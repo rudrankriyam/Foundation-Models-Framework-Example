@@ -1,44 +1,109 @@
 # Foundation Models Framework Example
 
-An example iOS app demonstrating the power of Apple's Foundation Models framework for integrating on-device language models into your applications.
+A production-ready iOS app demonstrating Apple's Foundation Models framework with clean architecture, MVVM pattern, and comprehensive examples of on-device AI capabilities.
 
-## Overview
+## 🏗️ Architecture
 
-This project showcases how to use Apple's Foundation Models framework (available in iOS 26.0+ and macOS 26.0+) to create intelligent, privacy-focused applications that leverage on-device language models.
+This project follows modern iOS development best practices with a layered, modular architecture:
+
+```
+FMF/
+├── Models/                     # Data models and error handling
+│   ├── DataModels.swift       # @Generable structures
+│   └── FoundationModelsError.swift # Custom errors
+├── Services/                   # Business logic layer
+│   └── FoundationModelsService.swift # Core AI service
+├── Tools/                      # Custom AI tools
+│   ├── WeatherTool.swift      # Weather information tool
+│   └── BreadDatabaseTool.swift # Recipe search tool
+├── ViewModels/                 # MVVM presentation logic
+│   └── ContentViewModel.swift # Main view model
+├── Views/
+│   ├── Components/            # Reusable UI components
+│   │   ├── ExampleButton.swift
+│   │   └── ResponseDisplayView.swift
+│   └── ContentView.swift      # Main view
+└── README.md
+```
+
+## 🎯 Engineering Principles
+
+- **MVVM Architecture**: Clear separation between UI, business logic, and data
+- **Dependency Injection**: Service layer properly injected into ViewModels
+- **Single Responsibility**: Each component has one clear purpose
+- **Reactive UI**: Using `@Observable` for real-time updates
+- **Error Handling**: Comprehensive error management throughout the stack
+- **Reusability**: Components designed for reuse across the app
+- **Type Safety**: Strong typing with Foundation Models protocols
 
 ## Requirements
 
 - iOS 26.0+ or macOS 26.0+
 - Apple Intelligence enabled
-- Compatible Apple device
+- Compatible Apple device with Apple Silicon
 
 ## Features
 
-- **Basic Chat Sessions**: Simple text-based interactions with language models
-- **Structured Data Generation**: Generate typed data objects from natural language prompts
-- **Streaming Responses**: Real-time streaming of model responses
-- **Tool Calling**: Extend model capabilities with custom tools
-- **Generation Guides**: Control and constrain model outputs
-- **Transcript Management**: Save and restore conversation history
+### 🤖 Core AI Capabilities
+- **Basic Chat**: Simple conversational interactions
+- **Structured Data Generation**: Type-safe data generation with `@Generable`
+- **Generation Guides**: Constrained outputs with `@Guide` annotations
+- **Streaming Responses**: Real-time response streaming
+- **Tool Calling**: Custom tools for extended functionality
+- **Model Availability**: System capability checking
 
-## Quick Start
+### 🎨 Creative Features
+- **Creative Writing**: Story outline and narrative generation
+- **Business Ideas**: Startup concept and business plan generation
 
-### Basic Chat Example
+### 🛠️ Custom Tools
+- **Weather Tool**: Multi-city weather information with simulated data
+- **Recipe Database**: Advanced bread recipe search with filtering
 
+## Usage Examples
+
+### Basic Chat
 ```swift
-import FoundationModels
-
-// Create a session with instructions
-let session = LanguageModelSession(instructions: "You are a helpful assistant.")
-
-// Generate a response
-let prompt = "Suggest a catchy name for a new coffee shop."
-let response = try await session.respond(to: prompt)
-print(response.content)
+let service = FoundationModelsService()
+let response = try await service.generateResponse(
+    prompt: "Suggest a catchy name for a new coffee shop.",
+    instructions: "You are a helpful assistant."
+)
 ```
 
 ### Structured Data Generation
+```swift
+let bookInfo = try await service.generateStructuredData(
+    prompt: "Suggest a sci-fi book.",
+    type: BookRecommendation.self
+)
+print("Title: \(bookInfo.title)")
+print("Author: \(bookInfo.author)")
+```
 
+### Tool Calling
+```swift
+let session = service.createSessionWithTools()
+let response = try await session.respond(
+    to: Prompt("Is it hotter in Boston or Chicago?")
+)
+```
+
+### Streaming Responses
+```swift
+let finalResponse = try await service.streamResponse(
+    prompt: "Write a short poem about technology.",
+    onPartialUpdate: { partialText in
+        print("Partial: \(partialText)")
+    }
+)
+```
+
+## Data Models
+
+The app includes comprehensive `@Generable` data models:
+
+### Book Recommendations
 ```swift
 @Generable
 struct BookRecommendation {
@@ -48,299 +113,94 @@ struct BookRecommendation {
     @Guide(description: "The author's name")
     let author: String
     
-    @Guide(description: "A brief description in 2-3 sentences")
-    let description: String
-    
     @Guide(description: "Genre of the book")
     let genre: Genre
 }
-
-@Generable
-enum Genre {
-    case fiction
-    case nonFiction
-    case mystery
-    case romance
-    case sciFi
-}
-
-// Generate structured data
-let session = LanguageModelSession()
-let bookInfo = try await session.respond(
-    to: "Suggest a sci-fi book for someone who loves space exploration.",
-    generating: BookRecommendation.self
-)
-print("Title: \(bookInfo.content.title)")
-print("Author: \(bookInfo.content.author)")
 ```
 
-## Advanced Examples
-
-### Generation Guides and Constraints
-
+### Product Reviews
 ```swift
 @Generable
 struct ProductReview {
-    @Guide(description: "Product name", .pattern(/[A-Z][a-zA-Z\s]+/))
+    @Guide(description: "Product name")
     let productName: String
     
-    @Guide(description: "Rating from 1 to 5", .range(1...5))
+    @Guide(description: "Rating from 1 to 5")
     let rating: Int
     
-    @Guide(description: "Review text", .count(50...200))
-    let reviewText: String
-    
-    @Guide(description: "Would recommend", .anyOf(["Yes", "No", "Maybe"]))
-    let recommendation: String
+    @Guide(description: "Key pros of the product")
+    let pros: [String]
 }
 ```
 
-### Streaming Responses
+## Custom Tools
+
+### Weather Tool
+Provides weather information with realistic simulation:
+- Multi-city weather database
+- Temperature, humidity, and wind data
+- Fallback to random generation for unknown cities
+
+### Bread Database Tool
+Advanced recipe search capabilities:
+- Comprehensive recipe database
+- Smart search across names, descriptions, and tags
+- Difficulty levels and preparation times
+- Relevance-based sorting
+
+## Error Handling
+
+Comprehensive error handling with custom error types:
 
 ```swift
-let session = LanguageModelSession()
-let stream = session.streamResponse(
-    to: "Write a short story about space exploration",
-    generating: [String].self
-)
-
-for try await partialContent in stream {
-    // Update UI with streaming content
-    updateUI(with: partialContent)
-}
-
-// Get final result
-let finalResponse = try await stream.collect()
-```
-
-### Custom Tools
-
-```swift
-struct WeatherTool: Tool {
-    let name = "get_weather"
-    let description = "Gets current weather for a location"
-    
-    @Generable
-    struct Arguments {
-        @Guide(description: "City name")
-        let city: String
-        
-        @Guide(description: "Country code (optional)")
-        let country: String?
-    }
-    
-    func call(arguments: Arguments) async throws -> ToolOutput {
-        // Fetch weather data
-        let weatherData = try await fetchWeather(
-            city: arguments.city,
-            country: arguments.country
-        )
-        return ToolOutput(weatherData)
-    }
-}
-
-// Use tool in session
-let session = LanguageModelSession(tools: [WeatherTool()])
-let response = try await session.respond(to: "What's the weather like in San Francisco?")
-```
-
-### Dynamic Schema Generation
-
-```swift
-// Create schemas at runtime
-let personSchema = DynamicGenerationSchema(
-    name: "Person",
-    description: "A person with basic information",
-    properties: [
-        .init(name: "name", description: "Full name", schema: .init(type: String.self)),
-        .init(name: "age", description: "Age in years", schema: .init(type: Int.self)),
-        .init(name: "email", description: "Email address", schema: .init(type: String.self))
-    ]
-)
-
-let generationSchema = try GenerationSchema(
-    root: personSchema,
-    dependencies: []
-)
-
-let response = try await session.respond(
-    to: "Create a person profile for a software engineer",
-    schema: generationSchema
-)
-```
-
-### Model Availability and Configuration
-
-```swift
-// Check model availability
-let model = SystemLanguageModel.default
-switch model.availability {
-case .available:
-    print("Model is ready to use")
-case .unavailable(let reason):
-    switch reason {
-    case .deviceNotEligible:
-        print("Device doesn't support Apple Intelligence")
-    case .appleIntelligenceNotEnabled:
-        print("Apple Intelligence is not enabled")
-    case .modelNotReady:
-        print("Model is downloading...")
-    }
-}
-
-// Use specialized models
-let contentTaggingModel = SystemLanguageModel(useCase: .contentTagging)
-let session = LanguageModelSession(model: contentTaggingModel)
-```
-
-### Generation Options and Sampling
-
-```swift
-let options = GenerationOptions(
-    sampling: .random(top: 10, seed: 42),
-    temperature: 0.7,
-    maximumResponseTokens: 500
-)
-
-let response = try await session.respond(
-    to: "Write a creative story",
-    options: options
-)
-```
-
-### Error Handling
-
-```swift
-do {
-    let response = try await session.respond(to: prompt)
-    print(response.content)
-} catch let error as LanguageModelSession.GenerationError {
-    switch error {
-    case .exceededContextWindowSize(let context):
-        print("Context too large: \(context.debugDescription)")
-        // Start new session or shorten prompt
-    case .assetsUnavailable(let context):
-        print("Model assets unavailable: \(context.debugDescription)")
-        // Retry later or check availability
-    case .guardrailViolation(let context):
-        print("Content policy violation: \(context.debugDescription)")
-        // Modify prompt to comply with policies
-    case .decodingFailure(let context):
-        print("Failed to decode response: \(context.debugDescription)")
-        // Handle malformed response
-    default:
-        print("Generation error: \(error.localizedDescription)")
-    }
-} catch let toolError as LanguageModelSession.ToolCallError {
-    print("Tool call failed: \(toolError.localizedDescription)")
-    print("Tool: \(toolError.tool.name)")
+enum FoundationModelsError: LocalizedError {
+    case sessionCreationFailed
+    case responseGenerationFailed(String)
+    case toolCallFailed(String)
+    case streamingFailed(String)
+    case modelUnavailable(String)
 }
 ```
 
-### Transcript Management
+## Architecture Benefits
 
-```swift
-// Save conversation history
-let transcript = session.transcript
-let data = try JSONEncoder().encode(transcript)
-UserDefaults.standard.set(data, forKey: "conversation_history")
+1. **Testability**: Clean separation allows for easy unit testing
+2. **Maintainability**: Modular structure makes code easy to maintain
+3. **Scalability**: Easy to add new features and tools
+4. **Reusability**: Components can be reused across different parts of the app
+5. **Type Safety**: Strong typing prevents runtime errors
+6. **Performance**: Efficient async/await patterns and proper memory management
 
-// Restore from saved transcript
-if let data = UserDefaults.standard.data(forKey: "conversation_history") {
-    let savedTranscript = try JSONDecoder().decode(Transcript.self, from: data)
-    let restoredSession = LanguageModelSession(transcript: savedTranscript)
-}
-```
+## Getting Started
 
-### Content Generation with Partially Generated Types
+1. Clone the repository
+2. Open `FMF.xcodeproj` in Xcode
+3. Ensure you have a device with Apple Intelligence enabled
+4. Build and run the project
+5. Explore the different AI capabilities through the example buttons
 
-```swift
-@Generable
-struct BlogPost {
-    @Guide(description: "Blog post title")
-    let title: String
-    
-    @Guide(description: "Blog post content", .count(500...1000))
-    let content: String
-    
-    @Guide(description: "List of tags", .count(3...5))
-    let tags: [String]
-}
+## Privacy & Security
 
-// Stream partial results
-let stream = session.streamResponse(
-    to: "Write a blog post about sustainable living",
-    generating: BlogPost.self
-)
-
-for try await partialPost in stream {
-    // Access partially generated content
-    print("Title (partial): \(partialPost.title)")
-    // UI can update in real-time as content generates
-    updateBlogPostUI(partialPost)
-}
-```
-
-## Project Structure
-
-```
-FMF/
-├── FMF/
-│   ├── FMFApp.swift          # App entry point
-│   ├── ContentView.swift     # Main UI with examples
-│   └── Assets.xcassets/      # App assets
-├── FMF.xcodeproj/           # Xcode project
-└── README.md                # This file
-```
-
-## Key Framework Components
-
-### Core Classes
-
-- **`LanguageModelSession`**: Main interface for interacting with language models
-- **`SystemLanguageModel`**: Represents the system's language model
-- **`GeneratedContent`**: Container for model-generated structured data
-- **`Transcript`**: Records conversation history
-
-### Protocols
-
-- **`Generable`**: Mark types that can be generated by the model
-- **`Tool`**: Define custom tools the model can call
-- **`PromptRepresentable`**: Types that can be converted to prompts
-- **`InstructionsRepresentable`**: Types that can be used as instructions
-
-### Macros
-
-- **`@Generable`**: Automatically implements `Generable` protocol
-- **`@Guide`**: Provides generation constraints and descriptions
-
-## Best Practices
-
-1. **Model Availability**: Always check model availability before use
-2. **Error Handling**: Implement comprehensive error handling for various failure modes
-3. **Memory Management**: Use sessions efficiently to manage context window size
-4. **Privacy**: All processing happens on-device for user privacy
-5. **Performance**: Consider using streaming for long responses
-6. **Constraints**: Use generation guides to ensure consistent output format
-
-## Privacy and Security
-
-Foundation Models framework operates entirely on-device, ensuring:
-- No data sent to external servers
-- Complete user privacy
-- Offline functionality
-- Compliance with Apple's privacy standards
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+- **On-device Processing**: All AI operations happen locally
+- **No Data Transmission**: No user data sent to external servers
+- **Apple's Privacy Standards**: Built on Apple's privacy-first AI framework
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+When contributing to this project, please maintain the established architecture:
 
-## Resources
+1. Follow the MVVM pattern
+2. Add new data models to `Models/DataModels.swift`
+3. Implement new tools in the `Tools/` directory
+4. Use the service layer for business logic
+5. Create reusable components in `Views/Components/`
 
-- [Apple Foundation Models Documentation](https://developer.apple.com/documentation/foundationmodels)
-- [Apple Intelligence Developer Resources](https://developer.apple.com/apple-intelligence/)
-- [WWDC 2024 Sessions on Apple Intelligence](https://developer.apple.com/videos/) 
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- Built with Apple's Foundation Models framework
+- Demonstrates modern iOS development practices
+- Showcases on-device AI capabilities 
