@@ -10,14 +10,17 @@ import SwiftUI
 
 struct ContentView: View {
   @State private var viewModel = ContentViewModel()
+  @State private var showDebugInfo = false
 
   var body: some View {
     NavigationStack {
       ScrollView {
         VStack(alignment: .leading, spacing: 20) {
           headerView
+          debugToggleView
           exampleButtonsView
           responseView
+          debugPerformanceView
           loadingView
         }
         .padding(.vertical)
@@ -39,6 +42,16 @@ struct ContentView: View {
       Text("On-device AI Examples")
         .font(.subheadline)
         .foregroundStyle(.secondary)
+    }
+    .padding(.horizontal)
+  }
+
+  private var debugToggleView: some View {
+    HStack {
+      Toggle("Show Debug Info", isOn: $showDebugInfo)
+        .font(.subheadline)
+
+      Spacer()
     }
     .padding(.horizontal)
   }
@@ -119,6 +132,16 @@ struct ContentView: View {
         response: viewModel.displayText,
         isError: viewModel.isError,
         onClear: viewModel.clearResults
+      )
+    }
+  }
+
+  @ViewBuilder
+  private var debugPerformanceView: some View {
+    if showDebugInfo {
+      DebugPerformanceView(
+        metrics: viewModel.performanceMetrics,
+        onReset: viewModel.resetPerformanceMetrics
       )
     }
   }

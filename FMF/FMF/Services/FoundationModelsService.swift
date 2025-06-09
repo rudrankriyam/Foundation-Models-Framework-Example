@@ -46,19 +46,37 @@ final class FoundationModelsService {
 
   // MARK: - Basic Operations
 
-  func generateResponse(prompt: String, instructions: String? = nil) async throws -> String {
+  func generateResponse(
+    prompt: String, instructions: String? = nil, performanceMetrics: PerformanceMetrics? = nil
+  ) async throws -> String {
+    performanceMetrics?.startTracking(operationType: .basic, promptLength: prompt.count)
+
     let session = createBasicSession(instructions: instructions)
     let response = try await session.respond(to: Prompt(prompt))
+
+    // Estimate token count based on response length (rough approximation)
+    let estimatedTokens = estimateTokenCount(from: response.content)
+    performanceMetrics?.finishTracking(totalTokens: estimatedTokens)
+
     return response.content
   }
 
   func generateStructuredData<T: Generable>(
     prompt: String,
     type: T.Type,
-    instructions: String? = nil
+    instructions: String? = nil,
+    performanceMetrics: PerformanceMetrics? = nil
   ) async throws -> T {
+    performanceMetrics?.startTracking(operationType: .structured, promptLength: prompt.count)
+
     let session = createBasicSession(instructions: instructions)
     let response = try await session.respond(to: Prompt(prompt), generating: type)
+
+    // Estimate token count for structured response
+    let responseString = String(describing: response.content)
+    let estimatedTokens = estimateTokenCount(from: responseString)
+    performanceMetrics?.finishTracking(totalTokens: estimatedTokens)
+
     return response.content
   }
 
@@ -67,24 +85,39 @@ final class FoundationModelsService {
   func streamResponse(
     prompt: String,
     instructions: String? = nil,
+    performanceMetrics: PerformanceMetrics? = nil,
     onPartialUpdate: @escaping (String) -> Void
   ) async throws -> String {
+    performanceMetrics?.startTracking(operationType: .streaming, promptLength: prompt.count)
+
     let session = createBasicSession(instructions: instructions)
     let stream = session.streamResponse(to: Prompt(prompt))
 
     for try await partialResponse in stream {
+      performanceMetrics?.addStreamingToken(at: Date())
       onPartialUpdate(partialResponse)
     }
 
     let finalResponse = try await stream.collect()
+    let estimatedTokens = estimateTokenCount(from: finalResponse.content)
+    performanceMetrics?.finishTracking(totalTokens: estimatedTokens)
+
     return finalResponse.content
   }
 
   // MARK: - Tool Operations
 
-  func executeWithTools(prompt: String) async throws -> (response: String, transcriptCount: Int) {
+  func executeWithTools(prompt: String, performanceMetrics: PerformanceMetrics? = nil) async throws
+    -> (response: String, transcriptCount: Int)
+  {
+    performanceMetrics?.startTracking(operationType: .toolCalling, promptLength: prompt.count)
+
     let session = createSessionWithTools()
     let response = try await session.respond(to: Prompt(prompt))
+
+    let estimatedTokens = estimateTokenCount(from: response.content)
+    performanceMetrics?.finishTracking(totalTokens: estimatedTokens)
+
     return (response.content, session.transcript.entries.count)
   }
 
@@ -112,6 +145,25 @@ final class FoundationModelsService {
     } else {
       return "Unexpected error: \(error.localizedDescription)"
     }
+  }
+
+  // MARK: - Helper Methods
+
+  /// Estimates token count using industry-standard approximations
+  /// Based on OpenAI's guidelines: 1 token ≈ 4 chars OR 1 token ≈ 0.75 words
+  /// Uses the maximum of both calculations for conservative estimation
+  private func estimateTokenCount(from text: String) -> Int {
+    // Method 1: Character-based (1 token ≈ 4 characters)
+    let charBasedTokens = Double(text.count) / 4.0
+
+    // Method 2: Word-based (1 token ≈ 0.75 words, so tokens = words / 0.75)
+    let wordCount = text.split(separator: " ").count
+    let wordBasedTokens = Double(wordCount) / 0.75
+
+    // Use the maximum for conservative estimation (as recommended by OpenAI)
+    let estimatedTokens = max(charBasedTokens, wordBasedTokens)
+
+    return Int(ceil(estimatedTokens))
   }
 }
 
