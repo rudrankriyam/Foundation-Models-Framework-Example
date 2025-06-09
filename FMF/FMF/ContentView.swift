@@ -14,7 +14,7 @@ struct ContentView: View {
   @State private var errorMessage: String = ""
 
   var body: some View {
-    NavigationView {
+    NavigationStack {
       ScrollView {
         VStack(alignment: .leading, spacing: 20) {
           // Header
@@ -72,6 +72,14 @@ struct ContentView: View {
             ) {
               await modelAvailabilityExample()
             }
+
+            ExampleButton(
+              title: "Tool Calling",
+              subtitle: "Use custom tools with the model",
+              icon: "wrench.and.screwdriver"
+            ) {
+              await toolCallingExample()
+            }
           }
           .padding(.horizontal)
 
@@ -93,7 +101,6 @@ struct ContentView: View {
                   )
                   .foregroundColor(errorMessage.isEmpty ? .primary : .red)
               }
-              .frame(maxHeight: 200)
               .padding(.horizontal)
             }
           }
@@ -216,6 +223,39 @@ struct ContentView: View {
           fatalError("Unknown availability reason")
         }
       }
+
+      return result
+    }
+  }
+
+  private func toolCallingExample() async {
+    await executeExample {
+      // Create tools
+      let weatherTool = WeatherTool()
+      let breadTool = BreadDatabaseTool()
+
+      // Create session with tools
+      let session = LanguageModelSession(
+        tools: [weatherTool, breadTool],
+        instructions: "You are a helpful assistant that can check weather and find recipes."
+      )
+
+      // Example 1: Weather comparison
+      let weatherResponse = try await session.respond(
+        to: "Is it hotter in Boston, Wichita, or Pittsburgh?"
+      )
+
+      var result = "Weather Comparison:\n\(weatherResponse.content)\n\n"
+
+      // Example 2: Recipe search
+      let recipeResponse = try await session.respond(
+        to: "Find three sourdough bread recipes"
+      )
+
+      result += "Recipe Search:\n\(recipeResponse.content)\n\n"
+
+      // Show transcript information
+      result += "Session Transcript Entries: \(session.transcript)"
 
       return result
     }
@@ -367,6 +407,111 @@ struct ProductReview {
 
   @Guide(description: "Would recommend")
   let recommendation: String
+}
+
+// MARK: - Custom Tools
+
+struct WeatherTool: Tool {
+  let name = "getWeather"
+  let description = "Retrieve the latest weather information for a city"
+
+  @Generable
+  struct Arguments {
+    @Guide(description: "The city to get weather information for")
+    var city: String
+  }
+
+  struct Forecast: Encodable {
+    var city: String
+    var temperature: Int
+  }
+
+  func call(arguments: Arguments) async throws -> ToolOutput {
+    // Simulate weather data (in real app, you'd use WeatherKit)
+    let simulatedTemperatures = [
+      "Boston": 72,
+      "Wichita": 89,
+      "Pittsburgh": 68,
+      "New York": 75,
+      "Los Angeles": 82,
+      "Chicago": 70,
+    ]
+
+    let temperature = simulatedTemperatures[arguments.city] ?? Int.random(in: 60...90)
+
+    let forecast = GeneratedContent(properties: [
+      "city": arguments.city,
+      "temperature": temperature,
+      "unit": "Fahrenheit",
+    ])
+
+    return ToolOutput(forecast)
+  }
+}
+
+struct BreadDatabaseTool: Tool {
+  let name = "searchBreadDatabase"
+  let description = "Searches a local database for bread recipes."
+
+  @Generable
+  struct Arguments {
+    @Guide(description: "The type of bread to search for")
+    var searchTerm: String
+
+    @Guide(description: "The number of recipes to get", .range(1...6))
+    var limit: Int
+  }
+
+  struct Recipe {
+    var name: String
+    var description: String
+    var link: URL
+  }
+
+  func call(arguments: Arguments) async throws -> ToolOutput {
+    // Simulate bread recipe database
+    let allRecipes = [
+      Recipe(
+        name: "Classic Sourdough",
+        description: "A tangy, crusty sourdough bread with a chewy interior",
+        link: URL(string: "https://example.com/sourdough1")!
+      ),
+      Recipe(
+        name: "San Francisco Sourdough",
+        description: "Traditional SF-style sourdough with wild yeast starter",
+        link: URL(string: "https://example.com/sourdough2")!
+      ),
+      Recipe(
+        name: "Whole Wheat Sourdough",
+        description: "Healthy sourdough made with whole wheat flour",
+        link: URL(string: "https://example.com/sourdough3")!
+      ),
+      Recipe(
+        name: "Rye Sourdough",
+        description: "Dense, flavorful sourdough with rye flour",
+        link: URL(string: "https://example.com/sourdough4")!
+      ),
+      Recipe(
+        name: "Milk Bread",
+        description: "Soft, pillowy Japanese-style milk bread",
+        link: URL(string: "https://example.com/milkbread")!
+      ),
+    ]
+
+    // Filter recipes based on search term
+    let filteredRecipes = allRecipes.filter { recipe in
+      recipe.name.lowercased().contains(arguments.searchTerm.lowercased())
+    }
+
+    // Limit results
+    let recipes = Array(filteredRecipes.prefix(arguments.limit))
+
+    let formattedRecipes = recipes.map {
+      "Recipe for '\($0.name)': \($0.description) Link: \($0.link)"
+    }
+
+    return ToolOutput(GeneratedContent(properties: ["recipes": formattedRecipes]))
+  }
 }
 
 #Preview {
