@@ -5,116 +5,186 @@
 //  Created by Rudrank Riyam on 6/9/25.
 //
 
+import CoreLocation
 import Foundation
 import FoundationModels
+import MapKit
 
-/// A tool that provides weather information for cities
+/// A tool that provides real weather information for cities using OpenMeteo API
 struct WeatherTool: Tool {
   let name = "getWeather"
-  let description = "Retrieve the latest weather information for a city"
+  let description = "Retrieve the latest weather information for a city using OpenMeteo API"
 
   @Generable
   struct Arguments {
-    @Guide(description: "The city to get weather information for")
+    @Guide(
+      description: "The city to get weather information for (e.g., 'New York', 'London', 'Tokyo')")
     var city: String
   }
 
   struct WeatherData: Encodable {
     let city: String
-    let temperature: Int
+    let temperature: Double
     let condition: String
-    let humidity: Int
-    let windSpeed: Int
+    let humidity: Double
+    let windSpeed: Double
+    let feelsLike: Double
+    let pressure: Double
+    let precipitation: Double
     let unit: String
   }
 
-  private let weatherDatabase: [String: WeatherData] = [
-    "Boston": WeatherData(
-      city: "Boston", temperature: 72, condition: "Partly Cloudy", humidity: 65, windSpeed: 8,
-      unit: "Fahrenheit"),
-    "Wichita": WeatherData(
-      city: "Wichita", temperature: 89, condition: "Sunny", humidity: 45, windSpeed: 12,
-      unit: "Fahrenheit"),
-    "Pittsburgh": WeatherData(
-      city: "Pittsburgh", temperature: 68, condition: "Overcast", humidity: 70, windSpeed: 6,
-      unit: "Fahrenheit"),
-    "New York": WeatherData(
-      city: "New York", temperature: 75, condition: "Sunny", humidity: 60, windSpeed: 10,
-      unit: "Fahrenheit"),
-    "Los Angeles": WeatherData(
-      city: "Los Angeles", temperature: 82, condition: "Clear", humidity: 40, windSpeed: 5,
-      unit: "Fahrenheit"),
-    "Chicago": WeatherData(
-      city: "Chicago", temperature: 70, condition: "Cloudy", humidity: 68, windSpeed: 15,
-      unit: "Fahrenheit"),
-    "Miami": WeatherData(
-      city: "Miami", temperature: 85, condition: "Humid", humidity: 80, windSpeed: 7,
-      unit: "Fahrenheit"),
-    "Seattle": WeatherData(
-      city: "Seattle", temperature: 65, condition: "Rainy", humidity: 85, windSpeed: 9,
-      unit: "Fahrenheit"),
-  ]
+  private struct OpenMeteoResponse: Codable {
+    let current: CurrentWeather
 
-  func call(arguments: Arguments) async throws -> ToolOutput {
-    // Simulate API delay
-    try await Task.sleep(for: .milliseconds(500))
+    struct CurrentWeather: Codable {
+      let temperature: Double
+      let windspeed: Double
+      let relativehumidity: Double
+      let apparentTemperature: Double
+      let precipitation: Double
+      let pressure: Double
+      let weathercode: Int
 
-    let cityName = arguments.city.trimmingCharacters(in: .whitespacesAndNewlines)
-
-    // Try to find exact match first
-    if let weatherData = weatherDatabase[cityName] {
-      return ToolOutput(
-        GeneratedContent(properties: [
-          "city": weatherData.city,
-          "temperature": weatherData.temperature,
-          "condition": weatherData.condition,
-          "humidity": weatherData.humidity,
-          "windSpeed": weatherData.windSpeed,
-          "unit": weatherData.unit,
-        ]))
+      enum CodingKeys: String, CodingKey {
+        case temperature = "temperature_2m"
+        case windspeed = "windspeed_10m"
+        case relativehumidity = "relative_humidity_2m"
+        case apparentTemperature = "apparent_temperature"
+        case precipitation
+        case pressure = "surface_pressure"
+        case weathercode
+      }
     }
-
-    // Try case-insensitive search
-    if let matchingEntry = weatherDatabase.first(where: {
-      $0.key.lowercased() == cityName.lowercased()
-    }) {
-      let weatherData = matchingEntry.value
-      return ToolOutput(
-        GeneratedContent(properties: [
-          "city": weatherData.city,
-          "temperature": weatherData.temperature,
-          "condition": weatherData.condition,
-          "humidity": weatherData.humidity,
-          "windSpeed": weatherData.windSpeed,
-          "unit": weatherData.unit,
-        ]))
-    }
-
-    // Generate random data for unknown cities
-    let randomWeather = generateRandomWeather(for: cityName)
-    return ToolOutput(
-      GeneratedContent(properties: [
-        "city": randomWeather.city,
-        "temperature": randomWeather.temperature,
-        "condition": randomWeather.condition,
-        "humidity": randomWeather.humidity,
-        "windSpeed": randomWeather.windSpeed,
-        "unit": randomWeather.unit,
-        "note": "Simulated data for unknown city",
-      ]))
   }
 
-  private func generateRandomWeather(for city: String) -> WeatherData {
-    let conditions = ["Sunny", "Cloudy", "Partly Cloudy", "Rainy", "Overcast", "Clear"]
-    let randomCondition = conditions.randomElement() ?? "Unknown"
+  func call(arguments: Arguments) async throws -> ToolOutput {
+    let cityName = arguments.city.trimmingCharacters(in: .whitespacesAndNewlines)
+
+    do {
+      // Get coordinates for the city
+      let coordinates = try await getCoordinates(for: cityName)
+
+      // Fetch weather data from OpenMeteo
+      let weatherData = try await fetchWeatherFromOpenMeteo(
+        latitude: coordinates.latitude,
+        longitude: coordinates.longitude,
+        cityName: cityName
+      )
+
+      return ToolOutput(
+        GeneratedContent(properties: [
+          "city": weatherData.city,
+          "temperature": weatherData.temperature,
+          "condition": weatherData.condition,
+          "humidity": weatherData.humidity,
+          "windSpeed": weatherData.windSpeed,
+          "feelsLike": weatherData.feelsLike,
+          "pressure": weatherData.pressure,
+          "precipitation": weatherData.precipitation,
+          "unit": weatherData.unit,
+        ]))
+    } catch {
+      // Return error information in a structured way
+      return ToolOutput(
+        GeneratedContent(properties: [
+          "city": cityName,
+          "error": "Unable to fetch weather data: \(error.localizedDescription)",
+          "temperature": 0,
+          "condition": "Unknown",
+          "humidity": 0,
+          "windSpeed": 0,
+          "feelsLike": 0,
+          "pressure": 0,
+          "precipitation": 0,
+          "unit": "Celsius",
+        ]))
+    }
+  }
+
+  private func getCoordinates(for city: String) async throws -> CLLocationCoordinate2D {
+    return try await withCheckedThrowingContinuation { continuation in
+        let geocoder = CLGeocoder()
+        geocoder.geocodeAddressString(city) { placemarks, error in
+            if let coordinate = placemarks?.first?.location?.coordinate {
+                continuation.resume(returning: coordinate)
+            } else {
+                continuation.resume(throwing: WeatherError.locationNotFound)
+            }
+        }
+    }
+  }
+
+  private func fetchWeatherFromOpenMeteo(
+    latitude: Double,
+    longitude: Double,
+    cityName: String
+  ) async throws -> WeatherData {
+    let baseURL = "https://api.open-meteo.com/v1/forecast"
+    let urlString =
+      "\(baseURL)?latitude=\(latitude)&longitude=\(longitude)&current=temperature_2m,relative_humidity_2m,apparent_temperature,surface_pressure,precipitation,windspeed_10m,weathercode"
+
+    guard let url = URL(string: urlString) else {
+      throw WeatherError.invalidURL
+    }
+
+    let (data, response) = try await URLSession.shared.data(from: url)
+
+    guard let httpResponse = response as? HTTPURLResponse,
+      httpResponse.statusCode == 200
+    else {
+      throw WeatherError.apiError
+    }
+
+    let openMeteoResponse = try JSONDecoder().decode(OpenMeteoResponse.self, from: data)
+    let current = openMeteoResponse.current
 
     return WeatherData(
-      city: city,
-      temperature: Int.random(in: 40...100),
-      condition: randomCondition,
-      humidity: Int.random(in: 30...90),
-      windSpeed: Int.random(in: 0...25),
-      unit: "Fahrenheit"
+      city: cityName,
+      temperature: current.temperature,
+      condition: weatherCondition(from: current.weathercode),
+      humidity: current.relativehumidity,
+      windSpeed: current.windspeed,
+      feelsLike: current.apparentTemperature,
+      pressure: current.pressure,
+      precipitation: current.precipitation,
+      unit: "Celsius"
     )
+  }
+
+  private func weatherCondition(from code: Int) -> String {
+    switch code {
+    case 0: return "Clear sky"
+    case 1, 2, 3: return "Partly cloudy"
+    case 45, 48: return "Fog"
+    case 51, 53, 55: return "Drizzle"
+    case 56, 57: return "Freezing drizzle"
+    case 61, 63, 65: return "Rain"
+    case 66, 67: return "Freezing rain"
+    case 71, 73, 75: return "Snow"
+    case 77: return "Snow grains"
+    case 80, 81, 82: return "Rain showers"
+    case 85, 86: return "Snow showers"
+    case 95: return "Thunderstorm"
+    case 96, 99: return "Thunderstorm with hail"
+    default: return "Unknown"
+    }
+  }
+}
+
+enum WeatherError: Error, LocalizedError {
+  case locationNotFound
+  case invalidURL
+  case apiError
+
+  var errorDescription: String? {
+    switch self {
+    case .locationNotFound:
+      return "Could not find location for the specified city"
+    case .invalidURL:
+      return "Invalid API URL"
+    case .apiError:
+      return "Weather API request failed"
+    }
   }
 }
