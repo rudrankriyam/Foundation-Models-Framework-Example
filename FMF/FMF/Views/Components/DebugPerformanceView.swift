@@ -117,7 +117,7 @@ struct DebugPerformanceView: View {
 
       Text("Token counts are estimated using OpenAI's guidelines (1 token ≈ 4 chars or 0.75 words)")
         .font(.caption2)
-        .foregroundColor(.tertiary)
+        .foregroundStyle(.tertiary)
         .italic()
     }
   }

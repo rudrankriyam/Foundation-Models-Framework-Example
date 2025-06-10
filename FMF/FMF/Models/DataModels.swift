@@ -78,6 +78,9 @@ struct StoryOutline {
 
   @Guide(description: "Story genre")
   let genre: StoryGenre
+  
+  @Guide(description: "Major themes explored in the story")
+  let themes: [String]
 }
 
 @Generable
@@ -113,4 +116,7 @@ struct BusinessIdea {
 
   @Guide(description: "Initial startup costs estimate")
   let estimatedStartupCost: String
+
+  @Guide(description: "Expected timeline or phases for launch and growth")
+  let timeline: String?
 }
