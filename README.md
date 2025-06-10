@@ -10,7 +10,7 @@ A practical iOS app demonstrating Apple's Foundation Models framework with vario
 
 ## Features
 
-### 🤖 Core AI Capabilities
+### Core AI Capabilities
 - **Basic Chat**: Simple conversational interactions
 - **Structured Data Generation**: Type-safe data generation with `@Generable`
 - **Generation Guides**: Constrained outputs with `@Guide` annotations
@@ -18,11 +18,11 @@ A practical iOS app demonstrating Apple's Foundation Models framework with vario
 - **Tool Calling**: Custom tools for extended functionality
 - **Model Availability**: System capability checking
 
-### 🎨 Creative Features
+### Creative Features
 - **Creative Writing**: Story outline and narrative generation
 - **Business Ideas**: Startup concept and business plan generation
 
-### 🛠️ Custom Tools
+### Custom Tools
 - **Weather Tool**: Multi-city weather information with simulated data
 - **Recipe Database**: Advanced bread recipe search with filtering
 
