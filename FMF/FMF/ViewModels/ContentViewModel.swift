@@ -128,7 +128,7 @@ final class ContentViewModel {
   func executeToolCalling() async {
     await executeExample(operationType: .toolCalling) {
       let weatherResult = try await self.foundationModelsService.executeWithTools(
-        prompt: "Is it hotter in Boston, Wichita, or Pittsburgh?",
+        prompt: "Is it hotter in New Delhi, or San Francisco?",
         performanceMetrics: self.performanceMetrics
       )
 

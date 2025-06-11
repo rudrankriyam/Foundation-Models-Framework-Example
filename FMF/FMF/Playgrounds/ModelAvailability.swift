@@ -11,7 +11,6 @@ import Playgrounds
     let testResponse = try await session.respond(
       to: "Say 'Hello from Foundation Models!' in a creative way."
     )
-
   } else {
     print("❌ Foundation Models is not available on this device")
     print("This feature requires:")

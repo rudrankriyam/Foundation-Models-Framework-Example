@@ -17,7 +17,6 @@ final class FoundationModelsService {
 
   private var currentSession: LanguageModelSession?
   private let weatherTool = WeatherTool()
-  private let breadTool = BreadDatabaseTool()
 
   // MARK: - Session Management
 
@@ -33,11 +32,11 @@ final class FoundationModelsService {
   }
 
   func createSessionWithTools(instructions: String? = nil) -> LanguageModelSession {
-    let defaultInstructions = "You are a helpful assistant with access to weather and recipe tools."
+    let defaultInstructions = "You are a helpful assistant with access to weather tools."
     let finalInstructions = instructions ?? defaultInstructions
 
     let session = LanguageModelSession(
-      tools: [weatherTool, breadTool],
+      tools: [weatherTool],
       instructions: Instructions(finalInstructions)
     )
     currentSession = session

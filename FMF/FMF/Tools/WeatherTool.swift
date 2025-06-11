@@ -60,19 +60,24 @@ struct WeatherTool: Tool {
 
   func call(arguments: Arguments) async throws -> ToolOutput {
     let cityName = arguments.city.trimmingCharacters(in: .whitespacesAndNewlines)
+    print("WeatherTool.call(arguments:) called with city: \(cityName)")
 
     do {
       // Get coordinates for the city
+      print("Attempting to get coordinates for city: \(cityName)")
       let coordinates = try await getCoordinates(for: cityName)
+      print("Obtained coordinates: \(coordinates)")
 
       // Fetch weather data from OpenMeteo
+      print("Fetching weather for latitude: \(coordinates.latitude), longitude: \(coordinates.longitude)")
       let weatherData = try await fetchWeatherFromOpenMeteo(
         latitude: coordinates.latitude,
         longitude: coordinates.longitude,
         cityName: cityName
       )
+      print("Weather data fetched: \(weatherData)")
 
-      return ToolOutput(
+      let output = ToolOutput(
         GeneratedContent(properties: [
           "city": weatherData.city,
           "temperature": weatherData.temperature,
@@ -84,9 +89,12 @@ struct WeatherTool: Tool {
           "precipitation": weatherData.precipitation,
           "unit": weatherData.unit,
         ]))
+      print("Returning successful ToolOutput for city: \(cityName)")
+      return output
     } catch {
+      print("Error in WeatherTool.call: \(error)")
       // Return error information in a structured way
-      return ToolOutput(
+      let output = ToolOutput(
         GeneratedContent(properties: [
           "city": cityName,
           "error": "Unable to fetch weather data: \(error.localizedDescription)",
@@ -99,19 +107,24 @@ struct WeatherTool: Tool {
           "precipitation": 0,
           "unit": "Celsius",
         ]))
+      print("Returning error ToolOutput for city: \(cityName) with error: \(error.localizedDescription)")
+      return output
     }
   }
 
   private func getCoordinates(for city: String) async throws -> CLLocationCoordinate2D {
+    print("getCoordinates called for city: \(city)")
     return try await withCheckedThrowingContinuation { continuation in
-        let geocoder = CLGeocoder()
-        geocoder.geocodeAddressString(city) { placemarks, error in
-            if let coordinate = placemarks?.first?.location?.coordinate {
-                continuation.resume(returning: coordinate)
-            } else {
-                continuation.resume(throwing: WeatherError.locationNotFound)
-            }
+      let geocoder = CLGeocoder()
+      geocoder.geocodeAddressString(city) { placemarks, error in
+        if let coordinate = placemarks?.first?.location?.coordinate {
+          print("Geocoding successful. Coordinate: \(coordinate)")
+          continuation.resume(returning: coordinate)
+        } else {
+          print("Geocoding failed for city: \(city). Error: \(String(describing: error))")
+          continuation.resume(throwing: WeatherError.locationNotFound)
         }
+      }
     }
   }
 
@@ -124,7 +137,10 @@ struct WeatherTool: Tool {
     let urlString =
       "\(baseURL)?latitude=\(latitude)&longitude=\(longitude)&current=temperature_2m,relative_humidity_2m,apparent_temperature,surface_pressure,precipitation,windspeed_10m,weathercode"
 
+    print("fetchWeatherFromOpenMeteo URL: \(urlString)")
+
     guard let url = URL(string: urlString) else {
+      print("Invalid URL: \(urlString)")
       throw WeatherError.invalidURL
     }
 
@@ -133,23 +149,32 @@ struct WeatherTool: Tool {
     guard let httpResponse = response as? HTTPURLResponse,
       httpResponse.statusCode == 200
     else {
+      print("API error with response: \(response)")
       throw WeatherError.apiError
     }
 
-    let openMeteoResponse = try JSONDecoder().decode(OpenMeteoResponse.self, from: data)
-    let current = openMeteoResponse.current
+    do {
+      let openMeteoResponse = try JSONDecoder().decode(OpenMeteoResponse.self, from: data)
+      let current = openMeteoResponse.current
+      print("Decoded OpenMeteoResponse: \(current)")
 
-    return WeatherData(
-      city: cityName,
-      temperature: current.temperature,
-      condition: weatherCondition(from: current.weathercode),
-      humidity: current.relativehumidity,
-      windSpeed: current.windspeed,
-      feelsLike: current.apparentTemperature,
-      pressure: current.pressure,
-      precipitation: current.precipitation,
-      unit: "Celsius"
-    )
+      let weather = WeatherData(
+        city: cityName,
+        temperature: current.temperature,
+        condition: weatherCondition(from: current.weathercode),
+        humidity: current.relativehumidity,
+        windSpeed: current.windspeed,
+        feelsLike: current.apparentTemperature,
+        pressure: current.pressure,
+        precipitation: current.precipitation,
+        unit: "Celsius"
+      )
+      print("Returning WeatherData: \(weather)")
+      return weather
+    } catch {
+      print("Decoding error: \(error)")
+      throw error
+    }
   }
 
   private func weatherCondition(from code: Int) -> String {
