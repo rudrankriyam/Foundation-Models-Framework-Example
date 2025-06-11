@@ -134,13 +134,6 @@ final class ContentViewModel {
 
       var result = "Weather Comparison:\n\(weatherResult.response)\n\n"
 
-      let recipeResult = try await self.foundationModelsService.executeWithTools(
-        prompt: "Find three sourdough bread recipes"
-      )
-
-      result += "Recipe Search:\n\(recipeResult.response)\n\n"
-      result += "Total transcript entries: \(recipeResult.transcriptCount)"
-
       return result
     }
   }
