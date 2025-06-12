@@ -36,39 +36,41 @@ Love this project? Check out my books to explore more of AI and iOS development:
 
 ### Basic Chat
 ```swift
-let service = FoundationModelsService()
-let response = try await service.generateResponse(
-    prompt: "Suggest a catchy name for a new coffee shop.",
-    instructions: "You are a helpful assistant."
+let session = LanguageModelSession()
+let response = try await session.respond(
+    to: "Suggest a catchy name for a new coffee shop."
 )
+print(response.content)
 ```
 
 ### Structured Data Generation
 ```swift
-let bookInfo = try await service.generateStructuredData(
-    prompt: "Suggest a sci-fi book.",
-    type: BookRecommendation.self
+let session = LanguageModelSession()
+let bookInfo = try await session.respond(
+    to: "Suggest a sci-fi book.",
+    generating: BookRecommendation.self
 )
-print("Title: \(bookInfo.title)")
-print("Author: \(bookInfo.author)")
+print("Title: \(bookInfo.content.title)")
+print("Author: \(bookInfo.content.author)")
 ```
 
 ### Tool Calling
 ```swift
-let session = service.createSessionWithTools()
+let session = LanguageModelSession(tools: [WeatherTool()])
 let response = try await session.respond(
-    to: Prompt("Is it hotter in Boston or Chicago?")
+    to: "Is it hotter in New Delhi or Cupertino?"
 )
+print(response.content)
 ```
 
 ### Streaming Responses
 ```swift
-let finalResponse = try await service.streamResponse(
-    prompt: "Write a short poem about technology.",
-    onPartialUpdate: { partialText in
-        print("Partial: \(partialText)")
-    }
-)
+let session = LanguageModelSession()
+let stream = session.streamResponse(to: "Write a short poem about technology.")
+
+for try await partialText in stream {
+    print("Partial: \(partialText)")
+}
 ```
 
 ## Data Models
