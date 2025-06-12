@@ -2,6 +2,12 @@
 
 A practical iOS app demonstrating Apple's Foundation Models framework with various examples of on-device AI capabilities.
 
+## Support
+
+Love this project? Check out my books to explore more of AI and iOS development:
+- [Exploring AI for iOS Development](https://academy.rudrank.com/product/ai)
+- [Exploring AI-Assisted Coding for iOS Development](https://academy.rudrank.com/product/ai-assisted-coding)
+
 ## Requirements
 
 - iOS 26.0+ or macOS 26.0+
