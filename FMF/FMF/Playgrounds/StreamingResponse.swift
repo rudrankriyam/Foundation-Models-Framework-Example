@@ -12,5 +12,5 @@ import Playgrounds
     print("Partial response: \(partialResult)")
   }
 
-  print("Streaming complete!")
+  print("Streaming complete")
 }

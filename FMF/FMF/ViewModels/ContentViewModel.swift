@@ -19,7 +19,6 @@ final class ContentViewModel {
   var response: String = ""
   var isLoading: Bool = false
   var errorMessage: String = ""
-  var performanceMetrics = PerformanceMetrics()
 
   // MARK: - Dependencies
 
@@ -46,8 +45,7 @@ final class ContentViewModel {
     await executeExample {
       try await self.foundationModelsService.generateResponse(
         prompt: "Suggest a catchy name for a new coffee shop.",
-        instructions: "You are a helpful assistant.",
-        performanceMetrics: self.performanceMetrics
+        instructions: "You are a helpful assistant."
       )
     }
   }
@@ -57,8 +55,7 @@ final class ContentViewModel {
     await executeExample {
       let bookInfo = try await self.foundationModelsService.generateStructuredData(
         prompt: "Suggest a sci-fi book.",
-        type: BookRecommendation.self,
-        performanceMetrics: self.performanceMetrics
+        type: BookRecommendation.self
       )
 
       return """
@@ -75,8 +72,7 @@ final class ContentViewModel {
     await executeExample {
       let review = try await self.foundationModelsService.generateStructuredData(
         prompt: "Write a product review for a smartphone.",
-        type: ProductReview.self,
-        performanceMetrics: self.performanceMetrics
+        type: ProductReview.self
       )
 
       return """
@@ -100,7 +96,6 @@ final class ContentViewModel {
     do {
       let finalResponse = try await foundationModelsService.streamResponse(
         prompt: "Write a short poem about technology.",
-        performanceMetrics: performanceMetrics,
         onPartialUpdate: { [weak self] partialText in
           Task { @MainActor in
             self?.response = partialText
@@ -126,10 +121,9 @@ final class ContentViewModel {
 
   @MainActor
   func executeToolCalling() async {
-    await executeExample(operationType: .toolCalling) {
+    await executeExample {
       let weatherResult = try await self.foundationModelsService.executeWithTools(
-        prompt: "Is it hotter in New Delhi, or San Francisco?",
-        performanceMetrics: self.performanceMetrics
+        prompt: "Is it hotter in New Delhi, or San Francisco?"
       )
 
       var result = "Weather Comparison:\n\(weatherResult.response)\n\n"
@@ -140,11 +134,10 @@ final class ContentViewModel {
 
   @MainActor
   func executeCreativeWriting() async {
-    await executeExample(operationType: .creative) {
+    await executeExample {
       let storyOutline = try await self.foundationModelsService.generateStructuredData(
         prompt: "Create an outline for a mystery story set in a small town.",
-        type: StoryOutline.self,
-        performanceMetrics: self.performanceMetrics
+        type: StoryOutline.self
       )
 
       return """
@@ -162,11 +155,10 @@ final class ContentViewModel {
 
   @MainActor
   func executeBusinessIdea() async {
-    await executeExample(operationType: .business) {
+    await executeExample {
       let businessIdea = try await self.foundationModelsService.generateStructuredData(
         prompt: "Generate a unique startup business idea for 2025.",
-        type: BusinessIdea.self,
-        performanceMetrics: self.performanceMetrics
+        type: BusinessIdea.self
       )
 
       return """
@@ -188,9 +180,7 @@ final class ContentViewModel {
   // MARK: - Helper Methods
 
   @MainActor
-  private func executeExample(
-    operationType: OperationType? = nil, _ operation: @escaping () async throws -> String
-  ) async {
+  private func executeExample(_ operation: @escaping () async throws -> String) async {
     isLoading = true
     response = ""
     errorMessage = ""
@@ -209,10 +199,5 @@ final class ContentViewModel {
   func clearResults() {
     response = ""
     errorMessage = ""
-  }
-
-  @MainActor
-  func resetPerformanceMetrics() {
-    performanceMetrics.reset()
   }
 }

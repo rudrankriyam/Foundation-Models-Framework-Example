@@ -78,7 +78,7 @@ struct StoryOutline {
 
   @Guide(description: "Story genre")
   let genre: StoryGenre
-  
+
   @Guide(description: "Major themes explored in the story")
   let themes: [String]
 }
