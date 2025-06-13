@@ -12,16 +12,30 @@ struct ContentView: View {
   @State private var viewModel = ContentViewModel()
 
   var body: some View {
-    NavigationStack {
-      ScrollView {
-        VStack(alignment: .leading, spacing: 20) {
-          headerView
-          exampleButtonsView
-          responseView
-          loadingView
+    TabView {
+      // Examples Tab
+      NavigationStack {
+        ScrollView {
+          VStack(alignment: .leading, spacing: 20) {
+            headerView
+            exampleButtonsView
+            responseView
+            loadingView
+          }
+          .padding(.vertical)
         }
-        .padding(.vertical)
       }
+      .tabItem {
+        Image(systemName: "brain.head.profile")
+        Text("Examples")
+      }
+
+      // ChatBot Tab
+      ChatBotView()
+        .tabItem {
+          Image(systemName: "message.badge.waveform")
+          Text("ChatBot")
+        }
     }
   }
 
