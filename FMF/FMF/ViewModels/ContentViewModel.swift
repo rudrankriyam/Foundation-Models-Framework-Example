@@ -5,12 +5,12 @@
 //  Created by Rudrank Riyam on 6/9/25.
 //
 
+import CoreLocation
 import Foundation
 import FoundationModels
+import MapKit
 import Observation
 import SwiftUI
-import CoreLocation
-import MapKit
 
 /// ViewModel for managing ContentView state and operations
 @Observable
@@ -47,10 +47,11 @@ final class ContentViewModel {
     do {
       // Create a basic session
       let session = LanguageModelSession(instructions: Instructions("You are a helpful assistant."))
-      
+
       // Generate response
-      let response = try await session.respond(to: Prompt("Suggest a catchy name for a new coffee shop."))
-      
+      let response = try await session.respond(
+        to: Prompt("Suggest a catchy name for a new coffee shop."))
+
       self.response = response.content
     } catch {
       errorMessage = handleFoundationModelsError(error)
@@ -68,15 +69,15 @@ final class ContentViewModel {
     do {
       // Create a basic session
       let session = LanguageModelSession()
-      
+
       // Generate structured data
       let response = try await session.respond(
         to: Prompt("Suggest a sci-fi book."),
         generating: BookRecommendation.self
       )
-      
+
       let bookInfo = response.content
-      
+
       self.response = """
         Title: \(bookInfo.title)
         Author: \(bookInfo.author)
@@ -99,15 +100,15 @@ final class ContentViewModel {
     do {
       // Create a basic session
       let session = LanguageModelSession()
-      
+
       // Generate structured product review
       let response = try await session.respond(
         to: Prompt("Write a product review for a smartphone."),
         generating: ProductReview.self
       )
-      
+
       let review = response.content
-      
+
       self.response = """
         Product: \(review.productName)
         Rating: \(review.rating)/5
@@ -133,7 +134,7 @@ final class ContentViewModel {
     do {
       // Create a basic session
       let session = LanguageModelSession()
-      
+
       // Create streaming response
       let stream = session.streamResponse(to: Prompt("Write a short poem about technology."))
 
@@ -168,7 +169,8 @@ final class ContentViewModel {
     case .available:
       result += "✅ Default model is available and ready\n"
       result += "Supported languages: \(model.supportedLanguages.count)\n"
-      result += "Content tagging model: \(contentTaggingModel.availability == .available ? "✅" : "❌")\n"
+      result +=
+        "Content tagging model: \(contentTaggingModel.availability == .available ? "✅" : "❌")\n"
 
     case .unavailable(let reason):
       result += "❌ Default model unavailable\n"
@@ -200,9 +202,10 @@ final class ContentViewModel {
         tools: [WeatherTool()],
         instructions: Instructions("You are a helpful assistant with access to weather tools.")
       )
-      
+
       // Execute with tools
-      let response = try await session.respond(to: Prompt("Is it hotter in New Delhi, or San Francisco?"))
+      let response = try await session.respond(
+        to: Prompt("Is it hotter in New Delhi, or San Francisco?"))
 
       self.response = "Weather Comparison:\n\(response.content)\n\n"
     } catch {
@@ -221,15 +224,15 @@ final class ContentViewModel {
     do {
       // Create a basic session
       let session = LanguageModelSession()
-      
+
       // Generate structured story outline
       let response = try await session.respond(
         to: Prompt("Create an outline for a mystery story set in a small town."),
         generating: StoryOutline.self
       )
-      
+
       let storyOutline = response.content
-      
+
       self.response = """
         Story Outline: \(storyOutline.title)
 
@@ -256,15 +259,15 @@ final class ContentViewModel {
     do {
       // Create a basic session
       let session = LanguageModelSession()
-      
+
       // Generate structured business idea
       let response = try await session.respond(
         to: Prompt("Generate a unique startup business idea for 2025."),
         generating: BusinessIdea.self
       )
-      
+
       let businessIdea = response.content
-      
+
       self.response = """
         Business: \(businessIdea.name)
 
@@ -292,9 +295,9 @@ final class ContentViewModel {
     response = ""
     errorMessage = ""
   }
-  
+
   // MARK: - Error Handling
-  
+
   private func handleFoundationModelsError(_ error: Error) -> String {
     if let generationError = error as? LanguageModelSession.GenerationError {
       return handleGenerationError(generationError)
@@ -306,7 +309,7 @@ final class ContentViewModel {
       return "Unexpected error: \(error.localizedDescription)"
     }
   }
-  
+
   private func handleGenerationError(_ error: LanguageModelSession.GenerationError) -> String {
     switch error {
     case .exceededContextWindowSize(let context):
@@ -325,7 +328,7 @@ final class ContentViewModel {
       return "Unknown generation error"
     }
   }
-  
+
   private func handleToolCallError(_ error: LanguageModelSession.ToolCallError) -> String {
     return "Tool '\(error.tool.name)' failed: \(error.underlyingError.localizedDescription)"
   }
