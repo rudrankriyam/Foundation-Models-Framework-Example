@@ -4,33 +4,55 @@
 //
 //  Created by Rudrank Riyam on 6/9/25.
 //
+//  This file defines the WeatherTool, a utility for retrieving real-time weather information for cities using the OpenMeteo API.
+//  The tool provides temperature, humidity, wind speed, and other weather metrics for a given city.
+//
 
 import CoreLocation
 import Foundation
 import FoundationModels
 import MapKit
 
-/// A tool that provides real weather information for cities using OpenMeteo API
+/// `WeatherTool` is a utility that provides real-time weather information for cities using the OpenMeteo API.
+///
+/// This tool fetches the latest weather data, including temperature, humidity, wind speed, and more, for a specified city.
+/// It uses geocoding to resolve city names to coordinates and then queries the OpenMeteo API for current weather conditions.
 struct WeatherTool: Tool {
+
+  /// The name of the tool, used for identification.
   let name = "getWeather"
+  /// A brief description of the tool's functionality.
   let description = "Retrieve the latest weather information for a city using OpenMeteo API"
 
+  /// Arguments required to fetch weather information.
   @Generable
   struct Arguments {
+    /// The city to get weather information for (e.g., "New York", "London", "Tokyo").
     @Guide(
       description: "The city to get weather information for (e.g., 'New York', 'London', 'Tokyo')")
     var city: String
   }
 
+  /// The weather data returned by the tool.
   struct WeatherData: Encodable {
+
+    /// The name of the city.
     let city: String
+    /// The current temperature in Celsius.
     let temperature: Double
+    /// A textual description of the weather condition.
     let condition: String
+    /// The current humidity percentage.
     let humidity: Double
+    /// The current wind speed in km/h.
     let windSpeed: Double
+    /// The 'feels like' temperature in Celsius.
     let feelsLike: Double
+    /// The current atmospheric pressure in hPa.
     let pressure: Double
+    /// The current precipitation in mm.
     let precipitation: Double
+    /// The unit of temperature (e.g., "Celsius").
     let unit: String
   }
 
@@ -69,7 +91,9 @@ struct WeatherTool: Tool {
       print("Obtained coordinates: \(coordinates)")
 
       // Fetch weather data from OpenMeteo
-      print("Fetching weather for latitude: \(coordinates.latitude), longitude: \(coordinates.longitude)")
+      print(
+        "Fetching weather for latitude: \(coordinates.latitude), longitude: \(coordinates.longitude)"
+      )
       let weatherData = try await fetchWeatherFromOpenMeteo(
         latitude: coordinates.latitude,
         longitude: coordinates.longitude,
@@ -107,7 +131,9 @@ struct WeatherTool: Tool {
           "precipitation": 0,
           "unit": "Celsius",
         ]))
-      print("Returning error ToolOutput for city: \(cityName) with error: \(error.localizedDescription)")
+      print(
+        "Returning error ToolOutput for city: \(cityName) with error: \(error.localizedDescription)"
+      )
       return output
     }
   }
@@ -134,15 +160,23 @@ struct WeatherTool: Tool {
     cityName: String
   ) async throws -> WeatherData {
     let baseURL = "https://api.open-meteo.com/v1/forecast"
-    let urlString =
-      "\(baseURL)?latitude=\(latitude)&longitude=\(longitude)&current=temperature_2m,relative_humidity_2m,apparent_temperature,surface_pressure,precipitation,windspeed_10m,weathercode"
+    var components = URLComponents(string: baseURL)
+    components?.queryItems = [
+      URLQueryItem(name: "latitude", value: "\(latitude)"),
+      URLQueryItem(name: "longitude", value: "\(longitude)"),
+      URLQueryItem(
+        name: "current",
+        value:
+          "temperature_2m,relative_humidity_2m,apparent_temperature,surface_pressure,precipitation,windspeed_10m,weathercode"
+      ),
+    ]
 
-    print("fetchWeatherFromOpenMeteo URL: \(urlString)")
-
-    guard let url = URL(string: urlString) else {
-      print("Invalid URL: \(urlString)")
+    guard let url = components?.url else {
+      print("Invalid URL from URLComponents: \(String(describing: components))")
       throw WeatherError.invalidURL
     }
+
+    print("fetchWeatherFromOpenMeteo URL: \(url)")
 
     let (data, response) = try await URLSession.shared.data(from: url)
 

@@ -9,6 +9,8 @@ import Foundation
 import FoundationModels
 import Observation
 import SwiftUI
+import CoreLocation
+import MapKit
 
 /// ViewModel for managing ContentView state and operations
 @Observable
@@ -19,10 +21,6 @@ final class ContentViewModel {
   var response: String = ""
   var isLoading: Bool = false
   var errorMessage: String = ""
-
-  // MARK: - Dependencies
-
-  private let foundationModelsService = FoundationModelsService()
 
   // MARK: - Computed Properties
 
@@ -42,40 +40,75 @@ final class ContentViewModel {
 
   @MainActor
   func executeBasicChat() async {
-    await executeExample {
-      try await self.foundationModelsService.generateResponse(
-        prompt: "Suggest a catchy name for a new coffee shop.",
-        instructions: "You are a helpful assistant."
-      )
+    isLoading = true
+    response = ""
+    errorMessage = ""
+
+    do {
+      // Create a basic session
+      let session = LanguageModelSession(instructions: Instructions("You are a helpful assistant."))
+      
+      // Generate response
+      let response = try await session.respond(to: Prompt("Suggest a catchy name for a new coffee shop."))
+      
+      self.response = response.content
+    } catch {
+      errorMessage = handleFoundationModelsError(error)
     }
+
+    isLoading = false
   }
 
   @MainActor
   func executeStructuredData() async {
-    await executeExample {
-      let bookInfo = try await self.foundationModelsService.generateStructuredData(
-        prompt: "Suggest a sci-fi book.",
-        type: BookRecommendation.self
-      )
+    isLoading = true
+    response = ""
+    errorMessage = ""
 
-      return """
+    do {
+      // Create a basic session
+      let session = LanguageModelSession()
+      
+      // Generate structured data
+      let response = try await session.respond(
+        to: Prompt("Suggest a sci-fi book."),
+        generating: BookRecommendation.self
+      )
+      
+      let bookInfo = response.content
+      
+      self.response = """
         Title: \(bookInfo.title)
         Author: \(bookInfo.author)
         Genre: \(bookInfo.genre)
         Description: \(bookInfo.description)
         """
+    } catch {
+      errorMessage = handleFoundationModelsError(error)
     }
+
+    isLoading = false
   }
 
   @MainActor
   func executeGenerationGuides() async {
-    await executeExample {
-      let review = try await self.foundationModelsService.generateStructuredData(
-        prompt: "Write a product review for a smartphone.",
-        type: ProductReview.self
-      )
+    isLoading = true
+    response = ""
+    errorMessage = ""
 
-      return """
+    do {
+      // Create a basic session
+      let session = LanguageModelSession()
+      
+      // Generate structured product review
+      let response = try await session.respond(
+        to: Prompt("Write a product review for a smartphone."),
+        generating: ProductReview.self
+      )
+      
+      let review = response.content
+      
+      self.response = """
         Product: \(review.productName)
         Rating: \(review.rating)/5
         Review: \(review.reviewText)
@@ -84,7 +117,11 @@ final class ContentViewModel {
         Pros: \(review.pros.joined(separator: ", "))
         Cons: \(review.cons.joined(separator: ", "))
         """
+    } catch {
+      errorMessage = handleFoundationModelsError(error)
     }
+
+    isLoading = false
   }
 
   @MainActor
@@ -94,53 +131,106 @@ final class ContentViewModel {
     errorMessage = ""
 
     do {
-      let finalResponse = try await foundationModelsService.streamResponse(
-        prompt: "Write a short poem about technology.",
-        onPartialUpdate: { [weak self] partialText in
-          Task { @MainActor in
-            self?.response = partialText
-          }
-        }
-      )
+      // Create a basic session
+      let session = LanguageModelSession()
+      
+      // Create streaming response
+      let stream = session.streamResponse(to: Prompt("Write a short poem about technology."))
 
-      response = finalResponse
+      // Process streaming updates
+      for try await partialResponse in stream {
+        self.response = partialResponse
+      }
+
+      // Get final response
+      let finalResponse = try await stream.collect()
+      self.response = finalResponse.content
       isLoading = false
     } catch {
-      errorMessage = foundationModelsService.handleError(error)
+      errorMessage = handleFoundationModelsError(error)
       isLoading = false
     }
   }
 
   @MainActor
   func executeModelAvailability() async {
-    await executeExample {
-      let availabilityInfo = self.foundationModelsService.checkModelAvailability()
-      return availabilityInfo.availabilityDescription
+    isLoading = true
+    response = ""
+    errorMessage = ""
+
+    // Check model availability
+    let model = SystemLanguageModel.default
+    let contentTaggingModel = SystemLanguageModel(useCase: .contentTagging)
+
+    var result = "Model Availability Check:\n\n"
+
+    switch model.availability {
+    case .available:
+      result += "✅ Default model is available and ready\n"
+      result += "Supported languages: \(model.supportedLanguages.count)\n"
+      result += "Content tagging model: \(contentTaggingModel.availability == .available ? "✅" : "❌")\n"
+
+    case .unavailable(let reason):
+      result += "❌ Default model unavailable\n"
+      switch reason {
+      case .deviceNotEligible:
+        result += "Reason: Device not eligible for Apple Intelligence\n"
+      case .appleIntelligenceNotEnabled:
+        result += "Reason: Apple Intelligence not enabled\n"
+      case .modelNotReady:
+        result += "Reason: Model assets not ready (downloading...)\n"
+      @unknown default:
+        result += "Reason: Unknown\n"
+      }
     }
+
+    self.response = result
+    isLoading = false
   }
 
   @MainActor
   func executeToolCalling() async {
-    await executeExample {
-      let weatherResult = try await self.foundationModelsService.executeWithTools(
-        prompt: "Is it hotter in New Delhi, or San Francisco?"
+    isLoading = true
+    response = ""
+    errorMessage = ""
+
+    do {
+      // Create session with tools
+      let session = LanguageModelSession(
+        tools: [WeatherTool()],
+        instructions: Instructions("You are a helpful assistant with access to weather tools.")
       )
+      
+      // Execute with tools
+      let response = try await session.respond(to: Prompt("Is it hotter in New Delhi, or San Francisco?"))
 
-      var result = "Weather Comparison:\n\(weatherResult.response)\n\n"
-
-      return result
+      self.response = "Weather Comparison:\n\(response.content)\n\n"
+    } catch {
+      errorMessage = handleFoundationModelsError(error)
     }
+
+    isLoading = false
   }
 
   @MainActor
   func executeCreativeWriting() async {
-    await executeExample {
-      let storyOutline = try await self.foundationModelsService.generateStructuredData(
-        prompt: "Create an outline for a mystery story set in a small town.",
-        type: StoryOutline.self
-      )
+    isLoading = true
+    response = ""
+    errorMessage = ""
 
-      return """
+    do {
+      // Create a basic session
+      let session = LanguageModelSession()
+      
+      // Generate structured story outline
+      let response = try await session.respond(
+        to: Prompt("Create an outline for a mystery story set in a small town."),
+        generating: StoryOutline.self
+      )
+      
+      let storyOutline = response.content
+      
+      self.response = """
         Story Outline: \(storyOutline.title)
 
         Protagonist: \(storyOutline.protagonist)
@@ -150,18 +240,32 @@ final class ContentViewModel {
         Central Conflict:
         \(storyOutline.conflict)
         """
+    } catch {
+      errorMessage = handleFoundationModelsError(error)
     }
+
+    isLoading = false
   }
 
   @MainActor
   func executeBusinessIdea() async {
-    await executeExample {
-      let businessIdea = try await self.foundationModelsService.generateStructuredData(
-        prompt: "Generate a unique startup business idea for 2025.",
-        type: BusinessIdea.self
-      )
+    isLoading = true
+    response = ""
+    errorMessage = ""
 
-      return """
+    do {
+      // Create a basic session
+      let session = LanguageModelSession()
+      
+      // Generate structured business idea
+      let response = try await session.respond(
+        to: Prompt("Generate a unique startup business idea for 2025."),
+        generating: BusinessIdea.self
+      )
+      
+      let businessIdea = response.content
+      
+      self.response = """
         Business: \(businessIdea.name)
 
         Description: \(businessIdea.description)
@@ -174,30 +278,55 @@ final class ContentViewModel {
 
         Estimated Startup Cost: \(businessIdea.estimatedStartupCost)
         """
-    }
-  }
-
-  // MARK: - Helper Methods
-
-  @MainActor
-  private func executeExample(_ operation: @escaping () async throws -> String) async {
-    isLoading = true
-    response = ""
-    errorMessage = ""
-
-    do {
-      let result = try await operation()
-      response = result
     } catch {
-      errorMessage = foundationModelsService.handleError(error)
+      errorMessage = handleFoundationModelsError(error)
     }
 
     isLoading = false
   }
 
+  // MARK: - Helper Methods
+
   @MainActor
   func clearResults() {
     response = ""
     errorMessage = ""
+  }
+  
+  // MARK: - Error Handling
+  
+  private func handleFoundationModelsError(_ error: Error) -> String {
+    if let generationError = error as? LanguageModelSession.GenerationError {
+      return handleGenerationError(generationError)
+    } else if let toolCallError = error as? LanguageModelSession.ToolCallError {
+      return handleToolCallError(toolCallError)
+    } else if let customError = error as? FoundationModelsError {
+      return customError.localizedDescription
+    } else {
+      return "Unexpected error: \(error.localizedDescription)"
+    }
+  }
+  
+  private func handleGenerationError(_ error: LanguageModelSession.GenerationError) -> String {
+    switch error {
+    case .exceededContextWindowSize(let context):
+      return "Context window exceeded: \(context.debugDescription)"
+    case .assetsUnavailable(let context):
+      return "Model assets unavailable: \(context.debugDescription)"
+    case .guardrailViolation(let context):
+      return "Content policy violation: \(context.debugDescription)"
+    case .decodingFailure(let context):
+      return "Failed to decode response: \(context.debugDescription)"
+    case .unsupportedGuide(let context):
+      return "Unsupported generation guide: \(context.debugDescription)"
+    case .unsupportedLanguageOrLocale(let context):
+      return "Unsupported language/locale: \(context.debugDescription)"
+    @unknown default:
+      return "Unknown generation error"
+    }
+  }
+  
+  private func handleToolCallError(_ error: LanguageModelSession.ToolCallError) -> String {
+    return "Tool '\(error.tool.name)' failed: \(error.underlyingError.localizedDescription)"
   }
 }
