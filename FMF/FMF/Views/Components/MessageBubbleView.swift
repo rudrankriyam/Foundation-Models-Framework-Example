@@ -10,7 +10,7 @@ import SwiftUI
 struct MessageBubbleView: View {
     let message: ChatMessage
     @State private var animateTyping = false
-    
+
     var body: some View {
         HStack {
             if message.isFromUser {
@@ -23,7 +23,7 @@ struct MessageBubbleView: View {
         }
         .padding(.horizontal)
     }
-    
+
     private var messageContent: some View {
         VStack(alignment: message.isFromUser ? .trailing : .leading, spacing: 4) {
             HStack {
@@ -32,19 +32,19 @@ struct MessageBubbleView: View {
                         .foregroundStyle(.blue)
                         .font(.caption)
                 }
-                
+
                 Text(message.isFromUser ? "You" : "Assistant")
                     .font(.caption)
                     .fontWeight(.medium)
                     .foregroundStyle(.secondary)
-                
+
                 if message.isFromUser {
                     Image(systemName: "person.circle")
                         .foregroundStyle(.blue)
                         .font(.caption)
                 }
             }
-            
+
             Group {
                 if !message.isFromUser && message.content.isEmpty {
                     // Show typing indicator for empty assistant messages (streaming)
@@ -77,8 +77,8 @@ struct MessageBubbleView: View {
                 RoundedRectangle(cornerRadius: 16)
                     .fill(message.isFromUser ? Color.indigo : Color.gray)
             )
-            .foregroundStyle(.primary)
-            
+            .foregroundStyle(.white)
+
             if message.isContextSummary {
                 HStack {
                     Image(systemName: "arrow.triangle.2.circlepath")
@@ -100,14 +100,14 @@ struct MessageBubbleView: View {
                 isFromUser: false
             )
         )
-        
+
         MessageBubbleView(
             message: ChatMessage(
                 content: "Can you help me write a story?",
                 isFromUser: true
             )
         )
-        
+
         MessageBubbleView(
             message: ChatMessage(
                 content: "This is a summary of our previous conversation to maintain context.",
