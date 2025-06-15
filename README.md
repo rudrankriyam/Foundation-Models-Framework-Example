@@ -30,7 +30,6 @@ Love this project? Check out my books to explore more of AI and iOS development:
 
 ### Custom Tools
 - **Weather Tool**: Multi-city weather information with simulated data
-- **Recipe Database**: Advanced bread recipe search with filtering
 
 ## Usage Examples
 
