@@ -32,10 +32,8 @@ import Playgrounds
 
   print("\n🌅 Streaming poetic description:")
 
-  var fullResponse = ""
   for try await partialResult in poeticStream {
     print("📝 \(partialResult)")
-    fullResponse = partialResult
   }
 
   // You can also collect the final response if needed
