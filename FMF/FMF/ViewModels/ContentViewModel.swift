@@ -230,7 +230,7 @@ final class ContentViewModel {
 
       // Execute with web search tool
       let response = try await session.respond(
-        to: "WWDC 2025 announcements")
+        to: "Search about WWDC 2025 announcements, especially the Foundation Model framework")
 
       self.response = "Web Search Results:\n\(response.content)\n\n"
     } catch {
