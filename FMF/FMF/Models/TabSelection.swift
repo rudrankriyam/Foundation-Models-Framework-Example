@@ -1,0 +1,14 @@
+//
+//  TabSelection.swift
+//  FMF
+//
+//  Created by Rudrank Riyam on 6/15/25.
+//
+
+import Foundation
+
+enum TabSelection: String, CaseIterable {
+  case examples = "Examples"
+  case chatBot = "ChatBot"
+  case settings = "Settings"
+}
