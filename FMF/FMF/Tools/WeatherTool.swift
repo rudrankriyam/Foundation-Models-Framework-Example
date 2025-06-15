@@ -82,72 +82,28 @@ struct WeatherTool: Tool {
 
   func call(arguments: Arguments) async throws -> ToolOutput {
     let cityName = arguments.city.trimmingCharacters(in: .whitespacesAndNewlines)
-    print("WeatherTool.call(arguments:) called with city: \(cityName)")
 
     do {
-      // Get coordinates for the city
-      print("Attempting to get coordinates for city: \(cityName)")
       let coordinates = try await getCoordinates(for: cityName)
-      print("Obtained coordinates: \(coordinates)")
-
-      // Fetch weather data from OpenMeteo
-      print(
-        "Fetching weather for latitude: \(coordinates.latitude), longitude: \(coordinates.longitude)"
-      )
       let weatherData = try await fetchWeatherFromOpenMeteo(
         latitude: coordinates.latitude,
         longitude: coordinates.longitude,
         cityName: cityName
       )
-      print("Weather data fetched: \(weatherData)")
 
-      let output = ToolOutput(
-        GeneratedContent(properties: [
-          "city": weatherData.city,
-          "temperature": weatherData.temperature,
-          "condition": weatherData.condition,
-          "humidity": weatherData.humidity,
-          "windSpeed": weatherData.windSpeed,
-          "feelsLike": weatherData.feelsLike,
-          "pressure": weatherData.pressure,
-          "precipitation": weatherData.precipitation,
-          "unit": weatherData.unit,
-        ]))
-      print("Returning successful ToolOutput for city: \(cityName)")
-      return output
+      return createSuccessOutput(from: weatherData)
     } catch {
-      print("Error in WeatherTool.call: \(error)")
-      // Return error information in a structured way
-      let output = ToolOutput(
-        GeneratedContent(properties: [
-          "city": cityName,
-          "error": "Unable to fetch weather data: \(error.localizedDescription)",
-          "temperature": 0,
-          "condition": "Unknown",
-          "humidity": 0,
-          "windSpeed": 0,
-          "feelsLike": 0,
-          "pressure": 0,
-          "precipitation": 0,
-          "unit": "Celsius",
-        ]))
-      print(
-        "Returning error ToolOutput for city: \(cityName) with error: \(error.localizedDescription)"
-      )
-      return output
+      return createErrorOutput(for: cityName, error: error)
     }
   }
 
   private func getCoordinates(for city: String) async throws -> CLLocationCoordinate2D {
-    print("getCoordinates called for city: \(city)")
     return try await withCheckedThrowingContinuation { continuation in
       let geocoder = CLGeocoder()
       geocoder.geocodeAddressString(city) { placemarks, error in
         if let coordinate = placemarks?.first?.location?.coordinate {
-          print("Geocoding successful. Coordinate: \(coordinate)")
           continuation.resume(returning: coordinate)
         } else {
-          print("Geocoding failed for city: \(city). Error: \(String(describing: error))")
           continuation.resume(throwing: WeatherError.locationNotFound)
         }
       }
@@ -172,43 +128,31 @@ struct WeatherTool: Tool {
     ]
 
     guard let url = components?.url else {
-      print("Invalid URL from URLComponents: \(String(describing: components))")
       throw WeatherError.invalidURL
     }
-
-    print("fetchWeatherFromOpenMeteo URL: \(url)")
 
     let (data, response) = try await URLSession.shared.data(from: url)
 
     guard let httpResponse = response as? HTTPURLResponse,
       httpResponse.statusCode == 200
     else {
-      print("API error with response: \(response)")
       throw WeatherError.apiError
     }
 
-    do {
-      let openMeteoResponse = try JSONDecoder().decode(OpenMeteoResponse.self, from: data)
-      let current = openMeteoResponse.current
-      print("Decoded OpenMeteoResponse: \(current)")
+    let openMeteoResponse = try JSONDecoder().decode(OpenMeteoResponse.self, from: data)
+    let current = openMeteoResponse.current
 
-      let weather = WeatherData(
-        city: cityName,
-        temperature: current.temperature,
-        condition: weatherCondition(from: current.weathercode),
-        humidity: current.relativehumidity,
-        windSpeed: current.windspeed,
-        feelsLike: current.apparentTemperature,
-        pressure: current.pressure,
-        precipitation: current.precipitation,
-        unit: "Celsius"
-      )
-      print("Returning WeatherData: \(weather)")
-      return weather
-    } catch {
-      print("Decoding error: \(error)")
-      throw error
-    }
+    return WeatherData(
+      city: cityName,
+      temperature: current.temperature,
+      condition: weatherCondition(from: current.weathercode),
+      humidity: current.relativehumidity,
+      windSpeed: current.windspeed,
+      feelsLike: current.apparentTemperature,
+      pressure: current.pressure,
+      precipitation: current.precipitation,
+      unit: "Celsius"
+    )
   }
 
   private func weatherCondition(from code: Int) -> String {
@@ -228,6 +172,37 @@ struct WeatherTool: Tool {
     case 96, 99: return "Thunderstorm with hail"
     default: return "Unknown"
     }
+  }
+
+  private func createSuccessOutput(from weatherData: WeatherData) -> ToolOutput {
+    return ToolOutput(
+      GeneratedContent(properties: [
+        "city": weatherData.city,
+        "temperature": weatherData.temperature,
+        "condition": weatherData.condition,
+        "humidity": weatherData.humidity,
+        "windSpeed": weatherData.windSpeed,
+        "feelsLike": weatherData.feelsLike,
+        "pressure": weatherData.pressure,
+        "precipitation": weatherData.precipitation,
+        "unit": weatherData.unit,
+      ]))
+  }
+
+  private func createErrorOutput(for cityName: String, error: Error) -> ToolOutput {
+    return ToolOutput(
+      GeneratedContent(properties: [
+        "city": cityName,
+        "error": "Unable to fetch weather data: \(error.localizedDescription)",
+        "temperature": 0,
+        "condition": "Unknown",
+        "humidity": 0,
+        "windSpeed": 0,
+        "feelsLike": 0,
+        "pressure": 0,
+        "precipitation": 0,
+        "unit": "Celsius",
+      ]))
   }
 }
 
