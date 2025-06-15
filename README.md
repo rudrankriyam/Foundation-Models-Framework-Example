@@ -30,6 +30,7 @@ Love this project? Check out my books to explore more of AI and iOS development:
 
 ### Custom Tools
 - **Weather Tool**: Multi-city weather information with simulated data
+- **Web Search Tool**: Real-time web search using Exa AI API
 
 ## Usage Examples
 
@@ -55,11 +56,19 @@ print("Author: \(bookInfo.content.author)")
 
 ### Tool Calling
 ```swift
+// Weather Tool
 let session = LanguageModelSession(tools: [WeatherTool()])
 let response = try await session.respond(
     to: "Is it hotter in New Delhi or Cupertino?"
 )
 print(response.content)
+
+// Web Search Tool
+let webSession = LanguageModelSession(tools: [WebTool()])
+let webResponse = try await webSession.respond(
+    to: "Search for the latest WWDC 2025 announcements"
+)
+print(webResponse.content)
 ```
 
 ### Streaming Responses
@@ -109,31 +118,23 @@ struct ProductReview {
 ## Custom Tools
 
 ### Weather Tool
-Provides weather information with realistic simulation:
+Provides weather information:
 - Multi-city weather database
 - Temperature, humidity, and wind data
 - Fallback to random generation for unknown cities
 
-### Bread Database Tool
-Advanced recipe search capabilities:
-- Comprehensive recipe database
-- Smart search across names, descriptions, and tags
-- Difficulty levels and preparation times
-- Relevance-based sorting
+### Web Search Tool
+Real-time web search by Exa AI:
+- Returns text content from web pages
+- Configurable number of results (default: 5)
+- Supports complex search queries and current events
 
-## Error Handling
+**Setup Requirements:**
+1. Get an API key from [Exa AI](https://exa.ai)
+2. Add your API key in the app's Settings screen
+3. The tool will automatically use the stored API key for searches
 
-Comprehensive error handling with custom error types:
 
-```swift
-enum FoundationModelsError: LocalizedError {
-    case sessionCreationFailed
-    case responseGenerationFailed(String)
-    case toolCallFailed(String)
-    case streamingFailed(String)
-    case modelUnavailable(String)
-}
-```
 
 ## Getting Started
 
@@ -141,7 +142,18 @@ enum FoundationModelsError: LocalizedError {
 2. Open `FMF.xcodeproj` in Xcode
 3. Ensure you have a device with Apple Intelligence enabled
 4. Build and run the project
-5. Explore the different AI capabilities through the example buttons
+5. (Optional) For web search functionality:
+   - Get an API key from [Exa AI](https://exa.ai)
+   - Tap the gear icon in the app to access Settings
+   - Enter your Exa API key in the settings screen
+6. Explore the different AI capabilities through the example buttons
+
+**Note:** All features except web search work without any additional setup. The web search tool requires an Exa API key for functionality.
+
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a pull request.
 
 ## License
 
