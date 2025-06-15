@@ -24,13 +24,6 @@ struct ContentView: View {
           }
           .padding(.vertical)
         }
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-            NavigationLink(destination: SettingsView()) {
-              Image(systemName: "gear")
-            }
-          }
-        }
       }
       .tabItem {
         Image(systemName: "brain.head.profile")
@@ -43,6 +36,13 @@ struct ContentView: View {
           Image(systemName: "message.badge.waveform")
           Text("ChatBot")
         }
+
+      // Settings Tab
+      SettingsView()
+        .tabItem {
+          Image(systemName: "gear")
+          Text("Settings")
+        }
     }
   }
 
@@ -50,9 +50,6 @@ struct ContentView: View {
 
   private var headerView: some View {
     VStack(alignment: .leading, spacing: 8) {
-      Image(systemName: "brain.head.profile")
-        .imageScale(.large)
-        .foregroundStyle(.tint)
       Text("Foundation Models")
         .font(.largeTitle)
         .fontWeight(.bold)
@@ -64,7 +61,7 @@ struct ContentView: View {
   }
 
   private var exampleButtonsView: some View {
-    LazyVGrid(columns: adaptiveGridColumns, spacing: 12) {
+    LazyVGrid(columns: adaptiveGridColumns, spacing: gridSpacing) {
       ExampleButton(
         title: "Basic Chat",
         subtitle: "Simple conversation with the model",
@@ -142,10 +139,10 @@ struct ContentView: View {
   
   private var adaptiveGridColumns: [GridItem] {
     #if os(iOS)
-    // iPhone: 2 columns with flexible sizing
+    // iPhone: 2 columns with flexible sizing and better spacing
     return [
-      GridItem(.flexible(), spacing: 8),
-      GridItem(.flexible(), spacing: 8)
+      GridItem(.flexible(minimum: 140), spacing: 12),
+      GridItem(.flexible(minimum: 140), spacing: 12)
     ]
     #elseif os(macOS)
     // Mac: Adaptive columns based on available width
@@ -153,9 +150,17 @@ struct ContentView: View {
     #else
     // Default fallback for other platforms
     return [
-      GridItem(.flexible(), spacing: 8),
-      GridItem(.flexible(), spacing: 8)
+      GridItem(.flexible(minimum: 140), spacing: 12),
+      GridItem(.flexible(minimum: 140), spacing: 12)
     ]
+    #endif
+  }
+  
+  private var gridSpacing: CGFloat {
+    #if os(iOS)
+    16
+    #else
+    12
     #endif
   }
 

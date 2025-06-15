@@ -34,6 +34,24 @@ struct ChatBotView: View {
         }
     }
 
+    // MARK: - Computed Properties
+    
+    private var headerBackgroundColor: Color {
+        #if os(macOS)
+        Color(NSColor.controlBackgroundColor)
+        #else
+        Color(.systemGray6)
+        #endif
+    }
+    
+    private var inputBackgroundColor: Color {
+        #if os(macOS)
+        Color(NSColor.windowBackgroundColor)
+        #else
+        Color(.systemBackground)
+        #endif
+    }
+
     // MARK: - View Components
 
     private var headerView: some View {
@@ -60,7 +78,7 @@ struct ChatBotView: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
-        .background(Color(NSColor.controlBackgroundColor))
+        .background(headerBackgroundColor)
     }
 
     private var messagesView: some View {
@@ -122,7 +140,7 @@ struct ChatBotView: View {
             }
             .padding()
         }
-        .background(Color(NSColor.windowBackgroundColor))
+        .background(inputBackgroundColor)
     }
     
     // MARK: - Actions

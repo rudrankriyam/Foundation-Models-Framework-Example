@@ -41,6 +41,14 @@ struct ExampleButton: View {
   }
 
   private var buttonContent: some View {
+    #if os(iOS)
+    VStack(alignment: .leading, spacing: 8) {
+      textContent
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding()
+    .background(backgroundView)
+    #else
     HStack(spacing: 12) {
       iconView
       textContent
@@ -49,6 +57,7 @@ struct ExampleButton: View {
     }
     .padding()
     .background(backgroundView)
+    #endif
   }
 
   private var iconView: some View {
@@ -59,14 +68,34 @@ struct ExampleButton: View {
   }
 
   private var textContent: some View {
-    VStack(alignment: .leading, spacing: 2) {
+    VStack(alignment: .leading, spacing: 4) {
       Text(title)
-        .font(.headline)
+        .font(titleFont)
+        .fontWeight(.medium)
         .foregroundStyle(.primary)
+        .fixedSize(horizontal: false, vertical: true)
       Text(subtitle)
-        .font(.caption)
+        .font(subtitleFont)
         .foregroundStyle(.secondary)
+        .fixedSize(horizontal: false, vertical: true)
+        .lineLimit(nil)
     }
+  }
+  
+  private var titleFont: Font {
+    #if os(iOS)
+    .subheadline
+    #else
+    .headline
+    #endif
+  }
+  
+  private var subtitleFont: Font {
+    #if os(iOS)
+    .caption
+    #else
+    .caption
+    #endif
   }
 
   private var chevronIcon: some View {

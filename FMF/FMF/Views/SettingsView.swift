@@ -77,38 +77,10 @@ struct SettingsView: View {
             Link("https://exa.ai/api", destination: URL(string: "https://exa.ai/api")!)
               .font(.caption)
             
-            Text("The API key is stored securely on your device and only used for web search requests.")
+            Text("The API key is stored on the device and only used for web search requests.")
               .font(.caption)
               .foregroundColor(.secondary)
           }
-        }
-        
-        Section {
-          VStack(alignment: .leading, spacing: 8) {
-            HStack {
-              Image(systemName: "info.circle")
-                .foregroundColor(.blue)
-              Text("About Exa Search")
-                .font(.subheadline)
-                .fontWeight(.medium)
-            }
-            
-            Text("Exa provides AI-powered web search with:")
-              .font(.caption)
-              .foregroundColor(.secondary)
-            
-            VStack(alignment: .leading, spacing: 4) {
-              Text("• Neural and keyword search")
-              Text("• High-quality results")
-              Text("• Content extraction and summaries")
-              Text("• Research paper and news filtering")
-            }
-            .font(.caption)
-            .foregroundColor(.secondary)
-          }
-          .padding(.vertical, 4)
-        } header: {
-          Text("Features")
         }
       }
       .navigationTitle("Settings")
