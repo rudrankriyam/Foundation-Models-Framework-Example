@@ -98,16 +98,13 @@ struct WeatherTool: Tool {
   }
 
   private func getCoordinates(for city: String) async throws -> CLLocationCoordinate2D {
-    return try await withCheckedThrowingContinuation { continuation in
-      let geocoder = CLGeocoder()
-      geocoder.geocodeAddressString(city) { placemarks, error in
-        if let coordinate = placemarks?.first?.location?.coordinate {
-          continuation.resume(returning: coordinate)
-        } else {
-          continuation.resume(throwing: WeatherError.locationNotFound)
-        }
-      }
+    guard let request = MKGeocodingRequest(addressString: city) else { throw WeatherError.locationNotFound }
+    
+    let mapItems = try await request.mapItems
+    guard let coordinate = mapItems.first?.placemark.coordinate else {
+      throw WeatherError.locationNotFound
     }
+    return coordinate
   }
 
   private func fetchWeatherFromOpenMeteo(
@@ -222,3 +219,4 @@ enum WeatherError: Error, LocalizedError {
     }
   }
 }
+
