@@ -110,34 +110,26 @@ struct WebTool: Tool {
   }
 
   private func createSearchSummary(from response: ExaSearchResponse, query: String) -> String {
-    var summary = "Search results for '\(query)':\n\n"
+    var summary = "Information about '\(query)':\n\n"
     
     if !response.results.isEmpty {
-      // Add search type info
-      summary += "🔍 Search Type: \(response.resolvedSearchType.capitalized)\n\n"
+      // Combine text content from all results
+      var combinedText = ""
       
-      // Add top results
-      summary += "🔗 Top Results:\n"
-      for (index, result) in response.results.prefix(3).enumerated() {
-        summary += "\(index + 1). \(result.title)\n"
-        
-        if let author = result.author, !author.isEmpty {
-          summary += "   Author: \(author)\n"
-        }
-        
+      for result in response.results.prefix(3) {
         if let resultSummary = result.summary, !resultSummary.isEmpty {
-          summary += "   \(resultSummary)\n"
+          combinedText += "\(resultSummary)\n\n"
         } else if let text = result.text, !text.isEmpty {
-          let truncatedText = String(text.prefix(200))
-          summary += "   \(truncatedText)...\n"
+          let truncatedText = String(text.prefix(300))
+          combinedText += "\(truncatedText)...\n\n"
         }
-        
-        summary += "\n"
       }
+      
+      summary += combinedText.isEmpty ? "No detailed text content available." : combinedText
       
       // Add cost info if available
       if let cost = response.costDollars {
-        summary += "💰 Search cost: $\(String(format: "%.4f", cost.total))\n"
+        summary += "Search cost: $\(String(format: "%.4f", cost.total))\n"
       }
     } else {
       summary += "No results found for this query."
@@ -152,7 +144,6 @@ struct WebTool: Tool {
         "query": searchData.query,
         "abstract": searchData.abstract,
         "abstractSource": searchData.abstractSource,
-        "abstractURL": searchData.abstractURL,
         "relatedTopicsCount": searchData.relatedTopics.count,
         "summary": searchData.summary,
         "status": "success"
@@ -166,7 +157,6 @@ struct WebTool: Tool {
         "error": "Unable to perform web search: \(error.localizedDescription)",
         "abstract": "",
         "abstractSource": "",
-        "abstractURL": "",
         "relatedTopicsCount": 0,
         "summary": "Search failed for query: '\(query)'",
         "status": "error"
