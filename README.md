@@ -1,5 +1,7 @@
 # Foundation Models Framework Example
 
+![App Screenshot](placeholder.png)
+
 A practical iOS app demonstrating Apple's Foundation Models framework with various examples of on-device AI capabilities.
 
 ## Support
