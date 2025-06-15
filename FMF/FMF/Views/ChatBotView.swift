@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import FoundationModels
 
 struct ChatBotView: View {
     @State private var viewModel = ChatBotViewModel()
@@ -27,7 +28,7 @@ struct ChatBotView: View {
                     Button("Clear") {
                         viewModel.clearChat()
                     }
-                    .disabled(viewModel.messages.isEmpty)
+                    .disabled(viewModel.session.transcript.entries.isEmpty)
                 }
             }
         }
@@ -66,9 +67,9 @@ struct ChatBotView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: 12) {
-                    ForEach(viewModel.messages) { message in
-                        MessageBubbleView(message: message)
-                            .id(message.id)
+                    ForEach(viewModel.session.transcript.entries) { entry in
+                        TranscriptEntryView(entry: entry)
+                            .id(entry.id)
                     }
 
                     if viewModel.isSummarizing {
@@ -85,10 +86,10 @@ struct ChatBotView: View {
                 }
                 .padding(.vertical)
             }
-            .onChange(of: viewModel.messages.count) { _, _ in
-                if let lastMessage = viewModel.messages.last {
+            .onChange(of: viewModel.session.transcript.entries.count) { _, _ in
+                if let lastEntry = viewModel.session.transcript.entries.last {
                     withAnimation(.easeOut(duration: 0.3)) {
-                        proxy.scrollTo(lastMessage.id, anchor: .bottom)
+                        proxy.scrollTo(lastEntry.id, anchor: .bottom)
                     }
                 }
             }
@@ -136,6 +137,58 @@ struct ChatBotView: View {
         Task {
             await viewModel.sendMessage(trimmedMessage)
         }
+    }
+}
+
+struct TranscriptEntryView: View {
+    let entry: Transcript.Entry
+    
+    var body: some View {
+        switch entry {
+        case .prompt(let prompt):
+            if let text = extractText(from: prompt.segments), !text.isEmpty {
+                MessageBubbleView(message: ChatMessage(content: text, isFromUser: true))
+            }
+            
+        case .response(let response):
+            if let text = extractText(from: response.segments), !text.isEmpty {
+                MessageBubbleView(message: ChatMessage(content: text, isFromUser: false))
+            }
+            
+        case .toolCalls(let toolCalls):
+            ForEach(Array(toolCalls.enumerated()), id: \.offset) { _, toolCall in
+                MessageBubbleView(message: ChatMessage(
+                    content: "🔧 Calling tool: \(toolCall.toolName)",
+                    isFromUser: false
+                ))
+            }
+            
+        case .toolOutput(let toolOutput):
+            if let text = extractText(from: toolOutput.segments), !text.isEmpty {
+                MessageBubbleView(message: ChatMessage(
+                    content: "🔧 Tool result: \(text)",
+                    isFromUser: false
+                ))
+            }
+            
+        case .instructions:
+            // Don't show instructions in chat UI
+            EmptyView()
+            
+        @unknown default:
+            EmptyView()
+        }
+    }
+    
+    private func extractText(from segments: [Transcript.Segment]) -> String? {
+        let text = segments.compactMap { segment in
+            if case .text(let textSegment) = segment {
+                return textSegment.content
+            }
+            return nil
+        }.joined(separator: " ")
+        
+        return text.isEmpty ? nil : text
     }
 }
 

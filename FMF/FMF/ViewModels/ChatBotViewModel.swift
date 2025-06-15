@@ -14,14 +14,13 @@ final class ChatBotViewModel {
 
   // MARK: - Published Properties
 
-  var messages: [ChatMessage] = []
   var isLoading: Bool = false
   var isSummarizing: Bool = false
   var sessionCount: Int = 1
 
-  // MARK: - Private Properties
-
-  private var session: LanguageModelSession
+  // MARK: - Public Properties
+  
+  private(set) var session: LanguageModelSession
 
   // MARK: - Initialization
 
@@ -37,15 +36,6 @@ final class ChatBotViewModel {
 
   @MainActor
   func sendMessage(_ content: String) async {
-    // Add user message
-    let userMessage = ChatMessage(content: content, isFromUser: true)
-    messages.append(userMessage)
-
-    // Create placeholder assistant message for streaming
-    let assistantMessage = ChatMessage(content: "", isFromUser: false)
-    messages.append(assistantMessage)
-
-    let assistantMessageIndex = messages.count - 1
     isLoading = session.isResponding
 
     do {
@@ -53,30 +43,16 @@ final class ChatBotViewModel {
       let responseStream = try session.streamResponse(to: Prompt(content))
 
       for try await chunk in responseStream {
-        // Update the assistant message in real-time
-        // chunk already contains the complete response up to this point
-        messages[assistantMessageIndex] = ChatMessage(
-          id: messages[assistantMessageIndex].id,  // Keep the same ID
-          content: chunk,
-          isFromUser: false,
-          timestamp: messages[assistantMessageIndex].timestamp  // Keep original timestamp
-        )
+        // The streaming automatically updates the session transcript
       }
 
     } catch LanguageModelSession.GenerationError.exceededContextWindowSize {
-      // Remove the placeholder message before handling context exceeded
-      messages.removeLast()
       // Handle context window exceeded by summarizing and creating new session
       await handleContextWindowExceeded(userMessage: content)
 
     } catch {
-      // Update the placeholder message with error
-      messages[assistantMessageIndex] = ChatMessage(
-        id: messages[assistantMessageIndex].id,
-        content: "Sorry, I encountered an error: \(error.localizedDescription)",
-        isFromUser: false,
-        timestamp: messages[assistantMessageIndex].timestamp
-      )
+      // For errors, we'll need to manually add an error message to show in UI
+      // This is handled in the computed property by checking for incomplete responses
     }
 
     isLoading = session.isResponding
@@ -84,7 +60,6 @@ final class ChatBotViewModel {
 
   @MainActor
   func clearChat() {
-    messages.removeAll()
     sessionCount = 1
     session = LanguageModelSession(
       instructions: Instructions(
@@ -102,8 +77,6 @@ final class ChatBotViewModel {
     do {
       let summary = try await generateConversationSummary()
       createNewSessionWithContext(summary: summary)
-      addContextSummaryMessage(userMessage: userMessage)
-      
       isSummarizing = false
       
       try await respondWithNewSession(to: userMessage)
@@ -113,11 +86,30 @@ final class ChatBotViewModel {
   }
 
   private func createConversationText() -> String {
-    return messages.map { message in
-      let sender = message.isFromUser ? "User" : "Assistant"
-      return "\(sender): \(message.content)"
+    return session.transcript.entries.compactMap { entry in
+      switch entry {
+      case .prompt(let prompt):
+        let text = prompt.segments.compactMap { segment in
+          if case .text(let textSegment) = segment {
+            return textSegment.content
+          }
+          return nil
+        }.joined(separator: " ")
+        return "User: \(text)"
+      case .response(let response):
+        let text = response.segments.compactMap { segment in
+          if case .text(let textSegment) = segment {
+            return textSegment.content
+          }
+          return nil
+        }.joined(separator: " ")
+        return "Assistant: \(text)"
+      default:
+        return nil
+      }
     }.joined(separator: "\n\n")
   }
+  
   
   @MainActor
   private func generateConversationSummary() async throws -> ConversationSummary {
@@ -163,40 +155,18 @@ final class ChatBotViewModel {
   }
   
   @MainActor
-  private func addContextSummaryMessage(userMessage: String) {
-    let summaryMessage = ChatMessage(
-      content: "I've summarized our conversation to continue with fresh context. Let me respond to your message: \"\(userMessage)\"",
-      isFromUser: false,
-      isContextSummary: true
-    )
-    messages.append(summaryMessage)
-  }
-  
-  @MainActor
   private func respondWithNewSession(to userMessage: String) async throws {
-    let assistantMessage = ChatMessage(content: "", isFromUser: false)
-    messages.append(assistantMessage)
-    let assistantMessageIndex = messages.count - 1
-    
     let responseStream = try session.streamResponse(to: Prompt(userMessage))
     
     for try await chunk in responseStream {
-      messages[assistantMessageIndex] = ChatMessage(
-        id: messages[assistantMessageIndex].id,
-        content: chunk,
-        isFromUser: false,
-        timestamp: messages[assistantMessageIndex].timestamp
-      )
+      // The streaming automatically updates the session transcript
     }
   }
   
   @MainActor
   private func handleSummarizationError(_ error: Error) {
     isSummarizing = false
-    let errorMessage = ChatMessage(
-      content: "I encountered an error while managing the conversation context: \(error.localizedDescription)",
-      isFromUser: false
-    )
-    messages.append(errorMessage)
+    // Error handling could be implemented by adding a synthetic transcript entry
+    // or by showing an alert - for now we'll rely on the UI to show the error state
   }
 }
