@@ -191,23 +191,48 @@ final class ContentViewModel {
   }
 
   @MainActor
-  func executeToolCalling() async {
+  func executeWeatherToolCalling() async {
     isLoading = true
     response = ""
     errorMessage = ""
 
     do {
-      // Create session with tools
+      // Create session with weather tool
       let session = LanguageModelSession(
         tools: [WeatherTool()],
         instructions: Instructions("You are a helpful assistant with access to weather tools.")
       )
 
-      // Execute with tools
+      // Execute with weather tool
       let response = try await session.respond(
-        to: Prompt("Is it hotter in New Delhi, or San Francisco?"))
+        to: Prompt("Is it hotter in New Delhi, or San Francisco? Compare the weather in both cities."))
 
       self.response = "Weather Comparison:\n\(response.content)\n\n"
+    } catch {
+      errorMessage = handleFoundationModelsError(error)
+    }
+
+    isLoading = false
+  }
+
+  @MainActor
+  func executeWebSearchToolCalling() async {
+    isLoading = true
+    response = ""
+    errorMessage = ""
+
+    do {
+      // Create session with web search tool
+      let session = LanguageModelSession(
+        tools: [WebTool()],
+        instructions: Instructions("You are a helpful assistant with access to web search tools.")
+      )
+
+      // Execute with web search tool
+      let response = try await session.respond(
+        to: "WWDC 2025")
+
+      self.response = "Web Search Results:\n\(response.content)\n\n"
     } catch {
       errorMessage = handleFoundationModelsError(error)
     }

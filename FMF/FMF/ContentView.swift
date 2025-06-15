@@ -24,6 +24,13 @@ struct ContentView: View {
           }
           .padding(.vertical)
         }
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+            NavigationLink(destination: SettingsView()) {
+              Image(systemName: "gear")
+            }
+          }
+        }
       }
       .tabItem {
         Image(systemName: "brain.head.profile")
@@ -99,11 +106,19 @@ struct ContentView: View {
       }
 
       ExampleButton(
-        title: "Tool Calling",
-        subtitle: "Use custom tools with the model",
-        icon: "wrench.and.screwdriver"
+        title: "Weather Tool",
+        subtitle: "Compare weather in different cities",
+        icon: "cloud.sun"
       ) {
-        await viewModel.executeToolCalling()
+        await viewModel.executeWeatherToolCalling()
+      }
+
+      ExampleButton(
+        title: "Web Search Tool",
+        subtitle: "Search for WWDC 2025 announcements",
+        icon: "magnifyingglass"
+      ) {
+        await viewModel.executeWebSearchToolCalling()
       }
 
       ExampleButton(
