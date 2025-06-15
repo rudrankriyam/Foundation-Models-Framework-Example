@@ -51,6 +51,23 @@ struct ConversationSummary {
   let userPreferences: [String]
 }
 
+// MARK: - Request/Response Models
+
+struct RequestResponsePair: Identifiable {
+  let id = UUID()
+  let request: String
+  let response: String
+  let isError: Bool
+  let timestamp: Date
+  
+  init(request: String, response: String, isError: Bool = false) {
+    self.request = request
+    self.response = response
+    self.isError = isError
+    self.timestamp = Date()
+  }
+}
+
 // MARK: - Book Recommendation Models
 
 @Generable

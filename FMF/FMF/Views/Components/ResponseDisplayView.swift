@@ -8,23 +8,28 @@
 import FoundationModels
 import SwiftUI
 
-/// View component for displaying AI model responses
+/// View component for displaying AI model requests and responses
 struct ResponseDisplayView: View {
-  let response: String
-  let isError: Bool
+  let requestResponse: RequestResponsePair
   let onClear: () -> Void
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 8) {
+    VStack(alignment: .leading, spacing: 12) {
       headerView
-      contentView
+      requestView
+      responseView
     }
   }
 
   private var headerView: some View {
     HStack {
-      Text("Response")
-        .font(.headline)
+      VStack(alignment: .leading, spacing: 2) {
+        Text("Request & Response")
+          .font(.headline)
+        Text(requestResponse.timestamp.formatted(date: .omitted, time: .shortened))
+          .font(.caption2)
+          .foregroundStyle(.secondary)
+      }
 
       Spacer()
 
@@ -35,53 +40,100 @@ struct ResponseDisplayView: View {
     .padding(.horizontal)
   }
 
-  private var contentView: some View {
-    ScrollView {
-      Text(response)
-        .font(.system(.body, design: .monospaced))
-        .padding()
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(backgroundView)
-        .foregroundColor(textColor)
-        .textSelection(.enabled)
+  private var requestView: some View {
+    VStack(alignment: .leading, spacing: 4) {
+      HStack {
+        Image(systemName: "arrow.up.circle.fill")
+          .foregroundStyle(.blue)
+        Text("Request")
+          .font(.subheadline)
+          .fontWeight(.medium)
+      }
+      
+      ScrollView {
+        Text(requestResponse.request)
+          .font(.system(.body, design: .default))
+          .padding()
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .background(requestBackgroundView)
+          .foregroundColor(.primary)
+          .textSelection(.enabled)
+      }
+      .frame(maxHeight: 100)
+    }
+    .padding(.horizontal)
+  }
+  
+  private var responseView: some View {
+    VStack(alignment: .leading, spacing: 4) {
+      HStack {
+        Image(systemName: requestResponse.isError ? "exclamationmark.triangle.fill" : "arrow.down.circle.fill")
+          .foregroundStyle(requestResponse.isError ? .red : .green)
+        Text("Response")
+          .font(.subheadline)
+          .fontWeight(.medium)
+      }
+      
+      ScrollView {
+        Text(requestResponse.response)
+          .font(.system(.body, design: .monospaced))
+          .padding()
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .background(responseBackgroundView)
+          .foregroundColor(responseTextColor)
+          .textSelection(.enabled)
+      }
     }
     .padding(.horizontal)
   }
 
-  private var backgroundView: some View {
+  private var requestBackgroundView: some View {
     RoundedRectangle(cornerRadius: 8)
-      .fill(backgroundColor)
+      .fill(Color.blue.opacity(0.1))
       .overlay(
         RoundedRectangle(cornerRadius: 8)
-          .stroke(borderColor, lineWidth: 1)
+          .stroke(Color.blue.opacity(0.2), lineWidth: 1)
+      )
+  }
+  
+  private var responseBackgroundView: some View {
+    RoundedRectangle(cornerRadius: 8)
+      .fill(responseBackgroundColor)
+      .overlay(
+        RoundedRectangle(cornerRadius: 8)
+          .stroke(responseBorderColor, lineWidth: 1)
       )
   }
 
-  private var backgroundColor: Color {
-    isError ? Color.red.opacity(0.1) : Color.gray.opacity(0.1)
+  private var responseBackgroundColor: Color {
+    requestResponse.isError ? Color.red.opacity(0.1) : Color.green.opacity(0.1)
   }
 
-  private var borderColor: Color {
-    isError ? Color.red.opacity(0.3) : Color.gray.opacity(0.2)
+  private var responseBorderColor: Color {
+    requestResponse.isError ? Color.red.opacity(0.3) : Color.green.opacity(0.2)
   }
 
-  private var textColor: Color {
-    isError ? .red : .primary
+  private var responseTextColor: Color {
+    requestResponse.isError ? .red : .primary
   }
 }
 
 #Preview {
   VStack(spacing: 20) {
     ResponseDisplayView(
-      response:
-        "This is a successful response from the AI model with some longer text to show how it wraps and displays.",
-      isError: false,
+      requestResponse: RequestResponsePair(
+        request: "Suggest a catchy name for a new coffee shop.",
+        response: "Here are some catchy coffee shop names:\n\n• Bean There, Done That\n• Grounds for Celebration\n• The Daily Grind\n• Espresso Yourself\n• Caffeine & Company"
+      ),
       onClear: {}
     )
 
     ResponseDisplayView(
-      response: "This is an error message that would be displayed when something goes wrong.",
-      isError: true,
+      requestResponse: RequestResponsePair(
+        request: "Generate a business plan for a startup.",
+        response: "This is an error message that would be displayed when something goes wrong with the AI model.",
+        isError: true
+      ),
       onClear: {}
     )
   }

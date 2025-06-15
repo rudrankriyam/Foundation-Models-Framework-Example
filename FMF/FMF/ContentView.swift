@@ -161,10 +161,9 @@ struct ContentView: View {
 
   @ViewBuilder
   private var responseView: some View {
-    if viewModel.hasContent {
+    if let requestResponse = viewModel.requestResponse {
       ResponseDisplayView(
-        response: viewModel.displayText,
-        isError: viewModel.isError,
+        requestResponse: requestResponse,
         onClear: viewModel.clearResults
       )
     }
