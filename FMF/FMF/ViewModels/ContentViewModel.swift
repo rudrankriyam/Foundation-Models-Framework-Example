@@ -225,12 +225,12 @@ final class ContentViewModel {
       // Create session with web search tool
       let session = LanguageModelSession(
         tools: [WebTool()],
-        instructions: Instructions("You are a helpful assistant with access to web search tools.")
+        instructions: Instructions("You are a helpful assistant with access to web search tools. Summarize the result.")
       )
 
       // Execute with web search tool
       let response = try await session.respond(
-        to: "WWDC 2025")
+        to: "WWDC 2025 announcements")
 
       self.response = "Web Search Results:\n\(response.content)\n\n"
     } catch {

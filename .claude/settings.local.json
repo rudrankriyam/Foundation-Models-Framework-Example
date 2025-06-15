@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:docs.exa.ai)",
+      "Bash(rm:*)",
+      "Bash(find:*)",
+      "Bash(true)",
+      "Bash(/Applications/Xcode-beta.app/Contents/Developer/usr/bin/xcodebuild -project FMF.xcodeproj -scheme FMF -destination \"platform=macOS\" clean build)"
+    ],
+    "deny": []
+  }
+}

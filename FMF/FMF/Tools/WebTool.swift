@@ -126,11 +126,6 @@ struct WebTool: Tool {
       }
       
       summary += combinedText.isEmpty ? "No detailed text content available." : combinedText
-      
-      // Add cost info if available
-      if let cost = response.costDollars {
-        summary += "Search cost: $\(String(format: "%.4f", cost.total))\n"
-      }
     } else {
       summary += "No results found for this query."
     }

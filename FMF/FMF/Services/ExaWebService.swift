@@ -28,7 +28,7 @@ final class ExaWebService {
       query: query,
       type: "auto",
       numResults: 5,
-      includeText: true
+      contents: ExaContents(text: true)
     )
     
     var request = URLRequest(url: url)
@@ -86,14 +86,12 @@ struct ExaSearchRequest: Codable {
   let query: String
   let type: String
   let numResults: Int
-  let includeText: Bool
-  
-  enum CodingKeys: String, CodingKey {
-    case query
-    case type
-    case numResults
-    case includeText = "text"
-  }
+  let contents: ExaContents
+}
+
+/// Contents configuration for Exa search
+struct ExaContents: Codable {
+  let text: Bool
 }
 
 /// Response from Exa search API

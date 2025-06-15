@@ -64,7 +64,7 @@ struct ContentView: View {
   }
 
   private var exampleButtonsView: some View {
-    VStack(spacing: 12) {
+    LazyVGrid(columns: adaptiveGridColumns, spacing: 12) {
       ExampleButton(
         title: "Basic Chat",
         subtitle: "Simple conversation with the model",
@@ -138,6 +138,25 @@ struct ContentView: View {
       }
     }
     .padding(.horizontal)
+  }
+  
+  private var adaptiveGridColumns: [GridItem] {
+    #if os(iOS)
+    // iPhone: 2 columns with flexible sizing
+    return [
+      GridItem(.flexible(), spacing: 8),
+      GridItem(.flexible(), spacing: 8)
+    ]
+    #elseif os(macOS)
+    // Mac: Adaptive columns based on available width
+    return Array(repeating: GridItem(.adaptive(minimum: 280), spacing: 12), count: 1)
+    #else
+    // Default fallback for other platforms
+    return [
+      GridItem(.flexible(), spacing: 8),
+      GridItem(.flexible(), spacing: 8)
+    ]
+    #endif
   }
 
   @ViewBuilder
