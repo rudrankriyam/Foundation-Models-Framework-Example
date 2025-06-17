@@ -214,7 +214,7 @@ struct TextTool: Tool {
     
     let words = text.split(separator: " ", omittingEmptySubsequences: false)
     
-    for (index, word) in words.enumerated() {
+    for word in words {
       let wordLength = word.count
       
       if currentLineLength + wordLength + (currentLineLength > 0 ? 1 : 0) > width {

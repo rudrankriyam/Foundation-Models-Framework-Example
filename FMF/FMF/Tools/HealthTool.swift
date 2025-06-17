@@ -81,24 +81,6 @@ struct HealthTool: Tool {
     let (startDate, endDate) = getDateRange(arguments: arguments)
     let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
     
-    let query = HKStatisticsQuery(
-      quantityType: stepType,
-      quantitySamplePredicate: predicate,
-      options: .cumulativeSum
-    ) { _, result, error in
-      if let error = error {
-        return
-      }
-      
-      guard let result = result,
-            let sum = result.sumQuantity() else {
-        return
-      }
-      
-      let steps = sum.doubleValue(for: HKUnit.count())
-      return
-    }
-    
     // Use async/await wrapper
     return await withCheckedContinuation { continuation in
       let query = HKStatisticsQuery(
@@ -249,6 +231,7 @@ struct HealthTool: Tool {
         
         for (index, workout) in workouts.enumerated() {
           let duration = workout.duration / 60 // Convert to minutes
+          // Using deprecated API until replacement is available
           let calories = workout.totalEnergyBurned?.doubleValue(for: .kilocalorie()) ?? 0
           let distance = workout.totalDistance?.doubleValue(for: .meter()) ?? 0
           

@@ -58,6 +58,8 @@ struct LocationTool: Tool {
   }
   
   private let locationManager = CLLocationManager()
+  // Using CLGeocoder until MKReverseGeocodingRequest API is available
+  @available(macOS, deprecated: 26.0, message: "Will be replaced with MapKit geocoding when stable")
   private let geocoder = CLGeocoder()
   
   func call(arguments: Arguments) async throws -> ToolOutput {
@@ -104,7 +106,8 @@ struct LocationTool: Tool {
     }
     
     // Reverse geocode to get address
-    let placemark = try? await geocoder.reverseGeocodeLocation(location).first
+    let placemarks = try? await geocoder.reverseGeocodeLocation(location)
+    let placemark = placemarks?.first
     
     let address = formatAddress(placemark: placemark)
     
@@ -128,14 +131,17 @@ struct LocationTool: Tool {
     }
     
     do {
-      let placemarks = try await geocoder.geocodeAddressString(address)
-      
-      guard let placemark = placemarks.first,
-            let location = placemark.location else {
+      guard let request = MKGeocodingRequest(addressString: address) else {
         return createErrorOutput(error: LocationError.geocodingFailed)
       }
       
-      let formattedAddress = formatAddress(placemark: placemark)
+      let mapItems = try await request.mapItems
+      guard let mkPlacemark = mapItems.first?.placemark,
+            let location = mkPlacemark.location else {
+        return createErrorOutput(error: LocationError.geocodingFailed)
+      }
+      
+      let formattedAddress = "\(mkPlacemark.name ?? ""), \(mkPlacemark.locality ?? ""), \(mkPlacemark.administrativeArea ?? "")"
       
       return ToolOutput(
         GeneratedContent(properties: [
@@ -144,10 +150,10 @@ struct LocationTool: Tool {
           "latitude": location.coordinate.latitude,
           "longitude": location.coordinate.longitude,
           "formattedAddress": formattedAddress,
-          "country": placemark.country ?? "",
-          "state": placemark.administrativeArea ?? "",
-          "city": placemark.locality ?? "",
-          "postalCode": placemark.postalCode ?? "",
+          "country": mkPlacemark.country ?? "",
+          "state": mkPlacemark.administrativeArea ?? "",
+          "city": mkPlacemark.locality ?? "",
+          "postalCode": mkPlacemark.postalCode ?? "",
           "message": "Location found: \(formattedAddress)"
         ])
       )
