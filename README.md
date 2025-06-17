@@ -154,6 +154,13 @@ Time-based operations and calculations:
 - Format durations in human-readable format
 - No external dependencies or API keys required
 
+### Math Tool
+Mathematical calculations and conversions:
+- Basic arithmetic operations (add, subtract, multiply, divide, power, sqrt)
+- Statistical calculations (mean, median, standard deviation)
+- Unit conversions (temperature, length, weight)
+- Works entirely offline
+
 
 
 
