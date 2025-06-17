@@ -8,7 +8,7 @@ import Playgrounds
   print("Starting streaming response example...")
 
   // Create a streaming response
-  let stream = session.streamResponse(to: "Write a short poem about technology and innovation.")
+  let stream = session.streamResponse(to: "Write a haiku about destiny.")
 
   print("\n📝 Streaming poem content:")
 

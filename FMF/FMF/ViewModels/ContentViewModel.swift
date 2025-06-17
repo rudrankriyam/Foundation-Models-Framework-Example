@@ -143,7 +143,7 @@ final class ContentViewModel {
 
   @MainActor
   func executeStreaming() async {
-    let requestText = "Write a short poem about technology."
+    let requestText = "Write a haiku about destiny."
     isLoading = true
     requestResponse = nil
 

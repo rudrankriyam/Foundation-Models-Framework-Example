@@ -1,4 +1,5 @@
 import FoundationModels
+import SwiftUI
 import Playgrounds
 
 #Playground {
