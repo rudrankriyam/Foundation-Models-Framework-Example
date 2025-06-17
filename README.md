@@ -72,28 +72,13 @@ let webResponse = try await webSession.respond(
 )
 print(webResponse.content)
 
-// Reminders Tool
-let remindersSession = LanguageModelSession(tools: [RemindersTool()])
-let reminderResponse = try await remindersSession.respond(
-    to: "Create a reminder to buy groceries tomorrow at 5 PM"
-)
-print(reminderResponse.content)
-
-// Calendar Tool
-let calendarSession = LanguageModelSession(tools: [CalendarTool()])
-let calendarResponse = try await calendarSession.respond(
-    to: "Schedule a meeting with the team next Monday at 2 PM for 1 hour"
-)
-print(calendarResponse.content)
-
-// Multiple Tools
+// Multiple Tools Example
 let multiSession = LanguageModelSession(tools: [
     WeatherTool(),
-    CalendarTool(),
-    RemindersTool()
+    WebTool()
 ])
 let multiResponse = try await multiSession.respond(
-    to: "Check the weather for tomorrow and if it's sunny, schedule an outdoor picnic at noon"
+    to: "Check the weather in Tokyo and search for tourist attractions there"
 )
 print(multiResponse.content)
 ```
@@ -162,68 +147,13 @@ Real-time web search by Exa AI:
 2. Add your API key in the app's Settings screen
 3. The tool will automatically use the stored API key for searches
 
-### Reminders Tool
-Access and manage reminders using EventKit:
-- Create, read, update, and complete reminders
-- Query reminders by filter (all, incomplete, completed, today, overdue)
-- Set due dates, priorities, and reminder lists
-- Full integration with iOS Reminders app
+### Timer Tool
+Time-based operations and calculations:
+- Get current time in any timezone
+- Calculate time differences between dates
+- Format durations in human-readable format
+- No external dependencies or API keys required
 
-### Calendar Tool
-Manage calendar events using EventKit:
-- Create, read, update, and delete calendar events
-- Check availability for scheduling
-- Support for recurring events
-- Query events by time range
-- Integration with all device calendars
-
-### Contacts Tool
-Access and manage contacts using Contacts framework:
-- Search contacts by name
-- Create new contacts with full details
-- Update existing contact information
-- Support for phone numbers, emails, birthdays, and notes
-- Respects user privacy settings
-
-### Location Tool
-Location-based services using CoreLocation and MapKit:
-- Get current location (with permission)
-- Geocode addresses to coordinates
-- Reverse geocode coordinates to addresses
-- Calculate distances between locations
-- Search for nearby places by category
-
-### Notification Tool
-Schedule and manage local notifications:
-- Schedule time-based or calendar-based notifications
-- Query pending notifications
-- Cancel scheduled notifications
-- Check notification permissions
-- Support for repeating notifications
-
-### Health Tool
-Query health data using HealthKit:
-- Access steps, heart rate, and workout data
-- Query sleep patterns and calories burned
-- Track walking/running distance
-- Time-based data aggregation
-- Respects health data privacy
-
-### Photos Tool
-Manage photos and albums using PhotoKit:
-- Search photos by date, type, or location
-- Browse and create albums
-- Mark photos as favorites
-- Get detailed photo metadata
-- Support for screenshots, selfies, and videos
-
-### Shortcuts Tool
-Run Shortcuts app automations:
-- List available shortcuts
-- Execute shortcuts with parameters
-- Pass input data to shortcuts
-- Integrate with user-created automations
-- Bridge AI capabilities with Shortcuts workflows
 
 
 
@@ -241,46 +171,6 @@ Run Shortcuts app automations:
 
 **Note:** All features except web search work without any additional setup. The web search tool requires an Exa API key for functionality.
 
-## Required Permissions
-
-The app will request the following permissions when using specific tools:
-
-### Info.plist Keys Required
-Add these keys to your `Info.plist` file with appropriate usage descriptions:
-
-```xml
-<!-- Reminders -->
-<key>NSRemindersUsageDescription</key>
-<string>This app needs access to your reminders to help manage tasks with AI assistance.</string>
-
-<!-- Calendar -->
-<key>NSCalendarsUsageDescription</key>
-<string>This app needs access to your calendar to help schedule events with AI assistance.</string>
-
-<!-- Contacts -->
-<key>NSContactsUsageDescription</key>
-<string>This app needs access to your contacts to help manage contact information with AI assistance.</string>
-
-<!-- Location -->
-<key>NSLocationWhenInUseUsageDescription</key>
-<string>This app needs access to your location to provide location-based AI assistance.</string>
-
-<!-- Notifications -->
-<key>NSUserNotificationsUsageDescription</key>
-<string>This app needs permission to send you notifications for reminders and alerts.</string>
-
-<!-- Health -->
-<key>NSHealthShareUsageDescription</key>
-<string>This app needs access to your health data to provide AI-powered health insights.</string>
-<key>NSHealthUpdateUsageDescription</key>
-<string>This app needs permission to update your health data.</string>
-
-<!-- Photos -->
-<key>NSPhotoLibraryUsageDescription</key>
-<string>This app needs access to your photos to help organize and search them with AI assistance.</string>
-<key>NSPhotoLibraryAddUsageDescription</key>
-<string>This app needs permission to save photos to your library.</string>
-```
 
 
 ## Contributing

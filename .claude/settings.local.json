@@ -7,7 +7,9 @@
       "Bash(true)",
       "Bash(/Applications/Xcode-beta.app/Contents/Developer/usr/bin/xcodebuild -project FMF.xcodeproj -scheme FMF -destination \"platform=macOS\" clean build)",
       "Bash(git add:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(xcodebuild:*)",
+      "Bash(grep:*)"
     ],
     "deny": []
   }
