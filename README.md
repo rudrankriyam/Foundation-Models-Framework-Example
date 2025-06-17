@@ -161,6 +161,13 @@ Mathematical calculations and conversions:
 - Unit conversions (temperature, length, weight)
 - Works entirely offline
 
+### Text Tool
+Text manipulation and analysis:
+- Analyze text (word count, character count, statistics)
+- Transform text (uppercase, lowercase, camelCase, snake_case)
+- Format text (trim, wrap, truncate, remove newlines)
+- No external dependencies
+
 
 
 
