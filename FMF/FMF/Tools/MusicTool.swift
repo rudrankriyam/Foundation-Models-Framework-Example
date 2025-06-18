@@ -351,12 +351,54 @@ struct MusicTool: Tool {
   }
   
     private func getRecommendations() async -> ToolOutput {
-        return ToolOutput(
-            GeneratedContent(properties: [
-                "status": "success",
-                "message": "Music recommendations feature is currently simplified. Use search to find music."
-            ])
-        )
+        do {
+            let request = MusicPersonalRecommendationsRequest()
+            let response = try await request.response()
+            let recommendations = response.recommendations
+            
+            var recommendationDescription = ""
+            
+            for (index, recommendation) in recommendations.prefix(5).enumerated() {
+                recommendationDescription += "\(index + 1). \(recommendation.title ?? "Recommendation")\n"
+                
+                let items = recommendation.items
+                for item in items.prefix(3) {
+                    recommendationDescription += "   • "
+                    
+                    // Handle different enum cases for MusicPersonalRecommendation.Item
+                    switch item {
+                    case .album(let album):
+                        recommendationDescription += "💿 \(album.title) by \(album.artistName)\n"
+                    case .playlist(let playlist):
+                        recommendationDescription += "📝 \(playlist.name)\n"
+                    case .station(let station):
+                        recommendationDescription += "📻 \(station.name)\n"
+                    @unknown default:
+                        recommendationDescription += "ID: \(item.id)\n"
+                    }
+                }
+                
+                if items.count > 3 {
+                    recommendationDescription += "   ... and \(items.count - 3) more items\n"
+                }
+                recommendationDescription += "\n"
+            }
+            
+            if recommendationDescription.isEmpty {
+                recommendationDescription = "No personal recommendations available. Make sure you have Apple Music subscription and have been using the service."
+            }
+            
+            return ToolOutput(
+                GeneratedContent(properties: [
+                    "status": "success",
+                    "recommendationCount": recommendations.count,
+                    "recommendations": recommendationDescription.trimmingCharacters(in: .whitespacesAndNewlines),
+                    "message": "Found \(recommendations.count) personal recommendation(s)"
+                ])
+            )
+        } catch {
+            return createErrorOutput(error: error)
+        }
     }
   
   private func formatDuration(_ duration: TimeInterval) -> String {
