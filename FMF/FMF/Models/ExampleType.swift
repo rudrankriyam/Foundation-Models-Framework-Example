@@ -13,8 +13,6 @@ enum ExampleType: String, CaseIterable, Identifiable {
   case generationGuides
   case streamingResponse
   case modelAvailability
-  case weatherTool
-  case webSearchTool
   case creativeWriting
   case businessIdeas
   
@@ -32,10 +30,6 @@ enum ExampleType: String, CaseIterable, Identifiable {
       return "Streaming Response"
     case .modelAvailability:
       return "Model Availability"
-    case .weatherTool:
-      return "Weather Tool"
-    case .webSearchTool:
-      return "Web Search Tool"
     case .creativeWriting:
       return "Creative Writing"
     case .businessIdeas:
@@ -55,10 +49,6 @@ enum ExampleType: String, CaseIterable, Identifiable {
       return "Real-time response streaming"
     case .modelAvailability:
       return "Check system capabilities"
-    case .weatherTool:
-      return "Compare weather in different cities"
-    case .webSearchTool:
-      return "Search for WWDC 2025 announcements"
     case .creativeWriting:
       return "Generate story outlines and narratives"
     case .businessIdeas:
@@ -78,10 +68,6 @@ enum ExampleType: String, CaseIterable, Identifiable {
       return "waveform"
     case .modelAvailability:
       return "checkmark.circle"
-    case .weatherTool:
-      return "cloud.sun"
-    case .webSearchTool:
-      return "magnifyingglass"
     case .creativeWriting:
       return "pencil.and.outline"
     case .businessIdeas:
@@ -101,10 +87,6 @@ enum ExampleType: String, CaseIterable, Identifiable {
       await viewModel.executeStreaming()
     case .modelAvailability:
       await viewModel.executeModelAvailability()
-    case .weatherTool:
-      await viewModel.executeWeatherToolCalling()
-    case .webSearchTool:
-      await viewModel.executeWebSearchToolCalling()
     case .creativeWriting:
       await viewModel.executeCreativeWriting()
     case .businessIdeas:

@@ -8,98 +8,164 @@
 import SwiftUI
 import FoundationModels
 
+// MARK: - Platform-specific Colors
+
+#if os(macOS)
+import AppKit
+#endif
+
+private var secondaryBackgroundColor: Color {
+#if os(iOS)
+    Color(UIColor.secondarySystemBackground)
+#elseif os(macOS)
+    Color(NSColor.controlBackgroundColor)
+#endif
+}
+
+private var separatorColor: Color {
+#if os(iOS)
+    Color(UIColor.separator)
+#elseif os(macOS)
+    Color(NSColor.separatorColor)
+#endif
+}
+
 struct ToolsTabView: View {
-    @State private var selectedTool: ToolExample = .weather
     @State private var isRunning = false
     @State private var result: String = ""
     @State private var errorMessage: String?
-    
+    @State private var selectedTool: ToolExample?
+
     var body: some View {
         NavigationStack {
-            VStack(spacing: 20) {
-                // Tool selector
-                Picker("Select Tool", selection: $selectedTool) {
-                    ForEach(ToolExample.allCases, id: \.self) { tool in
-                        Text(tool.displayName).tag(tool)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    headerView
+                    toolButtonsView
+                    if selectedTool != nil {
+                        resultView
                     }
                 }
-                .pickerStyle(.menu)
-                .padding(.horizontal)
-                
-                // Tool description
-                Text(selectedTool.description)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-                    .frame(maxHeight: 80)
-                
-                // Run button
-                Button(action: runSelectedTool) {
-                    HStack {
-                        if isRunning {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle())
-                                .scaleEffect(0.8)
-                        } else {
-                            Image(systemName: "play.fill")
-                        }
-                        Text(isRunning ? "Running..." : "Run Example")
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(isRunning)
-                .padding(.horizontal)
-                
-                // Result display
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 10) {
-                        if let error = errorMessage {
-                            Text("Error: \(error)")
-                                .foregroundColor(.red)
-                                .padding()
-                                .background(Color.red.opacity(0.1))
-                                .cornerRadius(8)
-                        }
-                        
-                        if !result.isEmpty {
-                            Text("Result:")
-                                .font(.headline)
-                            
-                            Text(result)
-                                .font(.system(.body, design: .monospaced))
-                                .textSelection(.enabled)
-                                .padding()
-                                .background(Color.gray.opacity(0.1))
-                                .cornerRadius(8)
-                        }
-                    }
-                    .padding()
-                }
-                .frame(maxHeight: .infinity)
+                .padding(.vertical)
             }
-            .navigationTitle("Tool Examples")
+            .navigationTitle("Tools")
+#if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+#endif
         }
     }
-    
-    private func runSelectedTool() {
-        Task {
-            await executeToolExample()
+
+    // MARK: - View Components
+
+    private var headerView: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("AI Tools")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+            Text("Explore AI-powered tools")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
         }
+        .padding(.horizontal)
     }
-    
+
+    private var toolButtonsView: some View {
+        LazyVGrid(columns: adaptiveGridColumns, spacing: gridSpacing) {
+            ForEach(ToolExample.allCases, id: \.self) { tool in
+                ToolButton(
+                    tool: tool,
+                    isSelected: selectedTool == tool,
+                    isRunning: isRunning && selectedTool == tool
+                ) {
+                    selectedTool = tool
+                    Task {
+                        await executeToolExample(tool: tool)
+                    }
+                }
+            }
+        }
+        .padding(.horizontal)
+    }
+
+    private var adaptiveGridColumns: [GridItem] {
+#if os(iOS)
+        // iPhone: 2 columns with flexible sizing
+        return [
+            GridItem(.flexible(minimum: 140), spacing: 12),
+            GridItem(.flexible(minimum: 140), spacing: 12)
+        ]
+#elseif os(macOS)
+        // Mac: Adaptive columns based on available width
+        return Array(repeating: GridItem(.adaptive(minimum: 280), spacing: 12), count: 1)
+#else
+        // Default fallback
+        return [
+            GridItem(.flexible(minimum: 140), spacing: 12),
+            GridItem(.flexible(minimum: 140), spacing: 12)
+        ]
+#endif
+    }
+
+    private var gridSpacing: CGFloat {
+#if os(iOS)
+        16
+#else
+        12
+#endif
+    }
+
+    @ViewBuilder
+    private var resultView: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Result")
+                    .font(.headline)
+                Spacer()
+                Button("Clear") {
+                    result = ""
+                    errorMessage = nil
+                    selectedTool = nil
+                }
+                .font(.caption)
+            }
+
+            if let error = errorMessage {
+                Text("Error: \(error)")
+                    .foregroundColor(.red)
+                    .font(.caption)
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.red.opacity(0.1))
+                    .cornerRadius(8)
+            }
+
+            if !result.isEmpty {
+                ScrollView {
+                    Text(result)
+                        .font(.system(.body, design: .monospaced))
+                        .textSelection(.enabled)
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(secondaryBackgroundColor)
+                        .cornerRadius(8)
+                }
+                .frame(maxHeight: 300)
+            }
+        }
+        .padding(.horizontal)
+    }
+
     @MainActor
-    private func executeToolExample() async {
+    private func executeToolExample(tool: ToolExample) async {
         isRunning = true
         errorMessage = nil
         result = ""
-        
+
         do {
             let service = FoundationModelsService()
             let response: String
-            
-            switch selectedTool {
+
+            switch tool {
             case .weather:
                 response = try await service.sendMessageWithWeatherTool()
             case .web:
@@ -121,15 +187,71 @@ struct ToolsTabView: View {
             case .health:
                 response = try await service.sendMessageWithHealthTool()
             }
-            
+
             result = response
         } catch {
             errorMessage = error.localizedDescription
         }
-        
+
         isRunning = false
     }
 }
+
+// MARK: - Tool Button Component
+
+struct ToolButton: View {
+    let tool: ToolExample
+    let isSelected: Bool
+    let isRunning: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 12) {
+                ZStack {
+                    Image(systemName: tool.icon)
+                        .font(.system(size: 28))
+                        .foregroundColor(isSelected ? .white : .accentColor)
+                        .opacity(isRunning ? 0 : 1)
+
+                    if isRunning {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle())
+                            .scaleEffect(0.8)
+                    }
+                }
+                .frame(width: 50, height: 50)
+
+                VStack(spacing: 4) {
+                    Text(tool.displayName)
+                        .font(.headline)
+                        .foregroundColor(isSelected ? .white : .primary)
+                        .multilineTextAlignment(.center)
+
+                    Text(tool.shortDescription)
+                        .font(.caption)
+                        .foregroundColor(isSelected ? .white.opacity(0.8) : .secondary)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                }
+            }
+            .padding()
+            .frame(maxWidth: .infinity, minHeight: 140)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(isSelected ? Color.accentColor : secondaryBackgroundColor)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(isSelected ? Color.clear : separatorColor, lineWidth: 0.5)
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
+        .disabled(isRunning)
+    }
+}
+
+// MARK: - Tool Example Enum
 
 enum ToolExample: String, CaseIterable {
     case weather
@@ -142,22 +264,52 @@ enum ToolExample: String, CaseIterable {
     case text
     case location
     case health
-    
+
     var displayName: String {
         switch self {
-        case .weather: return "Weather Tool"
-        case .web: return "Web Search Tool"
-        case .timer: return "Timer Tool"
-        case .math: return "Math Tool"
-        case .contacts: return "Contacts Tool"
-        case .calendar: return "Calendar Tool"
-        case .reminders: return "Reminders Tool"
-        case .text: return "Text Tool"
-        case .location: return "Location Tool"
-        case .health: return "Health Tool"
+        case .weather: return "Weather"
+        case .web: return "Web Search"
+        case .timer: return "Timer"
+        case .math: return "Math"
+        case .contacts: return "Contacts"
+        case .calendar: return "Calendar"
+        case .reminders: return "Reminders"
+        case .text: return "Text"
+        case .location: return "Location"
+        case .health: return "Health"
         }
     }
-    
+
+    var icon: String {
+        switch self {
+        case .weather: return "cloud.sun"
+        case .web: return "magnifyingglass"
+        case .timer: return "timer"
+        case .math: return "function"
+        case .contacts: return "person.2"
+        case .calendar: return "calendar"
+        case .reminders: return "checklist"
+        case .text: return "textformat"
+        case .location: return "location"
+        case .health: return "heart"
+        }
+    }
+
+    var shortDescription: String {
+        switch self {
+        case .weather: return "Get weather info"
+        case .web: return "Search the web"
+        case .timer: return "Set timers"
+        case .math: return "Calculate"
+        case .contacts: return "Find contacts"
+        case .calendar: return "View events"
+        case .reminders: return "Manage tasks"
+        case .text: return "Transform text"
+        case .location: return "Get location"
+        case .health: return "Health data"
+        }
+    }
+
     var description: String {
         switch self {
         case .weather: return "Get current weather information for any location"
