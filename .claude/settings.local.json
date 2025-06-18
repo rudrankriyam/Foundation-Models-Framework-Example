@@ -16,7 +16,9 @@
       "Bash(/Applications/Xcode-beta.app/Contents/Developer/usr/bin/xcodebuild -project FMF/FMF.xcodeproj -scheme FMF -destination \"platform=macOS\" build)",
       "Bash(/Applications/Xcode-beta.app/Contents/Developer/usr/bin/xcodebuild -project FMF/FMF.xcodeproj -scheme FMF -destination \"platform=macOS\" build 2 >& 1)",
       "Bash(open:*)",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "WebFetch(domain:developer.apple.com)",
+      "Bash(swift:*)"
     ],
     "deny": []
   }

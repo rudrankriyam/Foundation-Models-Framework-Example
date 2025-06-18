@@ -58,9 +58,6 @@ struct LocationTool: Tool {
   }
   
   private let locationManager = CLLocationManager()
-  // Using CLGeocoder until MKReverseGeocodingRequest API is available
-  @available(macOS, deprecated: 26.0, message: "Will be replaced with MapKit geocoding when stable")
-  private let geocoder = CLGeocoder()
   
   func call(arguments: Arguments) async throws -> ToolOutput {
     switch arguments.action.lowercased() {
@@ -105,9 +102,12 @@ struct LocationTool: Tool {
       return createErrorOutput(error: LocationError.locationUnavailable)
     }
     
-    // Reverse geocode to get address
-    let placemarks = try? await geocoder.reverseGeocodeLocation(location)
-    let placemark = placemarks?.first
+    // Reverse geocode to get address using new MapKit API
+    guard let request = MKReverseGeocodingRequest(location: location) else {
+      return createErrorOutput(error: LocationError.reverseGeocodingFailed)
+    }
+    let mapItems = try? await request.mapItems
+    let placemark = mapItems?.first?.placemark
     
     let address = formatAddress(placemark: placemark)
     
@@ -171,9 +171,12 @@ struct LocationTool: Tool {
     let location = CLLocation(latitude: latitude, longitude: longitude)
     
     do {
-      let placemarks = try await geocoder.reverseGeocodeLocation(location)
+      guard let request = MKReverseGeocodingRequest(location: location) else {
+        return createErrorOutput(error: LocationError.reverseGeocodingFailed)
+      }
+      let mapItems = try await request.mapItems
       
-      guard let placemark = placemarks.first else {
+      guard let placemark = mapItems.first?.placemark else {
         return createErrorOutput(error: LocationError.reverseGeocodingFailed)
       }
       
@@ -300,7 +303,7 @@ struct LocationTool: Tool {
     )
   }
   
-  private func formatAddress(placemark: CLPlacemark?) -> String {
+  private func formatAddress(placemark: MKPlacemark?) -> String {
     guard let placemark = placemark else { return "Unknown location" }
     
     var components: [String] = []
@@ -387,7 +390,7 @@ struct LocationTool: Tool {
   }
 }
 
-extension CLPlacemark {
+extension MKPlacemark {
   var formattedAddress: String? {
     if let name = name,
        let locality = locality,
