@@ -59,12 +59,9 @@ struct ToolsTabView: View {
 
     private var headerView: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("AI Tools")
+            Text("Tool Use")
                 .font(.largeTitle)
                 .fontWeight(.bold)
-            Text("Explore AI-powered tools")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
         }
         .padding(.horizontal)
     }
