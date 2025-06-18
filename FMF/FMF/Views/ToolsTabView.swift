@@ -179,6 +179,8 @@ struct ToolsTabView: View {
                 response = try await service.sendMessageWithHealthTool()
             case .music:
                 response = try await service.sendMessageWithMusicTool()
+            case .webMetadata:
+                response = try await service.sendMessageWithWebMetadataTool()
             }
 
             result = response
@@ -255,6 +257,7 @@ enum ToolExample: String, CaseIterable {
     case location
     case health
     case music
+    case webMetadata
 
     var displayName: String {
         switch self {
@@ -266,6 +269,7 @@ enum ToolExample: String, CaseIterable {
         case .location: return "Location"
         case .health: return "Health"
         case .music: return "Music"
+        case .webMetadata: return "Web Metadata"
         }
     }
 
@@ -279,6 +283,7 @@ enum ToolExample: String, CaseIterable {
         case .location: return "location"
         case .health: return "heart"
         case .music: return "music.note"
+        case .webMetadata: return "link.circle"
         }
     }
 
@@ -292,6 +297,7 @@ enum ToolExample: String, CaseIterable {
         case .location: return "Get location"
         case .health: return "Health data"
         case .music: return "Play music"
+        case .webMetadata: return "Social summaries"
         }
     }
 
@@ -305,6 +311,7 @@ enum ToolExample: String, CaseIterable {
         case .location: return "Get location information and perform geocoding"
         case .health: return "Access health data like steps, heart rate, and workouts"
         case .music: return "Search and play music, manage playlists, get recommendations"
+        case .webMetadata: return "Fetch webpage metadata and generate social media summaries"
         }
     }
 }

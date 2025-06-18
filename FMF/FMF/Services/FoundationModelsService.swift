@@ -31,7 +31,8 @@ final class FoundationModelsService {
   }
 
   func createSessionWithTools(instructions: String? = nil) -> LanguageModelSession {
-    let defaultInstructions = "You are a helpful assistant with access to weather and web search tools."
+    let defaultInstructions =
+      "You are a helpful assistant with access to weather and web search tools."
     let finalInstructions = instructions ?? defaultInstructions
 
     let session = LanguageModelSession(
@@ -115,52 +116,64 @@ final class FoundationModelsService {
   }
 
   // MARK: - Individual Tool Methods
-  
+
   func sendMessageWithWeatherTool() async throws -> String {
     let session = LanguageModelSession(tools: [WeatherTool()])
-    let response = try await session.respond(to: Prompt("What's the weather like in San Francisco?"))
+    let response = try await session.respond(
+      to: Prompt("What's the weather like in San Francisco?"))
     return response.content
   }
-  
+
   func sendMessageWithWebTool() async throws -> String {
     let session = LanguageModelSession(tools: [WebTool()])
-    let response = try await session.respond(to: Prompt("Search for the latest news about Apple Intelligence"))
+    let response = try await session.respond(
+      to: Prompt("Search for the latest news about Apple Intelligence"))
     return response.content
   }
-  
+
   func sendMessageWithContactsTool() async throws -> String {
     let session = LanguageModelSession(tools: [ContactsTool()])
     let response = try await session.respond(to: Prompt("Find contacts named John"))
     return response.content
   }
-  
+
   func sendMessageWithCalendarTool() async throws -> String {
     let session = LanguageModelSession(tools: [CalendarTool()])
     let response = try await session.respond(to: Prompt("What events do I have today?"))
     return response.content
   }
-  
+
   func sendMessageWithRemindersTool() async throws -> String {
     let session = LanguageModelSession(tools: [RemindersTool()])
-    let response = try await session.respond(to: Prompt("Create a reminder to buy milk tomorrow at 5 PM"))
+    let response = try await session.respond(
+      to: Prompt("Create a reminder to buy milk tomorrow at 5 PM"))
     return response.content
   }
-  
+
   func sendMessageWithLocationTool() async throws -> String {
     let session = LanguageModelSession(tools: [LocationTool()])
     let response = try await session.respond(to: Prompt("What's my current location?"))
     return response.content
   }
-  
+
   func sendMessageWithHealthTool() async throws -> String {
     let session = LanguageModelSession(tools: [HealthTool()])
     let response = try await session.respond(to: Prompt("How many steps have I taken today?"))
     return response.content
   }
-  
+
   func sendMessageWithMusicTool() async throws -> String {
     let session = LanguageModelSession(tools: [MusicTool()])
     let response = try await session.respond(to: Prompt("Search for songs by Taylor Swift"))
+    return response.content
+  }
+
+  func sendMessageWithWebMetadataTool() async throws -> String {
+    let session = LanguageModelSession(tools: [WebMetadataTool()])
+    let response = try await session.respond(
+      to: Prompt(
+        "Generate a social media summary for https://www.apple.com/newsroom/2025/06/apple-services-deliver-powerful-features-and-intelligent-updates-to-users-this-fall/"
+      ))
     return response.content
   }
 

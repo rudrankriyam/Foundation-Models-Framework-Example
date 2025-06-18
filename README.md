@@ -83,6 +83,13 @@ let multiResponse = try await multiSession.respond(
     to: "Check the weather in Tokyo and search for tourist attractions there"
 )
 print(multiResponse.content)
+
+// Web Metadata Tool Example
+let metadataSession = LanguageModelSession(tools: [WebMetadataTool()])
+let metadataResponse = try await metadataSession.respond(
+    to: "Generate a Twitter post for https://www.apple.com/newsroom/"
+)
+print(metadataResponse.content)
 ```
 
 ### Streaming Responses
@@ -169,6 +176,14 @@ Text manipulation and analysis:
 - Transform text (uppercase, lowercase, camelCase, snake_case)
 - Format text (trim, wrap, truncate, remove newlines)
 - No external dependencies
+
+### Web Metadata Tool
+Webpage metadata extraction and social media summary generation:
+- Fetches title, description, and metadata from any URL
+- Generates AI-powered summaries optimized for social media
+- Supports platform-specific formatting (Twitter, LinkedIn, Facebook)
+- Automatic hashtag generation
+- No API key required
 
 
 
