@@ -157,6 +157,12 @@ final class FoundationModelsService {
     let response = try await session.respond(to: Prompt("How many steps have I taken today?"))
     return response.content
   }
+  
+  func sendMessageWithMusicTool() async throws -> String {
+    let session = LanguageModelSession(tools: [MusicTool()])
+    let response = try await session.respond(to: Prompt("Search for songs by Taylor Swift"))
+    return response.content
+  }
 
 }
 

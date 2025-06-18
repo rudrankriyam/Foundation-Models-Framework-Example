@@ -180,6 +180,8 @@ struct ToolsTabView: View {
                 response = try await service.sendMessageWithLocationTool()
             case .health:
                 response = try await service.sendMessageWithHealthTool()
+            case .music:
+                response = try await service.sendMessageWithMusicTool()
             }
 
             result = response
@@ -255,6 +257,7 @@ enum ToolExample: String, CaseIterable {
     case reminders
     case location
     case health
+    case music
 
     var displayName: String {
         switch self {
@@ -265,6 +268,7 @@ enum ToolExample: String, CaseIterable {
         case .reminders: return "Reminders"
         case .location: return "Location"
         case .health: return "Health"
+        case .music: return "Music"
         }
     }
 
@@ -277,6 +281,7 @@ enum ToolExample: String, CaseIterable {
         case .reminders: return "checklist"
         case .location: return "location"
         case .health: return "heart"
+        case .music: return "music.note"
         }
     }
 
@@ -289,6 +294,7 @@ enum ToolExample: String, CaseIterable {
         case .reminders: return "Manage tasks"
         case .location: return "Get location"
         case .health: return "Health data"
+        case .music: return "Play music"
         }
     }
 
@@ -301,6 +307,7 @@ enum ToolExample: String, CaseIterable {
         case .reminders: return "Create and manage reminder tasks"
         case .location: return "Get location information and perform geocoding"
         case .health: return "Access health data like steps, heart rate, and workouts"
+        case .music: return "Search and play music, manage playlists, get recommendations"
         }
     }
 }
