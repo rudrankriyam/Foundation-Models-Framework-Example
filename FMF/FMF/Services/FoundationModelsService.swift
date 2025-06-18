@@ -128,18 +128,6 @@ final class FoundationModelsService {
     return response.content
   }
   
-  func sendMessageWithTimerTool() async throws -> String {
-    let session = LanguageModelSession(tools: [TimerTool()])
-    let response = try await session.respond(to: Prompt("Set a timer for 5 minutes"))
-    return response.content
-  }
-  
-  func sendMessageWithMathTool() async throws -> String {
-    let session = LanguageModelSession(tools: [MathTool()])
-    let response = try await session.respond(to: Prompt("Calculate the square root of 144"))
-    return response.content
-  }
-  
   func sendMessageWithContactsTool() async throws -> String {
     let session = LanguageModelSession(tools: [ContactsTool()])
     let response = try await session.respond(to: Prompt("Find contacts named John"))
@@ -155,12 +143,6 @@ final class FoundationModelsService {
   func sendMessageWithRemindersTool() async throws -> String {
     let session = LanguageModelSession(tools: [RemindersTool()])
     let response = try await session.respond(to: Prompt("Create a reminder to buy milk tomorrow at 5 PM"))
-    return response.content
-  }
-  
-  func sendMessageWithTextTool() async throws -> String {
-    let session = LanguageModelSession(tools: [TextTool()])
-    let response = try await session.respond(to: Prompt("Transform 'hello world' to uppercase"))
     return response.content
   }
   

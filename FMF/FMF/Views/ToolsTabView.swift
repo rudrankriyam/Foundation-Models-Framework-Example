@@ -170,18 +170,12 @@ struct ToolsTabView: View {
                 response = try await service.sendMessageWithWeatherTool()
             case .web:
                 response = try await service.sendMessageWithWebTool()
-            case .timer:
-                response = try await service.sendMessageWithTimerTool()
-            case .math:
-                response = try await service.sendMessageWithMathTool()
             case .contacts:
                 response = try await service.sendMessageWithContactsTool()
             case .calendar:
                 response = try await service.sendMessageWithCalendarTool()
             case .reminders:
                 response = try await service.sendMessageWithRemindersTool()
-            case .text:
-                response = try await service.sendMessageWithTextTool()
             case .location:
                 response = try await service.sendMessageWithLocationTool()
             case .health:
@@ -256,12 +250,9 @@ struct ToolButton: View {
 enum ToolExample: String, CaseIterable {
     case weather
     case web
-    case timer
-    case math
     case contacts
     case calendar
     case reminders
-    case text
     case location
     case health
 
@@ -269,12 +260,9 @@ enum ToolExample: String, CaseIterable {
         switch self {
         case .weather: return "Weather"
         case .web: return "Web Search"
-        case .timer: return "Timer"
-        case .math: return "Math"
         case .contacts: return "Contacts"
         case .calendar: return "Calendar"
         case .reminders: return "Reminders"
-        case .text: return "Text"
         case .location: return "Location"
         case .health: return "Health"
         }
@@ -284,12 +272,9 @@ enum ToolExample: String, CaseIterable {
         switch self {
         case .weather: return "cloud.sun"
         case .web: return "magnifyingglass"
-        case .timer: return "timer"
-        case .math: return "function"
         case .contacts: return "person.2"
         case .calendar: return "calendar"
         case .reminders: return "checklist"
-        case .text: return "textformat"
         case .location: return "location"
         case .health: return "heart"
         }
@@ -299,12 +284,9 @@ enum ToolExample: String, CaseIterable {
         switch self {
         case .weather: return "Get weather info"
         case .web: return "Search the web"
-        case .timer: return "Set timers"
-        case .math: return "Calculate"
         case .contacts: return "Find contacts"
         case .calendar: return "View events"
         case .reminders: return "Manage tasks"
-        case .text: return "Transform text"
         case .location: return "Get location"
         case .health: return "Health data"
         }
@@ -314,12 +296,9 @@ enum ToolExample: String, CaseIterable {
         switch self {
         case .weather: return "Get current weather information for any location"
         case .web: return "Search the web for any topic using AI-powered search"
-        case .timer: return "Create and manage timers with various durations"
-        case .math: return "Perform mathematical calculations and solve equations"
         case .contacts: return "Search and display contact information"
         case .calendar: return "Create, search, and manage calendar events"
         case .reminders: return "Create and manage reminder tasks"
-        case .text: return "Transform text with various operations"
         case .location: return "Get location information and perform geocoding"
         case .health: return "Access health data like steps, heart rate, and workouts"
         }
