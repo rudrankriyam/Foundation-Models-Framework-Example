@@ -67,9 +67,9 @@ struct MusicTool: Tool {
     case "pause":
       return pauseMusic()
     case "next":
-      return skipToNext()
+      return await skipToNext()
     case "previous":
-      return skipToPrevious()
+      return await skipToPrevious()
     case "currentsong":
       return getCurrentSong()
     case "playlists":
@@ -221,34 +221,38 @@ struct MusicTool: Tool {
     )
   }
   
-  private func skipToNext() -> ToolOutput {
-    Task {
-      let player = ApplicationMusicPlayer.shared
-      try await player.skipToNextEntry()
-    }
+  private func skipToNext() async -> ToolOutput {
+    let player = ApplicationMusicPlayer.shared
     
-    return ToolOutput(
-      GeneratedContent(properties: [
-        "status": "success",
-        "action": "next",
-        "message": "Skipped to next song"
-      ])
-    )
+    do {
+      try await player.skipToNextEntry()
+      return ToolOutput(
+        GeneratedContent(properties: [
+          "status": "success",
+          "action": "next",
+          "message": "Skipped to next song"
+        ])
+      )
+    } catch {
+      return createErrorOutput(error: error)
+    }
   }
   
-  private func skipToPrevious() -> ToolOutput {
-    Task {
-      let player = ApplicationMusicPlayer.shared
-      try await player.skipToPreviousEntry()
-    }
+  private func skipToPrevious() async -> ToolOutput {
+    let player = ApplicationMusicPlayer.shared
     
-    return ToolOutput(
-      GeneratedContent(properties: [
-        "status": "success",
-        "action": "previous",
-        "message": "Skipped to previous song"
-      ])
-    )
+    do {
+      try await player.skipToPreviousEntry()
+      return ToolOutput(
+        GeneratedContent(properties: [
+          "status": "success",
+          "action": "previous",
+          "message": "Skipped to previous song"
+        ])
+      )
+    } catch {
+      return createErrorOutput(error: error)
+    }
   }
   
   private func getCurrentSong() -> ToolOutput {

@@ -18,7 +18,8 @@
       "Bash(open:*)",
       "mcp__ide__getDiagnostics",
       "WebFetch(domain:developer.apple.com)",
-      "Bash(swift:*)"
+      "Bash(swift:*)",
+      "Bash(rg:*)"
     ],
     "deny": []
   }
