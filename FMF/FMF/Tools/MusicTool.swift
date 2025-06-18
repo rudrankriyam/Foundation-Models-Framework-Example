@@ -48,7 +48,7 @@ struct MusicTool: Tool {
     // Check if MusicKit is authorized
     let authStatus = MusicAuthorization.currentStatus
     
-    guard authStatus == .authorized else {
+    if authStatus != .authorized {
       if authStatus == .notDetermined {
         let status = await MusicAuthorization.request()
         if status != .authorized {
@@ -264,33 +264,40 @@ struct MusicTool: Tool {
     }
     
     // Check if the entry has an item (non-transient)
-    if let item = nowPlaying.item {
-      var properties: [String: Any] = [
-        "status": "success",
-        "id": item.id.rawValue,
-        "playbackState": player.state.playbackStatus
-      ]
-
-        switch item {
-        case .song(let song):
-            properties["title"] = song.title
-            properties["artist"] = song.artistName
-
-            if let album = song.albumTitle {
-                properties["album"] = album
-            }
-
-            if let duration = song.duration {
-                properties["duration"] = formatDuration(duration)
-            }
-
-            properties["message"] = "Currently playing: \(song.title) by \(song.artistName)"
-        default:
-            properties["message"] = "Currently playing: \(item.id)"
-        }
-
-
-      return ToolOutput(GeneratedContent(properties: properties))
+    if case let .song(song) = nowPlaying.item {
+      if let album = song.albumTitle {
+        return ToolOutput(
+          GeneratedContent(properties: [
+            "status": "success",
+            "id": song.id.rawValue,
+            "playbackState": String(describing: player.state.playbackStatus),
+            "title": song.title,
+            "artist": song.artistName,
+            "album": album,
+            "message": "Currently playing: \(song.title) by \(song.artistName)"
+          ])
+        )
+      } else {
+        return ToolOutput(
+          GeneratedContent(properties: [
+            "status": "success",
+            "id": song.id.rawValue,
+            "playbackState": String(describing: player.state.playbackStatus),
+            "title": song.title,
+            "artist": song.artistName,
+            "message": "Currently playing: \(song.title) by \(song.artistName)"
+          ])
+        )
+      }
+    } else if let item = nowPlaying.item {
+      return ToolOutput(
+        GeneratedContent(properties: [
+          "status": "success",
+          "id": item.id.rawValue,
+          "playbackState": String(describing: player.state.playbackStatus),
+          "message": "Currently playing: \(item.id)"
+        ])
+      )
     } else if let transientItem = nowPlaying.transientItem {
       // Handle transient items
       return ToolOutput(
