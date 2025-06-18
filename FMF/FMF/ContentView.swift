@@ -34,6 +34,16 @@ struct ContentView: View {
             }
             .tag(TabSelection.chatBot)
 
+            // Tools Tab
+            NavigationStack {
+                ToolsTabView()
+            }
+            .tabItem {
+                Image(systemName: "wrench.and.screwdriver")
+                Text("Tools")
+            }
+            .tag(TabSelection.tools)
+
             // Settings Tab
             NavigationStack {
                 SettingsView()

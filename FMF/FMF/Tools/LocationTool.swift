@@ -80,22 +80,13 @@ struct LocationTool: Tool {
     // Check authorization status
     let authStatus = locationManager.authorizationStatus
     
-    #if os(macOS)
     guard authStatus == .authorizedAlways else {
       if authStatus == .notDetermined {
-        // On macOS, we need to request authorization differently
-        // This would typically be done through app entitlements
+        // Request permission and wait for response
+        return await requestLocationPermission()
       }
       return createErrorOutput(error: LocationError.authorizationDenied)
     }
-    #else
-    guard authStatus == .authorizedAlways || authStatus == .authorizedWhenInUse else {
-      if authStatus == .notDetermined {
-        locationManager.requestWhenInUseAuthorization()
-      }
-      return createErrorOutput(error: LocationError.authorizationDenied)
-    }
-    #endif
     
     // Get current location
     guard let location = locationManager.location else {
@@ -379,6 +370,30 @@ struct LocationTool: Tool {
     return formatter.string(from: date)
   }
   
+  private func requestLocationPermission() async -> ToolOutput {
+    // Create a location delegate to handle authorization changes
+    let delegate = LocationDelegate()
+    locationManager.delegate = delegate
+    
+    // Request permission
+    #if os(macOS)
+    // On macOS, just start monitoring which will trigger permission dialog
+    locationManager.startUpdatingLocation()
+    locationManager.stopUpdatingLocation()
+    #else
+    locationManager.requestWhenInUseAuthorization()
+    #endif
+    
+    // Return informative message
+    return ToolOutput(
+      GeneratedContent(properties: [
+        "status": "permission_requested",
+        "message": "Location permission requested. Please allow location access in the system alert and try again.",
+        "instruction": "After granting permission, please run this tool again to get your location."
+      ])
+    )
+  }
+  
   private func createErrorOutput(error: Error) -> ToolOutput {
     return ToolOutput(
       GeneratedContent(properties: [
@@ -409,6 +424,7 @@ extension Double {
 enum LocationError: Error, LocalizedError {
   case invalidAction
   case authorizationDenied
+  case authorizationNotDetermined
   case locationUnavailable
   case missingAddress
   case missingCoordinates
@@ -422,6 +438,8 @@ enum LocationError: Error, LocalizedError {
       return "Invalid action. Use 'current', 'geocode', 'reverse', 'search', or 'distance'."
     case .authorizationDenied:
       return "Location access denied. Please grant permission in Settings."
+    case .authorizationNotDetermined:
+      return "Location permission not yet determined. Please grant permission when prompted."
     case .locationUnavailable:
       return "Current location is unavailable."
     case .missingAddress:
@@ -435,5 +453,22 @@ enum LocationError: Error, LocalizedError {
     case .reverseGeocodingFailed:
       return "Failed to find address for the given coordinates."
     }
+  }
+}
+
+// Location delegate to handle authorization changes
+class LocationDelegate: NSObject, CLLocationManagerDelegate {
+  func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+    // This will be called when authorization status changes
+  }
+  
+  func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+    // Required delegate method for requestLocation()
+    // We don't need to do anything here as we're just requesting permission
+  }
+  
+  func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+    // Handle location errors
+    print("Location error: \(error.localizedDescription)")
   }
 }

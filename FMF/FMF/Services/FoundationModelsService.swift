@@ -16,8 +16,6 @@ final class FoundationModelsService {
   // MARK: - Properties
 
   private var currentSession: LanguageModelSession?
-  private let weatherTool = WeatherTool()
-  private let webTool = WebTool()
 
   // MARK: - Session Management
 
@@ -37,7 +35,7 @@ final class FoundationModelsService {
     let finalInstructions = instructions ?? defaultInstructions
 
     let session = LanguageModelSession(
-      tools: [weatherTool, webTool],
+      tools: [WeatherTool(), WebTool()],
       instructions: Instructions(finalInstructions)
     )
     currentSession = session
@@ -114,6 +112,68 @@ final class FoundationModelsService {
     } else {
       return "Unexpected error: \(error.localizedDescription)"
     }
+  }
+
+  // MARK: - Individual Tool Methods
+  
+  func sendMessageWithWeatherTool() async throws -> String {
+    let session = LanguageModelSession(tools: [WeatherTool()])
+    let response = try await session.respond(to: Prompt("What's the weather like in San Francisco?"))
+    return response.content
+  }
+  
+  func sendMessageWithWebTool() async throws -> String {
+    let session = LanguageModelSession(tools: [WebTool()])
+    let response = try await session.respond(to: Prompt("Search for the latest news about Apple Intelligence"))
+    return response.content
+  }
+  
+  func sendMessageWithTimerTool() async throws -> String {
+    let session = LanguageModelSession(tools: [TimerTool()])
+    let response = try await session.respond(to: Prompt("Set a timer for 5 minutes"))
+    return response.content
+  }
+  
+  func sendMessageWithMathTool() async throws -> String {
+    let session = LanguageModelSession(tools: [MathTool()])
+    let response = try await session.respond(to: Prompt("Calculate the square root of 144"))
+    return response.content
+  }
+  
+  func sendMessageWithContactsTool() async throws -> String {
+    let session = LanguageModelSession(tools: [ContactsTool()])
+    let response = try await session.respond(to: Prompt("Find contacts named John"))
+    return response.content
+  }
+  
+  func sendMessageWithCalendarTool() async throws -> String {
+    let session = LanguageModelSession(tools: [CalendarTool()])
+    let response = try await session.respond(to: Prompt("What events do I have today?"))
+    return response.content
+  }
+  
+  func sendMessageWithRemindersTool() async throws -> String {
+    let session = LanguageModelSession(tools: [RemindersTool()])
+    let response = try await session.respond(to: Prompt("Create a reminder to buy milk tomorrow at 5 PM"))
+    return response.content
+  }
+  
+  func sendMessageWithTextTool() async throws -> String {
+    let session = LanguageModelSession(tools: [TextTool()])
+    let response = try await session.respond(to: Prompt("Transform 'hello world' to uppercase"))
+    return response.content
+  }
+  
+  func sendMessageWithLocationTool() async throws -> String {
+    let session = LanguageModelSession(tools: [LocationTool()])
+    let response = try await session.respond(to: Prompt("What's my current location?"))
+    return response.content
+  }
+  
+  func sendMessageWithHealthTool() async throws -> String {
+    let session = LanguageModelSession(tools: [HealthTool()])
+    let response = try await session.respond(to: Prompt("How many steps have I taken today?"))
+    return response.content
   }
 
 }
