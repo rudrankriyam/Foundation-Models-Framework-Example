@@ -1,6 +1,8 @@
 # Foundation Models Framework Example
 
-![App Screenshot](placeholder.png)
+![AI interface screenshot with "Foundation Models" title, showcasing on-device AI examples including Basic Chat, Structured Data, Generation Guides, and more; user requests a haiku about destiny, receiving response: "Paths weave through the mist, Stars whisper tales of tomorrow— Destiny unfolds.](main-examples.png)
+
+![A computer window displaying a tool use interface with weather info for San Francisco: 16°C, clear skies, 70% humidity, 18.1 km/h wind speed, 1010.2 hPa pressure. Various tool options include web search, contacts, calendar, reminders, location, health, and music.](tool-use.png)
 
 A practical iOS app demonstrating Apple's Foundation Models framework with various examples of on-device AI capabilities.
 
