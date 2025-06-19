@@ -8,13 +8,13 @@ import Playgrounds
 
   // List of landmarks to generate bad trip names for
   let landmarks = [
-    "Grand Canyon", "Eiffel Tower", "Mount Fuji", "Great Wall of China", "Sydney Opera House",
+    "Grand Canyon", "Eiffel Tower", "Mount Fuji"
   ]
 
   // Generate bad trip names for each landmark
   for landmark in landmarks {
     let response = try await session.respond(
-      to: "What's a bad name for a trip to \(landmark)? Reply only with a title."
+      to: "What's a good name for a trip to \(landmark)? Reply only with a title."
     )
     print("\(landmark): \(response.content)")
   }

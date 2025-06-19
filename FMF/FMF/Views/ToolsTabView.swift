@@ -152,6 +152,8 @@ struct ToolsTabView: View {
         .padding(.horizontal)
     }
 
+    // MARK: - Tool Example Execution
+
     @MainActor
     private func executeToolExample(tool: ToolExample) async {
         isRunning = true
@@ -159,36 +161,111 @@ struct ToolsTabView: View {
         result = ""
 
         do {
-            let service = FoundationModelsService()
             let response: String
 
             switch tool {
             case .weather:
-                response = try await service.sendMessageWithWeatherTool()
+                response = try await executeWeatherTool()
             case .web:
-                response = try await service.sendMessageWithWebTool()
+                response = try await executeWebTool()
             case .contacts:
-                response = try await service.sendMessageWithContactsTool()
+                response = try await executeContactsTool()
             case .calendar:
-                response = try await service.sendMessageWithCalendarTool()
+                response = try await executeCalendarTool()
             case .reminders:
-                response = try await service.sendMessageWithRemindersTool()
+                response = try await executeRemindersTool()
             case .location:
-                response = try await service.sendMessageWithLocationTool()
+                response = try await executeLocationTool()
             case .health:
-                response = try await service.sendMessageWithHealthTool()
+                response = try await executeHealthTool()
             case .music:
-                response = try await service.sendMessageWithMusicTool()
+                response = try await executeMusicTool()
             case .webMetadata:
-                response = try await service.sendMessageWithWebMetadataTool()
+                response = try await executeWebMetadataTool()
             }
 
             result = response
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = handleFoundationModelsError(error)
         }
 
         isRunning = false
+    }
+
+    // MARK: - Individual Tool Methods
+
+    private func executeWeatherTool() async throws -> String {
+        let session = LanguageModelSession(tools: [WeatherTool()])
+        let response = try await session.respond(
+            to: Prompt("What's the weather like in San Francisco?"))
+        return response.content
+    }
+
+    private func executeWebTool() async throws -> String {
+        let session = LanguageModelSession(tools: [WebTool()])
+        let response = try await session.respond(
+            to: Prompt("Search for the latest news about Apple Intelligence"))
+        return response.content
+    }
+
+    private func executeContactsTool() async throws -> String {
+        let session = LanguageModelSession(tools: [ContactsTool()])
+        let response = try await session.respond(to: Prompt("Find contacts named John"))
+        return response.content
+    }
+
+    private func executeCalendarTool() async throws -> String {
+        let session = LanguageModelSession(tools: [CalendarTool()])
+        let response = try await session.respond(to: Prompt("What events do I have today?"))
+        return response.content
+    }
+
+    private func executeRemindersTool() async throws -> String {
+        let session = LanguageModelSession(tools: [RemindersTool()])
+        let response = try await session.respond(
+            to: Prompt("Create a reminder to buy milk tomorrow at 5 PM"))
+        return response.content
+    }
+
+    private func executeLocationTool() async throws -> String {
+        let session = LanguageModelSession(tools: [LocationTool()])
+        let response = try await session.respond(to: Prompt("What's my current location?"))
+        return response.content
+    }
+
+    private func executeHealthTool() async throws -> String {
+        let session = LanguageModelSession(tools: [HealthTool()])
+        let response = try await session.respond(to: Prompt("How many steps have I taken today?"))
+        return response.content
+    }
+
+    private func executeMusicTool() async throws -> String {
+        let session = LanguageModelSession(tools: [MusicTool()])
+        let response = try await session.respond(to: Prompt("Search for songs by Taylor Swift"))
+        return response.content
+    }
+
+    private func executeWebMetadataTool() async throws -> String {
+        let session = LanguageModelSession(tools: [WebMetadataTool()])
+        let response = try await session.respond(
+            to: Prompt(
+                "Generate a social media summary for https://www.apple.com/newsroom/2025/06/apple-services-deliver-powerful-features-and-intelligent-updates-to-users-this-fall/"
+            ))
+        return response.content
+    }
+
+    // MARK: - Error Handling
+
+    private func handleFoundationModelsError(_ error: Error) -> String {
+        if let generationError = error as? LanguageModelSession.GenerationError {
+            return FoundationModelsErrorHandler.handleGenerationError(generationError)
+        } else if let toolCallError = error as? LanguageModelSession.ToolCallError {
+            return FoundationModelsErrorHandler.handleToolCallError(toolCallError)
+        } else if let customError = error as? FoundationModelsError {
+            return customError.localizedDescription
+        } else {
+            return "Unexpected error: \(error.localizedDescription)"
+        }
     }
 }
 
