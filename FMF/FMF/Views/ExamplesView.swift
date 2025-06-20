@@ -48,7 +48,7 @@ struct ExamplesView: View {
           ) {
             await exampleType.execute(with: viewModel)
           }
-          .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
+          .glassEffect(.regular.interactive(true), in: .rect(cornerRadius: 12))
           .glassEffectID(exampleType.id, in: glassNamespace)
         }
       }
@@ -83,6 +83,7 @@ struct ExamplesView: View {
     #endif
   }
 
+
   @ViewBuilder
   private var responseView: some View {
     if let requestResponse = viewModel.requestResponse {
@@ -104,6 +105,7 @@ struct ExamplesView: View {
           .foregroundStyle(.secondary)
       }
       .padding(.horizontal)
+      .glassEffect(.regular, in: .capsule)
     }
   }
 }

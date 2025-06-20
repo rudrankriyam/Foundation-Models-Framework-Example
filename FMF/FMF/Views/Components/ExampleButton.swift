@@ -42,24 +42,39 @@ struct ExampleButton: View {
 
   private var buttonContent: some View {
     #if os(iOS)
-    VStack(alignment: .leading, spacing: 8) {
+    VStack(alignment: .leading, spacing: 12) {
       HStack {
         iconView
         Spacer()
         chevronIcon
       }
-      textContent
+
+      VStack(alignment: .leading, spacing: 6) {
+        titleText
+        subtitleText
+      }
     }
     .frame(maxWidth: .infinity, alignment: .leading)
-    .padding()
+    .frame(minHeight: buttonMinHeight)
+    .padding(16)
+    .scaleEffect(isPressed ? 0.98 : 1.0)
+    .animation(.easeInOut(duration: 0.15), value: isPressed)
     #else
     HStack(spacing: 12) {
       iconView
-      textContent
+
+      VStack(alignment: .leading, spacing: 4) {
+        titleText
+        subtitleText
+      }
+
       Spacer()
       chevronIcon
     }
-    .padding()
+    .frame(minHeight: buttonMinHeight)
+    .padding(16)
+    .scaleEffect(isPressed ? 0.98 : 1.0)
+    .animation(.easeInOut(duration: 0.15), value: isPressed)
     #endif
   }
 
@@ -67,38 +82,26 @@ struct ExampleButton: View {
     Image(systemName: icon)
       .font(.title2)
       .foregroundStyle(.tint)
-      .frame(width: 30)
+      .frame(width: 24, height: 24)
   }
 
-  private var textContent: some View {
-    VStack(alignment: .leading, spacing: 4) {
-      Text(title)
-        .font(titleFont)
-        .fontWeight(.medium)
-        .foregroundStyle(.primary)
-        .fixedSize(horizontal: false, vertical: true)
-      Text(subtitle)
-        .font(subtitleFont)
-        .foregroundStyle(.secondary)
-        .fixedSize(horizontal: false, vertical: true)
-        .lineLimit(nil)
-    }
+  private var titleText: some View {
+    Text(title)
+      .font(.subheadline)
+      .fontWeight(.medium)
+      .foregroundStyle(.primary)
+      .lineLimit(2)
+      .fixedSize(horizontal: false, vertical: true)
+      .frame(maxWidth: .infinity, alignment: .leading)
   }
 
-  private var titleFont: Font {
-    #if os(iOS)
-    .subheadline
-    #else
-    .headline
-    #endif
-  }
-
-  private var subtitleFont: Font {
-    #if os(iOS)
-    .caption
-    #else
-    .caption
-    #endif
+  private var subtitleText: some View {
+    Text(subtitle)
+      .font(.caption)
+      .foregroundStyle(.secondary)
+      .lineLimit(1)
+      .truncationMode(.tail)
+      .frame(maxWidth: .infinity, alignment: .leading)
   }
 
   private var chevronIcon: some View {
@@ -106,13 +109,21 @@ struct ExampleButton: View {
       .font(.caption)
       .foregroundStyle(.tertiary)
   }
+
+  private var buttonMinHeight: CGFloat {
+    #if os(iOS)
+    85
+    #else
+    70
+    #endif
+  }
 }
 
 #Preview {
   VStack(spacing: 12) {
     ExampleButton(
       title: "Basic Chat",
-      subtitle: "Simple conversation with the model",
+      subtitle: "Simple conversation with AI",
       icon: "message"
     ) {
       // Preview action
@@ -120,9 +131,18 @@ struct ExampleButton: View {
     .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
 
     ExampleButton(
-      title: "Tool Calling",
-      subtitle: "Use custom tools with the model",
-      icon: "wrench.and.screwdriver"
+      title: "Creative Writing",
+      subtitle: "Generate stories and content",
+      icon: "pencil.and.outline"
+    ) {
+      // Preview action
+    }
+    .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
+
+    ExampleButton(
+      title: "Business Ideas",
+      subtitle: "Generate startup concepts",
+      icon: "lightbulb"
     ) {
       // Preview action
     }

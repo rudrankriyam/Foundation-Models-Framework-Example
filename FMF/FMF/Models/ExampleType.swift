@@ -40,19 +40,19 @@ enum ExampleType: String, CaseIterable, Identifiable {
   var subtitle: String {
     switch self {
     case .basicChat:
-      return "Simple conversation with the model"
+      return "Simple conversation with AI"
     case .structuredData:
-      return "Generate typed objects from prompts"
+      return "Generate typed data objects"
     case .generationGuides:
-      return "Constrained and guided outputs"
+      return "Constrained output generation"
     case .streamingResponse:
       return "Real-time response streaming"
     case .modelAvailability:
       return "Check system capabilities"
     case .creativeWriting:
-      return "Generate story outlines and narratives"
+      return "Generate stories and content"
     case .businessIdeas:
-      return "Generate startup concepts and plans"
+      return "Generate startup concepts"
     }
   }
   
