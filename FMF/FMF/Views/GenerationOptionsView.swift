@@ -12,7 +12,7 @@ struct GenerationOptionsView: View {
     @State private var temperature: Double = 0.7
     @State private var topK: Int = 50
     @State private var topP: Double = 0.9
-    @State private var maximumResponseTokens: Int = 100
+    @State private var maximumResponseTokens: Int = 500
     @State private var useSampling: Bool = true
     @State private var samplingMode: SamplingType = .nucleus
 
@@ -87,10 +87,10 @@ struct GenerationOptionsView: View {
             VStack(spacing: 16) {
                 // Temperature
                 temperatureSlider
-
-                // Top P
-                topPSlider
-
+                
+                // Sampling Section
+                samplingSection
+                
                 // Max Response Tokens
                 maxTokensSlider
             }
@@ -120,24 +120,55 @@ struct GenerationOptionsView: View {
         .padding()
         .background(.thinMaterial, in: .rect(cornerRadius: 8))
     }
+    
+    private var samplingSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Sampling Strategy")
+                .font(.subheadline)
+                .fontWeight(.medium)
 
-    private var topPSlider: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("Top P (Nucleus Sampling)")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                Spacer()
-                Text(String(format: "%.2f", topP))
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 8) {
+                Toggle("Use Custom Sampling", isOn: $useSampling)
+                    .font(.caption)
+
+                if useSampling {
+                    Picker("Sampling Mode", selection: $samplingMode) {
+                        ForEach(SamplingType.allCases, id: \.self) { mode in
+                            Text(mode.rawValue).tag(mode)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
+                    Text(samplingMode.description)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                    if samplingMode == .topK {
+                        HStack {
+                            Text("Top-K Value")
+                                .font(.caption)
+                            Spacer()
+                            Text("\(topK)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Slider(value: Binding(
+                            get: { Double(topK) },
+                            set: { topK = Int($0) }
+                        ), in: 1...100, step: 1)
+                    } else if samplingMode == .nucleus {
+                        HStack {
+                            Text("Probability Threshold")
+                                .font(.caption)
+                            Spacer()
+                            Text(String(format: "%.2f", topP))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Slider(value: $topP, in: 0.1...1.0, step: 0.05)
+                    }
+                }
             }
-
-            Slider(value: $topP, in: 0.1...1.0, step: 0.05)
-
-            Text("Cumulative probability threshold for token selection")
-                .font(.caption)
-                .foregroundStyle(.secondary)
         }
         .padding()
         .background(.thinMaterial, in: .rect(cornerRadius: 8))
@@ -158,9 +189,9 @@ struct GenerationOptionsView: View {
             Slider(value: Binding(
                 get: { Double(maximumResponseTokens) },
                 set: { maximumResponseTokens = Int($0) }
-            ), in: 50...500, step: 25)
+            ), in: 50...4000, step: 50)
 
-            Text("Maximum number of tokens to generate")
+            Text("Maximum number of tokens to generate (up to 4000)")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -242,7 +273,22 @@ struct GenerationOptionsView: View {
         response = ""
 
         do {
+            // Create sampling mode based on selection
+            let samplingMode: GenerationOptions.SamplingMode? = if useSampling {
+                switch self.samplingMode {
+                case .greedy:
+                    .greedy
+                case .topK:
+                    .random(top: topK)
+                case .nucleus:
+                    .random(probabilityThreshold: topP)
+                }
+            } else {
+                nil // Let system choose default
+            }
+
             let options = GenerationOptions(
+                sampling: samplingMode,
                 temperature: temperature,
                 maximumResponseTokens: maximumResponseTokens
             )
