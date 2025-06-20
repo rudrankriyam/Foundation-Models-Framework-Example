@@ -24,8 +24,6 @@ struct ChatView: View {
                 isTextFieldFocused: $isTextFieldFocused
             )
         }
-        .navigationTitle("AI ChatBot")
-        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Clear") {
