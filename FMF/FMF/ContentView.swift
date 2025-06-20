@@ -17,7 +17,7 @@ struct ContentView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             // Examples Tab
-            ExamplesTabView(viewModel: $viewModel)
+            ExamplesView(viewModel: $viewModel)
                 .tabItem {
                     Image(systemName: "brain.head.profile")
                     Text("Examples")
@@ -72,4 +72,3 @@ struct ContentView: View {
 #Preview {
     ContentView()
 }
-

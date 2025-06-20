@@ -1,5 +1,5 @@
 //
-//  ExamplesTabView.swift
+//  ExamplesView.swift
 //  FMF
 //
 //  Created by Rudrank Riyam on 6/15/25.
@@ -8,9 +8,10 @@
 import SwiftUI
 import FoundationModels
 
-struct ExamplesTabView: View {
+struct ExamplesView: View {
   @Binding var viewModel: ContentViewModel
-  
+  @Namespace private var glassNamespace
+
   var body: some View {
     NavigationStack {
       ScrollView {
@@ -24,7 +25,7 @@ struct ExamplesTabView: View {
       }
     }
   }
-  
+
   // MARK: - View Components
 
   private var headerView: some View {
@@ -32,28 +33,29 @@ struct ExamplesTabView: View {
       Text("Foundation Models")
         .font(.largeTitle)
         .fontWeight(.bold)
-      Text("On-device AI Examples")
-        .font(.subheadline)
-        .foregroundStyle(.secondary)
     }
     .padding(.horizontal)
   }
 
   private var exampleButtonsView: some View {
-    LazyVGrid(columns: adaptiveGridColumns, spacing: gridSpacing) {
-      ForEach(ExampleType.allCases) { exampleType in
-        ExampleButton(
-          title: exampleType.title,
-          subtitle: exampleType.subtitle,
-          icon: exampleType.icon
-        ) {
-          await exampleType.execute(with: viewModel)
+    GlassEffectContainer(spacing: gridSpacing) {
+      LazyVGrid(columns: adaptiveGridColumns, spacing: gridSpacing) {
+        ForEach(ExampleType.allCases) { exampleType in
+          ExampleButton(
+            title: exampleType.title,
+            subtitle: exampleType.subtitle,
+            icon: exampleType.icon
+          ) {
+            await exampleType.execute(with: viewModel)
+          }
+          .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
+          .glassEffectID(exampleType.id, in: glassNamespace)
         }
       }
+      .padding(.horizontal)
     }
-    .padding(.horizontal)
   }
-  
+
   private var adaptiveGridColumns: [GridItem] {
     #if os(iOS)
     // iPhone: 2 columns with flexible sizing and better spacing
@@ -72,7 +74,7 @@ struct ExamplesTabView: View {
     ]
     #endif
   }
-  
+
   private var gridSpacing: CGFloat {
     #if os(iOS)
     16
@@ -107,5 +109,5 @@ struct ExamplesTabView: View {
 }
 
 #Preview {
-  ExamplesTabView(viewModel: .constant(ContentViewModel()))
+  ExamplesView(viewModel: .constant(ContentViewModel()))
 }

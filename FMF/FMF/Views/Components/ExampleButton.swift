@@ -8,7 +8,7 @@
 import FoundationModels
 import SwiftUI
 
-/// Reusable button component for example actions
+/// Reusable button component for example actions with Liquid Glass effects
 struct ExampleButton: View {
   let title: String
   let subtitle: String
@@ -43,11 +43,15 @@ struct ExampleButton: View {
   private var buttonContent: some View {
     #if os(iOS)
     VStack(alignment: .leading, spacing: 8) {
+      HStack {
+        iconView
+        Spacer()
+        chevronIcon
+      }
       textContent
     }
     .frame(maxWidth: .infinity, alignment: .leading)
     .padding()
-    .background(backgroundView)
     #else
     HStack(spacing: 12) {
       iconView
@@ -56,7 +60,6 @@ struct ExampleButton: View {
       chevronIcon
     }
     .padding()
-    .background(backgroundView)
     #endif
   }
 
@@ -81,7 +84,7 @@ struct ExampleButton: View {
         .lineLimit(nil)
     }
   }
-  
+
   private var titleFont: Font {
     #if os(iOS)
     .subheadline
@@ -89,7 +92,7 @@ struct ExampleButton: View {
     .headline
     #endif
   }
-  
+
   private var subtitleFont: Font {
     #if os(iOS)
     .caption
@@ -103,15 +106,6 @@ struct ExampleButton: View {
       .font(.caption)
       .foregroundStyle(.tertiary)
   }
-
-  private var backgroundView: some View {
-    RoundedRectangle(cornerRadius: 12)
-      .fill(Color.gray.opacity(0.1))
-      .overlay(
-        RoundedRectangle(cornerRadius: 12)
-          .stroke(Color.gray.opacity(0.2), lineWidth: 0.5)
-      )
-  }
 }
 
 #Preview {
@@ -123,6 +117,7 @@ struct ExampleButton: View {
     ) {
       // Preview action
     }
+    .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
 
     ExampleButton(
       title: "Tool Calling",
@@ -131,6 +126,7 @@ struct ExampleButton: View {
     ) {
       // Preview action
     }
+    .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
   }
   .padding()
 }
