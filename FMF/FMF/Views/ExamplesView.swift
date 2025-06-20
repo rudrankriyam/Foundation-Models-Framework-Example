@@ -13,16 +13,17 @@ struct ExamplesView: View {
   @Namespace private var glassNamespace
 
   var body: some View {
-    NavigationStack {
-      ScrollView {
-        VStack(alignment: .leading, spacing: 20) {
-          headerView
-          exampleButtonsView
-          responseView
-          loadingView
-        }
-        .padding(.vertical)
+    ScrollView {
+      VStack(alignment: .leading, spacing: 20) {
+        headerView
+        exampleButtonsView
+        responseView
+        loadingView
       }
+      .padding(.vertical)
+    }
+    .navigationDestination(for: ExampleType.self) { exampleType in
+        GenerationOptionsView()
     }
   }
 
@@ -38,18 +39,23 @@ struct ExamplesView: View {
   }
 
   private var exampleButtonsView: some View {
-    GlassEffectContainer(spacing: gridSpacing) {
+    VStack(spacing: gridSpacing) {
       LazyVGrid(columns: adaptiveGridColumns, spacing: gridSpacing) {
         ForEach(ExampleType.allCases) { exampleType in
-          ExampleButton(
-            title: exampleType.title,
-            subtitle: exampleType.subtitle,
-            icon: exampleType.icon
-          ) {
-            await exampleType.execute(with: viewModel)
+          if exampleType == .generationOptions {
+            NavigationLink(value: exampleType) {
+                ExampleCardView(type: exampleType)
+            }
+            .buttonStyle(.plain)
+            .glassEffect(.regular.interactive(true), in: .rect(cornerRadius: 12))
+            .glassEffectID(exampleType.id, in: glassNamespace)
+          } else {
+            ExampleButton(exampleType: exampleType) {
+              await exampleType.execute(with: viewModel)
+            }
+            .glassEffect(.regular.interactive(true), in: .rect(cornerRadius: 12))
+            .glassEffectID(exampleType.id, in: glassNamespace)
           }
-          .glassEffect(.regular.interactive(true), in: .rect(cornerRadius: 12))
-          .glassEffectID(exampleType.id, in: glassNamespace)
         }
       }
       .padding(.horizontal)

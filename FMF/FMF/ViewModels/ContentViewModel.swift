@@ -13,8 +13,9 @@ import Observation
 import SwiftUI
 
 /// ViewModel for managing ContentView state and operations
+@MainActor
 @Observable
-final class ContentViewModel {
+class ContentViewModel {
 
   // MARK: - Published Properties
 
@@ -32,8 +33,8 @@ final class ContentViewModel {
   @MainActor
   func executeBasicChat() async {
     let requestText = "Suggest a catchy name for a new coffee shop."
-    isLoading = true
-    requestResponse = nil
+    setLoading(true)
+    setRequestResponse(nil)
 
     do {
       // Create a basic session
@@ -43,26 +44,19 @@ final class ContentViewModel {
       let response = try await session.respond(
         to: Prompt(requestText))
 
-      self.requestResponse = RequestResponsePair(
-        request: requestText,
-        response: response.content
-      )
+      setRequestResponse(RequestResponsePair(request: requestText, response: response.content))
     } catch {
-      self.requestResponse = RequestResponsePair(
-        request: requestText,
-        response: handleFoundationModelsError(error),
-        isError: true
-      )
+      setRequestResponse(RequestResponsePair(request: requestText, response: handleFoundationModelsError(error), isError: true))
     }
 
-    isLoading = false
+    setLoading(false)
   }
 
   @MainActor
   func executeStructuredData() async {
     let requestText = "Suggest a sci-fi book."
-    isLoading = true
-    requestResponse = nil
+    setLoading(true)
+    setRequestResponse(nil)
 
     do {
       // Create a basic session
@@ -82,27 +76,20 @@ final class ContentViewModel {
         Genre: \(bookInfo.genre)
         Description: \(bookInfo.description)
         """
-      
-      self.requestResponse = RequestResponsePair(
-        request: requestText,
-        response: responseText
-      )
+
+      setRequestResponse(RequestResponsePair(request: requestText, response: responseText))
     } catch {
-      self.requestResponse = RequestResponsePair(
-        request: requestText,
-        response: handleFoundationModelsError(error),
-        isError: true
-      )
+      setRequestResponse(RequestResponsePair(request: requestText, response: handleFoundationModelsError(error), isError: true))
     }
 
-    isLoading = false
+    setLoading(false)
   }
 
   @MainActor
   func executeGenerationGuides() async {
     let requestText = "Write a product review for a smartphone."
-    isLoading = true
-    requestResponse = nil
+    setLoading(true)
+    setRequestResponse(nil)
 
     do {
       // Create a basic session
@@ -125,27 +112,20 @@ final class ContentViewModel {
         Pros: \(review.pros.joined(separator: ", "))
         Cons: \(review.cons.joined(separator: ", "))
         """
-      
-      self.requestResponse = RequestResponsePair(
-        request: requestText,
-        response: responseText
-      )
+
+      setRequestResponse(RequestResponsePair(request: requestText, response: responseText))
     } catch {
-      self.requestResponse = RequestResponsePair(
-        request: requestText,
-        response: handleFoundationModelsError(error),
-        isError: true
-      )
+      setRequestResponse(RequestResponsePair(request: requestText, response: handleFoundationModelsError(error), isError: true))
     }
 
-    isLoading = false
+    setLoading(false)
   }
 
   @MainActor
   func executeStreaming() async {
     let requestText = "Write a haiku about destiny."
-    isLoading = true
-    requestResponse = nil
+    setLoading(true)
+    setRequestResponse(nil)
 
     do {
       // Create a basic session
@@ -155,41 +135,28 @@ final class ContentViewModel {
       let stream = session.streamResponse(to: Prompt(requestText))
 
       // Set initial request with empty response
-      self.requestResponse = RequestResponsePair(
-        request: requestText,
-        response: ""
-      )
+      setRequestResponse(RequestResponsePair(request: requestText, response: ""))
 
       // Process streaming updates
       for try await partialResponse in stream {
-        self.requestResponse = RequestResponsePair(
-          request: requestText,
-          response: partialResponse
-        )
+        setRequestResponse(RequestResponsePair(request: requestText, response: partialResponse))
       }
 
       // Get final response
       let finalResponse = try await stream.collect()
-      self.requestResponse = RequestResponsePair(
-        request: requestText,
-        response: finalResponse.content
-      )
-      isLoading = false
+      setRequestResponse(RequestResponsePair(request: requestText, response: finalResponse.content))
+      setLoading(false)
     } catch {
-      self.requestResponse = RequestResponsePair(
-        request: requestText,
-        response: handleFoundationModelsError(error),
-        isError: true
-      )
-      isLoading = false
+      setRequestResponse(RequestResponsePair(request: requestText, response: handleFoundationModelsError(error), isError: true))
+      setLoading(false)
     }
   }
 
   @MainActor
   func executeModelAvailability() async {
     let requestText = "Check system model availability and capabilities"
-    isLoading = true
-    requestResponse = nil
+    setLoading(true)
+    setRequestResponse(nil)
 
     // Check model availability
     let model = SystemLanguageModel.default
@@ -201,8 +168,7 @@ final class ContentViewModel {
     case .available:
       result += "✅ Default model is available and ready\n"
       result += "Supported languages: \(model.supportedLanguages.count)\n"
-      result +=
-        "Content tagging model: \(contentTaggingModel.availability == .available ? "✅" : "❌")\n"
+      result += "Content tagging model: \(contentTaggingModel.availability == .available ? "✅" : "❌")\n"
 
     case .unavailable(let reason):
       result += "❌ Default model unavailable\n"
@@ -218,18 +184,15 @@ final class ContentViewModel {
       }
     }
 
-    self.requestResponse = RequestResponsePair(
-      request: requestText,
-      response: result
-    )
-    isLoading = false
+    setRequestResponse(RequestResponsePair(request: requestText, response: result))
+    setLoading(false)
   }
 
   @MainActor
   func executeWeatherToolCalling() async {
     let requestText = "Is it hotter in New Delhi, or San Francisco? Compare the weather in both cities."
-    isLoading = true
-    requestResponse = nil
+    setLoading(true)
+    setRequestResponse(nil)
 
     do {
       // Create session with weather tool
@@ -242,26 +205,20 @@ final class ContentViewModel {
       let response = try await session.respond(
         to: Prompt(requestText))
 
-      self.requestResponse = RequestResponsePair(
-        request: requestText,
-        response: "Weather Comparison:\n\(response.content)\n\n"
-      )
+      let responseText = "Weather Comparison:\n\(response.content)\n\n"
+      setRequestResponse(RequestResponsePair(request: requestText, response: responseText))
     } catch {
-      self.requestResponse = RequestResponsePair(
-        request: requestText,
-        response: handleFoundationModelsError(error),
-        isError: true
-      )
+      setRequestResponse(RequestResponsePair(request: requestText, response: handleFoundationModelsError(error), isError: true))
     }
 
-    isLoading = false
+    setLoading(false)
   }
 
   @MainActor
   func executeWebSearchToolCalling() async {
     let requestText = "Search about WWDC 2025 announcements, especially the Foundation Model framework"
-    isLoading = true
-    requestResponse = nil
+    setLoading(true)
+    setRequestResponse(nil)
 
     do {
       // Create session with web search tool
@@ -272,28 +229,22 @@ final class ContentViewModel {
 
       // Execute with web search tool
       let response = try await session.respond(
-        to: requestText)
+        to: Prompt(requestText))
 
-      self.requestResponse = RequestResponsePair(
-        request: requestText,
-        response: "Web Search Results:\n\(response.content)\n\n"
-      )
+      let responseText = "Web Search Results:\n\(response.content)\n\n"
+      setRequestResponse(RequestResponsePair(request: requestText, response: responseText))
     } catch {
-      self.requestResponse = RequestResponsePair(
-        request: requestText,
-        response: handleFoundationModelsError(error),
-        isError: true
-      )
+      setRequestResponse(RequestResponsePair(request: requestText, response: handleFoundationModelsError(error), isError: true))
     }
 
-    isLoading = false
+    setLoading(false)
   }
 
   @MainActor
   func executeCreativeWriting() async {
     let requestText = "Create an outline for a mystery story set in a small town."
-    isLoading = true
-    requestResponse = nil
+    setLoading(true)
+    setRequestResponse(nil)
 
     do {
       // Create a basic session
@@ -317,27 +268,20 @@ final class ContentViewModel {
         Central Conflict:
         \(storyOutline.conflict)
         """
-      
-      self.requestResponse = RequestResponsePair(
-        request: requestText,
-        response: responseText
-      )
+
+      setRequestResponse(RequestResponsePair(request: requestText, response: responseText))
     } catch {
-      self.requestResponse = RequestResponsePair(
-        request: requestText,
-        response: handleFoundationModelsError(error),
-        isError: true
-      )
+      setRequestResponse(RequestResponsePair(request: requestText, response: handleFoundationModelsError(error), isError: true))
     }
 
-    isLoading = false
+    setLoading(false)
   }
 
   @MainActor
   func executeBusinessIdea() async {
     let requestText = "Generate a unique startup business idea for 2025."
-    isLoading = true
-    requestResponse = nil
+    setLoading(true)
+    setRequestResponse(nil)
 
     do {
       // Create a basic session
@@ -364,20 +308,13 @@ final class ContentViewModel {
 
         Estimated Startup Cost: \(businessIdea.estimatedStartupCost)
         """
-      
-      self.requestResponse = RequestResponsePair(
-        request: requestText,
-        response: responseText
-      )
+
+      setRequestResponse(RequestResponsePair(request: requestText, response: responseText))
     } catch {
-      self.requestResponse = RequestResponsePair(
-        request: requestText,
-        response: handleFoundationModelsError(error),
-        isError: true
-      )
+      setRequestResponse(RequestResponsePair(request: requestText, response: handleFoundationModelsError(error), isError: true))
     }
 
-    isLoading = false
+    setLoading(false)
   }
 
   // MARK: - Helper Methods
@@ -385,6 +322,14 @@ final class ContentViewModel {
   @MainActor
   func clearResults() {
     requestResponse = nil
+  }
+
+  private func setLoading(_ loading: Bool) {
+    isLoading = loading
+  }
+
+  private func setRequestResponse(_ response: RequestResponsePair?) {
+    requestResponse = response
   }
 
   // MARK: - Error Handling
