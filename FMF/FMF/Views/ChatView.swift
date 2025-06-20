@@ -11,24 +11,35 @@ import FoundationModels
 struct ChatView: View {
     @Binding var viewModel: ChatViewModel
     @State private var scrollID: String?
+    @State private var messageText = ""
+    @FocusState private var isTextFieldFocused: Bool
 
     var body: some View {
-        messagesView
-            .navigationTitle("AI ChatBot")
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button("Clear") {
-                        viewModel.clearChat()
-                    }
-                    .disabled(viewModel.session.transcript.entries.isEmpty)
+        VStack(spacing: 0) {
+            messagesView
+            
+            ChatInputView(
+                messageText: $messageText,
+                chatViewModel: viewModel,
+                isTextFieldFocused: $isTextFieldFocused
+            )
+        }
+        .navigationTitle("AI ChatBot")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button("Clear") {
+                    viewModel.clearChat()
                 }
+                .disabled(viewModel.session.transcript.entries.isEmpty)
             }
-            #if os(iOS)
-            .onTapGesture {
-                // Dismiss keyboard when tapping outside
-                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        }
+        .onAppear {
+            // Auto-focus when chat appears
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                isTextFieldFocused = true
             }
-            #endif
+        }
     }
 
 

@@ -11,7 +11,6 @@ import FoundationModels
 struct ContentView: View {
     @State private var viewModel = ContentViewModel()
     @State private var chatViewModel = ChatViewModel()
-    @State private var messageText = ""
     @State private var selectedTab: TabSelection = .examples
 
     var body: some View {
@@ -54,18 +53,9 @@ struct ContentView: View {
             }
             .tag(TabSelection.settings)
         }
-
-#if os(iOS)
-        .tabBarMinimizeBehavior(.onScrollUp)
-        .tabViewBottomAccessory {
-            if selectedTab == .chatBot {
-                ChatInputAccessoryView(
-                    messageText: $messageText,
-                    chatViewModel: chatViewModel
-                )
-            }
-        }
-#endif
+        #if os(iOS)
+        .ignoresSafeArea(.keyboard)
+        #endif
     }
 }
 
