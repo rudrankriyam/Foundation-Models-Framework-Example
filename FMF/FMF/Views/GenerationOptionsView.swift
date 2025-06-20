@@ -214,8 +214,9 @@ struct GenerationOptionsView: View {
             .frame(maxWidth: .infinity)
             .padding()
         }
-        .buttonStyle(.borderedProminent)
+        .buttonStyle(.glass)
         .disabled(isGenerating || prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isGenerating)
     }
 
     @ViewBuilder
@@ -230,6 +231,7 @@ struct GenerationOptionsView: View {
                         response = ""
                         showError = nil
                     }
+                    .buttonStyle(.glass)
                     .font(.caption)
                 }
 
