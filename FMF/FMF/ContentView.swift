@@ -10,7 +10,7 @@ import FoundationModels
 
 struct ContentView: View {
     @State private var viewModel = ContentViewModel()
-    @State private var chatBotViewModel = ChatBotViewModel()
+    @State private var chatViewModel = ChatViewModel()
     @State private var messageText = ""
     @State private var selectedTab: TabSelection = .examples
 
@@ -26,7 +26,7 @@ struct ContentView: View {
 
             // ChatBot Tab
             NavigationStack {
-                ChatBotView(viewModel: $chatBotViewModel)
+                ChatView(viewModel: $chatViewModel)
             }
             .tabItem {
                 Image(systemName: "ellipsis.message")
@@ -36,7 +36,7 @@ struct ContentView: View {
 
             // Tools Tab
             NavigationStack {
-                ToolsTabView()
+                ToolsView()
             }
             .tabItem {
                 Image(systemName: "function")
@@ -61,7 +61,7 @@ struct ContentView: View {
             if selectedTab == .chatBot {
                 ChatInputAccessoryView(
                     messageText: $messageText,
-                    chatBotViewModel: chatBotViewModel
+                    chatViewModel: chatViewModel
                 )
             }
         }

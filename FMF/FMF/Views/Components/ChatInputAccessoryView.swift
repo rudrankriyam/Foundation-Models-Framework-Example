@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ChatInputAccessoryView: View {
   @Binding var messageText: String
-  let chatBotViewModel: ChatBotViewModel
+  let chatViewModel: ChatViewModel
   @Environment(\.tabViewBottomAccessoryPlacement) private var placement
   @FocusState private var isTextFieldFocused: Bool
   
@@ -22,6 +22,9 @@ struct ChatInputAccessoryView: View {
         .onSubmit {
           sendMessage()
         }
+        #if os(iOS)
+        .submitLabel(.send)
+        #endif
       
       Button(action: sendMessage) {
         Image(systemName: "arrow.up.circle.fill")
@@ -32,14 +35,23 @@ struct ChatInputAccessoryView: View {
       }
       .disabled(
         messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || 
-        chatBotViewModel.isLoading || 
-        chatBotViewModel.isSummarizing
+        chatViewModel.isLoading || 
+        chatViewModel.isSummarizing
       )
+      #if os(macOS)
+      .keyboardShortcut(.return, modifiers: [])
+      #endif
     }
     .padding(.horizontal, isCollapsed ? 8 : 16)
     .padding(.vertical, isCollapsed ? 6 : 12)
     .background(backgroundMaterial)
     .animation(.easeInOut(duration: 0.3), value: placement)
+    .onAppear {
+      // Auto-focus the text field when the view appears
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+        isTextFieldFocused = true
+      }
+    }
   }
   
   private var isCollapsed: Bool {
@@ -59,10 +71,14 @@ struct ChatInputAccessoryView: View {
     guard !trimmedMessage.isEmpty else { return }
     
     messageText = ""
-    isTextFieldFocused = false
+    
+    // Keep focus on text field for continuous conversation
+    if !isCollapsed {
+      isTextFieldFocused = true
+    }
     
     Task {
-      await chatBotViewModel.sendMessage(trimmedMessage)
+      await chatViewModel.sendMessage(trimmedMessage)
     }
   }
 }
@@ -70,6 +86,6 @@ struct ChatInputAccessoryView: View {
 #Preview {
   ChatInputAccessoryView(
     messageText: .constant(""),
-    chatBotViewModel: ChatBotViewModel()
+    chatViewModel: ChatViewModel()
   )
 }

@@ -20,7 +20,8 @@
       "WebFetch(domain:developer.apple.com)",
       "Bash(swift:*)",
       "Bash(rg:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(mv:*)"
     ],
     "deny": []
   }

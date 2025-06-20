@@ -1,5 +1,5 @@
 //
-//  ChatBotView.swift
+//  ChatView.swift
 //  FMF
 //
 //  Created by Rudrank Riyam on 6/9/25.
@@ -8,8 +8,9 @@
 import SwiftUI
 import FoundationModels
 
-struct ChatBotView: View {
-    @Binding var viewModel: ChatBotViewModel
+struct ChatView: View {
+    @Binding var viewModel: ChatViewModel
+    @State private var scrollID: String?
 
     var body: some View {
         messagesView
@@ -22,6 +23,12 @@ struct ChatBotView: View {
                     .disabled(viewModel.session.transcript.entries.isEmpty)
                 }
             }
+            #if os(iOS)
+            .onTapGesture {
+                // Dismiss keyboard when tapping outside
+                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            }
+            #endif
     }
 
 
@@ -46,10 +53,21 @@ struct ChatBotView: View {
                             Spacer()
                         }
                         .padding(.horizontal)
+                        .id("summarizing")
                     }
+                    
+                    // Empty spacer for bottom padding
+                    Rectangle()
+                        .fill(.clear)
+                        .frame(height: 1)
+                        .id("bottom")
                 }
                 .padding(.vertical)
             }
+            #if os(iOS)
+            .scrollDismissesKeyboard(.interactively)
+            #endif
+            .scrollPosition(id: $scrollID, anchor: .bottom)
             .onChange(of: viewModel.session.transcript.entries.count) { _, _ in
                 if let lastEntry = viewModel.session.transcript.entries.last {
                     withAnimation(.easeOut(duration: 0.3)) {
@@ -57,7 +75,15 @@ struct ChatBotView: View {
                     }
                 }
             }
+            .onChange(of: viewModel.isSummarizing) { _, isSummarizing in
+                if isSummarizing {
+                    withAnimation(.easeOut(duration: 0.3)) {
+                        proxy.scrollTo("summarizing", anchor: .bottom)
+                    }
+                }
+            }
         }
+        .defaultScrollAnchor(.bottom)
     }
 
 }
@@ -115,5 +141,5 @@ struct TranscriptEntryView: View {
 }
 
 #Preview {
-    ChatBotView(viewModel: .constant(ChatBotViewModel()))
+    ChatView(viewModel: .constant(ChatViewModel()))
 }

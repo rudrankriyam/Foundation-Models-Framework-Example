@@ -1,5 +1,5 @@
 //
-//  ToolsTabView.swift
+//  ToolsView.swift
 //  FMF
 //
 //  Created by Claude on 6/18/25.
@@ -30,7 +30,7 @@ private var separatorColor: Color {
 #endif
 }
 
-struct ToolsTabView: View {
+struct ToolsView: View {
     @State private var isRunning = false
     @State private var result: String = ""
     @State private var errorMessage: String?
@@ -394,5 +394,5 @@ enum ToolExample: String, CaseIterable {
 }
 
 #Preview {
-    ToolsTabView()
+    ToolsView()
 }

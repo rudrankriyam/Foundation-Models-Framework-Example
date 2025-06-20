@@ -1,5 +1,5 @@
 //
-//  ChatBotViewModel.swift
+//  ChatViewModel.swift
 //  FMF
 //
 //  Created by Rudrank Riyam on 6/9/25.
@@ -10,7 +10,7 @@ import FoundationModels
 import Observation
 
 @Observable
-final class ChatBotViewModel {
+final class ChatViewModel {
 
     // MARK: - Published Properties
 
