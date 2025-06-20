@@ -5,42 +5,24 @@
 //  Created by Claude on 6/18/25.
 //
 
-import SwiftUI
 import FoundationModels
-
-// MARK: - Platform-specific Colors
+import SwiftUI
 
 #if os(macOS)
 import AppKit
 #endif
-
-private var secondaryBackgroundColor: Color {
-#if os(iOS)
-    Color(UIColor.secondarySystemBackground)
-#elseif os(macOS)
-    Color(NSColor.controlBackgroundColor)
-#endif
-}
-
-private var separatorColor: Color {
-#if os(iOS)
-    Color(UIColor.separator)
-#elseif os(macOS)
-    Color(NSColor.separatorColor)
-#endif
-}
 
 struct ToolsView: View {
     @State private var isRunning = false
     @State private var result: String = ""
     @State private var errorMessage: String?
     @State private var selectedTool: ToolExample?
+    @Namespace private var glassNamespace
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    headerView
                     toolButtonsView
                     if selectedTool != nil {
                         resultView
@@ -49,34 +31,23 @@ struct ToolsView: View {
                 .padding(.vertical)
             }
             .navigationTitle("Tools")
-#if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-#endif
         }
-    }
-
-    // MARK: - View Components
-
-    private var headerView: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Tool Use")
-                .font(.largeTitle)
-                .fontWeight(.bold)
-        }
-        .padding(.horizontal)
     }
 
     private var toolButtonsView: some View {
-        LazyVGrid(columns: adaptiveGridColumns, spacing: gridSpacing) {
-            ForEach(ToolExample.allCases, id: \.self) { tool in
-                ToolButton(
-                    tool: tool,
-                    isSelected: selectedTool == tool,
-                    isRunning: isRunning && selectedTool == tool
-                ) {
-                    selectedTool = tool
-                    Task {
-                        await executeToolExample(tool: tool)
+        GlassEffectContainer(spacing: gridSpacing) {
+            LazyVGrid(columns: adaptiveGridColumns, spacing: gridSpacing) {
+                ForEach(ToolExample.allCases, id: \.self) { tool in
+                    ToolButton(
+                        tool: tool,
+                        isSelected: selectedTool == tool,
+                        isRunning: isRunning && selectedTool == tool,
+                        namespace: glassNamespace
+                    ) {
+                        selectedTool = tool
+                        Task {
+                            await executeToolExample(tool: tool)
+                        }
                     }
                 }
             }
@@ -89,7 +60,7 @@ struct ToolsView: View {
         // iPhone: 2 columns with flexible sizing
         return [
             GridItem(.flexible(minimum: 140), spacing: 12),
-            GridItem(.flexible(minimum: 140), spacing: 12)
+            GridItem(.flexible(minimum: 140), spacing: 12),
         ]
 #elseif os(macOS)
         // Mac: Adaptive columns based on available width
@@ -98,7 +69,7 @@ struct ToolsView: View {
         // Default fallback
         return [
             GridItem(.flexible(minimum: 140), spacing: 12),
-            GridItem(.flexible(minimum: 140), spacing: 12)
+            GridItem(.flexible(minimum: 140), spacing: 12),
         ]
 #endif
     }
@@ -150,6 +121,22 @@ struct ToolsView: View {
             }
         }
         .padding(.horizontal)
+    }
+
+    private var secondaryBackgroundColor: Color {
+#if os(iOS)
+        Color(UIColor.secondarySystemBackground)
+#elseif os(macOS)
+        Color(NSColor.controlBackgroundColor)
+#endif
+    }
+
+    private var separatorColor: Color {
+#if os(iOS)
+        Color(UIColor.separator)
+#elseif os(macOS)
+        Color(NSColor.separatorColor)
+#endif
     }
 
     // MARK: - Tool Example Execution
@@ -275,6 +262,7 @@ struct ToolButton: View {
     let tool: ToolExample
     let isSelected: Bool
     let isRunning: Bool
+    let namespace: Namespace.ID
     let action: () -> Void
 
     var body: some View {
@@ -309,17 +297,16 @@ struct ToolButton: View {
             }
             .padding()
             .frame(maxWidth: .infinity, minHeight: 140)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(isSelected ? Color.accentColor : secondaryBackgroundColor)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(isSelected ? Color.clear : separatorColor, lineWidth: 0.5)
-            )
         }
         .buttonStyle(PlainButtonStyle())
         .disabled(isRunning)
+        .glassEffect(
+            isSelected ? .regular.tint(.accentColor).interactive(true) : .regular.interactive(true),
+            in: .rect(cornerRadius: 12)
+        )
+        .glassEffectID("tool-\(tool.rawValue)", in: namespace)
+        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isSelected)
+        .animation(.spring(response: 0.3, dampingFraction: 0.9), value: isRunning)
     }
 }
 
