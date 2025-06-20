@@ -19,7 +19,7 @@ struct ContentView: View {
             // Examples Tab
             ExamplesView(viewModel: $viewModel)
                 .tabItem {
-                    Image(systemName: "brain.head.profile")
+                    Image(systemName: "sparkles")
                     Text("Examples")
                 }
                 .tag(TabSelection.examples)
@@ -29,8 +29,8 @@ struct ContentView: View {
                 ChatBotView(viewModel: $chatBotViewModel)
             }
             .tabItem {
-                Image(systemName: "message.badge.waveform")
-                Text("ChatBot")
+                Image(systemName: "ellipsis.message")
+                Text("Chat")
             }
             .tag(TabSelection.chatBot)
 
@@ -39,7 +39,7 @@ struct ContentView: View {
                 ToolsTabView()
             }
             .tabItem {
-                Image(systemName: "wrench.and.screwdriver")
+                Image(systemName: "function")
                 Text("Tools")
             }
             .tag(TabSelection.tools)
@@ -49,7 +49,7 @@ struct ContentView: View {
                 SettingsView()
             }
             .tabItem {
-                Image(systemName: "gear")
+                Image(systemName: "slider.horizontal.3")
                 Text("Settings")
             }
             .tag(TabSelection.settings)
