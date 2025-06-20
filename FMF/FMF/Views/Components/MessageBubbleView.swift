@@ -78,7 +78,7 @@ struct MessageBubbleView: View {
           .accessibilityLabel("Assistant is typing")
           .accessibilityAddTraits(.updatesFrequently)
           .glassEffect(
-            .regular.tint(.gray.opacity(0.3)).interactive(),
+            .regular.tint(.gray.opacity(0.3)),
             in: .rect(cornerRadius: 18)
           )
         } else {
@@ -88,14 +88,12 @@ struct MessageBubbleView: View {
             .textSelection(.enabled)
             .accessibilityRespondsToUserInteraction(true)
             .foregroundStyle(
-              message.isFromUser ? 
-                .white : 
-                Color.primary
+              message.isFromUser ? .white : Color.primary
             )
             .glassEffect(
-              message.isFromUser ?
-                .regular.tint(.blue).interactive() :
-                .regular.tint(.gray.opacity(0.3)).interactive(),
+              message.isFromUser
+                ? .regular.tint(.blue).interactive()
+                : .regular.tint(.gray.opacity(0.3)),
               in: .rect(cornerRadius: 18)
             )
         }
@@ -104,7 +102,7 @@ struct MessageBubbleView: View {
           HStack {
             Image(systemName: "arrow.triangle.2.circlepath")
               .foregroundStyle(.orange)
-              .accessibilityHidden(true) // Decorative icon
+              .accessibilityHidden(true)  // Decorative icon
             Text("Context summarized")
               .font(.caption2)
               .foregroundStyle(.orange)
@@ -144,7 +142,8 @@ struct MessageBubbleView: View {
     }
 
     if message.isContextSummary {
-      return "This is a summary of previous conversation context. Double-tap to interact with message options."
+      return
+        "This is a summary of previous conversation context. Double-tap to interact with message options."
     }
 
     return "Double-tap to access message options like copy and share"
@@ -174,41 +173,43 @@ struct MessageBubbleView: View {
 
   private func copyMessageToClipboard() {
     #if os(iOS)
-    UIPasteboard.general.string = message.content
-    // Provide haptic feedback
-    let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-    impactFeedback.impactOccurred()
+      UIPasteboard.general.string = message.content
+      // Provide haptic feedback
+      let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+      impactFeedback.impactOccurred()
 
-    // Announce to VoiceOver
-    UIAccessibility.post(notification: .announcement, argument: "Message copied to clipboard")
+      // Announce to VoiceOver
+      UIAccessibility.post(notification: .announcement, argument: "Message copied to clipboard")
     #elseif os(macOS)
-    NSPasteboard.general.setString(message.content, forType: .string)
+      NSPasteboard.general.setString(message.content, forType: .string)
     #endif
   }
 
   private func shareMessage() {
     #if os(iOS)
-    let activityVC = UIActivityViewController(
-      activityItems: [message.content],
-      applicationActivities: nil
-    )
+      let activityVC = UIActivityViewController(
+        activityItems: [message.content],
+        applicationActivities: nil
+      )
 
-    if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-       let window = windowScene.windows.first,
-       let rootVC = window.rootViewController {
+      if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+        let window = windowScene.windows.first,
+        let rootVC = window.rootViewController
+      {
 
-      // For iPad - set popover presentation
-      if let popover = activityVC.popoverPresentationController {
-        popover.sourceView = window
-        popover.sourceRect = CGRect(x: window.bounds.midX, y: window.bounds.midY, width: 0, height: 0)
-        popover.permittedArrowDirections = []
+        // For iPad - set popover presentation
+        if let popover = activityVC.popoverPresentationController {
+          popover.sourceView = window
+          popover.sourceRect = CGRect(
+            x: window.bounds.midX, y: window.bounds.midY, width: 0, height: 0)
+          popover.permittedArrowDirections = []
+        }
+
+        rootVC.present(activityVC, animated: true)
+
+        // Announce to VoiceOver
+        UIAccessibility.post(notification: .announcement, argument: "Share sheet opened")
       }
-
-      rootVC.present(activityVC, animated: true)
-
-      // Announce to VoiceOver
-      UIAccessibility.post(notification: .announcement, argument: "Share sheet opened")
-    }
     #endif
   }
 }
@@ -216,99 +217,108 @@ struct MessageBubbleView: View {
 // MARK: - Mock Data
 
 extension ChatMessage {
-    static let mockUserShort = ChatMessage(
-        content: "Hello! How are you today?",
-        isFromUser: true
-    )
+  static let mockUserShort = ChatMessage(
+    content: "Hello! How are you today?",
+    isFromUser: true
+  )
 
-    static let mockUserMedium = ChatMessage(
-        content: "Can you help me understand how Foundation Models work in iOS? I'm particularly interested in the streaming capabilities.",
-        isFromUser: true
-    )
+  static let mockUserMedium = ChatMessage(
+    content:
+      "Can you help me understand how Foundation Models work in iOS? I'm particularly interested in the streaming capabilities.",
+    isFromUser: true
+  )
 
-    static let mockAssistantShort = ChatMessage(
-        content: "I'm doing great! How can I help you?",
-        isFromUser: false
-    )
+  static let mockAssistantShort = ChatMessage(
+    content: "I'm doing great! How can I help you?",
+    isFromUser: false
+  )
 
-    static let mockAssistantMedium = ChatMessage(
-        content: "Foundation Models provide powerful on-device AI capabilities. For streaming, you can use async sequences to receive partial responses as they're generated, creating a more responsive user experience.",
-        isFromUser: false
-    )
+  static let mockAssistantMedium = ChatMessage(
+    content:
+      "Foundation Models provide powerful on-device AI capabilities. For streaming, you can use async sequences to receive partial responses as they're generated, creating a more responsive user experience.",
+    isFromUser: false
+  )
 
-    static let mockContextSummary = ChatMessage(
-        content: "We discussed Foundation Models implementation, streaming responses, error handling best practices, and iOS app architecture patterns.",
-        isFromUser: false,
-        isContextSummary: true
-    )
+  static let mockContextSummary = ChatMessage(
+    content:
+      "We discussed Foundation Models implementation, streaming responses, error handling best practices, and iOS app architecture patterns.",
+    isFromUser: false,
+    isContextSummary: true
+  )
 
-    static let mockTypingIndicator = ChatMessage(
-        content: "",
-        isFromUser: false
-    )
+  static let mockTypingIndicator = ChatMessage(
+    content: "",
+    isFromUser: false
+  )
 }
 
 // MARK: - Essential Previews
 
 #Preview("Message Bubbles") {
-    ScrollView {
-        VStack(spacing: 16) {
-            Text("Chat Message Examples")
-                .font(.headline)
-                .padding()
-
-            MessageBubbleView(message: .mockUserShort)
-            MessageBubbleView(message: .mockAssistantShort)
-            MessageBubbleView(message: .mockUserMedium)
-            MessageBubbleView(message: .mockAssistantMedium)
-            MessageBubbleView(message: .mockContextSummary)
-            MessageBubbleView(message: .mockTypingIndicator)
-        }
+  ScrollView {
+    VStack(spacing: 16) {
+      Text("Chat Message Examples")
+        .font(.headline)
         .padding()
+
+      MessageBubbleView(message: .mockUserShort)
+      MessageBubbleView(message: .mockAssistantShort)
+      MessageBubbleView(message: .mockUserMedium)
+      MessageBubbleView(message: .mockAssistantMedium)
+      MessageBubbleView(message: .mockContextSummary)
+      MessageBubbleView(message: .mockTypingIndicator)
     }
-    .background(.regularMaterial)
+    .padding()
+  }
+  .background(.regularMaterial)
 }
 
 #Preview("Conversation Flow") {
-    ScrollView {
-        VStack(spacing: 12) {
-            MessageBubbleView(message: ChatMessage(
-                content: "Hi! I need help with Foundation Models.",
-                isFromUser: true
-            ))
+  ScrollView {
+    VStack(spacing: 12) {
+      MessageBubbleView(
+        message: ChatMessage(
+          content: "Hi! I need help with Foundation Models.",
+          isFromUser: true
+        ))
 
-            MessageBubbleView(message: ChatMessage(
-                content: "I'd be happy to help you with Foundation Models! What specific area would you like to focus on?",
-                isFromUser: false
-            ))
+      MessageBubbleView(
+        message: ChatMessage(
+          content:
+            "I'd be happy to help you with Foundation Models! What specific area would you like to focus on?",
+          isFromUser: false
+        ))
 
-            MessageBubbleView(message: ChatMessage(
-                content: "How do I implement streaming responses?",
-                isFromUser: true
-            ))
+      MessageBubbleView(
+        message: ChatMessage(
+          content: "How do I implement streaming responses?",
+          isFromUser: true
+        ))
 
-            MessageBubbleView(message: ChatMessage(
-                content: "For streaming responses, you can use async sequences with LanguageModelSession. This allows you to receive partial responses as they're generated, creating a more responsive user experience.",
-                isFromUser: false
-            ))
+      MessageBubbleView(
+        message: ChatMessage(
+          content:
+            "For streaming responses, you can use async sequences with LanguageModelSession. This allows you to receive partial responses as they're generated, creating a more responsive user experience.",
+          isFromUser: false
+        ))
 
-            MessageBubbleView(message: .mockTypingIndicator)
-        }
-        .padding()
+      MessageBubbleView(message: .mockTypingIndicator)
     }
-    .background(.regularMaterial)
+    .padding()
+  }
+  .background(.regularMaterial)
 }
 
 #Preview("Dark Mode") {
-    ScrollView {
-        VStack(spacing: 12) {
-            MessageBubbleView(message: .mockUserShort)
-            MessageBubbleView(message: .mockAssistantShort)
-            MessageBubbleView(message: .mockUserMedium)
-            MessageBubbleView(message: .mockAssistantMedium)
-        }
-        .padding()
+  ScrollView {
+    VStack(spacing: 12) {
+      MessageBubbleView(message: .mockUserShort)
+      MessageBubbleView(message: .mockAssistantShort)
+      MessageBubbleView(message: .mockUserMedium)
+      MessageBubbleView(message: .mockAssistantMedium)
     }
-    .background(.regularMaterial)
-    .preferredColorScheme(.dark)
+    .padding()
+  }
+  .background(.regularMaterial)
+  .preferredColorScheme(.dark)
 }

@@ -42,13 +42,9 @@ struct ResponseDisplayView: View {
 
   private var requestView: some View {
     VStack(alignment: .leading, spacing: 4) {
-      HStack {
-        Image(systemName: "arrow.up.circle.fill")
-          .foregroundStyle(.blue)
-        Text("Request")
-          .font(.subheadline)
-          .fontWeight(.medium)
-      }
+      Text("Request")
+        .font(.subheadline)
+        .fontWeight(.medium)
       
       ScrollView {
         Text(requestResponse.request)
@@ -67,8 +63,10 @@ struct ResponseDisplayView: View {
   private var responseView: some View {
     VStack(alignment: .leading, spacing: 4) {
       HStack {
-        Image(systemName: requestResponse.isError ? "exclamationmark.triangle.fill" : "arrow.down.circle.fill")
-          .foregroundStyle(requestResponse.isError ? .red : .green)
+        if requestResponse.isError {
+          Image(systemName: "exclamationmark.triangle.fill")
+            .foregroundStyle(.red)
+        }
         Text("Response")
           .font(.subheadline)
           .fontWeight(.medium)
