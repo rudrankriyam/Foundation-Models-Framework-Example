@@ -83,7 +83,7 @@ struct MessageBubbleView: View {
             in: .rect(cornerRadius: 18)
           )
         } else {
-          Text(parseMarkdown(from: message.content))
+          Text(LocalizedStringKey(String(message.content.characters)))
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
             .textSelection(.enabled)
@@ -113,31 +113,6 @@ struct MessageBubbleView: View {
           .accessibilityValue("This message contains a summary of previous conversation context")
         }
       }
-    }
-  }
-
-  // MARK: - Markdown Parsing
-  
-  private func parseMarkdown(from attributedString: AttributedString) -> AttributedString {
-    // Convert AttributedString to String for markdown parsing
-    let plainText = String(attributedString.characters)
-    
-    do {
-      // iOS 26 has native Markdown support in AttributedString
-      var attributed = try AttributedString(markdown: plainText)
-      
-      // Apply consistent styling
-      attributed.font = .body
-      
-      // Ensure proper color contrast for user messages
-      if message.isFromUser {
-        attributed.foregroundColor = .white
-      }
-      
-      return attributed
-    } catch {
-      // Fallback to original attributed string if markdown parsing fails
-      return attributedString
     }
   }
 
