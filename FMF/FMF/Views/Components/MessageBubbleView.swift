@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import FoundationModels
 
 struct MessageBubbleView: View {
   let message: ChatMessage
@@ -29,7 +30,7 @@ struct MessageBubbleView: View {
     .accessibilityHint(accessibilityMessageHint)
     .accessibilityAddTraits(accessibilityTraits)
     .accessibilityActions {
-      if !message.content.isEmpty {
+      if !message.content.characters.isEmpty {
         Button("Copy message") {
           copyMessageToClipboard()
         }
@@ -42,7 +43,7 @@ struct MessageBubbleView: View {
     .accessibilityFocused($isMessageFocused)
     .onAppear {
       // Auto-focus new assistant messages for screen readers
-      if !message.isFromUser && !message.content.isEmpty {
+      if !message.isFromUser && !message.content.characters.isEmpty {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
           isMessageFocused = true
         }
@@ -54,7 +55,7 @@ struct MessageBubbleView: View {
     GlassEffectContainer(spacing: 8) {
       VStack(alignment: message.isFromUser ? .trailing : .leading, spacing: 4) {
 
-        if !message.isFromUser && message.content.isEmpty {
+        if !message.isFromUser && message.content.characters.isEmpty {
           // Show typing indicator for empty assistant messages (streaming)
           HStack(spacing: 4) {
             ForEach(0..<3, id: \.self) { index in
@@ -82,7 +83,7 @@ struct MessageBubbleView: View {
             in: .rect(cornerRadius: 18)
           )
         } else {
-          Text(message.content)
+          Text(parseMarkdown(from: message.content))
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
             .textSelection(.enabled)
@@ -115,13 +116,38 @@ struct MessageBubbleView: View {
     }
   }
 
+  // MARK: - Markdown Parsing
+  
+  private func parseMarkdown(from attributedString: AttributedString) -> AttributedString {
+    // Convert AttributedString to String for markdown parsing
+    let plainText = String(attributedString.characters)
+    
+    do {
+      // iOS 26 has native Markdown support in AttributedString
+      var attributed = try AttributedString(markdown: plainText)
+      
+      // Apply consistent styling
+      attributed.font = .body
+      
+      // Ensure proper color contrast for user messages
+      if message.isFromUser {
+        attributed.foregroundColor = .white
+      }
+      
+      return attributed
+    } catch {
+      // Fallback to original attributed string if markdown parsing fails
+      return attributedString
+    }
+  }
+
   // MARK: - Accessibility Computed Properties
 
   private var accessibilityMessageLabel: String {
     let sender = message.isFromUser ? "You said" : "Assistant replied"
     let timestamp = formatTimestampForAccessibility(message.timestamp)
 
-    if message.content.isEmpty {
+    if message.content.characters.isEmpty {
       return "\(sender), typing indicator, \(timestamp)"
     }
 
@@ -130,14 +156,14 @@ struct MessageBubbleView: View {
   }
 
   private var accessibilityMessageValue: String {
-    if message.content.isEmpty {
+    if message.content.characters.isEmpty {
       return "Assistant is currently typing a response"
     }
-    return message.content
+    return String(message.content.characters)
   }
 
   private var accessibilityMessageHint: String {
-    if message.content.isEmpty {
+    if message.content.characters.isEmpty {
       return "Please wait for the assistant to finish typing"
     }
 
@@ -152,7 +178,7 @@ struct MessageBubbleView: View {
   private var accessibilityTraits: AccessibilityTraits {
     var traits: AccessibilityTraits = []
 
-    if message.content.isEmpty {
+    if message.content.characters.isEmpty {
       _ = traits.insert(.updatesFrequently)
     }
 
@@ -173,7 +199,7 @@ struct MessageBubbleView: View {
 
   private func copyMessageToClipboard() {
     #if os(iOS)
-      UIPasteboard.general.string = message.content
+      UIPasteboard.general.string = String(message.content.characters)
       // Provide haptic feedback
       let impactFeedback = UIImpactFeedbackGenerator(style: .light)
       impactFeedback.impactOccurred()
@@ -181,14 +207,14 @@ struct MessageBubbleView: View {
       // Announce to VoiceOver
       UIAccessibility.post(notification: .announcement, argument: "Message copied to clipboard")
     #elseif os(macOS)
-      NSPasteboard.general.setString(message.content, forType: .string)
+      NSPasteboard.general.setString(String(message.content.characters), forType: .string)
     #endif
   }
 
   private func shareMessage() {
     #if os(iOS)
       let activityVC = UIActivityViewController(
-        activityItems: [message.content],
+        activityItems: [String(message.content.characters)],
         applicationActivities: nil
       )
 
@@ -214,43 +240,6 @@ struct MessageBubbleView: View {
   }
 }
 
-// MARK: - Mock Data
-
-extension ChatMessage {
-  static let mockUserShort = ChatMessage(
-    content: "Hello! How are you today?",
-    isFromUser: true
-  )
-
-  static let mockUserMedium = ChatMessage(
-    content:
-      "Can you help me understand how Foundation Models work in iOS? I'm particularly interested in the streaming capabilities.",
-    isFromUser: true
-  )
-
-  static let mockAssistantShort = ChatMessage(
-    content: "I'm doing great! How can I help you?",
-    isFromUser: false
-  )
-
-  static let mockAssistantMedium = ChatMessage(
-    content:
-      "Foundation Models provide powerful on-device AI capabilities. For streaming, you can use async sequences to receive partial responses as they're generated, creating a more responsive user experience.",
-    isFromUser: false
-  )
-
-  static let mockContextSummary = ChatMessage(
-    content:
-      "We discussed Foundation Models implementation, streaming responses, error handling best practices, and iOS app architecture patterns.",
-    isFromUser: false,
-    isContextSummary: true
-  )
-
-  static let mockTypingIndicator = ChatMessage(
-    content: "",
-    isFromUser: false
-  )
-}
 
 // MARK: - Essential Previews
 
@@ -261,12 +250,25 @@ extension ChatMessage {
         .font(.headline)
         .padding()
 
-      MessageBubbleView(message: .mockUserShort)
-      MessageBubbleView(message: .mockAssistantShort)
-      MessageBubbleView(message: .mockUserMedium)
-      MessageBubbleView(message: .mockAssistantMedium)
-      MessageBubbleView(message: .mockContextSummary)
-      MessageBubbleView(message: .mockTypingIndicator)
+      MessageBubbleView(message: ChatMessage(
+        content: "Hello! How are you today?",
+        isFromUser: true
+      ))
+      
+      MessageBubbleView(message: ChatMessage(
+        content: "I'm doing great! How can I help you?",
+        isFromUser: false
+      ))
+      
+      MessageBubbleView(message: ChatMessage(
+        content: "## Foundation Models\n\nThey provide **powerful** on-device AI capabilities. For *streaming*, you can use `async sequences` to receive partial responses as they're generated, creating a more **responsive** user experience.",
+        isFromUser: false
+      ))
+      
+      MessageBubbleView(message: ChatMessage(
+        content: "",
+        isFromUser: false
+      ))
     }
     .padding()
   }
@@ -302,7 +304,7 @@ extension ChatMessage {
           isFromUser: false
         ))
 
-      MessageBubbleView(message: .mockTypingIndicator)
+      MessageBubbleView(message: ChatMessage(content: "", isFromUser: false))
     }
     .padding()
   }
@@ -312,10 +314,15 @@ extension ChatMessage {
 #Preview("Dark Mode") {
   ScrollView {
     VStack(spacing: 12) {
-      MessageBubbleView(message: .mockUserShort)
-      MessageBubbleView(message: .mockAssistantShort)
-      MessageBubbleView(message: .mockUserMedium)
-      MessageBubbleView(message: .mockAssistantMedium)
+      MessageBubbleView(message: ChatMessage(
+        content: "Hello! How are you today?",
+        isFromUser: true
+      ))
+      
+      MessageBubbleView(message: ChatMessage(
+        content: "## Rich Text Support\n\nI can display **bold**, *italic*, and `code` formatting!",
+        isFromUser: false
+      ))
     }
     .padding()
   }
