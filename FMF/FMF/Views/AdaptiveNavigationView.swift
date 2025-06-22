@@ -10,6 +10,7 @@ import FoundationModels
 
 struct AdaptiveNavigationView: View {
     @State private var navigationState = NavigationState()
+    @State private var sidebarSelection: TabSelection? = .examples
     @State private var contentViewModel = ContentViewModel()
     @State private var chatViewModel = ChatViewModel()
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -59,7 +60,7 @@ struct AdaptiveNavigationView: View {
         .ignoresSafeArea(.keyboard)
 #endif
         .onChange(of: navigationState.tabSelection) { _, newValue in
-            navigationState.selectedTab = newValue
+            sidebarSelection = newValue
         }
     }
     
@@ -67,56 +68,35 @@ struct AdaptiveNavigationView: View {
         NavigationSplitView(
             columnVisibility: $navigationState.splitViewVisibility
         ) {
-            SidebarView(selection: $navigationState.selectedTab)
+            SidebarView(selection: $sidebarSelection)
         } detail: {
-            NavigationStack {
-                detailView
-            }
+            detailView
         }
         .navigationSplitViewStyle(.balanced)
-        .onChange(of: navigationState.selectedTab) { _, newValue in
-            if let newValue = newValue {
+        .onChange(of: sidebarSelection) { _, newValue in
+            if let newValue {
                 navigationState.tabSelection = newValue
             }
         }
-#if os(macOS)
-        .toolbar {
-            ToolbarItem(placement: .navigation) {
-                Button(action: toggleSidebar) {
-                    Image(systemName: "sidebar.left")
-                }
-                .keyboardShortcut("s", modifiers: [.command, .option])
-                .help("Toggle Sidebar")
-            }
-        }
-#endif
     }
     
     @ViewBuilder
     private var detailView: some View {
-        switch navigationState.selectedTab {
+        switch sidebarSelection ?? .examples {
         case .examples:
             ExamplesView(viewModel: $contentViewModel)
+                .navigationTitle("Foundation Models")
         case .chat:
             ChatView(viewModel: $chatViewModel)
+                .navigationTitle("Chat")
         case .tools:
             ToolsView()
+                .navigationTitle("Tools")
         case .settings:
             SettingsView()
-        case nil:
-            ContentUnavailableView(
-                "Select a Section",
-                systemImage: "sidebar.left",
-                description: Text("Choose a section from the sidebar to get started")
-            )
+                .navigationTitle("Settings")
         }
     }
-    
-#if os(macOS)
-    private func toggleSidebar() {
-        NSApp.keyWindow?.firstResponder?.tryToPerform(#selector(NSSplitViewController.toggleSidebar(_:)), with: nil)
-    }
-#endif
 }
 
 #Preview {

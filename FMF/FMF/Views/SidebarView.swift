@@ -11,13 +11,16 @@ struct SidebarView: View {
     @Binding var selection: TabSelection?
     
     var body: some View {
-        List(TabSelection.allCases, id: \.self, selection: $selection) { tab in
-            Label(tab.rawValue, systemImage: tab.systemImage)
+        List(selection: $selection) {
+            ForEach(TabSelection.allCases, id: \.self) { tab in
+                Label(tab.rawValue, systemImage: tab.systemImage)
+                    .tag(tab)
 #if os(macOS)
-                .tag(tab)
-                .keyboardShortcut(tab.keyboardShortcut, modifiers: .command)
+                    .keyboardShortcut(tab.keyboardShortcut, modifiers: .command)
 #endif
+            }
         }
+        .listStyle(SidebarListStyle())
         .navigationTitle("Foundation Models")
 #if os(macOS)
         .navigationSplitViewColumnWidth(min: 200, ideal: 250, max: 300)

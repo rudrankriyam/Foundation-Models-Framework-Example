@@ -11,16 +11,4 @@ import SwiftUI
 class NavigationState {
     var tabSelection: TabSelection = .examples
     var splitViewVisibility: NavigationSplitViewVisibility = .automatic
-    
-    // For NavigationSplitView selection
-    var selectedTab: TabSelection? = .examples
-    
-    // Synchronize selections between TabView and NavigationSplitView
-    func syncSelections() {
-        if let selectedTab = selectedTab {
-            tabSelection = selectedTab
-        } else {
-            selectedTab = tabSelection
-        }
-    }
 }
