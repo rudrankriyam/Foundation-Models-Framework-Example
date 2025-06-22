@@ -11,7 +11,7 @@ import SwiftUI
 struct FMFApp: App {
   var body: some Scene {
     WindowGroup {
-      ContentView()
+      AdaptiveNavigationView()
 #if os(macOS)
         .frame(minWidth: 800, minHeight: 600)
 #endif

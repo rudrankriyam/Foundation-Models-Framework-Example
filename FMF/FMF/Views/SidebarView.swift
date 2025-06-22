@@ -1,0 +1,64 @@
+//
+//  SidebarView.swift
+//  FMF
+//
+//  Created by Rudrank Riyam on 6/22/25.
+//
+
+import SwiftUI
+
+struct SidebarView: View {
+    @Binding var selection: TabSelection?
+    
+    var body: some View {
+        List(TabSelection.allCases, id: \.self, selection: $selection) { tab in
+            Label(tab.rawValue, systemImage: tab.systemImage)
+#if os(macOS)
+                .tag(tab)
+                .keyboardShortcut(tab.keyboardShortcut, modifiers: .command)
+#endif
+        }
+        .navigationTitle("Foundation Models")
+#if os(macOS)
+        .navigationSplitViewColumnWidth(min: 200, ideal: 250, max: 300)
+#endif
+    }
+}
+
+extension TabSelection {
+    var systemImage: String {
+        switch self {
+        case .examples:
+            return "sparkles"
+        case .chat:
+            return "bubble.left.and.bubble.right"
+        case .tools:
+            return "wrench.and.screwdriver"
+        case .settings:
+            return "gear"
+        }
+    }
+    
+#if os(macOS)
+    var keyboardShortcut: KeyEquivalent {
+        switch self {
+        case .examples:
+            return "1"
+        case .chat:
+            return "2"
+        case .tools:
+            return "3"
+        case .settings:
+            return "4"
+        }
+    }
+#endif
+}
+
+#Preview {
+    NavigationSplitView {
+        SidebarView(selection: .constant(.examples))
+    } detail: {
+        Text("Detail View")
+    }
+}
