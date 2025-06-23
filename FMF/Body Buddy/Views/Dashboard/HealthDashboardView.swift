@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import FoundationModels
 
 struct HealthDashboardView: View {
     @Query(sort: \HealthMetric.timestamp, order: .reverse) private var metrics: [HealthMetric]
@@ -19,6 +20,8 @@ struct HealthDashboardView: View {
     @Namespace private var animationNamespace
     
     @State private var todayMetrics: [MetricType: Double] = [:]
+    @State private var encouragementMessage = "Loading your health insights..."
+    @State private var isGeneratingMessage = false
     
     var body: some View {
         ScrollView {
@@ -60,6 +63,11 @@ struct HealthDashboardView: View {
         .refreshable {
             await loadHealthData()
         }
+        .onChange(of: todayMetrics) { _, _ in
+            Task {
+                await generateEncouragementMessage()
+            }
+        }
     }
     
     // MARK: - Header Section
@@ -81,7 +89,7 @@ struct HealthDashboardView: View {
                         .frame(width: 80, height: 80)
                 }
                 
-            Text("You're doing great! Keep up the good work.")
+            Text(encouragementMessage)
                 .font(.callout)
                 .foregroundStyle(.secondary)
         }
@@ -105,6 +113,7 @@ struct HealthDashboardView: View {
                             goalValue: type.defaultGoal,
                             animationNamespace: animationNamespace
                         )
+                        .glassEffect(.regular, in: .rect(cornerRadius: 16))
                     }
                 }
             }
@@ -179,6 +188,49 @@ struct HealthDashboardView: View {
         }
     }
     
+    @MainActor
+    private func generateEncouragementMessage() async {
+        guard !isGeneratingMessage else { return }
+        isGeneratingMessage = true
+        
+        let score = calculateHealthScore()
+        let stepsProgress = (todayMetrics[.steps] ?? 0) / MetricType.steps.defaultGoal * 100
+        let sleepHours = todayMetrics[.sleep] ?? 0
+        let activeEnergy = Int(todayMetrics[.activeEnergy] ?? 0)
+        
+        do {
+            let session = LanguageModelSession(
+                instructions: Instructions(
+                    "You are a supportive health coach. Generate a brief, encouraging message (max 15 words) based on the user's health data. Do NOT use quotes, numbers, specific metrics, or emojis. Focus on general encouragement and motivation."
+                )
+            )
+            
+            let prompt = """
+                Health Score: \(Int(score))/100
+                Steps Progress: \(Int(stepsProgress))% of daily goal
+                Sleep: \(String(format: "%.1f", sleepHours)) hours last night
+                Active Energy: \(activeEnergy) calories burned today
+                Time of Day: \(timeOfDay)
+                
+                Generate a personalized, encouraging message.
+                """
+            
+            let response = try await session.respond(to: Prompt(prompt))
+            
+            // Clean up the response: remove quotes and trim whitespace
+            encouragementMessage = response.content
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .replacingOccurrences(of: "\"", with: "")
+                .replacingOccurrences(of: "\u{201C}", with: "") // Left double quotation mark
+                .replacingOccurrences(of: "\u{201D}", with: "") // Right double quotation mark
+        } catch {
+            // Fallback to simple message if AI generation fails
+            encouragementMessage = score >= 75 ? "Great progress today!" : "Keep working towards your goals!"
+        }
+        
+        isGeneratingMessage = false
+    }
+    
     private func calculateHealthScore() -> Double {
         // Simple health score calculation - will be improved with AI
         let stepsScore = min((todayMetrics[.steps] ?? 0) / MetricType.steps.defaultGoal, 1.0)
@@ -217,6 +269,9 @@ struct HealthDashboardView: View {
         ]
         
         isLoading = false
+        
+        // Generate personalized encouragement message
+        await generateEncouragementMessage()
     }
 }
 

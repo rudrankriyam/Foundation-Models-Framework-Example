@@ -71,7 +71,6 @@ struct DailyProgressCard: View {
         }
         .padding()
         .frame(width: 180)
-        .glassEffect(.regular, in: .rect(cornerRadius: 16))
         .onAppear {
             animatedProgress = progress
         }
