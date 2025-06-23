@@ -13,26 +13,29 @@ struct HealthDashboardView: View {
     @Query(sort: \HealthInsight.generatedAt, order: .reverse) private var insights: [HealthInsight]
     @State private var selectedMetricType: MetricType? = nil
     @State private var showingBuddyChat = false
+    @State private var isLoading = true
+    @State private var healthDataManager = HealthDataManager.shared
+    @Environment(\.modelContext) private var modelContext
     @Namespace private var animationNamespace
     
-    // Mock data for now - will be replaced with real HealthKit data
-    @State private var todayMetrics: [MetricType: Double] = [
-        .steps: 6842,
-        .heartRate: 72,
-        .sleep: 7.5,
-        .activeEnergy: 342
-    ]
+    @State private var todayMetrics: [MetricType: Double] = [:]
     
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                headerSection
-                
-                dailyProgressSection
-                
-                metricsGridSection
-                
-                insightsSection
+                if isLoading {
+                    ProgressView("Loading health data...")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .padding()
+                } else {
+                    headerSection
+                    
+                    dailyProgressSection
+                    
+                    metricsGridSection
+                    
+                    insightsSection
+                }
             }
             .padding()
         }
@@ -52,6 +55,12 @@ struct HealthDashboardView: View {
         .sheet(isPresented: $showingBuddyChat) {
             // BuddyChatView() - Will implement later
             Text("Buddy Chat Coming Soon!")
+        }
+        .task {
+            await loadHealthData()
+        }
+        .refreshable {
+            await loadHealthData()
         }
     }
     
@@ -176,6 +185,37 @@ struct HealthDashboardView: View {
         let activityScore = min((todayMetrics[.activeEnergy] ?? 0) / MetricType.activeEnergy.defaultGoal, 1.0)
         
         return (stepsScore + sleepScore + activityScore) / 3.0 * 100
+    }
+    
+    // MARK: - Data Loading
+    @MainActor
+    private func loadHealthData() async {
+        healthDataManager.setModelContext(modelContext)
+        
+        // Request authorization if needed
+        if !healthDataManager.isAuthorized {
+            do {
+                try await healthDataManager.requestAuthorization()
+            } catch {
+                print("Failed to request HealthKit authorization: \(error)")
+                isLoading = false
+                return
+            }
+        }
+        
+        // Fetch today's health data
+        await healthDataManager.fetchTodayHealthData()
+        
+        // Update UI with fetched data
+        todayMetrics = [
+            .steps: healthDataManager.todaySteps,
+            .heartRate: healthDataManager.currentHeartRate,
+            .sleep: healthDataManager.lastNightSleep,
+            .activeEnergy: healthDataManager.todayActiveEnergy,
+            .distance: healthDataManager.todayDistance
+        ]
+        
+        isLoading = false
     }
 }
 
