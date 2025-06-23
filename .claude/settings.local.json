@@ -21,7 +21,8 @@
       "Bash(swift:*)",
       "Bash(rg:*)",
       "Bash(git push:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": []
   }
