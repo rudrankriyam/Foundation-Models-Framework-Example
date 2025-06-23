@@ -9,7 +9,7 @@ import Playgrounds
   let businessIdea = try await session.respond(
     to:
       "Generate a unique tech startup business idea for 2025 that leverages AI and sustainability.",
-    generating: BusinessIdea.self
+    generating: BusinessIdea.self, includeSchemaInPrompt: true
   )
 
   print(
