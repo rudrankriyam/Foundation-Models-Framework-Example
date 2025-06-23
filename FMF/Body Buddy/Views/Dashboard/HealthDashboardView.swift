@@ -53,8 +53,7 @@ struct HealthDashboardView: View {
             }
         }
         .sheet(isPresented: $showingBuddyChat) {
-            // BuddyChatView() - Will implement later
-            Text("Buddy Chat Coming Soon!")
+            BodyBuddyChatView()
         }
         .task {
             await loadHealthData()
