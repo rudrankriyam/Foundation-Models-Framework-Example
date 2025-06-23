@@ -57,8 +57,7 @@ struct HealthDashboardView: View {
     
     // MARK: - Header Section
     private var headerSection: some View {
-        GlassCard(cornerRadius: 20) {
-            VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Good \(timeOfDay)!")
@@ -75,11 +74,12 @@ struct HealthDashboardView: View {
                         .frame(width: 80, height: 80)
                 }
                 
-                Text("You're doing great! Keep up the good work.")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-            }
+            Text("You're doing great! Keep up the good work.")
+                .font(.callout)
+                .foregroundStyle(.secondary)
         }
+        .padding()
+        .glassEffect(.regular, in: .rect(cornerRadius: 20))
     }
     
     // MARK: - Daily Progress Section
@@ -234,23 +234,22 @@ struct HealthScoreRing: View {
 // MARK: - Placeholder View
 struct InsightPlaceholderView: View {
     var body: some View {
-        GlassCard {
-            VStack(spacing: 12) {
-                Image(systemName: "lightbulb.fill")
-                    .font(.largeTitle)
-                    .foregroundStyle(Color.healthPrimary)
-                
-                Text("No insights yet")
-                    .font(.headline)
-                
-                Text("Start tracking your health metrics to receive personalized AI insights")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-            .frame(maxWidth: .infinity)
-            .padding()
+        VStack(spacing: 12) {
+            Image(systemName: "lightbulb.fill")
+                .font(.largeTitle)
+                .foregroundStyle(Color.healthPrimary)
+            
+            Text("No insights yet")
+                .font(.headline)
+            
+            Text("Start tracking your health metrics to receive personalized AI insights")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
         }
+        .frame(maxWidth: .infinity)
+        .padding()
+        .glassEffect(.regular, in: .rect(cornerRadius: 16))
     }
 }
 

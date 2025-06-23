@@ -56,7 +56,7 @@ struct MetricCardView: View {
                 .stroke(isSelected ? metricType.themeColor : Color.clear, lineWidth: 2)
         )
         .glassEffect(
-            isSelected ? .regular.tint(metricType.themeColor.opacity(0.2)) : .regular,
+            isSelected ? .regular.tint(metricType.themeColor) : .regular,
             in: .rect(cornerRadius: 16)
         )
         .scaleEffect(isSelected ? 1.05 : 1.0)
