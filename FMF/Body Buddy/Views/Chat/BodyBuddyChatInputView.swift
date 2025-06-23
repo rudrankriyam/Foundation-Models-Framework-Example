@@ -68,12 +68,12 @@ struct BodyBuddyChatInputView: View {
                 Button(action: sendMessage) {
                     ZStack {
                         Circle()
-                            .fill(messageText.isEmpty ? Color.gray.opacity(0.2) : Color.healthPrimary)
-                            .frame(width: 44, height: 44)
+                            .fill(messageText.isEmpty ? Color.primary.opacity(0.06) : Color.primary.opacity(0.1))
+                            .frame(width: 36, height: 36)
                         
                         Image(systemName: "arrow.up")
-                            .font(.system(size: 20, weight: .semibold))
-                            .foregroundStyle(messageText.isEmpty ? .gray : .white)
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundStyle(messageText.isEmpty ? .tertiary : .primary)
                     }
                 }
                 .disabled(
@@ -88,9 +88,8 @@ struct BodyBuddyChatInputView: View {
             .padding(.bottom, 8)
         }
         .background(
-            Color.lightBackground
+            Color(UIColor.systemBackground)
                 .ignoresSafeArea()
-                .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: -2)
         )
     }
     
@@ -117,13 +116,9 @@ struct QuickActionChip: View {
                 .font(.caption)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
-                .background(Color.healthPrimary.opacity(0.1))
-                .foregroundStyle(Color.healthPrimary)
+                .background(Color.primary.opacity(0.06))
+                .foregroundStyle(.primary)
                 .clipShape(Capsule())
-                .overlay(
-                    Capsule()
-                        .stroke(Color.healthPrimary.opacity(0.3), lineWidth: 1)
-                )
         }
         .buttonStyle(.plain)
     }

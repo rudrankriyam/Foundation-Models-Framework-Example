@@ -14,21 +14,14 @@ struct MetricCardView: View {
     @State private var isAnimating = false
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: metricType.icon)
-                    .font(.title2)
-                    .foregroundStyle(metricType.themeColor)
-                    .frame(width: 30, height: 30)
+                    .font(.body)
+                    .foregroundStyle(isSelected ? .primary : .secondary)
+                    .frame(width: 24, height: 24)
                 
                 Spacer()
-                
-                if isSelected {
-                    Image(systemName: "chevron.down")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .rotationEffect(.degrees(180))
-                }
             }
             
             Spacer()
@@ -47,28 +40,16 @@ struct MetricCardView: View {
         .frame(height: 120)
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(metricType.themeColor.opacity(0.1))
+        .glassEffect(
+            .regular,
+            in: .rect(cornerRadius: 16)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16)
-                .stroke(isSelected ? metricType.themeColor : Color.clear, lineWidth: 2)
+                .stroke(isSelected ? Color.primary.opacity(0.2) : Color.clear, lineWidth: 1)
         )
-        .glassEffect(
-            isSelected ? .regular.tint(metricType.themeColor) : .regular,
-            in: .rect(cornerRadius: 16)
-        )
-        .scaleEffect(isSelected ? 1.05 : 1.0)
-        .shadow(
-            color: isSelected ? metricType.themeColor.opacity(0.3) : .clear,
-            radius: 10
-        )
-        .onAppear {
-            withAnimation(.easeOut(duration: 0.5).delay(0.1)) {
-                isAnimating = true
-            }
-        }
+        .scaleEffect(isSelected ? 1.02 : 1.0)
+        .animation(.easeInOut(duration: 0.2), value: isSelected)
     }
     
     private var formattedValue: String {

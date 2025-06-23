@@ -26,31 +26,31 @@ struct DailyProgressCard: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: metricType.icon)
-                    .font(.title3)
-                    .foregroundStyle(metricType.themeColor)
+                    .font(.body)
+                    .foregroundStyle(.secondary)
                 
                 Spacer()
                 
                 Text("\(progressPercentage)%")
                     .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(progressColor)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.secondary)
             }
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(metricType.rawValue)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
                 
                 HStack(spacing: 4) {
                     Text(formattedValue)
                         .font(.title3)
-                        .fontWeight(.bold)
+                        .fontWeight(.semibold)
                         .foregroundStyle(.primary)
                     
                     Text("/ \(formattedGoal)")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.tertiary)
                 }
             }
             
@@ -58,16 +58,16 @@ struct DailyProgressCard: View {
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
                     Capsule()
-                        .fill(Color.gray.opacity(0.2))
-                        .frame(height: 6)
+                        .fill(Color.primary.opacity(0.08))
+                        .frame(height: 4)
                     
                     Capsule()
-                        .fill(metricType.gradient)
-                        .frame(width: geometry.size.width * animatedProgress, height: 6)
+                        .fill(Color.primary.opacity(0.3))
+                        .frame(width: geometry.size.width * animatedProgress, height: 4)
                         .animation(.spring(response: 0.6, dampingFraction: 0.8), value: animatedProgress)
                 }
             }
-            .frame(height: 6)
+            .frame(height: 4)
         }
         .padding()
         .frame(width: 180)
@@ -121,24 +121,24 @@ struct ActivityRingsView: View {
             // Stand Ring (Outer)
             ActivityRing(
                 progress: Double(standHours) / 12.0,
-                color: .healthSecondary,
-                lineWidth: 12,
+                color: .primary,
+                lineWidth: 8,
                 radius: 60
             )
             
             // Active Energy Ring (Middle)
             ActivityRing(
                 progress: activeEnergy / 500,
-                color: .caloriesColor,
-                lineWidth: 12,
+                color: .primary,
+                lineWidth: 8,
                 radius: 45
             )
             
             // Steps Ring (Inner)
             ActivityRing(
                 progress: steps / 10000,
-                color: .stepsColor,
-                lineWidth: 12,
+                color: .primary,
+                lineWidth: 8,
                 radius: 30
             )
         }
@@ -164,17 +164,13 @@ struct ActivityRing: View {
     var body: some View {
         ZStack {
             Circle()
-                .stroke(color.opacity(0.2), lineWidth: lineWidth)
+                .stroke(color.opacity(0.1), lineWidth: lineWidth)
                 .frame(width: radius * 2, height: radius * 2)
             
             Circle()
                 .trim(from: 0, to: animatedProgress)
                 .stroke(
-                    LinearGradient(
-                        colors: [color, color.opacity(0.7)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
+                    color.opacity(0.3),
                     style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
                 )
                 .frame(width: radius * 2, height: radius * 2)

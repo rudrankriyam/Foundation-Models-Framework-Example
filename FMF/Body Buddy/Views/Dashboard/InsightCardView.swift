@@ -21,20 +21,18 @@ struct InsightCardView: View {
                 HStack(spacing: 8) {
                     Image(systemName: insight.category.icon)
                         .font(.callout)
-                        .foregroundStyle(categoryColor)
-                        .frame(width: 24, height: 24)
-                        .background(categoryColor.opacity(0.2))
-                        .clipShape(Circle())
+                        .foregroundStyle(.secondary)
+                        .frame(width: 20, height: 20)
                     
                     VStack(alignment: .leading, spacing: 2) {
                         Text(insight.title)
                             .font(.subheadline)
-                            .fontWeight(.semibold)
+                            .fontWeight(.medium)
                             .lineLimit(isExpanded ? nil : 1)
                         
                         Text(timeAgo(from: insight.generatedAt))
                             .font(.caption2)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.tertiary)
                     }
                 }
                 
@@ -42,15 +40,15 @@ struct InsightCardView: View {
                 
                 if !insight.isRead {
                     Circle()
-                        .fill(Color.healthPrimary)
-                        .frame(width: 8, height: 8)
+                        .fill(Color.primary.opacity(0.3))
+                        .frame(width: 6, height: 6)
                 }
             }
             
             // Content
             Text(insight.content)
                 .font(.callout)
-                .foregroundStyle(.primary.opacity(0.9))
+                .foregroundStyle(.primary.opacity(0.8))
                 .lineLimit(isExpanded ? nil : 2)
                 .animation(.easeInOut, value: isExpanded)
             
@@ -81,12 +79,12 @@ struct InsightCardView: View {
             // Priority Badge
             if insight.priority == .urgent || insight.priority == .high {
                 HStack {
-                    Label(insight.priority.rawValue, systemImage: "exclamationmark.circle.fill")
+                    Text(insight.priority.rawValue)
                         .font(.caption2)
-                        .foregroundStyle(priorityColor)
+                        .foregroundStyle(.secondary)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(priorityColor.opacity(0.2))
+                        .background(Color.primary.opacity(0.06))
                         .clipShape(Capsule())
                     
                     Spacer()
@@ -98,10 +96,10 @@ struct InsightCardView: View {
                             Text("Got it")
                                 .font(.caption)
                                 .fontWeight(.medium)
-                                .foregroundStyle(.white)
+                                .foregroundStyle(.primary)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 6)
-                                .background(categoryColor)
+                                .background(Color.primary.opacity(0.1))
                                 .clipShape(Capsule())
                         }
                     }
@@ -111,12 +109,12 @@ struct InsightCardView: View {
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
         .glassEffect(
-            insight.isRead ? .regular : .regular.tint(categoryColor.opacity(0.1)),
+            .regular,
             in: .rect(cornerRadius: 16)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16)
-                .stroke(insight.isRead ? Color.clear : categoryColor.opacity(0.3), lineWidth: 1)
+                .stroke(insight.isRead ? Color.clear : Color.primary.opacity(0.1), lineWidth: 1)
         )
         .onTapGesture {
             withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
@@ -136,23 +134,11 @@ struct InsightCardView: View {
     }
     
     private var categoryColor: Color {
-        switch insight.category {
-        case .trend: return .healthPrimary
-        case .achievement: return .successGreen
-        case .recommendation: return .stepsColor
-        case .warning: return .warningYellow
-        case .goal: return .healthSecondary
-        case .comparison: return .sleepColor
-        }
+        return .primary
     }
     
     private var priorityColor: Color {
-        switch insight.priority {
-        case .urgent: return .alertRed
-        case .high: return .caloriesColor
-        case .medium: return .warningYellow
-        case .low: return .healthSecondary
-        }
+        return .primary
     }
     
     private func markAsRead() {

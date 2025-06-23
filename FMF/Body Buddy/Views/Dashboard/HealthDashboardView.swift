@@ -39,7 +39,6 @@ struct HealthDashboardView: View {
             }
             .padding()
         }
-        .background(Color.lightBackground.ignoresSafeArea())
         .navigationTitle("Health Dashboard")
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
@@ -48,7 +47,7 @@ struct HealthDashboardView: View {
                     showingBuddyChat = true
                 } label: {
                     Image(systemName: "bubble.left.and.bubble.right.fill")
-                        .foregroundStyle(Color.healthPrimary)
+                        .foregroundStyle(.primary)
                 }
             }
         }
@@ -146,13 +145,16 @@ struct HealthDashboardView: View {
                 Spacer()
                 
                 if !insights.isEmpty {
-                    Text("\(insights.filter { !$0.isRead }.count) new")
-                        .font(.caption)
-                        .foregroundStyle(Color.healthPrimary)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.healthPrimary.opacity(0.2))
-                        .clipShape(Capsule())
+                    let unreadCount = insights.filter { !$0.isRead }.count
+                    if unreadCount > 0 {
+                        Text("\(unreadCount) new")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.primary.opacity(0.08))
+                            .clipShape(Capsule())
+                    }
                 }
             }
             .padding(.horizontal, 4)
@@ -226,13 +228,13 @@ struct HealthScoreRing: View {
     var body: some View {
         ZStack {
             Circle()
-                .stroke(Color.gray.opacity(0.2), lineWidth: 8)
+                .stroke(Color.primary.opacity(0.1), lineWidth: 6)
             
             Circle()
                 .trim(from: 0, to: animatedScore / 100)
                 .stroke(
-                    scoreGradient,
-                    style: StrokeStyle(lineWidth: 8, lineCap: .round)
+                    Color.primary,
+                    style: StrokeStyle(lineWidth: 6, lineCap: .round)
                 )
                 .rotationEffect(.degrees(-90))
                 .animation(.easeOut(duration: 1.5), value: animatedScore)
@@ -240,8 +242,8 @@ struct HealthScoreRing: View {
             VStack(spacing: 2) {
                 Text("\(Int(animatedScore))")
                     .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundStyle(scoreColor)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.primary)
                 
                 Text("Score")
                     .font(.caption2)
@@ -252,22 +254,6 @@ struct HealthScoreRing: View {
             animatedScore = score
         }
     }
-    
-    private var scoreGradient: LinearGradient {
-        LinearGradient(
-            colors: [scoreColor, scoreColor.opacity(0.7)],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
-    
-    private var scoreColor: Color {
-        switch score {
-        case 80...: return .successGreen
-        case 60..<80: return .warningYellow
-        default: return .alertRed
-        }
-    }
 }
 
 // MARK: - Placeholder View
@@ -275,15 +261,16 @@ struct InsightPlaceholderView: View {
     var body: some View {
         VStack(spacing: 12) {
             Image(systemName: "lightbulb.fill")
-                .font(.largeTitle)
-                .foregroundStyle(Color.healthPrimary)
+                .font(.title2)
+                .foregroundStyle(.secondary)
             
             Text("No insights yet")
-                .font(.headline)
+                .font(.subheadline)
+                .fontWeight(.medium)
             
             Text("Start tracking your health metrics to receive personalized AI insights")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.tertiary)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)

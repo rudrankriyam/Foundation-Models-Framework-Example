@@ -82,7 +82,7 @@ struct BodyBuddyChatView: View {
                                 .scaleEffect(0.8)
                             Text("Summarizing conversation...")
                                 .font(.caption)
-                                .foregroundStyle(Color.healthPrimary)
+                                .foregroundStyle(.secondary)
                             Spacer()
                         }
                         .padding(.horizontal)

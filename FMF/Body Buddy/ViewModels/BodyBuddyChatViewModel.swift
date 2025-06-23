@@ -32,27 +32,15 @@ final class BodyBuddyChatViewModel {
     
     // MARK: - Initialization
     init() {
-        // Create session with tools for health data access
-        self.session = LanguageModelSession(tools: tools)
-    }
-    
-    private var healthCoachInstructions: String {
-        """
-        You are Body Buddy, a friendly and knowledgeable health coach AI assistant. Your personality is:
-        - Encouraging and supportive, celebrating small wins
-        - Knowledgeable about health and wellness without being preachy
-        - Personalized in your responses based on the user's health data
-        - Proactive in suggesting healthy habits and activities
-        
-        You have access to the user's real-time health data through tools. Always:
-        1. Reference specific health metrics when relevant
-        2. Provide actionable, personalized advice
-        3. Be empathetic and understanding of challenges
-        4. Celebrate progress, no matter how small
-        5. Use emojis occasionally to be friendly (but don't overdo it)
-        
-        Start conversations by checking recent health data and commenting on it positively.
-        """
+        // Create session with tools and instructions for health data access
+        self.session = LanguageModelSession(
+            tools: tools,
+            instructions: Instructions(
+                "You are Body Buddy, a friendly and knowledgeable health coach AI assistant. " +
+                "Based on the user's health data, provide personalized, encouraging responses. " +
+                "Be supportive and celebrate small wins. Use emojis occasionally."
+            )
+        )
     }
     
     func setModelContext(_ context: ModelContext) {
@@ -69,15 +57,8 @@ final class BodyBuddyChatViewModel {
             // Save user message to session history
             await saveMessageToSession(content, isFromUser: true)
             
-            // Include instructions with the user's message
-            let promptWithInstructions = """
-            \(healthCoachInstructions)
-            
-            User: \(content)
-            """
-            
             // Stream response from current session
-            let responseStream = session.streamResponse(to: Prompt(promptWithInstructions))
+            let responseStream = session.streamResponse(to: Prompt(content))
             
             var responseText = ""
             for try await _ in responseStream {
@@ -120,7 +101,14 @@ final class BodyBuddyChatViewModel {
     @MainActor
     func clearChat() {
         sessionCount = 1
-        session = LanguageModelSession(tools: tools)
+        session = LanguageModelSession(
+            tools: tools,
+            instructions: Instructions(
+                "You are Body Buddy, a friendly and knowledgeable health coach AI assistant. " +
+                "Based on the user's health data, provide personalized, encouraging responses. " +
+                "Be supportive and celebrate small wins. Use emojis occasionally."
+            )
+        )
     }
     
     @MainActor
@@ -263,9 +251,29 @@ final class BodyBuddyChatViewModel {
     }
     
     private func createNewSessionWithContext(summary: ConversationSummary) {
-        // Store context instructions for later use in prompts
-        // We'll include this in each prompt since we can't set instructions on session with tools
-        session = LanguageModelSession(tools: tools)
+        let contextInstructions = """
+        You are Body Buddy, a friendly and knowledgeable health coach AI assistant. 
+        Based on the user's health data, provide personalized, encouraging responses. 
+        Be supportive and celebrate small wins. Use emojis occasionally.
+        
+        You are continuing a conversation with a user. Here's a summary of your previous conversation:
+        
+        CONVERSATION SUMMARY:
+        \(summary.summary)
+        
+        KEY TOPICS DISCUSSED:
+        \(summary.keyTopics.map { "• \($0)" }.joined(separator: "\n"))
+        
+        USER PREFERENCES/REQUESTS:
+        \(summary.userPreferences.map { "• \($0)" }.joined(separator: "\n"))
+        
+        Continue the conversation naturally, referencing this context when relevant.
+        """
+        
+        session = LanguageModelSession(
+            tools: tools,
+            instructions: Instructions(contextInstructions)
+        )
         sessionCount += 1
     }
     
