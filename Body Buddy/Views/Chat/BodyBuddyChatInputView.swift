@@ -6,11 +6,22 @@
 //
 
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 struct BodyBuddyChatInputView: View {
     @Binding var messageText: String
     let chatViewModel: BodyBuddyChatViewModel
     @FocusState.Binding var isTextFieldFocused: Bool
+    
+    private var backgroundColor: Color {
+        #if os(macOS)
+        Color(NSColor.windowBackgroundColor)
+        #else
+        Color(UIColor.systemBackground)
+        #endif
+    }
     
     var body: some View {
         VStack(spacing: 12) {
@@ -88,7 +99,7 @@ struct BodyBuddyChatInputView: View {
             .padding(.bottom, 8)
         }
         .background(
-            Color(UIColor.systemBackground)
+            backgroundColor
                 .ignoresSafeArea()
         )
     }

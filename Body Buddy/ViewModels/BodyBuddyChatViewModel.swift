@@ -66,7 +66,7 @@ final class BodyBuddyChatViewModel {
             }
             
             // Extract the response text from the transcript
-            if let lastEntry = session.transcript.entries.last,
+            if let lastEntry = session.transcript.last,
                case .response(let response) = lastEntry {
                 responseText = response.segments.compactMap { segment in
                     if case .text(let textSegment) = segment {
@@ -203,7 +203,7 @@ final class BodyBuddyChatViewModel {
     }
     
     private func createConversationText() -> String {
-        return session.transcript.entries.compactMap { entry in
+        return session.transcript.compactMap { entry in
             switch entry {
             case .prompt(let prompt):
                 let text = prompt.segments.compactMap { segment in
@@ -289,7 +289,7 @@ final class BodyBuddyChatViewModel {
         }
         
         // Extract the response text from the transcript
-        if let lastEntry = session.transcript.entries.last,
+        if let lastEntry = session.transcript.last,
            case .response(let response) = lastEntry {
             responseText = response.segments.compactMap { segment in
                 if case .text(let textSegment) = segment {

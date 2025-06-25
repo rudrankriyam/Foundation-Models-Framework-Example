@@ -29,7 +29,7 @@ struct ChatView: View {
                 Button("Clear") {
                     viewModel.clearChat()
                 }
-                .disabled(viewModel.session.transcript.entries.isEmpty)
+                .disabled(viewModel.session.transcript.isEmpty)
             }
         }
         .onAppear {
@@ -47,7 +47,7 @@ struct ChatView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: 12) {
-                    ForEach(viewModel.session.transcript.entries) { entry in
+                    ForEach(viewModel.session.transcript) { entry in
                         TranscriptEntryView(entry: entry)
                             .id(entry.id)
                     }
@@ -77,8 +77,8 @@ struct ChatView: View {
             .scrollDismissesKeyboard(.interactively)
             #endif
             .scrollPosition(id: $scrollID, anchor: .bottom)
-            .onChange(of: viewModel.session.transcript.entries.count) { _, _ in
-                if let lastEntry = viewModel.session.transcript.entries.last {
+            .onChange(of: viewModel.session.transcript.count) { _, _ in
+                if let lastEntry = viewModel.session.transcript.last {
                     withAnimation(.easeOut(duration: 0.3)) {
                         proxy.scrollTo(lastEntry.id, anchor: .bottom)
                     }

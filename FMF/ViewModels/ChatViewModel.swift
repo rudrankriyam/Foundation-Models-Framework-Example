@@ -86,7 +86,7 @@ final class ChatViewModel {
     }
 
     private func createConversationText() -> String {
-        return session.transcript.entries.compactMap { entry in
+        return session.transcript.compactMap { entry in
             switch entry {
             case .prompt(let prompt):
                 let text = prompt.segments.compactMap { segment in

@@ -42,7 +42,7 @@ struct BodyBuddyChatView: View {
                     Button("Clear") {
                         viewModel.clearChat()
                     }
-                    .disabled(viewModel.session.transcript.entries.isEmpty)
+                    .disabled(viewModel.session.transcript.isEmpty)
                 }
             }
         }
@@ -66,7 +66,7 @@ struct BodyBuddyChatView: View {
             ScrollView {
                 LazyVStack(spacing: 12) {
                     // Welcome message
-                    if viewModel.session.transcript.entries.isEmpty {
+                    if viewModel.session.transcript.isEmpty {
                         WelcomeMessageView(healthMetrics: viewModel.currentHealthMetrics)
                             .id("welcome")
                     }
@@ -101,8 +101,8 @@ struct BodyBuddyChatView: View {
             .scrollDismissesKeyboard(.interactively)
             #endif
             .scrollPosition(id: $scrollID, anchor: .bottom)
-            .onChange(of: viewModel.session.transcript.entries.count) { _, _ in
-                if let lastEntry = viewModel.session.transcript.entries.last {
+            .onChange(of: viewModel.session.transcript.count) { _, _ in
+                if let lastEntry = viewModel.session.transcript.last {
                     withAnimation(.easeOut(duration: 0.3)) {
                         proxy.scrollTo(lastEntry.id, anchor: .bottom)
                     }
