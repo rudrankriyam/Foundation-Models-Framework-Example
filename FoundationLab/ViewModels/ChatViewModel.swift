@@ -8,10 +8,9 @@
 import Foundation
 import FoundationModels
 import Observation
-import Combine
 
 @Observable
-final class ChatViewModel: ObservableObject {
+final class ChatViewModel {
 
     // MARK: - Published Properties
 

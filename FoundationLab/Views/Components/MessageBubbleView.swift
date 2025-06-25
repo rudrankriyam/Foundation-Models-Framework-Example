@@ -62,134 +62,93 @@ struct MessageBubbleView: View {
   private var messageContent: some View {
     #if os(iOS) || os(macOS)
     GlassEffectContainer(spacing: 8) {
-      VStack(alignment: message.isFromUser ? .trailing : .leading, spacing: 4) {
-
-        if !message.isFromUser && message.content.characters.isEmpty {
-          // Show typing indicator for empty assistant messages (streaming)
-          HStack(spacing: 4) {
-            ForEach(0..<3, id: \.self) {
-              index in
-              Circle()
-                .fill(.secondary)
-                .frame(width: 6, height: 6)
-                .scaleEffect(animateTyping ? 1.2 : 0.8)
-                .animation(
-                  .easeInOut(duration: 0.6)
-                    .repeatForever()
-                    .delay(Double(index) * 0.2),
-                  value: animateTyping
-                )
-            }
-          }
-          .padding(.horizontal, 12)
-          .padding(.vertical, 8)
-          .onAppear {
-            animateTyping = true
-          }
-          .accessibilityLabel("Assistant is typing")
-          .accessibilityAddTraits(.updatesFrequently)
-          #if os(iOS) || os(macOS)
-          .glassEffect(
-            .regular.tint(.gray.opacity(0.3)),
-            in: .rect(cornerRadius: 18)
-          )
-          #endif
-        } else {
-          Text(LocalizedStringKey(String(message.content.characters)))
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .textSelection(.enabled)
-            .accessibilityRespondsToUserInteraction(true)
-            .foregroundStyle(
-              message.isFromUser ? .white : Color.primary
-            )
-            #if os(iOS) || os(macOS)
-            .glassEffect(
-              message.isFromUser
-                ? .regular.tint(.blue).interactive()
-                : .regular.tint(.gray.opacity(0.3)),
-              in: .rect(cornerRadius: 18)
-            )
-            #endif
-        }
-
-        if !message.isFromUser && !message.content.characters.isEmpty {
-          feedbackButtons
-            .padding(.top, 4)
-        }
-
-        if message.isContextSummary {
-          HStack {
-            Image(systemName: "arrow.triangle.2.circlepath")
-              .foregroundStyle(.orange)
-              .accessibilityHidden(true)  // Decorative icon
-            Text("Context summarized")
-              .font(.caption2)
-              .foregroundStyle(.orange)
-          }
-          .accessibilityElement(children: .combine)
-          .accessibilityLabel("Context summary indicator")
-          .accessibilityValue("This message contains a summary of previous conversation context")
-        }
-      }
+      messageContentStack
     }
     #else
+    messageContentStack
+    #endif
+  }
+  
+  private var messageContentStack: some View {
     VStack(alignment: message.isFromUser ? .trailing : .leading, spacing: 4) {
-
       if !message.isFromUser && message.content.characters.isEmpty {
-        // Show typing indicator for empty assistant messages (streaming)
-        HStack(spacing: 4) {
-          ForEach(0..<3, id: \.self) { index in
-            Circle()
-              .fill(.secondary)
-              .frame(width: 6, height: 6)
-              .scaleEffect(animateTyping ? 1.2 : 0.8)
-              .animation(
-                .easeInOut(duration: 0.6)
-                  .repeatForever()
-                  .delay(Double(index) * 0.2),
-                value: animateTyping
-              )
-          }
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .onAppear {
-          animateTyping = true
-        }
-        .accessibilityLabel("Assistant is typing")
-        .accessibilityAddTraits(.updatesFrequently)
+        typingIndicator
       } else {
-        Text(LocalizedStringKey(String(message.content.characters)))
-          .padding(.horizontal, 16)
-          .padding(.vertical, 10)
-          .textSelection(.enabled)
-          .accessibilityRespondsToUserInteraction(true)
-          .foregroundStyle(
-            message.isFromUser ? .white : Color.primary
-          )
+        messageText
       }
-
+      
       if !message.isFromUser && !message.content.characters.isEmpty {
         feedbackButtons
           .padding(.top, 4)
       }
-
+      
       if message.isContextSummary {
-        HStack {
-          Image(systemName: "arrow.triangle.2.circlepath")
-            .foregroundStyle(.orange)
-            .accessibilityHidden(true)  // Decorative icon
-          Text("Context summarized")
-            .font(.caption2)
-            .foregroundStyle(.orange)
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Context summary indicator")
-        .accessibilityValue("This message contains a summary of previous conversation context")
+        contextSummaryIndicator
       }
     }
+  }
+  
+  private var typingIndicator: some View {
+    HStack(spacing: 4) {
+      ForEach(0..<3, id: \.self) { index in
+        Circle()
+          .fill(.secondary)
+          .frame(width: 6, height: 6)
+          .scaleEffect(animateTyping ? 1.2 : 0.8)
+          .animation(
+            .easeInOut(duration: 0.6)
+              .repeatForever()
+              .delay(Double(index) * 0.2),
+            value: animateTyping
+          )
+      }
+    }
+    .padding(.horizontal, 12)
+    .padding(.vertical, 8)
+    .onAppear {
+      animateTyping = true
+    }
+    .accessibilityLabel("Assistant is typing")
+    .accessibilityAddTraits(.updatesFrequently)
+    #if os(iOS) || os(macOS)
+    .glassEffect(
+      .regular.tint(.gray.opacity(0.3)),
+      in: .rect(cornerRadius: 18)
+    )
     #endif
+  }
+  
+  private var messageText: some View {
+    Text(LocalizedStringKey(String(message.content.characters)))
+      .padding(.horizontal, 16)
+      .padding(.vertical, 10)
+      .textSelection(.enabled)
+      .accessibilityRespondsToUserInteraction(true)
+      .foregroundStyle(
+        message.isFromUser ? .white : Color.primary
+      )
+      #if os(iOS) || os(macOS)
+      .glassEffect(
+        message.isFromUser
+          ? .regular.tint(.blue).interactive()
+          : .regular.tint(.gray.opacity(0.3)),
+        in: .rect(cornerRadius: 18)
+      )
+      #endif
+  }
+  
+  private var contextSummaryIndicator: some View {
+    HStack {
+      Image(systemName: "arrow.triangle.2.circlepath")
+        .foregroundStyle(.orange)
+        .accessibilityHidden(true)  // Decorative icon
+      Text("Context summarized")
+        .font(.caption2)
+        .foregroundStyle(.orange)
+    }
+    .accessibilityElement(children: .combine)
+    .accessibilityLabel("Context summary indicator")
+    .accessibilityValue("This message contains a summary of previous conversation context")
   }
 
   private var feedbackButtons: some View {
@@ -230,8 +189,6 @@ struct MessageBubbleView: View {
     UIAccessibility.post(notification: .announcement, argument: "Feedback sent")
     #endif
   }
-
-  // MARK: - Accessibility Computed Properties
 
   // MARK: - Accessibility Computed Properties
 
