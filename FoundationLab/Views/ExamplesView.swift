@@ -49,14 +49,18 @@ struct ExamplesView: View {
                 ExampleCardView(type: exampleType)
             }
             .buttonStyle(.plain)
+            #if os(iOS) || os(macOS)
             .glassEffect(.regular.interactive(true), in: .rect(cornerRadius: 12))
             .glassEffectID(exampleType.id, in: glassNamespace)
+            #endif
           } else {
             ExampleButton(exampleType: exampleType) {
               await exampleType.execute(with: viewModel)
             }
+            #if os(iOS) || os(macOS)
             .glassEffect(.regular.interactive(true), in: .rect(cornerRadius: 12))
             .glassEffectID(exampleType.id, in: glassNamespace)
+            #endif
           }
         }
       }
@@ -113,7 +117,9 @@ struct ExamplesView: View {
           .foregroundStyle(.secondary)
       }
       .padding(.horizontal)
+      #if os(iOS) || os(macOS)
       .glassEffect(.regular, in: .capsule)
+      #endif
     }
   }
 }

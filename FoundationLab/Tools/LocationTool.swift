@@ -89,7 +89,7 @@ struct LocationTool: Tool {
       return createErrorOutput(error: LocationError.authorizationDenied)
     }
     #else
-    guard authStatus == .authorizedAlways || authStatus == .authorizedWhenInUse else {
+    guard authStatus == .authorizedAlways else {
       if authStatus == .notDetermined {
         // Request permission and wait for response
         return await requestLocationPermission()

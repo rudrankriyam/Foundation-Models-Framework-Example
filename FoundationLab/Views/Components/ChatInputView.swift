@@ -12,8 +12,9 @@ struct ChatInputView: View {
     let chatViewModel: ChatViewModel
     @FocusState.Binding var isTextFieldFocused: Bool
     @Namespace private var glassNamespace
-
+    
     var body: some View {
+#if os(iOS) || os(macOS)
         GlassEffectContainer(spacing: 12) {
             HStack(spacing: 12) {
                 TextField("Type your message...", text: $messageText, axis: .vertical)
@@ -26,10 +27,10 @@ struct ChatInputView: View {
                     .onSubmit {
                         sendMessage()
                     }
-                    #if os(iOS)
+#if os(iOS)
                     .submitLabel(.send)
-                    #endif
-
+#endif
+                
                 Button(action: sendMessage) {
                     Image(systemName: "arrow.up.circle.fill")
                         .font(.system(size: 24))
@@ -49,33 +50,60 @@ struct ChatInputView: View {
                     chatViewModel.isLoading ||
                     chatViewModel.isSummarizing
                 )
-                #if os(macOS)
+#if os(macOS)
                 .buttonStyle(.plain)
-                #endif
+#endif
             }
         }
         .padding()
+#else
+        HStack(spacing: 12) {
+            TextField("Type your message...", text: $messageText, axis: .vertical)
+                .textFieldStyle(.plain)
+                .focused($isTextFieldFocused)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .onSubmit {
+                    sendMessage()
+                }
+            
+            Button(action: sendMessage) {
+                Image(systemName: "arrow.up.circle.fill")
+                    .font(.system(size: 24))
+                    .foregroundStyle(
+                        messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .gray : .blue
+                    )
+            }
+            .padding(8)
+            .disabled(
+                messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+                chatViewModel.isLoading ||
+                chatViewModel.isSummarizing
+            )
+        }
+        .padding()
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: messageText.isEmpty)
-        #if os(iOS)
+#if os(iOS)
         .background(
             Color(UIColor.systemBackground)
                 .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: -2)
         )
-        #elseif os(macOS)
+#elseif os(macOS)
         .background(
             Color(NSColor.windowBackgroundColor)
                 .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: -2)
         )
-        #endif
+#endif
+#endif
     }
-
+    
     private func sendMessage() {
         let trimmedMessage = messageText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedMessage.isEmpty else { return }
-
+        
         messageText = ""
         isTextFieldFocused = true // Keep focus for continuous conversation
-
+        
         Task {
             await chatViewModel.sendMessage(trimmedMessage)
         }

@@ -35,6 +35,7 @@ struct ToolsView: View {
     }
 
     private var toolButtonsView: some View {
+        #if os(iOS) || os(macOS)
         GlassEffectContainer(spacing: gridSpacing) {
             LazyVGrid(columns: adaptiveGridColumns, spacing: gridSpacing) {
                 ForEach(ToolExample.allCases, id: \.self) { tool in
@@ -53,6 +54,24 @@ struct ToolsView: View {
             }
         }
         .padding(.horizontal)
+        #else
+        LazyVGrid(columns: adaptiveGridColumns, spacing: gridSpacing) {
+            ForEach(ToolExample.allCases, id: \.self) { tool in
+                ToolButton(
+                    tool: tool,
+                    isSelected: selectedTool == tool,
+                    isRunning: isRunning && selectedTool == tool,
+                    namespace: glassNamespace
+                ) {
+                    selectedTool = tool
+                    Task {
+                        await executeToolExample(tool: tool)
+                    }
+                }
+            }
+        }
+        .padding(.horizontal)
+        #endif
     }
 
     private var adaptiveGridColumns: [GridItem] {
@@ -128,6 +147,8 @@ struct ToolsView: View {
         Color(UIColor.secondarySystemBackground)
 #elseif os(macOS)
         Color(NSColor.controlBackgroundColor)
+#else
+        Color.gray.opacity(0.1)
 #endif
     }
 
@@ -136,6 +157,8 @@ struct ToolsView: View {
         Color(UIColor.separator)
 #elseif os(macOS)
         Color(NSColor.separatorColor)
+#else
+        Color.gray.opacity(0.3)
 #endif
     }
 
@@ -300,11 +323,13 @@ struct ToolButton: View {
         }
         .buttonStyle(PlainButtonStyle())
         .disabled(isRunning)
+        #if os(iOS) || os(macOS)
         .glassEffect(
             isSelected ? .regular.tint(.accentColor).interactive(true) : .regular.interactive(true),
             in: .rect(cornerRadius: 12)
         )
         .glassEffectID("tool-\(tool.rawValue)", in: namespace)
+        #endif
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isSelected)
         .animation(.spring(response: 0.3, dampingFraction: 0.9), value: isRunning)
     }
