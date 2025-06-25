@@ -20,10 +20,10 @@ struct ChatView: View {
             
             ChatInputView(
                 messageText: $messageText,
-                chatViewModel: viewModel,
                 isTextFieldFocused: $isTextFieldFocused
             )
         }
+        .environmentObject(viewModel)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Clear") {
@@ -109,7 +109,7 @@ struct TranscriptEntryView: View {
             
         case .response(let response):
             if let text = extractText(from: response.segments), !text.isEmpty {
-                MessageBubbleView(message: ChatMessage(content: text, isFromUser: false))
+                MessageBubbleView(message: ChatMessage(entryID: entry.id, content: text, isFromUser: false))
             }
             
         case .toolCalls(let toolCalls):

@@ -8,9 +8,10 @@
 import Foundation
 import FoundationModels
 import Observation
+import Combine
 
 @Observable
-final class ChatViewModel {
+final class ChatViewModel: ObservableObject {
 
     // MARK: - Published Properties
 
@@ -56,6 +57,37 @@ final class ChatViewModel {
         }
 
         isLoading = session.isResponding
+    }
+
+    @MainActor
+    func submitFeedback(for entryID: Transcript.Entry.ID, sentiment: LanguageModelFeedbackAttachment.Sentiment) {
+        guard let entryIndex = session.transcript.firstIndex(where: { $0.id == entryID }) else {
+            print("Error: Could not find transcript entry for feedback.")
+            return
+        }
+
+        let outputEntry = session.transcript[entryIndex]
+        let inputEntries = session.transcript[..<entryIndex]
+
+        let feedback = LanguageModelFeedbackAttachment(
+            input: Array(inputEntries),
+            output: [outputEntry],
+            sentiment: sentiment
+        )
+
+        // In a real app, you would serialize this and attach it to a Feedback Assistant report.
+        // For this example, we'll print the JSON representation to the console.
+        do {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .prettyPrinted
+            let data = try encoder.encode(feedback)
+            let jsonString = String(data: data, encoding: .utf8) ?? ""
+            print("\n--- Feedback Submitted ---")
+            print(jsonString)
+            print("------------------------\n")
+        } catch {
+            print("Error encoding feedback: \(error)")
+        }
     }
 
     @MainActor

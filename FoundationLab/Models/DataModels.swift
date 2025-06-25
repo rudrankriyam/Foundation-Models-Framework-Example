@@ -12,6 +12,7 @@ import FoundationModels
 
 struct ChatMessage: Identifiable, Equatable {
   let id: UUID
+  let entryID: Transcript.Entry.ID?
   let content: AttributedString
   let isFromUser: Bool
   let timestamp: Date
@@ -19,6 +20,16 @@ struct ChatMessage: Identifiable, Equatable {
 
   init(content: String, isFromUser: Bool, isContextSummary: Bool = false) {
     self.id = UUID()
+    self.entryID = nil
+    self.content = AttributedString(content)
+    self.isFromUser = isFromUser
+    self.timestamp = Date()
+    self.isContextSummary = isContextSummary
+  }
+  
+  init(entryID: Transcript.Entry.ID?, content: String, isFromUser: Bool, isContextSummary: Bool = false) {
+    self.id = UUID()
+    self.entryID = entryID
     self.content = AttributedString(content)
     self.isFromUser = isFromUser
     self.timestamp = Date()
@@ -27,6 +38,7 @@ struct ChatMessage: Identifiable, Equatable {
   
   init(content: AttributedString, isFromUser: Bool, isContextSummary: Bool = false) {
     self.id = UUID()
+    self.entryID = nil
     self.content = content
     self.isFromUser = isFromUser
     self.timestamp = Date()
@@ -36,6 +48,7 @@ struct ChatMessage: Identifiable, Equatable {
   init(id: UUID, content: String, isFromUser: Bool, timestamp: Date, isContextSummary: Bool = false)
   {
     self.id = id
+    self.entryID = nil
     self.content = AttributedString(content)
     self.isFromUser = isFromUser
     self.timestamp = timestamp
@@ -45,6 +58,7 @@ struct ChatMessage: Identifiable, Equatable {
   init(id: UUID, content: AttributedString, isFromUser: Bool, timestamp: Date, isContextSummary: Bool = false)
   {
     self.id = id
+    self.entryID = nil
     self.content = content
     self.isFromUser = isFromUser
     self.timestamp = timestamp

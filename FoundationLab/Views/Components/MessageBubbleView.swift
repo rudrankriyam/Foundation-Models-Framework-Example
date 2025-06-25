@@ -10,6 +10,8 @@ import FoundationModels
 
 struct MessageBubbleView: View {
   let message: ChatMessage
+  @EnvironmentObject var viewModel: ChatViewModel
+  @State private var feedbackSent: LanguageModelFeedbackAttachment.Sentiment? = nil
   @State private var animateTyping = false
   @AccessibilityFocusState private var isMessageFocused: Bool
 
@@ -59,7 +61,8 @@ struct MessageBubbleView: View {
         if !message.isFromUser && message.content.characters.isEmpty {
           // Show typing indicator for empty assistant messages (streaming)
           HStack(spacing: 4) {
-            ForEach(0..<3, id: \.self) { index in
+            ForEach(0..<3, id: \.self) {
+              index in
               Circle()
                 .fill(.secondary)
                 .frame(width: 6, height: 6)
@@ -102,6 +105,11 @@ struct MessageBubbleView: View {
               in: .rect(cornerRadius: 18)
             )
             #endif
+        }
+
+        if !message.isFromUser && !message.content.characters.isEmpty {
+          feedbackButtons
+            .padding(.top, 4)
         }
 
         if message.isContextSummary {
@@ -156,6 +164,11 @@ struct MessageBubbleView: View {
           )
       }
 
+      if !message.isFromUser && !message.content.characters.isEmpty {
+        feedbackButtons
+          .padding(.top, 4)
+      }
+
       if message.isContextSummary {
         HStack {
           Image(systemName: "arrow.triangle.2.circlepath")
@@ -172,6 +185,42 @@ struct MessageBubbleView: View {
     }
     #endif
   }
+
+  private var feedbackButtons: some View {
+    HStack(spacing: 1) {
+      Button(action: { sendFeedback(.positive) }) {
+        Image(systemName: "hand.thumbsup")
+          .padding(8)
+          .glassEffect(.regular.tint(feedbackSent == .positive ? .green.opacity(0.5) : .gray.opacity(0.2)), in: .circle)
+          .foregroundStyle(feedbackSent == .positive ? .green : .secondary)
+      }
+      .buttonStyle(.plain)
+      .disabled(feedbackSent != nil)
+      .accessibilityLabel(feedbackSent == .positive ? "Positive feedback sent" : "Send positive feedback")
+
+      Button(action: { sendFeedback(.negative) }) {
+        Image(systemName: "hand.thumbsdown")
+          .padding(8)
+          .glassEffect(.regular.tint(feedbackSent == .negative ? .red.opacity(0.5) : .gray.opacity(0.2)), in: .circle)
+          .foregroundStyle(feedbackSent == .negative ? .red : .secondary)
+      }
+      .buttonStyle(.plain)
+      .disabled(feedbackSent != nil)
+      .accessibilityLabel(feedbackSent == .negative ? "Negative feedback sent" : "Send negative feedback")
+    }
+    .padding(.leading, 10)
+  }
+
+  private func sendFeedback(_ sentiment: LanguageModelFeedbackAttachment.Sentiment) {
+    guard let entryID = message.entryID else { return }
+    feedbackSent = sentiment
+    viewModel.submitFeedback(for: entryID, sentiment: sentiment)
+    #if os(iOS)
+    UIAccessibility.post(notification: .announcement, argument: "Feedback sent")
+    #endif
+  }
+
+  // MARK: - Accessibility Computed Properties
 
   // MARK: - Accessibility Computed Properties
 
