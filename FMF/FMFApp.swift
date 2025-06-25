@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AppIntents
 
 @main
 struct FMFApp: App {
@@ -15,6 +16,9 @@ struct FMFApp: App {
 #if os(macOS)
         .frame(minWidth: 800, minHeight: 600)
 #endif
+        .onAppear {
+          FMFAppShortcuts.updateAppShortcutParameters()
+        }
     }
 #if os(macOS)
     .defaultSize(width: 1000, height: 700)

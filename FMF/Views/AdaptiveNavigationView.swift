@@ -9,11 +9,10 @@ import SwiftUI
 import FoundationModels
 
 struct AdaptiveNavigationView: View {
-    @State private var navigationState = NavigationState()
-    @State private var sidebarSelection: TabSelection? = .examples
     @State private var contentViewModel = ContentViewModel()
     @State private var chatViewModel = ChatViewModel()
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    private let navigationCoordinator = NavigationCoordinator.shared
     
     var body: some View {
 #if os(iOS)
@@ -31,7 +30,10 @@ struct AdaptiveNavigationView: View {
     }
     
     private var tabBasedNavigation: some View {
-        TabView(selection: $navigationState.tabSelection) {
+        TabView(selection: .init(
+            get: { navigationCoordinator.tabSelection },
+            set: { navigationCoordinator.tabSelection = $0 }
+        )) {
             Tab("Examples", systemImage: "sparkles", value: .examples) {
                 NavigationStack {
                     ExamplesView(viewModel: $contentViewModel)
@@ -59,30 +61,33 @@ struct AdaptiveNavigationView: View {
 #if os(iOS)
         .ignoresSafeArea(.keyboard)
 #endif
-        .onChange(of: navigationState.tabSelection) { _, newValue in
-            sidebarSelection = newValue
+        .onChange(of: navigationCoordinator.tabSelection) { _, newValue in
+            navigationCoordinator.splitViewSelection = newValue
         }
     }
     
     private var splitViewNavigation: some View {
         NavigationSplitView(
-            columnVisibility: $navigationState.splitViewVisibility
+            columnVisibility: .constant(.automatic)
         ) {
-            SidebarView(selection: $sidebarSelection)
+            SidebarView(selection: .init(
+                get: { navigationCoordinator.splitViewSelection },
+                set: { navigationCoordinator.splitViewSelection = $0 }
+            ))
         } detail: {
             detailView
         }
         .navigationSplitViewStyle(.balanced)
-        .onChange(of: sidebarSelection) { _, newValue in
+        .onChange(of: navigationCoordinator.splitViewSelection) { _, newValue in
             if let newValue {
-                navigationState.tabSelection = newValue
+                navigationCoordinator.tabSelection = newValue
             }
         }
     }
     
     @ViewBuilder
     private var detailView: some View {
-        switch sidebarSelection ?? .examples {
+        switch navigationCoordinator.splitViewSelection ?? .examples {
         case .examples:
             ExamplesView(viewModel: $contentViewModel)
                 .navigationTitle("Foundation Models")
