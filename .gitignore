@@ -34,9 +34,6 @@ playground.xcworkspace
 # macOS
 .DS_Store
 
-# Project specific
-fmf.md
-
 # CocoaPods
 #
 # We recommend against adding the Pods directory to your .gitignore. However
