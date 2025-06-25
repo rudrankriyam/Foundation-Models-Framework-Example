@@ -10,16 +10,22 @@ import FoundationModels
 
 struct MessageBubbleView: View {
   let message: ChatMessage
-  @EnvironmentObject var viewModel: ChatViewModel
+  @Environment(ChatViewModel.self) var viewModel
   @State private var animateTyping = false
   @AccessibilityFocusState private var isMessageFocused: Bool
   
   private var feedbackSent: LanguageModelFeedbackAttachment.Sentiment? {
-    guard let entryID = message.entryID else { return nil }
-    return viewModel.getFeedback(for: entryID)
+    guard let entryID = message.entryID else { 
+      print("DEBUG: No entryID for message: \(String(message.content.characters.prefix(50)))")
+      return nil 
+    }
+    let feedback = viewModel.getFeedback(for: entryID)
+    print("DEBUG: Feedback for entryID \(entryID): \(String(describing: feedback))")
+    return feedback
   }
 
   var body: some View {
+    let _ = print("DEBUG: MessageBubbleView rendered for message: \(String(message.content.characters.prefix(30))), entryID: \(String(describing: message.entryID)), feedbackSent: \(String(describing: feedbackSent))")
     HStack {
       if message.isFromUser {
         Spacer(minLength: 50)
@@ -191,8 +197,12 @@ struct MessageBubbleView: View {
   }
 
   private var feedbackButtons: some View {
-    HStack(spacing: 1) {
-      Button(action: { sendFeedback(.positive) }) {
+    let _ = print("DEBUG: Rendering feedback buttons for message: \(String(message.content.characters.prefix(30))), feedbackSent: \(String(describing: feedbackSent))")
+    return HStack(spacing: 1) {
+      Button(action: { 
+        print("DEBUG: Positive button tapped for message: \(String(message.content.characters.prefix(30)))")
+        sendFeedback(.positive) 
+      }) {
         Image(systemName: "hand.thumbsup")
           .padding(8)
           .glassEffect(.regular.tint(feedbackSent == .positive ? .green.opacity(0.5) : .gray.opacity(0.2)), in: .circle)
@@ -202,7 +212,10 @@ struct MessageBubbleView: View {
       .disabled(feedbackSent != nil)
       .accessibilityLabel(feedbackSent == .positive ? "Positive feedback sent" : "Send positive feedback")
 
-      Button(action: { sendFeedback(.negative) }) {
+      Button(action: { 
+        print("DEBUG: Negative button tapped for message: \(String(message.content.characters.prefix(30)))")
+        sendFeedback(.negative) 
+      }) {
         Image(systemName: "hand.thumbsdown")
           .padding(8)
           .glassEffect(.regular.tint(feedbackSent == .negative ? .red.opacity(0.5) : .gray.opacity(0.2)), in: .circle)
@@ -216,7 +229,13 @@ struct MessageBubbleView: View {
   }
 
   private func sendFeedback(_ sentiment: LanguageModelFeedbackAttachment.Sentiment) {
-    guard let entryID = message.entryID else { return }
+    print("DEBUG: sendFeedback called with sentiment: \(sentiment)")
+    print("DEBUG: viewModel is: \(viewModel)")
+    guard let entryID = message.entryID else { 
+      print("DEBUG: Cannot send feedback - no entryID")
+      return 
+    }
+    print("DEBUG: Sending \(sentiment) feedback for entryID: \(entryID)")
     viewModel.submitFeedback(for: entryID, sentiment: sentiment)
     #if os(iOS)
     UIAccessibility.post(notification: .announcement, argument: "Feedback sent")
@@ -357,7 +376,7 @@ struct MessageBubbleView: View {
     .padding()
   }
   .background(.regularMaterial)
-  .environmentObject(ChatViewModel())
+  .environment(ChatViewModel())
 }
 
 #Preview("Conversation Flow") {
@@ -394,7 +413,7 @@ struct MessageBubbleView: View {
     .padding()
   }
   .background(.regularMaterial)
-  .environmentObject(ChatViewModel())
+  .environment(ChatViewModel())
 }
 
 #Preview("Dark Mode") {
@@ -414,5 +433,5 @@ struct MessageBubbleView: View {
   }
   .background(.regularMaterial)
   .preferredColorScheme(.dark)
-  .environmentObject(ChatViewModel())
+  .environment(ChatViewModel())
 }

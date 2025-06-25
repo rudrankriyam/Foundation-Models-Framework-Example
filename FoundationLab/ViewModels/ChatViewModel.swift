@@ -65,6 +65,9 @@ final class ChatViewModel: ObservableObject {
 
     @MainActor
     func submitFeedback(for entryID: Transcript.Entry.ID, sentiment: LanguageModelFeedbackAttachment.Sentiment) {
+        print("DEBUG: submitFeedback called with entryID: \(entryID), sentiment: \(sentiment)")
+        print("DEBUG: Current feedbackState before update: \(feedbackState)")
+        
         guard let entryIndex = session.transcript.firstIndex(where: { $0.id == entryID }) else {
             print("Error: Could not find transcript entry for feedback.")
             return
@@ -72,6 +75,7 @@ final class ChatViewModel: ObservableObject {
 
         // Store the feedback state
         feedbackState[entryID] = sentiment
+        print("DEBUG: Updated feedbackState after update: \(feedbackState)")
 
         let outputEntry = session.transcript[entryIndex]
         let inputEntries = session.transcript[..<entryIndex]
