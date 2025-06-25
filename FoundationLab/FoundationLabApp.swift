@@ -1,6 +1,6 @@
 //
 //  FoundationLabApp.swift
-//  FoundationLab
+//  Foundation Lab
 //
 //  Created by Rudrank Riyam on 6/9/25.
 //

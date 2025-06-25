@@ -75,7 +75,7 @@
 /* Begin PBXNativeTarget section */
 		0AAE4FFE2DF76E6600838F13 /* FoundationLab */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 0AAE500A2DF76E6800838F13 /* Build configuration list for PBXNativeTarget "FoundationLab" */;
+			buildConfigurationList = 0AAE500A2DF76E6800838F13 /* Build configuration list for PBXNativeTarget "Foundation Lab" */;
 			buildPhases = (
 				0AAE4FFB2DF76E6600838F13 /* Sources */,
 				0AAE4FFC2DF76E6600838F13 /* Frameworks */,
@@ -88,7 +88,7 @@
 			fileSystemSynchronizedGroups = (
 				0AAE50012DF76E6600838F13 /* FoundationLab */,
 			);
-			name = FoundationLab;
+			name = "Foundation Lab";
 			packageProductDependencies = (
 			);
 			productName = FoundationLab;
@@ -332,6 +332,7 @@
 				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
 				ENABLE_RESOURCE_ACCESS_USB = NO;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Foundation Lab";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSAppleMusicUsageDescription = "This app needs access to Apple Music to search and play music from your library.";
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "This app needs access to your calendar to create and manage events.";
@@ -367,13 +368,13 @@
 				RUNTIME_EXCEPTION_DISABLE_LIBRARY_VALIDATION = NO;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = "1,2,7";
 				XROS_DEPLOYMENT_TARGET = 26.0;
 			};
 			name = Debug;
@@ -404,6 +405,7 @@
 				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
 				ENABLE_RESOURCE_ACCESS_USB = NO;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Foundation Lab";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSAppleMusicUsageDescription = "This app needs access to Apple Music to search and play music from your library.";
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "This app needs access to your calendar to create and manage events.";
@@ -439,13 +441,13 @@
 				RUNTIME_EXCEPTION_DISABLE_LIBRARY_VALIDATION = NO;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = "1,2,7";
 				XROS_DEPLOYMENT_TARGET = 26.0;
 			};
 			name = Release;
@@ -554,7 +556,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		0AAE500A2DF76E6800838F13 /* Build configuration list for PBXNativeTarget "FoundationLab" */ = {
+		0AAE500A2DF76E6800838F13 /* Build configuration list for PBXNativeTarget "Foundation Lab" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				0AAE500B2DF76E6800838F13 /* Debug */,
