@@ -30,8 +30,11 @@ struct BodyBuddyChatView: View {
             }
             .background(Color.lightBackground)
             .navigationTitle("Body Buddy")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
+                #if os(iOS)
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Done") {
                         dismiss()
@@ -44,6 +47,20 @@ struct BodyBuddyChatView: View {
                     }
                     .disabled(viewModel.session.transcript.isEmpty)
                 }
+                #else
+                ToolbarItem(placement: .navigation) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+                
+                ToolbarItem(placement: .automatic) {
+                    Button("Clear") {
+                        viewModel.clearChat()
+                    }
+                    .disabled(viewModel.session.transcript.isEmpty)
+                }
+                #endif
             }
         }
         .onAppear {
@@ -71,7 +88,7 @@ struct BodyBuddyChatView: View {
                             .id("welcome")
                     }
                     
-                    ForEach(viewModel.session.transcript.entries) { entry in
+                    ForEach(viewModel.session.transcript) { entry in
                         BodyBuddyTranscriptEntryView(entry: entry)
                             .id(entry.id)
                     }

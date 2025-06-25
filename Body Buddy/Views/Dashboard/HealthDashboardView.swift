@@ -43,8 +43,11 @@ struct HealthDashboardView: View {
             .padding()
         }
         .navigationTitle("Health Dashboard")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
+        #endif
         .toolbar {
+            #if os(iOS)
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
                     showingBuddyChat = true
@@ -53,6 +56,16 @@ struct HealthDashboardView: View {
                         .foregroundStyle(.primary)
                 }
             }
+            #else
+            ToolbarItem(placement: .automatic) {
+                Button {
+                    showingBuddyChat = true
+                } label: {
+                    Image(systemName: "bubble.left.and.bubble.right.fill")
+                        .foregroundStyle(.primary)
+                }
+            }
+            #endif
         }
         .sheet(isPresented: $showingBuddyChat) {
             BodyBuddyChatView()
