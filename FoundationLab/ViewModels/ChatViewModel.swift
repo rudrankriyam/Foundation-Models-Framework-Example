@@ -21,6 +21,10 @@ final class ChatViewModel {
     // MARK: - Public Properties
 
     private(set) var session: LanguageModelSession
+    
+    // MARK: - Feedback State
+    
+    private(set) var feedbackState: [Transcript.Entry.ID: LanguageModelFeedbackAttachment.Sentiment] = [:]
 
     // MARK: - Initialization
 
@@ -59,8 +63,48 @@ final class ChatViewModel {
     }
 
     @MainActor
+    func submitFeedback(for entryID: Transcript.Entry.ID, sentiment: LanguageModelFeedbackAttachment.Sentiment) {
+        guard let entryIndex = session.transcript.firstIndex(where: { $0.id == entryID }) else {
+            print("Error: Could not find transcript entry for feedback.")
+            return
+        }
+
+        // Store the feedback state
+        feedbackState[entryID] = sentiment
+
+        let outputEntry = session.transcript[entryIndex]
+        let inputEntries = session.transcript[..<entryIndex]
+
+        let feedback = LanguageModelFeedbackAttachment(
+            input: Array(inputEntries),
+            output: [outputEntry],
+            sentiment: sentiment
+        )
+
+        // In a real app, you would serialize this and attach it to a Feedback Assistant report.
+        // For this example, we'll print the JSON representation to the console.
+        do {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .prettyPrinted
+            let data = try encoder.encode(feedback)
+            let jsonString = String(data: data, encoding: .utf8) ?? ""
+            print("\n--- Feedback Submitted ---")
+            print(jsonString)
+            print("------------------------\n")
+        } catch {
+            print("Error encoding feedback: \(error)")
+        }
+    }
+    
+    @MainActor
+    func getFeedback(for entryID: Transcript.Entry.ID) -> LanguageModelFeedbackAttachment.Sentiment? {
+        return feedbackState[entryID]
+    }
+
+    @MainActor
     func clearChat() {
         sessionCount = 1
+        feedbackState.removeAll()
         session = LanguageModelSession(
             instructions: Instructions(
                 "You are a helpful, friendly AI assistant. Engage in natural conversation and provide thoughtful, detailed responses."

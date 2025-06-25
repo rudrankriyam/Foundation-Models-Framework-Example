@@ -30,7 +30,14 @@
       "Bash(/dev/null)",
       "Bash(gh pr create:*)",
       "Bash(git config:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Bash(DEVELOPER_DIR=\"/Applications/Xcode-26.0.0-Beta.2.app/Contents/Developer\" xcodebuild build -scheme \"FoundationLab\" -project FoundationLab.xcodeproj -destination 'platform=macOS')",
+      "Bash(DEVELOPER_DIR=\"/Applications/Xcode-26.0.0-Beta.2.app/Contents/Developer\" xcodebuild -list -project FoundationLab.xcodeproj)",
+      "Bash(DEVELOPER_DIR=\"/Applications/Xcode-26.0.0-Beta.2.app/Contents/Developer\" xcodebuild build -scheme \"Foundation Lab\" -project FoundationLab.xcodeproj -destination 'platform=macOS')",
+      "Bash(DEVELOPER_DIR=\"/Applications/Xcode-26.0.0-Beta.2.app/Contents/Developer\" xcodebuild build -scheme \"Foundation Lab\" -project FoundationLab.xcodeproj -destination 'platform=macOS' 2 >& 1)",
+      "Bash(git checkout:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh api:*)"
     ],
     "deny": []
   }

@@ -20,10 +20,10 @@ struct ChatView: View {
             
             ChatInputView(
                 messageText: $messageText,
-                chatViewModel: viewModel,
                 isTextFieldFocused: $isTextFieldFocused
             )
         }
+        .environment(viewModel)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Clear") {
@@ -105,27 +105,33 @@ struct TranscriptEntryView: View {
         case .prompt(let prompt):
             if let text = extractText(from: prompt.segments), !text.isEmpty {
                 MessageBubbleView(message: ChatMessage(content: text, isFromUser: true))
+                    .id(entry.id)
             }
             
         case .response(let response):
             if let text = extractText(from: response.segments), !text.isEmpty {
-                MessageBubbleView(message: ChatMessage(content: text, isFromUser: false))
+                MessageBubbleView(message: ChatMessage(entryID: entry.id, content: text, isFromUser: false))
+                    .id(entry.id)
             }
             
         case .toolCalls(let toolCalls):
-            ForEach(Array(toolCalls.enumerated()), id: \.offset) { _, toolCall in
+            ForEach(Array(toolCalls.enumerated()), id: \.offset) { index, toolCall in
                 MessageBubbleView(message: ChatMessage(
+                    entryID: entry.id,
                     content: "🔧 Calling tool: \(toolCall.toolName)",
                     isFromUser: false
                 ))
+                .id("\(entry.id)-tool-\(index)")
             }
             
         case .toolOutput(let toolOutput):
             if let text = extractText(from: toolOutput.segments), !text.isEmpty {
                 MessageBubbleView(message: ChatMessage(
+                    entryID: entry.id,
                     content: "🔧 Tool result: \(text)",
                     isFromUser: false
                 ))
+                .id(entry.id)
             }
             
         case .instructions:

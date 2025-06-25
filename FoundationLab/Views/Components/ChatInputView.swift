@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ChatInputView: View {
     @Binding var messageText: String
-    let chatViewModel: ChatViewModel
+    @Environment(ChatViewModel.self) var chatViewModel
     @FocusState.Binding var isTextFieldFocused: Bool
     @Namespace private var glassNamespace
     

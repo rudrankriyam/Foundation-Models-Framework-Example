@@ -10,8 +10,16 @@ import FoundationModels
 
 struct MessageBubbleView: View {
   let message: ChatMessage
+  @Environment(ChatViewModel.self) var viewModel
   @State private var animateTyping = false
   @AccessibilityFocusState private var isMessageFocused: Bool
+  
+  private var feedbackSent: LanguageModelFeedbackAttachment.Sentiment? {
+    guard let entryID = message.entryID else { 
+      return nil 
+    }
+    return viewModel.getFeedback(for: entryID)
+  }
 
   var body: some View {
     HStack {
@@ -54,122 +62,131 @@ struct MessageBubbleView: View {
   private var messageContent: some View {
     #if os(iOS) || os(macOS)
     GlassEffectContainer(spacing: 8) {
-      VStack(alignment: message.isFromUser ? .trailing : .leading, spacing: 4) {
-
-        if !message.isFromUser && message.content.characters.isEmpty {
-          // Show typing indicator for empty assistant messages (streaming)
-          HStack(spacing: 4) {
-            ForEach(0..<3, id: \.self) { index in
-              Circle()
-                .fill(.secondary)
-                .frame(width: 6, height: 6)
-                .scaleEffect(animateTyping ? 1.2 : 0.8)
-                .animation(
-                  .easeInOut(duration: 0.6)
-                    .repeatForever()
-                    .delay(Double(index) * 0.2),
-                  value: animateTyping
-                )
-            }
-          }
-          .padding(.horizontal, 12)
-          .padding(.vertical, 8)
-          .onAppear {
-            animateTyping = true
-          }
-          .accessibilityLabel("Assistant is typing")
-          .accessibilityAddTraits(.updatesFrequently)
-          #if os(iOS) || os(macOS)
-          .glassEffect(
-            .regular.tint(.gray.opacity(0.3)),
-            in: .rect(cornerRadius: 18)
-          )
-          #endif
-        } else {
-          Text(LocalizedStringKey(String(message.content.characters)))
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .textSelection(.enabled)
-            .accessibilityRespondsToUserInteraction(true)
-            .foregroundStyle(
-              message.isFromUser ? .white : Color.primary
-            )
-            #if os(iOS) || os(macOS)
-            .glassEffect(
-              message.isFromUser
-                ? .regular.tint(.blue).interactive()
-                : .regular.tint(.gray.opacity(0.3)),
-              in: .rect(cornerRadius: 18)
-            )
-            #endif
-        }
-
-        if message.isContextSummary {
-          HStack {
-            Image(systemName: "arrow.triangle.2.circlepath")
-              .foregroundStyle(.orange)
-              .accessibilityHidden(true)  // Decorative icon
-            Text("Context summarized")
-              .font(.caption2)
-              .foregroundStyle(.orange)
-          }
-          .accessibilityElement(children: .combine)
-          .accessibilityLabel("Context summary indicator")
-          .accessibilityValue("This message contains a summary of previous conversation context")
-        }
-      }
+      messageContentStack
     }
     #else
+    messageContentStack
+    #endif
+  }
+  
+  private var messageContentStack: some View {
     VStack(alignment: message.isFromUser ? .trailing : .leading, spacing: 4) {
-
       if !message.isFromUser && message.content.characters.isEmpty {
-        // Show typing indicator for empty assistant messages (streaming)
-        HStack(spacing: 4) {
-          ForEach(0..<3, id: \.self) { index in
-            Circle()
-              .fill(.secondary)
-              .frame(width: 6, height: 6)
-              .scaleEffect(animateTyping ? 1.2 : 0.8)
-              .animation(
-                .easeInOut(duration: 0.6)
-                  .repeatForever()
-                  .delay(Double(index) * 0.2),
-                value: animateTyping
-              )
-          }
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .onAppear {
-          animateTyping = true
-        }
-        .accessibilityLabel("Assistant is typing")
-        .accessibilityAddTraits(.updatesFrequently)
+        typingIndicator
       } else {
-        Text(LocalizedStringKey(String(message.content.characters)))
-          .padding(.horizontal, 16)
-          .padding(.vertical, 10)
-          .textSelection(.enabled)
-          .accessibilityRespondsToUserInteraction(true)
-          .foregroundStyle(
-            message.isFromUser ? .white : Color.primary
-          )
+        messageText
       }
-
+      
+      if !message.isFromUser && !message.content.characters.isEmpty {
+        feedbackButtons
+          .padding(.top, 4)
+      }
+      
       if message.isContextSummary {
-        HStack {
-          Image(systemName: "arrow.triangle.2.circlepath")
-            .foregroundStyle(.orange)
-            .accessibilityHidden(true)  // Decorative icon
-          Text("Context summarized")
-            .font(.caption2)
-            .foregroundStyle(.orange)
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Context summary indicator")
-        .accessibilityValue("This message contains a summary of previous conversation context")
+        contextSummaryIndicator
       }
     }
+  }
+  
+  private var typingIndicator: some View {
+    HStack(spacing: 4) {
+      ForEach(0..<3, id: \.self) { index in
+        Circle()
+          .fill(.secondary)
+          .frame(width: 6, height: 6)
+          .scaleEffect(animateTyping ? 1.2 : 0.8)
+          .animation(
+            .easeInOut(duration: 0.6)
+              .repeatForever()
+              .delay(Double(index) * 0.2),
+            value: animateTyping
+          )
+      }
+    }
+    .padding(.horizontal, 12)
+    .padding(.vertical, 8)
+    .onAppear {
+      animateTyping = true
+    }
+    .accessibilityLabel("Assistant is typing")
+    .accessibilityAddTraits(.updatesFrequently)
+    #if os(iOS) || os(macOS)
+    .glassEffect(
+      .regular.tint(.gray.opacity(0.3)),
+      in: .rect(cornerRadius: 18)
+    )
+    #endif
+  }
+  
+  private var messageText: some View {
+    Text(LocalizedStringKey(String(message.content.characters)))
+      .padding(.horizontal, 16)
+      .padding(.vertical, 10)
+      .textSelection(.enabled)
+      .accessibilityRespondsToUserInteraction(true)
+      .foregroundStyle(
+        message.isFromUser ? .white : Color.primary
+      )
+      #if os(iOS) || os(macOS)
+      .glassEffect(
+        message.isFromUser
+          ? .regular.tint(.blue).interactive()
+          : .regular.tint(.gray.opacity(0.3)),
+        in: .rect(cornerRadius: 18)
+      )
+      #endif
+  }
+  
+  private var contextSummaryIndicator: some View {
+    HStack {
+      Image(systemName: "arrow.triangle.2.circlepath")
+        .foregroundStyle(.orange)
+        .accessibilityHidden(true)  // Decorative icon
+      Text("Context summarized")
+        .font(.caption2)
+        .foregroundStyle(.orange)
+    }
+    .accessibilityElement(children: .combine)
+    .accessibilityLabel("Context summary indicator")
+    .accessibilityValue("This message contains a summary of previous conversation context")
+  }
+
+  private var feedbackButtons: some View {
+    HStack(spacing: 1) {
+      Button(action: { 
+        sendFeedback(.positive) 
+      }) {
+        Image(systemName: "hand.thumbsup")
+          .padding(8)
+          .glassEffect(.regular.tint(feedbackSent == .positive ? .green.opacity(0.5) : .gray.opacity(0.2)), in: .circle)
+          .foregroundStyle(feedbackSent == .positive ? .green : .secondary)
+      }
+      .buttonStyle(.plain)
+      .disabled(feedbackSent != nil)
+      .accessibilityLabel(feedbackSent == .positive ? "Positive feedback sent" : "Send positive feedback")
+
+      Button(action: { 
+        sendFeedback(.negative) 
+      }) {
+        Image(systemName: "hand.thumbsdown")
+          .padding(8)
+          .glassEffect(.regular.tint(feedbackSent == .negative ? .red.opacity(0.5) : .gray.opacity(0.2)), in: .circle)
+          .foregroundStyle(feedbackSent == .negative ? .red : .secondary)
+      }
+      .buttonStyle(.plain)
+      .disabled(feedbackSent != nil)
+      .accessibilityLabel(feedbackSent == .negative ? "Negative feedback sent" : "Send negative feedback")
+    }
+    .padding(.leading, 10)
+  }
+
+  private func sendFeedback(_ sentiment: LanguageModelFeedbackAttachment.Sentiment) {
+    guard let entryID = message.entryID else { 
+      return 
+    }
+    viewModel.submitFeedback(for: entryID, sentiment: sentiment)
+    #if os(iOS)
+    UIAccessibility.post(notification: .announcement, argument: "Feedback sent")
     #endif
   }
 
@@ -305,6 +322,7 @@ struct MessageBubbleView: View {
     .padding()
   }
   .background(.regularMaterial)
+  .environment(ChatViewModel())
 }
 
 #Preview("Conversation Flow") {
@@ -341,6 +359,7 @@ struct MessageBubbleView: View {
     .padding()
   }
   .background(.regularMaterial)
+  .environment(ChatViewModel())
 }
 
 #Preview("Dark Mode") {
@@ -360,4 +379,5 @@ struct MessageBubbleView: View {
   }
   .background(.regularMaterial)
   .preferredColorScheme(.dark)
+  .environment(ChatViewModel())
 }
