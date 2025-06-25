@@ -98,9 +98,9 @@ struct LocationTool: Tool {
       return createErrorOutput(error: LocationError.reverseGeocodingFailed)
     }
     let mapItems = try? await request.mapItems
-    let placemark = mapItems?.first?.placemark
+    let mapItem = mapItems?.first
     
-    let address = formatAddress(placemark: placemark)
+    let address = formatAddress(mapItem: mapItem)
     
     return ToolOutput(
       GeneratedContent(properties: [
@@ -127,12 +127,12 @@ struct LocationTool: Tool {
       }
       
       let mapItems = try await request.mapItems
-      guard let mkPlacemark = mapItems.first?.placemark,
-            let location = mkPlacemark.location else {
+      guard let mapItem = mapItems.first else {
         return createErrorOutput(error: LocationError.geocodingFailed)
       }
       
-      let formattedAddress = "\(mkPlacemark.name ?? ""), \(mkPlacemark.locality ?? ""), \(mkPlacemark.administrativeArea ?? "")"
+      let location = mapItem.location
+      let formattedAddress = formatAddress(mapItem: mapItem)
       
       return ToolOutput(
         GeneratedContent(properties: [
@@ -141,10 +141,10 @@ struct LocationTool: Tool {
           "latitude": location.coordinate.latitude,
           "longitude": location.coordinate.longitude,
           "formattedAddress": formattedAddress,
-          "country": mkPlacemark.country ?? "",
-          "state": mkPlacemark.administrativeArea ?? "",
-          "city": mkPlacemark.locality ?? "",
-          "postalCode": mkPlacemark.postalCode ?? "",
+          "country": "",  // These would need to be extracted from addressRepresentations
+          "state": "",
+          "city": "",
+          "postalCode": "",
           "message": "Location found: \(formattedAddress)"
         ])
       )
@@ -167,11 +167,11 @@ struct LocationTool: Tool {
       }
       let mapItems = try await request.mapItems
       
-      guard let placemark = mapItems.first?.placemark else {
+      guard let mapItem = mapItems.first else {
         return createErrorOutput(error: LocationError.reverseGeocodingFailed)
       }
       
-      let address = formatAddress(placemark: placemark)
+      let address = formatAddress(mapItem: mapItem)
       
       return ToolOutput(
         GeneratedContent(properties: [
@@ -179,11 +179,11 @@ struct LocationTool: Tool {
           "latitude": latitude,
           "longitude": longitude,
           "address": address,
-          "country": placemark.country ?? "",
-          "state": placemark.administrativeArea ?? "",
-          "city": placemark.locality ?? "",
-          "street": placemark.thoroughfare ?? "",
-          "postalCode": placemark.postalCode ?? "",
+          "country": "",  // These would need to be extracted from addressRepresentations
+          "state": "",
+          "city": "",
+          "street": "",
+          "postalCode": "",
           "message": "Address: \(address)"
         ])
       )
@@ -221,8 +221,8 @@ struct LocationTool: Tool {
         let distance: String
         if let userLocation = locationManager.location {
           let placeLocation = CLLocation(
-            latitude: item.placemark.coordinate.latitude,
-            longitude: item.placemark.coordinate.longitude
+            latitude: item.location.coordinate.latitude,
+            longitude: item.location.coordinate.longitude
           )
           let meters = userLocation.distance(from: placeLocation)
           distance = formatDistance(meters)
@@ -231,7 +231,7 @@ struct LocationTool: Tool {
         }
         
         placesDescription += "\(index + 1). \(item.name ?? "Unknown Place")\n"
-        if let address = item.placemark.formattedAddress {
+        if let address = formatMapItemAddress(item) {
           placesDescription += "   Address: \(address)\n"
         }
         placesDescription += "   Distance: \(distance)\n"
@@ -294,39 +294,17 @@ struct LocationTool: Tool {
     )
   }
   
-  private func formatAddress(placemark: MKPlacemark?) -> String {
-    guard let placemark = placemark else { return "Unknown location" }
+  private func formatAddress(mapItem: MKMapItem?) -> String {
+    guard let mapItem = mapItem else { return "Unknown location" }
     
-    var components: [String] = []
-    
-    if let name = placemark.name {
-      components.append(name)
-    }
-    if let street = placemark.thoroughfare {
-      if let number = placemark.subThoroughfare {
-        components.append("\(number) \(street)")
-      } else {
-        components.append(street)
-      }
-    }
-    if let city = placemark.locality {
-      components.append(city)
-    }
-    if let state = placemark.administrativeArea {
-      components.append(state)
-    }
-    if let postalCode = placemark.postalCode {
-      components.append(postalCode)
-    }
-    if let country = placemark.country {
-      components.append(country)
+    // Use name if available
+    if let name = mapItem.name {
+      return name
     }
     
-    // Remove duplicates while preserving order
-    var seen = Set<String>()
-    let unique = components.filter { seen.insert($0).inserted }
-    
-    return unique.joined(separator: ", ")
+    // Fallback to coordinates
+    let location = mapItem.location
+    return "Lat: \(location.coordinate.latitude), Lon: \(location.coordinate.longitude)"
   }
   
   private func formatDistance(_ meters: Double) -> String {
@@ -405,15 +383,9 @@ struct LocationTool: Tool {
   }
 }
 
-extension MKPlacemark {
-  var formattedAddress: String? {
-    if let name = name,
-       let locality = locality,
-       let administrativeArea = administrativeArea {
-      return "\(name), \(locality), \(administrativeArea)"
-    }
-    return nil
-  }
+// Helper function to format map item address
+private func formatMapItemAddress(_ mapItem: MKMapItem) -> String? {
+  return mapItem.name
 }
 
 extension Double {

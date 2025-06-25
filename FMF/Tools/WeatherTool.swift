@@ -101,9 +101,10 @@ struct WeatherTool: Tool {
     guard let request = MKGeocodingRequest(addressString: city) else { throw WeatherError.locationNotFound }
     
     let mapItems = try await request.mapItems
-    guard let coordinate = mapItems.first?.placemark.coordinate else {
+    guard let mapItem = mapItems.first else {
       throw WeatherError.locationNotFound
     }
+    let coordinate = mapItem.location.coordinate
     return coordinate
   }
 
