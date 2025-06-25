@@ -22,6 +22,10 @@ final class ChatViewModel: ObservableObject {
     // MARK: - Public Properties
 
     private(set) var session: LanguageModelSession
+    
+    // MARK: - Feedback State
+    
+    private(set) var feedbackState: [Transcript.Entry.ID: LanguageModelFeedbackAttachment.Sentiment] = [:]
 
     // MARK: - Initialization
 
@@ -66,6 +70,9 @@ final class ChatViewModel: ObservableObject {
             return
         }
 
+        // Store the feedback state
+        feedbackState[entryID] = sentiment
+
         let outputEntry = session.transcript[entryIndex]
         let inputEntries = session.transcript[..<entryIndex]
 
@@ -89,10 +96,16 @@ final class ChatViewModel: ObservableObject {
             print("Error encoding feedback: \(error)")
         }
     }
+    
+    @MainActor
+    func getFeedback(for entryID: Transcript.Entry.ID) -> LanguageModelFeedbackAttachment.Sentiment? {
+        return feedbackState[entryID]
+    }
 
     @MainActor
     func clearChat() {
         sessionCount = 1
+        feedbackState.removeAll()
         session = LanguageModelSession(
             instructions: Instructions(
                 "You are a helpful, friendly AI assistant. Engage in natural conversation and provide thoughtful, detailed responses."

@@ -11,9 +11,13 @@ import FoundationModels
 struct MessageBubbleView: View {
   let message: ChatMessage
   @EnvironmentObject var viewModel: ChatViewModel
-  @State private var feedbackSent: LanguageModelFeedbackAttachment.Sentiment? = nil
   @State private var animateTyping = false
   @AccessibilityFocusState private var isMessageFocused: Bool
+  
+  private var feedbackSent: LanguageModelFeedbackAttachment.Sentiment? {
+    guard let entryID = message.entryID else { return nil }
+    return viewModel.getFeedback(for: entryID)
+  }
 
   var body: some View {
     HStack {
@@ -213,7 +217,6 @@ struct MessageBubbleView: View {
 
   private func sendFeedback(_ sentiment: LanguageModelFeedbackAttachment.Sentiment) {
     guard let entryID = message.entryID else { return }
-    feedbackSent = sentiment
     viewModel.submitFeedback(for: entryID, sentiment: sentiment)
     #if os(iOS)
     UIAccessibility.post(notification: .announcement, argument: "Feedback sent")
@@ -354,6 +357,7 @@ struct MessageBubbleView: View {
     .padding()
   }
   .background(.regularMaterial)
+  .environmentObject(ChatViewModel())
 }
 
 #Preview("Conversation Flow") {
@@ -390,6 +394,7 @@ struct MessageBubbleView: View {
     .padding()
   }
   .background(.regularMaterial)
+  .environmentObject(ChatViewModel())
 }
 
 #Preview("Dark Mode") {
@@ -409,4 +414,5 @@ struct MessageBubbleView: View {
   }
   .background(.regularMaterial)
   .preferredColorScheme(.dark)
+  .environmentObject(ChatViewModel())
 }
