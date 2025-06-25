@@ -47,10 +47,6 @@ struct ChatView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: 12) {
-                    let _ = print("DEBUG: Transcript count: \(viewModel.session.transcript.count)")
-                    let _ = viewModel.session.transcript.enumerated().forEach { index, entry in
-                        print("DEBUG: Transcript[\(index)]: type=\(type(of: entry)), id=\(entry.id)")
-                    }
                     ForEach(viewModel.session.transcript) { entry in
                         TranscriptEntryView(entry: entry)
                             .id(entry.id)
@@ -114,7 +110,6 @@ struct TranscriptEntryView: View {
             
         case .response(let response):
             if let text = extractText(from: response.segments), !text.isEmpty {
-                let _ = print("DEBUG: Creating MessageBubbleView for response with entryID: \(entry.id)")
                 MessageBubbleView(message: ChatMessage(entryID: entry.id, content: text, isFromUser: false))
                     .id(entry.id)
             }

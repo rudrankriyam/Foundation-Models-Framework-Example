@@ -16,16 +16,12 @@ struct MessageBubbleView: View {
   
   private var feedbackSent: LanguageModelFeedbackAttachment.Sentiment? {
     guard let entryID = message.entryID else { 
-      print("DEBUG: No entryID for message: \(String(message.content.characters.prefix(50)))")
       return nil 
     }
-    let feedback = viewModel.getFeedback(for: entryID)
-    print("DEBUG: Feedback for entryID \(entryID): \(String(describing: feedback))")
-    return feedback
+    return viewModel.getFeedback(for: entryID)
   }
 
   var body: some View {
-    let _ = print("DEBUG: MessageBubbleView rendered for message: \(String(message.content.characters.prefix(30))), entryID: \(String(describing: message.entryID)), feedbackSent: \(String(describing: feedbackSent))")
     HStack {
       if message.isFromUser {
         Spacer(minLength: 50)
@@ -197,10 +193,8 @@ struct MessageBubbleView: View {
   }
 
   private var feedbackButtons: some View {
-    let _ = print("DEBUG: Rendering feedback buttons for message: \(String(message.content.characters.prefix(30))), feedbackSent: \(String(describing: feedbackSent))")
-    return HStack(spacing: 1) {
+    HStack(spacing: 1) {
       Button(action: { 
-        print("DEBUG: Positive button tapped for message: \(String(message.content.characters.prefix(30)))")
         sendFeedback(.positive) 
       }) {
         Image(systemName: "hand.thumbsup")
@@ -213,7 +207,6 @@ struct MessageBubbleView: View {
       .accessibilityLabel(feedbackSent == .positive ? "Positive feedback sent" : "Send positive feedback")
 
       Button(action: { 
-        print("DEBUG: Negative button tapped for message: \(String(message.content.characters.prefix(30)))")
         sendFeedback(.negative) 
       }) {
         Image(systemName: "hand.thumbsdown")
@@ -229,13 +222,9 @@ struct MessageBubbleView: View {
   }
 
   private func sendFeedback(_ sentiment: LanguageModelFeedbackAttachment.Sentiment) {
-    print("DEBUG: sendFeedback called with sentiment: \(sentiment)")
-    print("DEBUG: viewModel is: \(viewModel)")
     guard let entryID = message.entryID else { 
-      print("DEBUG: Cannot send feedback - no entryID")
       return 
     }
-    print("DEBUG: Sending \(sentiment) feedback for entryID: \(entryID)")
     viewModel.submitFeedback(for: entryID, sentiment: sentiment)
     #if os(iOS)
     UIAccessibility.post(notification: .announcement, argument: "Feedback sent")
