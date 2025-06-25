@@ -123,23 +123,3 @@ struct ExampleCardView: View {
             .animation(.easeInOut(duration: 0.15), value: isPressed)
     }
 }
-
-#Preview {
-    VStack(spacing: 12) {
-        ExampleButton(exampleType: .basicChat) {
-            // Preview action
-        }
-        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
-
-        ExampleButton(exampleType: .creativeWriting) {
-            // Preview action
-        }
-        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
-
-        ExampleButton(exampleType: .businessIdeas) {
-            // Preview action
-        }
-        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
-    }
-    .padding()
-}

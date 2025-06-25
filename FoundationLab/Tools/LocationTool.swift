@@ -80,13 +80,23 @@ struct LocationTool: Tool {
     // Check authorization status
     let authStatus = locationManager.authorizationStatus
     
-    guard authStatus == .authorizedAlways else {
+    #if os(visionOS)
+    guard authStatus == .authorizedWhenInUse else {
       if authStatus == .notDetermined {
         // Request permission and wait for response
         return await requestLocationPermission()
       }
       return createErrorOutput(error: LocationError.authorizationDenied)
     }
+    #else
+    guard authStatus == .authorizedAlways || authStatus == .authorizedWhenInUse else {
+      if authStatus == .notDetermined {
+        // Request permission and wait for response
+        return await requestLocationPermission()
+      }
+      return createErrorOutput(error: LocationError.authorizationDenied)
+    }
+    #endif
     
     // Get current location
     guard let location = locationManager.location else {
@@ -444,3 +454,4 @@ class LocationDelegate: NSObject, CLLocationManagerDelegate {
     print("Location error: \(error.localizedDescription)")
   }
 }
+
