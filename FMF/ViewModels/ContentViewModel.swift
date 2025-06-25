@@ -360,6 +360,8 @@ class ContentViewModel {
       return "Unsupported generation guide: \(context.debugDescription)"
     case .unsupportedLanguageOrLocale(let context):
       return "Unsupported language/locale: \(context.debugDescription)"
+    case .rateLimited(let context):
+      return "Rate limited: \(context.debugDescription)"
     @unknown default:
       return "Unknown generation error"
     }
