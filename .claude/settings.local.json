@@ -29,7 +29,8 @@
       "Bash(xcrun simctl launch:*)",
       "Bash(/dev/null)",
       "Bash(gh pr create:*)",
-      "Bash(git config:*)"
+      "Bash(git config:*)",
+      "Bash(git pull:*)"
     ],
     "deny": []
   }
