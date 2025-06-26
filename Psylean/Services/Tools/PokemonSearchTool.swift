@@ -33,7 +33,6 @@ struct PokemonSearchTool: Tool {
                 // If type not found, use popular Pokemon
                 pokemonList = getPopularPokemon()
             } catch {
-                print("PokemonSearchTool Error: \(error)")
                 throw error
             }
         } else {

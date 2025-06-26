@@ -71,12 +71,6 @@ final class PokemonAnalyzer {
             try await currentTask?.value
         } catch {
             if !Task.isCancelled {
-                print("Analysis Error: \(error)")
-                print("Error Type: \(type(of: error))")
-                if let localizedError = error as? LocalizedError {
-                    print("Localized Description: \(localizedError.localizedDescription)")
-                    print("Failure Reason: \(localizedError.failureReason ?? "None")")
-                }
                 self.error = error
                 throw error
             }

@@ -44,7 +44,7 @@ final class PokemonDataTool: Tool {
     func call(arguments: Arguments) async throws -> ToolOutput {
         do {
             let pokemonData = try await PokeAPIClient.fetchPokemon(identifier: arguments.identifier)
-            await recordFetch(pokemonName: pokemonData.name, success: true)
+            recordFetch(pokemonName: pokemonData.name, success: true)
 
             var output = formatPokemonData(pokemonData)
 
@@ -59,9 +59,7 @@ final class PokemonDataTool: Tool {
 
             return ToolOutput(output)
         } catch {
-            await recordFetch(pokemonName: arguments.identifier, success: false)
-            print("PokemonDataTool Error: \(error)")
-            print("Identifier requested: \(arguments.identifier)")
+            recordFetch(pokemonName: arguments.identifier, success: false)
             throw error
         }
     }
