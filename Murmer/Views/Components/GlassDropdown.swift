@@ -95,7 +95,7 @@ struct GlassDropdown: View {
             RoundedRectangle(cornerRadius: 16)
                 .fill(.regularMaterial)
                 #if os(iOS) || os(macOS)
-                .glassEffect()
+                .glassEffect(.regular, in: .rect(cornerRadius: 16))
                 #endif
         }
         .clipShape(RoundedRectangle(cornerRadius: 16))

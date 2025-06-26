@@ -131,7 +131,7 @@ struct MurmerMainView: View {
                         RoundedRectangle(cornerRadius: 16)
                             .fill(.regularMaterial)
                             #if os(iOS) || os(macOS)
-                            .glassEffect()
+                            .glassEffect(.regular, in: .rect(cornerRadius: 16))
                             #endif
                     }
                     .transition(.asymmetric(
@@ -178,8 +178,10 @@ struct MurmerMainView: View {
         }
         
         // Haptic feedback
+        #if os(iOS)
         let impact = UIImpactFeedbackGenerator(style: .medium)
         impact.impactOccurred()
+        #endif
     }
 }
 

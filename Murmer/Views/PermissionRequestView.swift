@@ -72,7 +72,7 @@ struct PermissionRequestView: View {
                 RoundedRectangle(cornerRadius: 20)
                     .fill(.regularMaterial)
                     #if os(iOS) || os(macOS)
-                    .glassEffect()
+                    .glassEffect(.regular, in: .rect(cornerRadius: 20))
                     #endif
             }
             

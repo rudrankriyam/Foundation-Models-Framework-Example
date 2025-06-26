@@ -104,7 +104,7 @@ class MurmerViewModel: ObservableObject {
                 if let reminder = output.namedValues["reminder"] as? ReminderOutput {
                     lastCreatedReminder = reminder.title
                     showSuccessAnimation()
-                    provideHapticFeedback(.success)
+                    provideHapticFeedback("success")
                     
                     // Clear the recognized text after a delay
                     try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
@@ -112,7 +112,7 @@ class MurmerViewModel: ObservableObject {
                 }
             } catch {
                 showError("Failed to create reminder: \(error.localizedDescription)")
-                provideHapticFeedback(.error)
+                provideHapticFeedback("error")
             }
         }
     }
@@ -187,9 +187,21 @@ class MurmerViewModel: ObservableObject {
         }
     }
     
-    private func provideHapticFeedback(_ type: UINotificationFeedbackGenerator.FeedbackType) {
+    private func provideHapticFeedback(_ type: String) {
+        #if os(iOS)
         let generator = UINotificationFeedbackGenerator()
         generator.prepare()
-        generator.notificationOccurred(type)
+        
+        switch type {
+        case "success":
+            generator.notificationOccurred(.success)
+        case "error":
+            generator.notificationOccurred(.error)
+        case "warning":
+            generator.notificationOccurred(.warning)
+        default:
+            break
+        }
+        #endif
     }
 }

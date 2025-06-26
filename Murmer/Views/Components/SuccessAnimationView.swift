@@ -40,7 +40,7 @@ struct SuccessAnimationView: View {
                 .scaleEffect(scale)
                 .opacity(opacity)
                 #if os(iOS) || os(macOS)
-                .glassEffect()
+                .glassEffect(.regular, in: .rect(cornerRadius: 20))
                 #endif
             
             // Checkmark
@@ -100,7 +100,7 @@ struct SuccessFeedbackModifier: ViewModifier {
                         RoundedRectangle(cornerRadius: 20)
                             .fill(.regularMaterial)
                             #if os(iOS) || os(macOS)
-                            .glassEffect()
+                            .glassEffect(.regular, in: .rect(cornerRadius: 20))
                             #endif
                     }
                     .padding()
