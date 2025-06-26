@@ -81,7 +81,7 @@ final class PokemonAnalyzer {
         let stream = session.streamResponse(
                 generating: PokemonAnalysis.self,
                 options: GenerationOptions(
-                    temperature: 0.8
+                    temperature: 0.3  // Lower temperature for more deterministic output
                 ),
                 includeSchemaInPrompt: false
             ) {
@@ -91,16 +91,30 @@ final class PokemonAnalyzer {
                 "1. Extract the type (fire, water, grass, etc.) from the description"
                 "2. Use searchPokemon with that type to get a list"
                 "3. Choose the Pokemon that best matches the characteristics"
-                "4. Explain briefly why you chose this specific Pokemon"
                 
                 "If this is a specific name or number, fetch that Pokemon directly."
                 
                 "Always fetch the Pokemon's data using fetchPokemonData (include evolution data)."
                 
+                "⚠️ CRITICAL - READ THE TOOL OUTPUT CAREFULLY ⚠️"
+                "When you call fetchPokemonData, you will receive output with a section marked:"
+                "=== POKEMON DATA START ==="
+                "Pokemon Name: [name]"
+                "Pokedex Number: [number]" 
+                "=== POKEMON DATA END ==="
+                
+                "You MUST use these EXACT values:"
+                "- Copy the Pokemon Name EXACTLY as shown (this goes in pokemonName)"
+                "- Copy the Pokedex Number EXACTLY as shown (this goes in pokedexNumber)"
+                
+                "DO NOT:"
+                "- Guess or use numbers from memory (e.g., if tool says Gengar is #94, use 94, NOT 149)"
+                "- Use any values from outside the marked section"
+                
                 "Then provide a comprehensive analysis including:"
                 "- An epic title that captures this Pokemon's essence"
-                "- For pokemonName: use the EXACT name from the API response"
-                "- For pokedexNumber: use the EXACT number from 'Pokedex Number:' in the API response (DO NOT GUESS OR USE ANY OTHER NUMBER)"
+                "- pokemonName: MUST match the 'Pokemon Name' from the data section"
+                "- pokedexNumber: MUST match the 'Pokedex Number' from the data section"
                 "- A poetic description of what makes this Pokemon special"
                 "- Battle role classification based on its stats"
                 "- Detailed stat analysis with strategic insights"

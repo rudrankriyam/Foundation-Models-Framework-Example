@@ -65,10 +65,13 @@ final class PokemonDataTool: Tool {
     }
 
     private func formatPokemonData(_ pokemon: PokemonAPIData) -> String {
-        var output = "Pokemon: \(pokemon.name.capitalized)\n"
+        var output = "=== POKEMON DATA START ===\n"
+        output += "Pokemon Name: \(pokemon.name)\n"
         output += "Pokedex Number: \(pokemon.id)\n"
-        output += "CRITICAL: The pokedexNumber field MUST be exactly \(pokemon.id) (not any other number)\n"
-        output += "DO NOT use any other number. The correct Pokedex number for \(pokemon.name) is \(pokemon.id)\n\n"
+        output += "\nCRITICAL INSTRUCTIONS:\n"
+        output += "- pokemonName MUST be: \(pokemon.name)\n"
+        output += "- pokedexNumber MUST be: \(pokemon.id)\n"
+        output += "=== POKEMON DATA END ===\n\n"
 
         // Basic Info
         output += "Height: \(Double(pokemon.height) / 10.0)m\n"
@@ -93,11 +96,6 @@ final class PokemonDataTool: Tool {
         for stat in pokemon.stats {
             let statName = stat.stat.name.replacingOccurrences(of: "-", with: " ").capitalized
             output += "- \(statName): \(stat.baseStat)\n"
-        }
-
-        // Image URL
-        if let imageUrl = pokemon.sprites.other?.officialArtwork?.frontDefault {
-            output += "\nOfficial Artwork: \(imageUrl)"
         }
 
         return output
