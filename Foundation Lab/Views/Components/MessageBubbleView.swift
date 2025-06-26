@@ -158,7 +158,9 @@ struct MessageBubbleView: View {
       }) {
         Image(systemName: "hand.thumbsup")
           .padding(8)
+          #if os(macOS) || os(iOS)
           .glassEffect(.regular.tint(feedbackSent == .positive ? .green.opacity(0.5) : .gray.opacity(0.2)), in: .circle)
+          #endif
           .foregroundStyle(feedbackSent == .positive ? .green : .secondary)
       }
       .buttonStyle(.plain)
@@ -170,7 +172,9 @@ struct MessageBubbleView: View {
       }) {
         Image(systemName: "hand.thumbsdown")
           .padding(8)
+#if os(macOS) || os(iOS)
           .glassEffect(.regular.tint(feedbackSent == .negative ? .red.opacity(0.5) : .gray.opacity(0.2)), in: .circle)
+#endif
           .foregroundStyle(feedbackSent == .negative ? .red : .secondary)
       }
       .buttonStyle(.plain)

@@ -17,43 +17,91 @@ import MapKit
 ///
 /// This tool fetches the latest weather data, including temperature, humidity, wind speed, and more, for a specified city.
 /// It uses geocoding to resolve city names to coordinates and then queries the OpenMeteo API for current weather conditions.
-struct WeatherTool: Tool {
+public struct WeatherTool: Tool {
 
   /// The name of the tool, used for identification.
-  let name = "getWeather"
+  public let name = "getWeather"
   /// A brief description of the tool's functionality.
-  let description = "Retrieve the latest weather information for a city using OpenMeteo API"
+  public let description = "Retrieve the latest weather information for a city using OpenMeteo API"
+  
+  /// Public initializer for WeatherTool
+  public init() {}
 
   /// Arguments required to fetch weather information.
-  @Generable
-  struct Arguments {
+  public struct Arguments: Generable, Sendable {
     /// The city to get weather information for (e.g., "New York", "London", "Tokyo").
     @Guide(
       description: "The city to get weather information for (e.g., 'New York', 'London', 'Tokyo')")
-    var city: String
+    public var city: String
+    
+    // Public initializer
+    public init(city: String) {
+      self.city = city
+    }
+    
+    // MARK: - Generable conformance
+    
+    // ConvertibleToGeneratedContent conformance
+    nonisolated public var generatedContent: GeneratedContent {
+      GeneratedContent(
+        properties: [
+          "city": city
+        ]
+      )
+    }
+    
+    // ConvertibleFromGeneratedContent conformance
+    nonisolated public init(_ content: GeneratedContent) throws {
+      self.city = try content.value(String.self, forProperty: "city")
+    }
+    
+    // GenerationSchemaConformant conformance
+    nonisolated public static var generationSchema: GenerationSchema {
+      GenerationSchema(
+        type: Self.self,
+        properties: [
+          GenerationSchema.Property(
+            name: "city", 
+            description: "The city to get weather information for (e.g., 'New York', 'London', 'Tokyo')", 
+            type: String.self
+          )
+        ]
+      )
+    }
+    
+    // PartiallyGenerated nested type
+    public struct PartiallyGenerated: Identifiable, ConvertibleFromGeneratedContent, Sendable {
+      public var id: GenerationID
+      public var city: String.PartiallyGenerated?
+      
+      nonisolated public init(_ content: GeneratedContent) throws {
+        self.id = content.id ?? GenerationID()
+        self.city = try content.value(forProperty: "city")
+      }
+    }
   }
 
   /// The weather data returned by the tool.
-  struct WeatherData: Encodable {
+  public struct WeatherData: Encodable {
 
     /// The name of the city.
-    let city: String
+    public let city: String
     /// The current temperature in Celsius.
-    let temperature: Double
+    public let temperature: Double
     /// A textual description of the weather condition.
-    let condition: String
+    public let condition: String
     /// The current humidity percentage.
-    let humidity: Double
+    public let humidity: Double
     /// The current wind speed in km/h.
-    let windSpeed: Double
+    public let windSpeed: Double
     /// The 'feels like' temperature in Celsius.
-    let feelsLike: Double
+    public let feelsLike: Double
     /// The current atmospheric pressure in hPa.
-    let pressure: Double
+    public let pressure: Double
     /// The current precipitation in mm.
-    let precipitation: Double
+    public let precipitation: Double
     /// The unit of temperature (e.g., "Celsius").
-    let unit: String
+    public let unit: String
   }
 
   private struct OpenMeteoResponse: Codable {
@@ -80,7 +128,7 @@ struct WeatherTool: Tool {
     }
   }
 
-  func call(arguments: Arguments) async throws -> ToolOutput {
+  public func call(arguments: Arguments) async throws -> ToolOutput {
     let cityName = arguments.city.trimmingCharacters(in: .whitespacesAndNewlines)
 
     do {
@@ -204,12 +252,12 @@ struct WeatherTool: Tool {
   }
 }
 
-enum WeatherError: Error, LocalizedError {
+public enum WeatherError: Error, LocalizedError {
   case locationNotFound
   case invalidURL
   case apiError
 
-  var errorDescription: String? {
+  public var errorDescription: String? {
     switch self {
     case .locationNotFound:
       return "Could not find location for the specified city"
