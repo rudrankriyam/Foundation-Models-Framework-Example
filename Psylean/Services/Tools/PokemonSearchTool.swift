@@ -27,7 +27,12 @@ struct PokemonSearchTool: Tool {
         
         // If type is specified, fetch Pokemon of that type
         if let type = arguments.type {
-            pokemonList = try await fetchPokemonByType(type: type.lowercased())
+            do {
+                pokemonList = try await PokeAPIClient.fetchPokemonByType(type.lowercased())
+            } catch APIError.typeNotFound {
+                // If type not found, use popular Pokemon
+                pokemonList = getPopularPokemon()
+            }
         } else {
             // Provide a curated list of popular Pokemon
             pokemonList = getPopularPokemon()
@@ -52,28 +57,6 @@ struct PokemonSearchTool: Tool {
         return ToolOutput(output)
     }
     
-    private func fetchPokemonByType(type: String) async throws -> [String] {
-        var components = URLComponents()
-        components.scheme = "https"
-        components.host = "pokeapi.co"
-        components.path = "/api/v2/type/\(type)"
-        
-        guard let url = components.url else {
-            throw URLError(.badURL)
-        }
-        
-        let (data, response) = try await URLSession.shared.data(from: url)
-        
-        guard let httpResponse = response as? HTTPURLResponse,
-              httpResponse.statusCode == 200 else {
-            // If type not found, return empty list
-            return []
-        }
-        
-        let typeData = try JSONDecoder().decode(TypeData.self, from: data)
-        return typeData.pokemon.map { $0.pokemon.name }
-    }
-    
     private func getPopularPokemon() -> [String] {
         [
             "pikachu", "eevee", "bulbasaur", "charmander", "squirtle",
@@ -81,20 +64,5 @@ struct PokemonSearchTool: Tool {
             "mew", "mewtwo", "lucario", "garchomp", "gengar",
             "charizard", "blastoise", "venusaur", "lapras", "gyarados"
         ]
-    }
-}
-
-// MARK: - Type API Model
-
-private struct TypeData: Codable {
-    let pokemon: [PokemonEntry]
-    
-    struct PokemonEntry: Codable {
-        let pokemon: NamedResource
-        
-        struct NamedResource: Codable {
-            let name: String
-            let url: String
-        }
     }
 }

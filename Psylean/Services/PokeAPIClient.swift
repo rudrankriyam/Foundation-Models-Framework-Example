@@ -58,6 +58,34 @@ struct PokeAPIClient {
         let (evolutionData, _) = try await session.data(from: evolutionURL)
         return try JSONDecoder().decode(EvolutionChain.self, from: evolutionData)
     }
+    
+    /// Fetches Pokemon by type
+    static func fetchPokemonByType(_ type: String) async throws -> [String] {
+        var components = URLComponents()
+        components.scheme = "https"
+        components.host = baseURL
+        components.path = "/api/\(apiVersion)/type/\(type.lowercased())"
+        
+        guard let url = components.url else {
+            throw APIError.invalidURL
+        }
+        
+        let (data, response) = try await session.data(from: url)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        
+        switch httpResponse.statusCode {
+        case 200:
+            let typeData = try JSONDecoder().decode(TypeData.self, from: data)
+            return typeData.pokemon.map { $0.pokemon.name }
+        case 404:
+            throw APIError.typeNotFound(type)
+        default:
+            throw APIError.httpError(statusCode: httpResponse.statusCode)
+        }
+    }
 }
 
 // MARK: - Error Types
@@ -66,6 +94,7 @@ enum APIError: LocalizedError {
     case invalidURL
     case invalidResponse
     case pokemonNotFound(String)
+    case typeNotFound(String)
     case rateLimited
     case httpError(statusCode: Int)
     
@@ -77,6 +106,8 @@ enum APIError: LocalizedError {
             return "Invalid response from server"
         case .pokemonNotFound(let identifier):
             return "Pokemon '\(identifier)' not found"
+        case .typeNotFound(let type):
+            return "Type '\(type)' not found"
         case .rateLimited:
             return "API rate limit exceeded. Please try again later"
         case .httpError(let statusCode):
@@ -189,6 +220,21 @@ struct EvolutionChain: Codable {
         enum CodingKeys: String, CodingKey {
             case species
             case evolvesTo = "evolves_to"
+        }
+    }
+}
+
+// MARK: - Type Models
+
+struct TypeData: Codable {
+    let pokemon: [PokemonEntry]
+    
+    struct PokemonEntry: Codable {
+        let pokemon: NamedResource
+        
+        struct NamedResource: Codable {
+            let name: String
+            let url: String
         }
     }
 }

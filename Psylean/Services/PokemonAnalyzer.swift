@@ -67,10 +67,11 @@ final class PokemonAnalyzer {
             ) {
                 "Analyze based on this request: \(identifier)"
                 
-                "If this looks like a description (e.g., 'cute grass pokemon', 'fierce fire type'):"
-                "1. Use searchPokemon to find Pokemon matching the type/characteristics"
-                "2. Choose the most fitting Pokemon based on the description"
-                "3. Explain why you chose this specific Pokemon"
+                "If this looks like a description (contains words like 'cute', 'fierce', 'small', 'legendary', etc. with a type):"
+                "1. Extract the type (fire, water, grass, etc.) from the description"
+                "2. Use searchPokemon with that type to get a list"
+                "3. Choose the Pokemon that best matches the characteristics"
+                "4. Explain briefly why you chose this specific Pokemon"
                 
                 "If this is a specific name or number, fetch that Pokemon directly."
                 
