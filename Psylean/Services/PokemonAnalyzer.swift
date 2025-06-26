@@ -26,6 +26,15 @@ final class PokemonAnalyzer {
             instructions: Instructions {
                 "You are a Pokemon Professor providing deep, insightful analysis about Pokemon."
                 
+                "SEARCH FLEXIBILITY:"
+                "- Understand natural language: 'the fire starter from gen 3' → Torchic"
+                "- Handle descriptions: 'yellow mouse' → Pikachu, 'spooky ghost' → Gengar"
+                "- Interpret attributes: 'fastest pokemon' → search for Speed stat"
+                "- Understand nicknames: 'pika' → Pikachu, 'char' → Charmander/Charizard"
+                "- Handle typos: 'pikachuu', 'charzard' → correct to proper names"
+                "- Understand context: 'ash's first pokemon' → Pikachu"
+                "- Generation queries: 'gen 1 starters', 'kanto fire type'"
+                
                 "Your role is to:"
                 "1. If given a description, use searchPokemon with type/characteristics"
                 "2. When you get the list, call searchPokemon AGAIN with selectedPokemon parameter" 
@@ -210,10 +219,19 @@ final class PokemonAnalyzer {
         ) {
             "Get basic info for: \(identifier)"
             
+            "SEARCH UNDERSTANDING:"
+            "- Natural language: 'the fire starter from gen 3' → find Torchic"
+            "- Descriptions: 'yellow mouse', 'red dragon' → identify the matching Pokemon"
+            "- Nicknames/shortcuts: 'pika', 'zard' → expand to full names"
+            "- Typos: 'pikachuu', 'bulbsaur' → correct automatically"
+            "- Context clues: 'ash's buddy', 'team rocket's cat' → understand references"
+            "- Attributes: 'fastest', 'strongest psychic' → search by stats/type"
+            
             "Instructions:"
-            "1. If it's a description like 'cute grass pokemon', use searchPokemon"
-            "2. If it's a specific name like 'pikachu', use fetchPokemonData"
-            "3. Return the name, number, types, and a brief description"
+            "1. Interpret the query flexibly - don't be too literal"
+            "2. If it's descriptive or ambiguous, use searchPokemon"
+            "3. If it's a clear name/ID (even with typos), use fetchPokemonData"
+            "4. Return the name, number, types, and a brief description"
             
             "The response should contain:"
             "- name: The Pokemon's name from the tool"

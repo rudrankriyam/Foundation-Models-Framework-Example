@@ -24,12 +24,10 @@ struct AnalyzePokemonIntent: AppIntent {
             throw IntentError.emptyInput
         }
         
-        // Sanitize input
-        let sanitizedQuery = pokemonQuery.trimmingCharacters(in: .whitespacesAndNewlines)
-            .lowercased()
-            .replacingOccurrences(of: "[^a-z0-9\\s-]", with: "", options: .regularExpression)
+        // Clean input but preserve natural language
+        let cleanedQuery = pokemonQuery.trimmingCharacters(in: .whitespacesAndNewlines)
         
-        guard sanitizedQuery.count >= 2 else {
+        guard cleanedQuery.count >= 2 else {
             throw IntentError.inputTooShort
         }
         
@@ -41,7 +39,7 @@ struct AnalyzePokemonIntent: AppIntent {
         
         for attempt in 1...3 {
             do {
-                basicInfo = try await analyzer.getPokemonBasicInfoWithCache(sanitizedQuery)
+                basicInfo = try await analyzer.getPokemonBasicInfoWithCache(cleanedQuery)
                 break // Success, exit retry loop
             } catch {
                 lastError = error
