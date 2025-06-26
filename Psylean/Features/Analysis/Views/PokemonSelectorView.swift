@@ -88,7 +88,7 @@ struct PokemonSelectorView: View {
                 }
             } else {
                 // Popular Pokemon
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                     ForEach(popularPokemon, id: \.0) { pokemon in
                         Button {
                             pokemonIdentifier = pokemon.0
@@ -101,7 +101,7 @@ struct PokemonSelectorView: View {
                                 } placeholder: {
                                     ProgressView()
                                 }
-                                .frame(width: 60, height: 60)
+                                .frame(width: 80, height: 80)
                                 
                                 Text(pokemon.0.capitalized)
                                     .font(.caption)

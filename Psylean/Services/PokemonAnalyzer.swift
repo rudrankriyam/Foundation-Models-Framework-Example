@@ -75,9 +75,6 @@ final class PokemonAnalyzer {
     }
     
     private func performAnalysis(_ identifier: String) async throws {
-        #if DEBUG
-        print("🎯 STARTING ANALYSIS FOR: \(identifier)")
-        #endif
         
         let stream = session.streamResponse(
                 generating: PokemonAnalysis.self,
@@ -125,12 +122,6 @@ final class PokemonAnalyzer {
             try Task.checkCancellation()
             analysis = partialAnalysis
             
-            #if DEBUG
-            // Log when we get the Pokemon name and number
-            if let name = partialAnalysis.pokemonName, let number = partialAnalysis.pokedexNumber {
-                print("🤖 AI GENERATED - Pokemon: \(name), Number: \(number)")
-            }
-            #endif
         }
     }
     

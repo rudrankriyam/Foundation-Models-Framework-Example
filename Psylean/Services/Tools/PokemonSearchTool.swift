@@ -22,9 +22,6 @@ struct PokemonSearchTool: Tool {
     func call(arguments: Arguments) async throws -> ToolOutput {
         let query = arguments.query.lowercased()
         
-        #if DEBUG
-        print("🔎 SEARCH TOOL CALLED - Query: \(query)")
-        #endif
         
         var pokemonList: [String] = []
         var selectedPokemon: String
@@ -37,9 +34,6 @@ struct PokemonSearchTool: Tool {
         if let type = detectedType {
             do {
                 pokemonList = try await PokeAPIClient.fetchPokemonByType(type)
-                #if DEBUG
-                print("🔎 Found \(pokemonList.count) \(type) type Pokemon")
-                #endif
             } catch {
                 pokemonList = getPopularPokemon()
             }
@@ -69,17 +63,11 @@ struct PokemonSearchTool: Tool {
             selectedPokemon = pokemonList.first ?? "pikachu"
         }
         
-        #if DEBUG
-        print("🔎 Selected Pokemon: \(selectedPokemon)")
-        #endif
         
         // Fetch the selected Pokemon's data
         do {
             let pokemonData = try await PokeAPIClient.fetchPokemon(identifier: selectedPokemon)
             
-            #if DEBUG
-            print("✅ FETCHED DATA - Pokemon: \(pokemonData.name), ID: \(pokemonData.id)")
-            #endif
             
             var output = "Based on your search for '\(arguments.query)', I found the perfect Pokemon:\n\n"
             output += "=== POKEMON DATA START ===\n"

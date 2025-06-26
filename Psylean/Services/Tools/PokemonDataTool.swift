@@ -46,9 +46,6 @@ final class PokemonDataTool: Tool {
             let pokemonData = try await PokeAPIClient.fetchPokemon(identifier: arguments.identifier)
             recordFetch(pokemonName: pokemonData.name, success: true)
 
-            #if DEBUG
-            print("🔧 TOOL OUTPUT - Pokemon: \(pokemonData.name), ID: \(pokemonData.id)")
-            #endif
 
             var output = formatPokemonData(pokemonData)
 
@@ -61,9 +58,6 @@ final class PokemonDataTool: Tool {
                 }
             }
 
-            #if DEBUG
-            print("📄 FULL TOOL OUTPUT:\n\(output)")
-            #endif
 
             return ToolOutput(output)
         } catch {
