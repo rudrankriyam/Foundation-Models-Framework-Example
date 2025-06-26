@@ -8,55 +8,98 @@
 import Foundation
 import FoundationModels
 
-/// A tool that searches for Pokemon based on descriptions
+/// A tool that searches for Pokemon and returns data for the best match
 struct PokemonSearchTool: Tool {
-    let name = "searchPokemon"
-    let description = "Searches for Pokemon based on type, characteristics, or descriptions"
+    let name = "searchAndAnalyzePokemon"
+    let description = "Searches for Pokemon based on criteria and returns detailed data for the best match"
     
     @Generable
     struct Arguments {
-        @Guide(description: "The type to filter by (optional: fire, water, grass, etc.)")
-        let type: String?
-        
-        @Guide(description: "Additional characteristics to look for (cute, fierce, large, small, etc.)")
-        let characteristics: String?
+        @Guide(description: "The search query - can be a type, characteristics, or description like 'cute grass pokemon' or 'fierce dragon'")
+        let query: String
     }
     
     func call(arguments: Arguments) async throws -> ToolOutput {
-        var pokemonList: [String] = []
+        let query = arguments.query.lowercased()
         
-        // If type is specified, fetch Pokemon of that type
-        if let type = arguments.type {
+        #if DEBUG
+        print("🔎 SEARCH TOOL CALLED - Query: \(query)")
+        #endif
+        
+        var pokemonList: [String] = []
+        var selectedPokemon: String
+        
+        // Extract type from query if present
+        let types = ["fire", "water", "grass", "electric", "psychic", "dragon", "dark", "fighting", "flying", "poison", "ground", "rock", "bug", "ghost", "steel", "ice", "normal", "fairy"]
+        let detectedType = types.first { query.contains($0) }
+        
+        // Get Pokemon list based on type
+        if let type = detectedType {
             do {
-                pokemonList = try await PokeAPIClient.fetchPokemonByType(type.lowercased())
-            } catch APIError.typeNotFound {
-                // If type not found, use popular Pokemon
-                pokemonList = getPopularPokemon()
+                pokemonList = try await PokeAPIClient.fetchPokemonByType(type)
+                #if DEBUG
+                print("🔎 Found \(pokemonList.count) \(type) type Pokemon")
+                #endif
             } catch {
-                throw error
+                pokemonList = getPopularPokemon()
             }
         } else {
-            // Provide a curated list of popular Pokemon
             pokemonList = getPopularPokemon()
         }
         
-        var output = "Available Pokemon"
-        if let type = arguments.type {
-            output += " of type \(type.capitalized)"
+        // Select best match based on characteristics
+        if query.contains("cute") || query.contains("adorable") {
+            selectedPokemon = pokemonList.first { ["pikachu", "eevee", "jigglypuff", "togepi", "mew", "skitty", "teddiursa", "pachirisu", "emolga", "dedenne"].contains($0) } 
+                ?? pokemonList.randomElement() 
+                ?? "pikachu"
+        } else if query.contains("fierce") || query.contains("strong") || query.contains("powerful") {
+            selectedPokemon = pokemonList.first { ["charizard", "garchomp", "dragonite", "tyranitar", "salamence", "hydreigon", "haxorus", "gyarados", "arcanine"].contains($0) } 
+                ?? pokemonList.randomElement() 
+                ?? "charizard"
+        } else if query.contains("legendary") {
+            selectedPokemon = pokemonList.first { ["mewtwo", "rayquaza", "dialga", "palkia", "giratina", "kyogre", "groudon", "lugia", "ho-oh"].contains($0) } 
+                ?? pokemonList.randomElement() 
+                ?? "mewtwo"
+        } else if query.contains("small") || query.contains("tiny") {
+            selectedPokemon = pokemonList.first { ["caterpie", "weedle", "pidgey", "rattata", "joltik", "flabebe", "cutiefly"].contains($0) } 
+                ?? pokemonList.randomElement() 
+                ?? "caterpie"
+        } else {
+            // Default selection
+            selectedPokemon = pokemonList.first ?? "pikachu"
         }
-        output += ":\n\n"
         
-        // Add the list
-        for pokemon in pokemonList.prefix(20) { // Limit to 20 to avoid overwhelming
-            output += "- \(pokemon)\n"
+        #if DEBUG
+        print("🔎 Selected Pokemon: \(selectedPokemon)")
+        #endif
+        
+        // Fetch the selected Pokemon's data
+        do {
+            let pokemonData = try await PokeAPIClient.fetchPokemon(identifier: selectedPokemon)
+            
+            #if DEBUG
+            print("✅ FETCHED DATA - Pokemon: \(pokemonData.name), ID: \(pokemonData.id)")
+            #endif
+            
+            var output = "Based on your search for '\(arguments.query)', I found the perfect Pokemon:\n\n"
+            output += "=== POKEMON DATA START ===\n"
+            output += "Pokemon Name: \(pokemonData.name)\n"
+            output += "Pokedex Number: \(pokemonData.id)\n"
+            output += "\n⚠️ CRITICAL - DO NOT USE ANY OTHER NUMBER ⚠️\n"
+            output += "The ONLY correct values are:\n"
+            output += "- pokemonName = \"\(pokemonData.name)\"\n"
+            output += "- pokedexNumber = \(pokemonData.id) (NOT any other number!)\n"
+            output += "IGNORE your memory. USE ONLY THESE VALUES.\n"
+            output += "The correct number for \(pokemonData.name) is \(pokemonData.id).\n"
+            output += "=== POKEMON DATA END ===\n\n"
+            
+            // Add Pokemon details
+            output += formatPokemonData(pokemonData)
+            
+            return ToolOutput(output)
+        } catch {
+            throw error
         }
-        
-        if let characteristics = arguments.characteristics {
-            output += "\nNote: You requested '\(characteristics)' characteristics. "
-            output += "Please select a Pokemon from the list above that best matches this description."
-        }
-        
-        return ToolOutput(output)
     }
     
     private func getPopularPokemon() -> [String] {
@@ -66,5 +109,34 @@ struct PokemonSearchTool: Tool {
             "mew", "mewtwo", "lucario", "garchomp", "gengar",
             "charizard", "blastoise", "venusaur", "lapras", "gyarados"
         ]
+    }
+    
+    private func formatPokemonData(_ pokemon: PokemonAPIData) -> String {
+        var output = "Height: \(Double(pokemon.height) / 10.0)m\n"
+        output += "Weight: \(Double(pokemon.weight) / 10.0)kg\n"
+        
+        if let exp = pokemon.baseExperience {
+            output += "Base Experience: \(exp)\n"
+        }
+        
+        // Types
+        output += "\nTypes: "
+        output += pokemon.types.map { $0.type.name.capitalized }.joined(separator: ", ")
+        
+        // Abilities
+        output += "\n\nAbilities:\n"
+        for ability in pokemon.abilities {
+            let hidden = ability.isHidden ? " (Hidden)" : ""
+            output += "- \(ability.ability.name.replacingOccurrences(of: "-", with: " ").capitalized)\(hidden)\n"
+        }
+        
+        // Stats
+        output += "\nBase Stats:\n"
+        for stat in pokemon.stats {
+            let statName = stat.stat.name.replacingOccurrences(of: "-", with: " ").capitalized
+            output += "- \(statName): \(stat.baseStat)\n"
+        }
+        
+        return output
     }
 }

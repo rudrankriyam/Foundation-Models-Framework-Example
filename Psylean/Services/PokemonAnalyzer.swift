@@ -27,15 +27,12 @@ final class PokemonAnalyzer {
                 "You are a Pokemon Professor providing deep, insightful analysis about Pokemon."
                 
                 "Your role is to:"
-                "1. If given a description (like 'cute grass pokemon'), use searchPokemon to find matching types"
-                "2. Select the most appropriate Pokemon based on the description"
-                "3. Fetch detailed Pokemon data using the fetchPokemonData tool"
-                "4. Analyze the Pokemon's stats, abilities, and types comprehensively"
-                "5. Provide strategic battle insights and competitive analysis"
-                "6. Share interesting facts and create engaging descriptions"
-                
-                "For descriptive searches: First use searchPokemon, then choose the best match."
-                "For specific names/IDs: Use fetchPokemonData directly."
+                "1. If given a description, use searchPokemon with type/characteristics"
+                "2. When you get the list, call searchPokemon AGAIN with selectedPokemon parameter" 
+                "3. If given a specific name/ID, use fetchPokemonData directly"
+                "4. Use ONLY the pokemonName and pokedexNumber from the tool response"
+                "5. Analyze the Pokemon's stats, abilities, and types comprehensively"
+                "6. Provide strategic battle insights and competitive analysis"
                 
                 "Focus on creating an epic, engaging analysis that includes:"
                 "- Poetic descriptions that capture the Pokemon's essence"
@@ -78,6 +75,10 @@ final class PokemonAnalyzer {
     }
     
     private func performAnalysis(_ identifier: String) async throws {
+        #if DEBUG
+        print("🎯 STARTING ANALYSIS FOR: \(identifier)")
+        #endif
+        
         let stream = session.streamResponse(
                 generating: PokemonAnalysis.self,
                 options: GenerationOptions(
@@ -87,14 +88,10 @@ final class PokemonAnalyzer {
             ) {
                 "Analyze based on this request: \(identifier)"
                 
-                "If this looks like a description (contains words like 'cute', 'fierce', 'small', 'legendary', etc. with a type):"
-                "1. Extract the type (fire, water, grass, etc.) from the description"
-                "2. Use searchPokemon with that type to get a list"
-                "3. Choose the Pokemon that best matches the characteristics"
-                
-                "If this is a specific name or number, fetch that Pokemon directly."
-                
-                "Always fetch the Pokemon's data using fetchPokemonData (include evolution data)."
+                "For ANY request (descriptive or specific):"
+                "1. If it's a description like 'cute grass pokemon', use searchAndAnalyzePokemon with the full query"
+                "2. If it's a specific name like 'pikachu', use fetchPokemonData directly"
+                "3. The tool will return the EXACT Pokemon data including the correct Pokedex number"
                 
                 "You MUST use these EXACT values:"
                 "- Copy the Pokemon Name EXACTLY as shown (this goes in pokemonName)"
@@ -127,6 +124,13 @@ final class PokemonAnalyzer {
             // Check for cancellation
             try Task.checkCancellation()
             analysis = partialAnalysis
+            
+            #if DEBUG
+            // Log when we get the Pokemon name and number
+            if let name = partialAnalysis.pokemonName, let number = partialAnalysis.pokedexNumber {
+                print("🤖 AI GENERATED - Pokemon: \(name), Number: \(number)")
+            }
+            #endif
         }
     }
     
