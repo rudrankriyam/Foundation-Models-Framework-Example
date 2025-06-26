@@ -32,6 +32,9 @@ struct PokemonSearchTool: Tool {
             } catch APIError.typeNotFound {
                 // If type not found, use popular Pokemon
                 pokemonList = getPopularPokemon()
+            } catch {
+                print("PokemonSearchTool Error: \(error)")
+                throw error
             }
         } else {
             // Provide a curated list of popular Pokemon

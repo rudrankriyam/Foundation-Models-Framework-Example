@@ -20,10 +20,20 @@ struct ErrorView: View {
             Text("Failed to fetch Pokemon data")
                 .font(.headline)
             
-            Text(error.localizedDescription)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
+            VStack(spacing: 8) {
+                Text(error.localizedDescription)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                
+                // Show more detail in debug mode
+                #if DEBUG
+                Text("Debug: \(String(describing: error))")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .multilineTextAlignment(.center)
+                #endif
+            }
             
             Button("Retry") {
                 retry()

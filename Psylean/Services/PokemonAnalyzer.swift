@@ -71,6 +71,12 @@ final class PokemonAnalyzer {
             try await currentTask?.value
         } catch {
             if !Task.isCancelled {
+                print("Analysis Error: \(error)")
+                print("Error Type: \(type(of: error))")
+                if let localizedError = error as? LocalizedError {
+                    print("Localized Description: \(localizedError.localizedDescription)")
+                    print("Failure Reason: \(localizedError.failureReason ?? "None")")
+                }
                 self.error = error
                 throw error
             }
@@ -81,7 +87,8 @@ final class PokemonAnalyzer {
         let stream = session.streamResponse(
                 generating: PokemonAnalysis.self,
                 options: GenerationOptions(
-                    temperature: 0.8
+                    temperature: 0.8,
+                    maxTokens: 2000  // Limit response size
                 ),
                 includeSchemaInPrompt: false
             ) {

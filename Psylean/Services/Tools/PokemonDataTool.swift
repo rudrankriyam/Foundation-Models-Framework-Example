@@ -60,6 +60,8 @@ final class PokemonDataTool: Tool {
             return ToolOutput(output)
         } catch {
             await recordFetch(pokemonName: arguments.identifier, success: false)
+            print("PokemonDataTool Error: \(error)")
+            print("Identifier requested: \(arguments.identifier)")
             throw error
         }
     }
