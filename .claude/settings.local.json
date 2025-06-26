@@ -39,7 +39,8 @@
       "Bash(gh pr view:*)",
       "Bash(gh api:*)",
       "Bash(/Applications/Xcode-26.0.0-Beta.2.app/Contents/Developer/usr/bin/xcodebuild -scheme Psylean -configuration Debug -destination \"platform=macOS\" build)",
-      "Bash(/Applications/Xcode-26.0.0-Beta.2.app/Contents/Developer/usr/bin/xcodebuild -scheme Psylean -configuration Debug -destination \"platform=macOS\" -showBuildSettings)"
+      "Bash(/Applications/Xcode-26.0.0-Beta.2.app/Contents/Developer/usr/bin/xcodebuild -scheme Psylean -configuration Debug -destination \"platform=macOS\" -showBuildSettings)",
+      "Bash(/Applications/Xcode\\ 16.2\\ beta\\ 2.app/Contents/Developer/usr/bin/xcodebuild -scheme \"Psylean\" -destination \"platform=macOS\" build)"
     ],
     "deny": []
   }

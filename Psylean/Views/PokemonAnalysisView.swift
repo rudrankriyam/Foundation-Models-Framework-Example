@@ -12,7 +12,6 @@ struct PokemonAnalysisView: View {
     @State private var analyzer: PokemonAnalyzer
     @State private var pokemonIdentifier = ""
     @State private var hasStartedAnalysis = false
-    @State private var showingPokemonPicker = false
     @Namespace private var glassNamespace
     
     init(pokemonIdentifier: String = "") {
@@ -27,7 +26,7 @@ struct PokemonAnalysisView: View {
                 if !hasStartedAnalysis {
                     PokemonSelectorView(
                         pokemonIdentifier: $pokemonIdentifier,
-                        showingPicker: $showingPokemonPicker
+                        showingPicker: .constant(false)
                     )
                     .transition(.scale.combined(with: .opacity))
                 }
@@ -67,9 +66,6 @@ struct PokemonAnalysisView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingPokemonPicker) {
-            PokemonPickerView(selectedPokemon: $pokemonIdentifier)
-        }
         .task {
             analyzer.prewarm()
         }
@@ -106,8 +102,17 @@ struct PokemonSelectorView: View {
     @Binding var pokemonIdentifier: String
     @Binding var showingPicker: Bool
     
+    let popularPokemon = [
+        ("pikachu", "25", "Electric"),
+        ("charizard", "6", "Fire/Flying"),
+        ("mewtwo", "150", "Psychic"),
+        ("eevee", "133", "Normal"),
+        ("lucario", "448", "Fighting/Steel"),
+        ("garchomp", "445", "Dragon/Ground")
+    ]
+    
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 20) {
             TextField("Enter Pokemon name or ID", text: $pokemonIdentifier)
                 .textFieldStyle(.roundedBorder)
                 .autocorrectionDisabled()
@@ -115,17 +120,40 @@ struct PokemonSelectorView: View {
                 .textInputAutocapitalization(.never)
                 #endif
             
-            Button {
-                showingPicker = true
-            } label: {
-                Label("Browse Popular Pokemon", systemImage: "square.grid.3x3")
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .foregroundStyle(.primary)
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Popular Pokemon")
+                    .font(.headline)
+                    .foregroundStyle(.secondary)
+                
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                    ForEach(popularPokemon, id: \.0) { pokemon in
+                        Button {
+                            pokemonIdentifier = pokemon.0
+                        } label: {
+                            VStack(spacing: 8) {
+                                AsyncImage(url: URL(string: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/\(pokemon.1).png")) { image in
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fit)
+                                } placeholder: {
+                                    ProgressView()
+                                }
+                                .frame(width: 60, height: 60)
+                                
+                                Text(pokemon.0.capitalized)
+                                    .font(.caption)
+                                    .lineLimit(1)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .foregroundStyle(.primary)
+                        }
+                        #if os(iOS) || os(macOS)
+                        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
+                        #endif
+                    }
+                }
             }
-            #if os(iOS) || os(macOS)
-            .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
-            #endif
         }
     }
 }
@@ -141,6 +169,7 @@ struct StreamingPokemonView: View {
                     .font(.title)
                     .fontWeight(.bold)
                     .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
                     .transition(.opacity)
             }
             
@@ -247,6 +276,7 @@ struct StreamingPokemonView: View {
                     .font(.callout)
                     .italic()
                     .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
                     .foregroundStyle(.secondary)
                     .padding()
                     #if os(iOS) || os(macOS)
@@ -272,9 +302,11 @@ struct PokemonCardContent: View {
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fit)
+                        .frame(maxWidth: .infinity)
                         .frame(height: 180)
                 } placeholder: {
                     ProgressView()
+                        .frame(maxWidth: .infinity)
                         .frame(height: 180)
                 }
             }
@@ -311,6 +343,7 @@ struct PokemonCardContent: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
             }
         }
     }
@@ -591,69 +624,6 @@ struct AnalyzeButton: View {
     }
 }
 
-struct PokemonPickerView: View {
-    @Binding var selectedPokemon: String
-    @Environment(\.dismiss) private var dismiss
-    
-    let popularPokemon = [
-        ("pikachu", "25", "Electric"),
-        ("charizard", "6", "Fire/Flying"),
-        ("mewtwo", "150", "Psychic"),
-        ("eevee", "133", "Normal"),
-        ("lucario", "448", "Fighting/Steel"),
-        ("garchomp", "445", "Dragon/Ground"),
-        ("gengar", "94", "Ghost/Poison"),
-        ("dragonite", "149", "Dragon/Flying"),
-        ("snorlax", "143", "Normal"),
-        ("gyarados", "130", "Water/Flying"),
-        ("blaziken", "257", "Fire/Fighting"),
-        ("umbreon", "197", "Dark"),
-        ("sylveon", "700", "Fairy"),
-        ("greninja", "658", "Water/Dark"),
-        ("zoroark", "571", "Dark")
-    ]
-    
-    var body: some View {
-        NavigationStack {
-            List {
-                ForEach(popularPokemon, id: \.0) { pokemon in
-                    Button {
-                        selectedPokemon = pokemon.0
-                        dismiss()
-                    } label: {
-                        HStack {
-                            VStack(alignment: .leading) {
-                                Text(pokemon.0.capitalized)
-                                    .font(.headline)
-                                Text("#\(pokemon.1)")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                            
-                            Spacer()
-                            
-                            Text(pokemon.2)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        .padding(.vertical, 4)
-                    }
-                }
-            }
-            .navigationTitle("Popular Pokemon")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-            }
-        }
-    }
-}
 
 // MARK: - Glass Effect Container
 
