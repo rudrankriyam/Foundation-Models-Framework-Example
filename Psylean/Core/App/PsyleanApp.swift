@@ -16,6 +16,12 @@ struct PsyleanApp: App {
                 .onAppear {
                     PsyleanAppShortcuts.updateAppShortcutParameters()
                 }
+#if os(macOS)
+                .frame(minWidth: 800, minHeight: 600)
+#endif
         }
+        #if os(macOS)
+        .defaultSize(width: 1000, height: 700)
+        #endif
     }
 }
