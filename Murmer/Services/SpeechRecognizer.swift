@@ -26,6 +26,8 @@ class SpeechRecognizer: NSObject, ObservableObject {
     override init() {
         super.init()
         speechRecognizer?.delegate = self
+        // Check initial permission status
+        hasPermission = SFSpeechRecognizer.authorizationStatus() == .authorized
     }
     
     func requestPermission() async -> Bool {
@@ -53,9 +55,13 @@ class SpeechRecognizer: NSObject, ObservableObject {
     }
     
     func startRecognition() throws {
-        guard hasPermission else {
+        // Check current authorization status instead of cached value
+        let authStatus = SFSpeechRecognizer.authorizationStatus()
+        guard authStatus == .authorized else {
+            hasPermission = false
             throw SpeechRecognizerError.notAuthorized
         }
+        hasPermission = true
         
         guard speechRecognizer?.isAvailable ?? false else {
             throw SpeechRecognizerError.recognizerNotAvailable
