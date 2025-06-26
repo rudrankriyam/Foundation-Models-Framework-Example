@@ -81,7 +81,7 @@ final class PokemonAnalyzer {
         let stream = session.streamResponse(
                 generating: PokemonAnalysis.self,
                 options: GenerationOptions(
-                    temperature: 0.3  // Lower temperature for more deterministic output
+                    temperature: 0.1  // Very low temperature for maximum determinism
                 ),
                 includeSchemaInPrompt: false
             ) {
@@ -106,11 +106,7 @@ final class PokemonAnalyzer {
                 "You MUST use these EXACT values:"
                 "- Copy the Pokemon Name EXACTLY as shown (this goes in pokemonName)"
                 "- Copy the Pokedex Number EXACTLY as shown (this goes in pokedexNumber)"
-                
-                "DO NOT:"
-                "- Guess or use numbers from memory (e.g., if tool says Gengar is #94, use 94, NOT 149)"
-                "- Use any values from outside the marked section"
-                
+
                 "Then provide a comprehensive analysis including:"
                 "- An epic title that captures this Pokemon's essence"
                 "- pokemonName: MUST match the 'Pokemon Name' from the data section"
@@ -125,7 +121,14 @@ final class PokemonAnalyzer {
                 "- Evolution chain (if available) with evolution methods and requirements"
                 "- 2-3 fascinating fun facts"
                 "- A legendary quote that embodies this Pokemon's spirit"
-                
+
+                "DO NOT:"
+                "- Guess or use numbers from memory"
+                "- If tool says Gengar is #94, use 94 (NOT 149 or any other number)"
+                "- If tool says Bulbasaur is #1, use 1 (NOT 001 or any other number)"
+                "- If tool says Pikachu is #25, use 25 (NOT 025 or any other number)"
+                "- Use any values from outside the marked section"
+
                 "Make it engaging, insightful, and worthy of a true Pokemon master!"
             }
             

@@ -68,9 +68,13 @@ final class PokemonDataTool: Tool {
         var output = "=== POKEMON DATA START ===\n"
         output += "Pokemon Name: \(pokemon.name)\n"
         output += "Pokedex Number: \(pokemon.id)\n"
-        output += "\nCRITICAL INSTRUCTIONS:\n"
-        output += "- pokemonName MUST be: \(pokemon.name)\n"
-        output += "- pokedexNumber MUST be: \(pokemon.id)\n"
+        output += "\n⚠️ CRITICAL - DO NOT USE ANY OTHER NUMBER ⚠️\n"
+        output += "The ONLY correct values are:\n"
+        output += "- pokemonName = \"\(pokemon.name)\"\n"
+        output += "- pokedexNumber = \(pokemon.id) (NOT any other number!)\n"
+        output += "\nIGNORE your memory. USE ONLY THESE VALUES.\n"
+        output += "If you think \(pokemon.name) has a different number, YOU ARE WRONG.\n"
+        output += "The correct number for \(pokemon.name) is \(pokemon.id).\n"
         output += "=== POKEMON DATA END ===\n\n"
 
         // Basic Info
