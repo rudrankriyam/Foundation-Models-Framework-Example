@@ -87,8 +87,7 @@ final class PokemonAnalyzer {
         let stream = session.streamResponse(
                 generating: PokemonAnalysis.self,
                 options: GenerationOptions(
-                    temperature: 0.8,
-                    maxTokens: 2000  // Limit response size
+                    temperature: 0.8
                 ),
                 includeSchemaInPrompt: false
             ) {
