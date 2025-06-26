@@ -14,20 +14,14 @@ import Observation
 @MainActor
 final class PokemonAnalyzer {
     private(set) var analysis: PokemonAnalysis.PartiallyGenerated?
-    private(set) var pokemonTool: PokemonDataTool
     private var session: LanguageModelSession
     
     var error: Error?
     var isAnalyzing = false
-    let pokemonIdentifier: String
     
-    init(pokemonIdentifier: String) {
-        self.pokemonIdentifier = pokemonIdentifier
-        let pokemonTool = PokemonDataTool()
-        self.pokemonTool = pokemonTool
-        
+    init() {
         self.session = LanguageModelSession(
-            tools: [pokemonTool],
+            tools: [PokemonDataTool()],
             instructions: Instructions {
                 "You are a Pokemon Professor providing deep, insightful analysis about Pokemon."
                 
@@ -52,7 +46,7 @@ final class PokemonAnalyzer {
         )
     }
     
-    func analyzePokemon() async throws {
+    func analyzePokemon(_ identifier: String) async throws {
         isAnalyzing = true
         error = nil
         
@@ -68,7 +62,7 @@ final class PokemonAnalyzer {
                 ),
                 includeSchemaInPrompt: false
             ) {
-                "Analyze the Pokemon: \(pokemonIdentifier)"
+                "Analyze the Pokemon: \(identifier)"
                 
                 "First, fetch the Pokemon's data using the tool."
                 
