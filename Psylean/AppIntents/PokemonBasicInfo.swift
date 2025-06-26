@@ -19,3 +19,18 @@ struct PokemonBasicInfo: Equatable {
     @Guide(description: "The Pokemon's types (e.g., Water, Flying)")
     let types: [String]
 }
+
+// Extended version with image data
+struct PokemonBasicInfoWithImage: Equatable {
+    let name: String
+    let number: Int
+    let types: [String]
+    let imageData: Data?
+    
+    init(from basicInfo: PokemonBasicInfo, imageData: Data? = nil) {
+        self.name = basicInfo.name
+        self.number = basicInfo.number
+        self.types = basicInfo.types
+        self.imageData = imageData
+    }
+}

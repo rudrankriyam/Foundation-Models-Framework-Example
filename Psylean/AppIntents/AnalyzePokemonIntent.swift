@@ -51,10 +51,21 @@ struct AnalyzePokemonIntent: AppIntent {
                 throw IntentError.invalidPokemonData
             }
             
+            // Download image synchronously
+            var imageData: Data? = nil
+            let imageURL = URL(string: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/\(number).png")!
+            if let data = try? Data(contentsOf: imageURL) {
+                imageData = data
+                print("DEBUG: Downloaded image data: \(data.count) bytes")
+            } else {
+                print("DEBUG: Failed to download image data")
+            }
+            
             let snippetView = PokemonSnippetView(
                 name: name,
                 number: number,
-                types: types
+                types: types,
+                imageData: imageData
             )
             
             return .result(view: snippetView)

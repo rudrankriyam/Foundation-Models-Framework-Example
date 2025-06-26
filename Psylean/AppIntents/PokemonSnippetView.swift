@@ -11,11 +11,96 @@ struct PokemonSnippetView: View {
     let name: String
     let number: Int
     let types: [String]
+    let imageData: Data?
+    
+    private var pokemonGradient: LinearGradient {
+        let colors = types.isEmpty ? [Color.gray] : types.map { Color.pokemonType($0) }
+        return LinearGradient(
+            colors: colors,
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+    
+    private var pokemonIconName: String {
+        guard let primaryType = types.first?.lowercased() else { return "sparkles" }
+        
+        switch primaryType {
+        case "fire": return "flame.fill"
+        case "water": return "drop.fill"
+        case "grass": return "leaf.fill"
+        case "electric": return "bolt.fill"
+        case "psychic": return "brain"
+        case "ice": return "snowflake"
+        case "dragon": return "sparkles"
+        case "dark": return "moon.fill"
+        case "fairy": return "star.fill"
+        case "fighting": return "figure.boxing"
+        case "poison": return "smoke.fill"
+        case "ground": return "mountain.2.fill"
+        case "flying": return "wind"
+        case "bug": return "ant.fill"
+        case "rock": return "cube.fill"
+        case "ghost": return "eye.slash.fill"
+        case "steel": return "shield.fill"
+        case "normal": return "circle.fill"
+        default: return "sparkles"
+        }
+    }
     
     var body: some View {
         VStack(spacing: 16) {
-            // Pokemon Image with shadow
+            // Pokemon Image - Using synchronously loaded data
+            Group {
+                if let imageData = imageData {
+                    // Show the actual Pokemon image
+                    #if os(macOS)
+                    if let nsImage = NSImage(data: imageData) {
+                        Image(nsImage: nsImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 120, height: 120)
+                            .background(
+                                Circle()
+                                    .fill(pokemonGradient.opacity(0.1))
+                            )
+                    }
+                    #else
+                    if let uiImage = UIImage(data: imageData) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 120, height: 120)
+                            .background(
+                                Circle()
+                                    .fill(pokemonGradient.opacity(0.1))
+                            )
+                    }
+                    #endif
+                } else {
+                    // Fallback to type-themed icon
+                    ZStack {
+                        Circle()
+                            .fill(pokemonGradient.opacity(0.2))
+                            .frame(width: 120, height: 120)
+                        
+                        Circle()
+                            .strokeBorder(pokemonGradient, lineWidth: 3)
+                            .frame(width: 120, height: 120)
+                        
+                        // Pokemon-themed icon based on primary type
+                        Image(systemName: pokemonIconName)
+                            .font(.system(size: 50, weight: .medium))
+                            .foregroundStyle(pokemonGradient)
+                    }
+                }
+            }
+            
+            // Original AsyncImage code (commented out for debugging)
+            /*
             AsyncImage(url: URL(string: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/\(number).png")) { phase in
+                let _ = print("DEBUG: AsyncImage URL: https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/\(number).png")
+                let _ = print("DEBUG: AsyncImage phase: \(phase)")
                 switch phase {
                 case .empty:
                     // Loading state
@@ -48,6 +133,7 @@ struct PokemonSnippetView: View {
                     EmptyView()
                 }
             }
+            */
             
             // Name and Number
             VStack(spacing: 6) {
