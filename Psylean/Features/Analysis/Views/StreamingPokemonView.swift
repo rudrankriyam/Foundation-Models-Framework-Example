@@ -25,9 +25,7 @@ struct StreamingPokemonView: View {
             // Pokemon Card
             if let name = analysis.pokemonName {
                 // Debug print
-                if let number = analysis.pokedexNumber {
-                    print("DEBUG: Displaying Pokemon \(name) with number \(number)")
-                }
+               
                 
                 #if os(iOS) || os(macOS)
                 GlassEffectContainer(spacing: 16) {
