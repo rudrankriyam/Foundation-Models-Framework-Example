@@ -15,20 +15,38 @@ struct PokemonSnippetView: View {
     var body: some View {
         VStack(spacing: 16) {
             // Pokemon Image with shadow
-            AsyncImage(url: URL(string: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/\(number).png")) { image in
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 120, height: 120)
-                    .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
-            } placeholder: {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.gray.opacity(0.2))
-                    .frame(width: 120, height: 120)
-                    .overlay(
-                        ProgressView()
-                            .tint(.gray)
-                    )
+            AsyncImage(url: URL(string: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/\(number).png")) { phase in
+                switch phase {
+                case .empty:
+                    // Loading state
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.gray.opacity(0.2))
+                        .frame(width: 120, height: 120)
+                        .overlay(
+                            ProgressView()
+                                .tint(.gray)
+                        )
+                case .success(let image):
+                    // Success state
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 120, height: 120)
+                        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                case .failure(_):
+                    // Error state - show Pokemon silhouette
+                    Image(systemName: "questionmark.square.dashed")
+                        .font(.system(size: 60))
+                        .foregroundColor(.gray.opacity(0.5))
+                        .frame(width: 120, height: 120)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.gray.opacity(0.1))
+                        )
+                @unknown default:
+                    // Fallback
+                    EmptyView()
+                }
             }
             
             // Name and Number

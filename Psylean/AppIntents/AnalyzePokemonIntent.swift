@@ -36,18 +36,18 @@ struct AnalyzePokemonIntent: AppIntent {
         let analyzer = PokemonAnalyzer()
         
         do {
-            try await analyzer.analyzePokemon(sanitizedQuery)
+            let basicInfo = try await analyzer.getPokemonBasicInfo(sanitizedQuery)
             
-            guard let analysis = analyzer.analysis else {
-                throw IntentError.noAnalysisAvailable
-            }
+            let name = basicInfo.name
+            let number = basicInfo.number
+            let types = basicInfo.types
             
-            let name = analysis.pokemonName ?? "Unknown"
-            let number = analysis.pokedexNumber ?? 0
-            let types = analysis.types?.compactMap { $0.name } ?? []
+            // Debug logging
+            print("DEBUG: Pokemon basic info - Name: \(name), Number: \(number), Types: \(types)")
             
             // Validate results
             guard number > 0 && number <= 1025 else { // Current max Pokedex number
+                print("DEBUG: Invalid Pokemon number: \(number)")
                 throw IntentError.invalidPokemonData
             }
             
@@ -72,6 +72,7 @@ enum IntentError: LocalizedError {
     case emptyInput
     case inputTooShort
     case noAnalysisAvailable
+    case incompleteAnalysis
     case invalidPokemonData
     case contextWindowExceeded
     case analysisError(String)
@@ -84,6 +85,8 @@ enum IntentError: LocalizedError {
             return "Input too short. Please enter at least 2 characters"
         case .noAnalysisAvailable:
             return "No Pokemon analysis was generated"
+        case .incompleteAnalysis:
+            return "Pokemon analysis is incomplete. Please try again"
         case .invalidPokemonData:
             return "Invalid Pokemon data received. Please try again"
         case .contextWindowExceeded:
