@@ -45,9 +45,15 @@ struct LegendaryPokemonIntent: AppIntent {
     static var description = IntentDescription("Search for a legendary Pokemon")
     static var openAppWhenRun: Bool = false
     
+    private let legendaryPokemon = [
+        "Mewtwo", "Mew", "Articuno", "Zapdos", "Moltres",
+        "Lugia", "Ho-Oh", "Celebi", "Kyogre", "Groudon",
+        "Rayquaza", "Dialga", "Palkia", "Giratina", "Arceus"
+    ]
+    
     func perform() async throws -> some IntentResult & ShowsSnippetView & ProvidesDialog {
         let intent = AnalyzePokemonIntent()
-        intent.pokemonQuery = "legendary pokemon"
+        intent.pokemonQuery = legendaryPokemon.randomElement() ?? "Mewtwo"
         return try await intent.perform()
     }
 }
