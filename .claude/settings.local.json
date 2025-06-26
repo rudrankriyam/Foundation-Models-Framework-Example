@@ -37,7 +37,11 @@
       "Bash(DEVELOPER_DIR=\"/Applications/Xcode-26.0.0-Beta.2.app/Contents/Developer\" xcodebuild build -scheme \"Foundation Lab\" -project FoundationLab.xcodeproj -destination 'platform=macOS' 2 >& 1)",
       "Bash(git checkout:*)",
       "Bash(gh pr view:*)",
-      "Bash(gh api:*)"
+      "Bash(gh api:*)",
+      "Bash(/Applications/Xcode-26.0.0-Beta.2.app/Contents/Developer/usr/bin/xcodebuild -scheme Psylean -configuration Debug -destination \"platform=macOS\" build)",
+      "Bash(/Applications/Xcode-26.0.0-Beta.2.app/Contents/Developer/usr/bin/xcodebuild -scheme Psylean -configuration Debug -destination \"platform=macOS\" -showBuildSettings)",
+      "Bash(/Applications/Xcode\\ 16.2\\ beta\\ 2.app/Contents/Developer/usr/bin/xcodebuild -scheme \"Psylean\" -destination \"platform=macOS\" build)",
+      "Bash(sudo xcode-select:*)"
     ],
     "deny": []
   }
