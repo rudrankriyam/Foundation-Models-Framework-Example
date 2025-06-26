@@ -9,7 +9,6 @@
 /* Begin PBXFileReference section */
 		0AAE4FFF2DF76E6600838F13 /* Foundation Lab.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Foundation Lab.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0ABC0C9B2E09AB5300A09018 /* Body Buddy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Body Buddy.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		0ABC0D772E09BAAC00A09018 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/HealthKit.framework; sourceTree = DEVELOPER_DIR; };
 		0ADB46DC2E0CE81900C29293 /* Psylean.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Psylean.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -75,7 +74,6 @@
 				0ADB46AD2E0CE6C100C29293 /* Foundation Lab */,
 				0ABC0C9C2E09AB5300A09018 /* Body Buddy */,
 				0ADB46DD2E0CE81900C29293 /* Psylean */,
-				0ABC0D762E09BAAC00A09018 /* Frameworks */,
 				0AAE50002DF76E6600838F13 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -88,14 +86,6 @@
 				0ADB46DC2E0CE81900C29293 /* Psylean.app */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		0ABC0D762E09BAAC00A09018 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				0ABC0D772E09BAAC00A09018 /* HealthKit.framework */,
-			);
-			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
