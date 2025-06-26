@@ -170,7 +170,6 @@ struct StreamingPokemonView: View {
                     .fontWeight(.bold)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
-                    .transition(.opacity)
             }
             
             // Pokemon Card
@@ -284,7 +283,6 @@ struct StreamingPokemonView: View {
                     #endif
             }
         }
-        .animation(.smooth, value: analysis)
     }
 }
 
