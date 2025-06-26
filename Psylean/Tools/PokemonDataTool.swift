@@ -126,10 +126,8 @@ final class PokemonDataTool: Tool {
             
             return ToolOutput(output)
         } catch {
-            recordFetch(pokemonName: arguments.identifier, success: false)
-            
-            // Return mock data for demo purposes
-            return ToolOutput(mockPokemonData(for: arguments.identifier))
+            await recordFetch(pokemonName: arguments.identifier, success: false)
+            throw error
         }
     }
     
@@ -177,79 +175,5 @@ final class PokemonDataTool: Tool {
         }
         
         return output
-    }
-    
-    private func mockPokemonData(for identifier: String) -> String {
-        let mockPokemon = [
-            "pikachu": """
-                Pokemon: Pikachu (#25)
-                
-                Height: 0.4m
-                Weight: 6.0kg
-                Base Experience: 112
-                
-                Types: Electric
-                
-                Abilities:
-                - Static
-                - Lightning Rod (Hidden)
-                
-                Base Stats:
-                - HP: 35
-                - Attack: 55
-                - Defense: 40
-                - Special Attack: 50
-                - Special Defense: 50
-                - Speed: 90
-                
-                Official Artwork: https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png
-                """,
-            
-            "charizard": """
-                Pokemon: Charizard (#6)
-                
-                Height: 1.7m
-                Weight: 90.5kg
-                Base Experience: 267
-                
-                Types: Fire, Flying
-                
-                Abilities:
-                - Blaze
-                - Solar Power (Hidden)
-                
-                Base Stats:
-                - HP: 78
-                - Attack: 84
-                - Defense: 78
-                - Special Attack: 109
-                - Special Defense: 85
-                - Speed: 100
-                
-                Official Artwork: https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/6.png
-                """
-        ]
-        
-        return mockPokemon[identifier.lowercased()] ?? """
-            Pokemon: \(identifier.capitalized) (#1)
-            
-            Height: 0.7m
-            Weight: 6.9kg
-            Base Experience: 64
-            
-            Types: Grass, Poison
-            
-            Abilities:
-            - Overgrow
-            - Chlorophyll (Hidden)
-            
-            Base Stats:
-            - HP: 45
-            - Attack: 49
-            - Defense: 49
-            - Special Attack: 65
-            - Special Defense: 65
-            - Speed: 45
-            """
     }
 }
