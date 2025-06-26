@@ -96,13 +96,6 @@ final class PokemonAnalyzer {
                 
                 "Always fetch the Pokemon's data using fetchPokemonData (include evolution data)."
                 
-                "⚠️ CRITICAL - READ THE TOOL OUTPUT CAREFULLY ⚠️"
-                "When you call fetchPokemonData, you will receive output with a section marked:"
-                "=== POKEMON DATA START ==="
-                "Pokemon Name: [name]"
-                "Pokedex Number: [number]" 
-                "=== POKEMON DATA END ==="
-                
                 "You MUST use these EXACT values:"
                 "- Copy the Pokemon Name EXACTLY as shown (this goes in pokemonName)"
                 "- Copy the Pokedex Number EXACTLY as shown (this goes in pokedexNumber)"
@@ -125,9 +118,6 @@ final class PokemonAnalyzer {
                 "DO NOT:"
                 "- Guess or use numbers from memory"
                 "- If tool says Gengar is #94, use 94 (NOT 149 or any other number)"
-                "- If tool says Bulbasaur is #1, use 1 (NOT 001 or any other number)"
-                "- If tool says Pikachu is #25, use 25 (NOT 025 or any other number)"
-                "- Use any values from outside the marked section"
 
                 "Make it engaging, insightful, and worthy of a true Pokemon master!"
             }
