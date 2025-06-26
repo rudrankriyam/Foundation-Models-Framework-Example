@@ -30,7 +30,7 @@ struct AnalyzePokemonIntent: AppIntent {
     @Parameter(
         title: "Pokemon",
         description: "Enter a Pokemon name or description (e.g., 'Pikachu' or 'cute grass pokemon')",
-        optionsProvider: PokemonQueryProvider()
+        requestValueDialog: IntentDialog("Which Pokemon would you like to analyze?")
     )
     var pokemonQuery: String
     
@@ -59,7 +59,6 @@ struct AnalyzePokemonIntent: AppIntent {
                 break // Success, exit retry loop
             } catch {
                 lastError = error
-                print("DEBUG: Attempt \(attempt) failed: \(error)")
                 
                 // Only retry for certain errors
                 if error is LanguageModelSession.GenerationError || 
@@ -82,12 +81,8 @@ struct AnalyzePokemonIntent: AppIntent {
         let number = basicInfo.number
         let types = basicInfo.types
         
-        // Debug logging
-        print("DEBUG: Pokemon basic info - Name: \(name), Number: \(number), Types: \(types)")
-        
         // Validate results
         guard number > 0 && number <= 1025 else { // Current max Pokedex number
-            print("DEBUG: Invalid Pokemon number: \(number)")
             throw IntentError.invalidPokemonData
         }
         
@@ -127,14 +122,9 @@ struct AnalyzePokemonIntent: AppIntent {
                 // Check if we got a valid response
                 if let httpResponse = response as? HTTPURLResponse,
                    httpResponse.statusCode == 200 {
-                    print("DEBUG: Successfully downloaded image: \(data.count) bytes")
                     return data
                 }
-                
-                print("DEBUG: Invalid response status for image download")
             } catch {
-                print("DEBUG: Image download attempt \(attempt) failed: \(error)")
-                
                 // Wait before retrying (exponential backoff)
                 if attempt < maxRetries {
                     try? await Task.sleep(nanoseconds: UInt64(attempt) * 500_000_000) // 0.5s, 1s, 1.5s
@@ -142,7 +132,6 @@ struct AnalyzePokemonIntent: AppIntent {
             }
         }
         
-        print("DEBUG: Failed to download image after \(maxRetries) attempts")
         return nil
     }
 }

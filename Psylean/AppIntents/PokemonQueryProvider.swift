@@ -44,6 +44,6 @@ struct PokemonQueryProvider: DynamicOptionsProvider {
     }
     
     func defaultResult() async -> String? {
-        return "Pikachu"
+        return nil
     }
 }

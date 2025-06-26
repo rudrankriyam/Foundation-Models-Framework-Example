@@ -6,6 +6,9 @@
 //
 
 import AppIntents
+import Foundation
+import SwiftUI
+import FoundationModels
 
 // Quick intent for Pikachu
 struct QuickPikachuIntent: AppIntent {
@@ -73,8 +76,58 @@ struct LegendaryPokemonIntent: AppIntent {
     ]
     
     func perform() async throws -> some IntentResult & ShowsSnippetView & ProvidesDialog {
-        let intent = AnalyzePokemonIntent()
-        intent.pokemonQuery = legendaryPokemon.randomElement() ?? "Mewtwo"
-        return try await intent.perform()
+        let selectedLegendary = legendaryPokemon.randomElement() ?? "Mewtwo"
+        
+        // Directly fetch Pokemon data from the API
+        do {
+            let pokemonData = try await PokeAPIClient.fetchPokemon(identifier: selectedLegendary.lowercased())
+            
+            // Extract types
+            let types = pokemonData.types.map { $0.type.name.capitalized }
+            
+            // Create description
+            let description = "The legendary \(types.joined(separator: "/")) type Pokemon, \(pokemonData.name.capitalized) stands at \(Double(pokemonData.height) / 10.0)m tall and possesses incredible power."
+            
+            // Download image
+            let imageURL = URL(string: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/\(pokemonData.id).png")!
+            let imageData: Data? = await downloadImageWithRetry(from: imageURL, maxRetries: 3)
+            
+            let snippetView = PokemonSnippetView(
+                name: pokemonData.name.capitalized,
+                number: pokemonData.id,
+                types: types,
+                description: description,
+                imageData: imageData
+            )
+            
+            // Create a voice-friendly response
+            let typeString = types.count > 1 ? "\(types[0]) and \(types[1])" : types.first ?? ""
+            let voiceResponse = "Found \(pokemonData.name.capitalized), a \(typeString) type legendary Pokemon!"
+            
+            return .result(
+                dialog: IntentDialog(stringLiteral: voiceResponse),
+                view: snippetView
+            )
+        } catch {
+            throw IntentError.analysisError("Failed to fetch legendary Pokemon data")
+        }
+    }
+    
+    private func downloadImageWithRetry(from url: URL, maxRetries: Int) async -> Data? {
+        for attempt in 1...maxRetries {
+            do {
+                let (data, response) = try await URLSession.shared.data(from: url)
+                
+                if let httpResponse = response as? HTTPURLResponse,
+                   httpResponse.statusCode == 200 {
+                    return data
+                }
+            } catch {
+                if attempt < maxRetries {
+                    try? await Task.sleep(nanoseconds: UInt64(attempt) * 500_000_000)
+                }
+            }
+        }
+        return nil
     }
 }
