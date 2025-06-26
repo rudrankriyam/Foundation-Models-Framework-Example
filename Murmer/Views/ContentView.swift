@@ -33,6 +33,9 @@ struct ContentView: View {
         .onAppear {
             viewModel.permissionManager.checkAllPermissions()
         }
+        .onChange(of: viewModel.permissionManager.allPermissionsGranted) { _, _ in
+            // Force view update when permissions change
+        }
     }
 }
 

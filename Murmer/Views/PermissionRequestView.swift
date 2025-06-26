@@ -118,6 +118,13 @@ struct PermissionRequestView: View {
     }
     
     private func requestPermissions() {
+        // If all permissions are already granted, just update the status
+        if permissionManager.allPermissionsGranted {
+            // Force a re-check to ensure the parent view updates
+            permissionManager.checkAllPermissions()
+            return
+        }
+        
         isRequestingPermissions = true
         
         Task {

@@ -804,6 +804,10 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Murmer needs access to your microphone to listen to your voice commands for creating reminders.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Murmer uses speech recognition to convert your voice into text for creating reminders.";
+				INFOPLIST_KEY_NSRemindersUsageDescription = "Murmer needs access to create reminders based on your voice commands.";
+				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Murmer needs full access to create and manage reminders based on your voice commands.";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
@@ -847,6 +851,10 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Murmer needs access to your microphone to listen to your voice commands for creating reminders.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Murmer uses speech recognition to convert your voice into text for creating reminders.";
+				INFOPLIST_KEY_NSRemindersUsageDescription = "Murmer needs access to your reminders to create and manage reminder tasks.";
+				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Murmer needs access to create reminders based on your voice commands.";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
