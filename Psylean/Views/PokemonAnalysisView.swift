@@ -64,6 +64,7 @@ struct PokemonAnalysisView: View {
                 AnalyzeButton {
                     await startAnalysis()
                 }
+                .padding(.bottom)
             }
         }
         .task {
@@ -604,21 +605,17 @@ struct AnalyzeButton: View {
                 if isLoading {
                     ProgressView()
                         .scaleEffect(0.8)
+                        .tint(.white)
                 } else {
                     Image(systemName: "sparkles")
                 }
                 Text("Analyze Pokemon")
             }
             .font(.headline)
-            .frame(maxWidth: .infinity)
-            .padding()
             .foregroundStyle(.white)
-            .background(Color.accentColor)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
         }
         .disabled(isLoading)
-        .padding()
-        .background(.ultraThinMaterial)
+        .buttonStyle(.glassProminent)
     }
 }
 
