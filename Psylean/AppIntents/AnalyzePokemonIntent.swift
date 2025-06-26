@@ -18,7 +18,6 @@ struct AnalyzePokemonIntent: AppIntent {
     @Parameter(title: "Pokemon", description: "Enter a Pokemon name or description (e.g., 'Pikachu' or 'cute grass pokemon')")
     var pokemonQuery: String
     
-    @MainActor
     func perform() async throws -> some IntentResult & ShowsSnippetView & ProvidesDialog {
         // Validate input
         guard !pokemonQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
@@ -36,56 +35,93 @@ struct AnalyzePokemonIntent: AppIntent {
         
         let analyzer = PokemonAnalyzer()
         
-        do {
-            let basicInfo = try await analyzer.getPokemonBasicInfo(sanitizedQuery)
-            
-            let name = basicInfo.name
-            let number = basicInfo.number
-            let types = basicInfo.types
-            
-            // Debug logging
-            print("DEBUG: Pokemon basic info - Name: \(name), Number: \(number), Types: \(types)")
-            
-            // Validate results
-            guard number > 0 && number <= 1025 else { // Current max Pokedex number
-                print("DEBUG: Invalid Pokemon number: \(number)")
-                throw IntentError.invalidPokemonData
-            }
-            
-            // Download image using async Task to avoid blocking main thread
-            let imageURL = URL(string: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/\(number).png")!
-            
-            let imageData: Data? = await Task.detached(priority: .userInitiated) {
-                do {
-                    let data = try Data(contentsOf: imageURL)
-                    print("DEBUG: Downloaded image data: \(data.count) bytes")
-                    return data
-                } catch {
-                    print("DEBUG: Failed to download image data: \(error)")
-                    return nil
+        // Try to fetch Pokemon info with retry logic
+        var basicInfo: PokemonBasicInfo?
+        var lastError: Error?
+        
+        for attempt in 1...3 {
+            do {
+                basicInfo = try await analyzer.getPokemonBasicInfo(sanitizedQuery)
+                break // Success, exit retry loop
+            } catch {
+                lastError = error
+                print("DEBUG: Attempt \(attempt) failed: \(error)")
+                
+                // Only retry for certain errors
+                if error is LanguageModelSession.GenerationError || 
+                   (error as? IntentError) == .contextWindowExceeded {
+                    throw error // Don't retry these errors
                 }
-            }.value
-            
-            let snippetView = PokemonSnippetView(
-                name: name,
-                number: number,
-                types: types,
-                description: basicInfo.description,
-                imageData: imageData
-            )
-            
-            return .result(dialog: IntentDialog("Found \(name)!"), view: snippetView)
-        } catch let error as IntentError {
-            throw error
-        } catch LanguageModelSession.GenerationError.exceededContextWindowSize {
-            throw IntentError.contextWindowExceeded
-        } catch {
-            throw IntentError.analysisError(error.localizedDescription)
+                
+                // Wait before retrying (exponential backoff)
+                if attempt < 3 {
+                    try await Task.sleep(nanoseconds: UInt64(attempt) * 1_000_000_000)
+                }
+            }
         }
+        
+        guard let basicInfo = basicInfo else {
+            throw lastError ?? IntentError.analysisError("Failed to fetch Pokemon data after 3 attempts")
+        }
+        
+        let name = basicInfo.name
+        let number = basicInfo.number
+        let types = basicInfo.types
+        
+        // Debug logging
+        print("DEBUG: Pokemon basic info - Name: \(name), Number: \(number), Types: \(types)")
+        
+        // Validate results
+        guard number > 0 && number <= 1025 else { // Current max Pokedex number
+            print("DEBUG: Invalid Pokemon number: \(number)")
+            throw IntentError.invalidPokemonData
+        }
+        
+        // Download image with retry logic
+        let imageURL = URL(string: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/\(number).png")!
+        
+        let imageData: Data? = await downloadImageWithRetry(from: imageURL, maxRetries: 3)
+        
+        let snippetView = PokemonSnippetView(
+            name: name,
+            number: number,
+            types: types,
+            description: basicInfo.description,
+            imageData: imageData
+        )
+        
+        return .result(dialog: IntentDialog("Found \(name)!"), view: snippetView)
+    }
+    
+    private func downloadImageWithRetry(from url: URL, maxRetries: Int) async -> Data? {
+        for attempt in 1...maxRetries {
+            do {
+                let (data, response) = try await URLSession.shared.data(from: url)
+                
+                // Check if we got a valid response
+                if let httpResponse = response as? HTTPURLResponse,
+                   httpResponse.statusCode == 200 {
+                    print("DEBUG: Successfully downloaded image: \(data.count) bytes")
+                    return data
+                }
+                
+                print("DEBUG: Invalid response status for image download")
+            } catch {
+                print("DEBUG: Image download attempt \(attempt) failed: \(error)")
+                
+                // Wait before retrying (exponential backoff)
+                if attempt < maxRetries {
+                    try? await Task.sleep(nanoseconds: UInt64(attempt) * 500_000_000) // 0.5s, 1s, 1.5s
+                }
+            }
+        }
+        
+        print("DEBUG: Failed to download image after \(maxRetries) attempts")
+        return nil
     }
 }
 
-enum IntentError: LocalizedError {
+enum IntentError: LocalizedError, Equatable {
     case emptyInput
     case inputTooShort
     case noAnalysisAvailable
