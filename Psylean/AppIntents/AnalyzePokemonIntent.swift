@@ -51,15 +51,19 @@ struct AnalyzePokemonIntent: AppIntent {
                 throw IntentError.invalidPokemonData
             }
             
-            // Download image synchronously
-            var imageData: Data? = nil
+            // Download image using async Task to avoid blocking main thread
             let imageURL = URL(string: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/\(number).png")!
-            if let data = try? Data(contentsOf: imageURL) {
-                imageData = data
-                print("DEBUG: Downloaded image data: \(data.count) bytes")
-            } else {
-                print("DEBUG: Failed to download image data")
-            }
+            
+            let imageData: Data? = await Task.detached(priority: .userInitiated) {
+                do {
+                    let data = try Data(contentsOf: imageURL)
+                    print("DEBUG: Downloaded image data: \(data.count) bytes")
+                    return data
+                } catch {
+                    print("DEBUG: Failed to download image data: \(error)")
+                    return nil
+                }
+            }.value
             
             let snippetView = PokemonSnippetView(
                 name: name,
