@@ -19,7 +19,7 @@ struct AnalyzePokemonIntent: AppIntent {
     var pokemonQuery: String
     
     @MainActor
-    func perform() async throws -> some IntentResult & ShowsSnippetView {
+    func perform() async throws -> some IntentResult & ShowsSnippetView & ProvidesDialog {
         // Validate input
         guard !pokemonQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw IntentError.emptyInput
@@ -74,7 +74,7 @@ struct AnalyzePokemonIntent: AppIntent {
                 imageData: imageData
             )
             
-            return .result(view: snippetView)
+            return .result(dialog: IntentDialog("Found \(name)!"), view: snippetView)
         } catch let error as IntentError {
             throw error
         } catch LanguageModelSession.GenerationError.exceededContextWindowSize {
