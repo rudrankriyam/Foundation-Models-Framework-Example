@@ -79,6 +79,7 @@ final class PokemonAnalyzer {
                 
                 "Then provide a comprehensive analysis including:"
                 "- An epic title that captures this Pokemon's essence"
+                "- The EXACT Pokemon name and Pokedex number from the fetched data (CRITICAL: use the actual ID from the API, not a guess)"
                 "- A poetic description of what makes this Pokemon special"
                 "- Battle role classification based on its stats"
                 "- Detailed stat analysis with strategic insights"
