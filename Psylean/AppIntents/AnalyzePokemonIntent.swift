@@ -116,7 +116,7 @@ struct AnalyzePokemonIntent: AppIntent {
     
     private func createVoiceResponse(for name: String, types: [String], description: String) -> String {
         let typeString = types.count > 1 ? "\(types[0]) and \(types[1])" : types.first ?? ""
-        return "\(name) is a \(typeString) type Pokemon. \(description)"
+        return "Found \(name), a \(typeString) type Pokemon!"
     }
     
     private func downloadImageWithRetry(from url: URL, maxRetries: Int) async -> Data? {
