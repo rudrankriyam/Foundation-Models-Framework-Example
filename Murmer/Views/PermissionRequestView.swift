@@ -8,6 +8,7 @@
 import SwiftUI
 import AVFoundation
 import Speech
+import EventKit
 
 struct PermissionRequestView: View {
     @ObservedObject var permissionManager: PermissionManager

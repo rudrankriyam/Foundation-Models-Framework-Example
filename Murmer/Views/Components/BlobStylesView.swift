@@ -10,13 +10,13 @@ import SwiftUI
 struct BlobStylesView: View {
     @StateObject private var audioManager = AudioManager()
     @State private var selectedStyle: BlobStyle = .organic
-    
+
     enum BlobStyle: String, CaseIterable {
         case organic = "Organic"
         case liquid = "Liquid"
         case geometric = "Geometric"
         case particles = "Particles"
-        
+
         var description: String {
             switch self {
             case .organic:
@@ -30,7 +30,7 @@ struct BlobStylesView: View {
             }
         }
     }
-    
+
     var body: some View {
         VStack(spacing: 20) {
             // Style picker
@@ -41,7 +41,7 @@ struct BlobStylesView: View {
             }
             .pickerStyle(.segmented)
             .padding(.horizontal)
-            
+
             // Selected blob view
             ZStack {
                 // Background
@@ -57,7 +57,7 @@ struct BlobStylesView: View {
                         )
                     )
                     .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
-                
+
                 // Selected blob
                 Group {
                     switch selectedStyle {
@@ -75,26 +75,26 @@ struct BlobStylesView: View {
             }
             .frame(height: 350)
             .padding(.horizontal)
-            
+
             // Description
             Text(selectedStyle.description)
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
-            
+
             // Audio level indicator
             VStack(spacing: 10) {
                 Text("Audio Level")
                     .font(.caption)
                     .foregroundColor(.secondary)
-                
+
                 ProgressView(value: audioManager.currentAmplitude)
                     .progressViewStyle(AudioLevelProgressStyle())
                     .frame(height: 20)
                     .padding(.horizontal)
             }
-            
+
             Spacer()
         }
         .padding(.vertical)
@@ -111,42 +111,42 @@ struct BlobStylesView: View {
 struct LiquidBlobView: View {
     @ObservedObject var audioManager: AudioManager
     @State private var phase: Double = 0
-    
+
     var body: some View {
         Canvas { context, size in
             let center = CGPoint(x: size.width / 2, y: size.height / 2)
             let baseRadius = min(size.width, size.height) / 3
-            
+
             // Create liquid effect with multiple layers
             for i in 0..<5 {
                 let layerPhase = phase + Double(i) * 0.4
                 let radius = baseRadius * (1 - CGFloat(i) * 0.1)
-                
+
                 var path = Path()
                 let points = 12
-                
+
                 for j in 0..<points {
                     let angle = (Double(j) / Double(points)) * 2 * .pi
                     let waveOffset = sin(angle * 3 + layerPhase) * 20 * audioManager.currentAmplitude
                     let r = radius + waveOffset
-                    
+
                     let x = center.x + cos(angle) * r
                     let y = center.y + sin(angle) * r
-                    
+
                     if j == 0 {
                         path.move(to: CGPoint(x: x, y: y))
                     } else {
                         path.addLine(to: CGPoint(x: x, y: y))
                     }
                 }
-                
+
                 path.closeSubpath()
-                
+
                 let gradient = Gradient(colors: [
                     Color.blue.opacity(0.6),
                     Color.purple.opacity(0.4)
                 ])
-                
+
                 context.fill(
                     path,
                     with: .linearGradient(
@@ -155,7 +155,7 @@ struct LiquidBlobView: View {
                         endPoint: CGPoint(x: size.width, y: size.height)
                     )
                 )
-                
+
                 // Apply blur for liquid effect
                 context.addFilter(.blur(radius: CGFloat(i) * 2))
             }
@@ -173,7 +173,7 @@ struct GeometricBlobView: View {
     @ObservedObject var audioManager: AudioManager
     @State private var rotation: Double = 0
     @State private var scale: Double = 1
-    
+
     var body: some View {
         ZStack {
             ForEach(0..<3) { i in
@@ -192,7 +192,7 @@ struct GeometricBlobView: View {
                     )
                 )
                 .rotationEffect(.degrees(rotation + Double(i * 30)))
-                .scaleEffect(scale - Double(i) * 0.2)
+                .scaleEffect(scale - Double(Double(i) * 0.2))
                 .blur(radius: CGFloat(i) * 1.5)
             }
         }
@@ -200,7 +200,7 @@ struct GeometricBlobView: View {
             withAnimation(.linear(duration: 20).repeatForever(autoreverses: false)) {
                 rotation = 360
             }
-            
+
             withAnimation(.easeInOut(duration: 2).repeatForever(autoreverses: true)) {
                 scale = 1.2
             }
@@ -211,31 +211,31 @@ struct GeometricBlobView: View {
 struct PolygonShape: Shape {
     let sides: Int
     var audioLevel: Double
-    
-    var animatableData: Double {
+
+    nonisolated var animatableData: Double {
         get { audioLevel }
         set { audioLevel = newValue }
     }
-    
-    func path(in rect: CGRect) -> Path {
+
+    nonisolated func path(in rect: CGRect) -> Path {
         let center = CGPoint(x: rect.midX, y: rect.midY)
-        let radius = min(rect.width, rect.height) / 2 * (0.8 + audioLevel * 0.4)
+        let radius = min(rect.width, rect.height) / 2 * (0.8 + CGFloat(audioLevel) * 0.4)
         let angleStep = (2 * .pi) / Double(sides)
-        
+
         var path = Path()
-        
+
         for i in 0..<sides {
             let angle = Double(i) * angleStep - .pi / 2
             let x = center.x + cos(angle) * radius
             let y = center.y + sin(angle) * radius
-            
+
             if i == 0 {
                 path.move(to: CGPoint(x: x, y: y))
             } else {
                 path.addLine(to: CGPoint(x: x, y: y))
             }
         }
-        
+
         path.closeSubpath()
         return path
     }
@@ -246,7 +246,7 @@ struct ParticleBlobView: View {
     @ObservedObject var audioManager: AudioManager
     @State private var particles: [Particle] = []
     @State private var time: Double = 0
-    
+
     struct Particle: Identifiable {
         let id = UUID()
         var position: CGPoint
@@ -255,29 +255,29 @@ struct ParticleBlobView: View {
         var opacity: Double
         var hue: Double
     }
-    
+
     var body: some View {
         TimelineView(.animation) { timeline in
             Canvas { context, size in
                 let center = CGPoint(x: size.width / 2, y: size.height / 2)
                 let currentTime = timeline.date.timeIntervalSinceReferenceDate
-                
+
                 // Update and draw particles
                 for particle in particles {
-                    let age = currentTime - time
-                    let audioBoost = audioManager.currentAmplitude * 2
-                    
+                    let age = CGFloat(currentTime - time)
+                    let audioBoost = CGFloat(audioManager.currentAmplitude * 2)
+
                     // Calculate position with audio influence
                     let x = particle.position.x + particle.velocity.dx * age * (1 + audioBoost)
                     let y = particle.position.y + particle.velocity.dy * age * (1 + audioBoost)
-                    
+
                     // Calculate distance from center
                     let distance = sqrt(pow(x - center.x, 2) + pow(y - center.y, 2))
                     let maxDistance = min(size.width, size.height) / 2
-                    
+
                     // Fade out based on distance
-                    let opacity = particle.opacity * (1 - distance / maxDistance)
-                    
+                    let opacity = particle.opacity * (1 - Double(distance / maxDistance))
+
                     // Draw particle
                     context.fill(
                         Circle().path(in: CGRect(
@@ -306,12 +306,12 @@ struct ParticleBlobView: View {
             initializeParticles()
         }
     }
-    
+
     private func initializeParticles() {
         particles = (0..<100).map { i in
             let angle = Double(i) / 100 * 2 * .pi
             let radius = Double.random(in: 50...100)
-            
+
             return Particle(
                 position: CGPoint(x: 125, y: 125),
                 velocity: CGVector(
@@ -325,7 +325,7 @@ struct ParticleBlobView: View {
         }
         time = Date().timeIntervalSinceReferenceDate
     }
-    
+
     private func updateParticles() {
         // Recreate particles when they fade out
         if particles.first?.opacity ?? 1 < 0.1 {
@@ -341,7 +341,7 @@ struct AudioLevelProgressStyle: ProgressViewStyle {
             ZStack(alignment: .leading) {
                 RoundedRectangle(cornerRadius: 10)
                     .fill(Color(.systemGray5))
-                
+
                 RoundedRectangle(cornerRadius: 10)
                     .fill(
                         LinearGradient(

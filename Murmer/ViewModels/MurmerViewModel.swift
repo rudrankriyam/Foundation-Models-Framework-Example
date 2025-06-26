@@ -21,22 +21,21 @@ class MurmerViewModel: ObservableObject {
     @Published var showError = false
     @Published var errorMessage = ""
     @Published var lastCreatedReminder: String = ""
-    
+
     let audioManager = AudioManager()
     let speechRecognizer = SpeechRecognizer()
     let permissionManager = PermissionManager()
-    
+
     private let eventStore = EKEventStore()
     private let reminderTool = MurmerRemindersTool()
-    private let modelRunner = ModelRunner(systemPrompt: "You are a helpful assistant that creates reminders from voice input. Extract the reminder text and any time expressions mentioned.")
-    
+
     private var cancellables = Set<AnyCancellable>()
-    
+
     init() {
         setupBindings()
         loadReminderLists()
     }
-    
+
     private func setupBindings() {
         // Bind speech recognition text
         speechRecognizer.$recognizedText
@@ -48,7 +47,7 @@ class MurmerViewModel: ObservableObject {
                 }
             }
             .store(in: &cancellables)
-        
+
         // Handle errors
         speechRecognizer.$error
             .compactMap { $0 }
@@ -58,7 +57,7 @@ class MurmerViewModel: ObservableObject {
             }
             .store(in: &cancellables)
     }
-    
+
     func startListening() async {
         guard permissionManager.allPermissionsGranted else {
             let granted = await permissionManager.requestAllPermissions()
@@ -66,8 +65,9 @@ class MurmerViewModel: ObservableObject {
                 permissionManager.showSettingsAlert()
                 return
             }
+            return
         }
-        
+
         do {
             try speechRecognizer.startRecognition()
             audioManager.startAudioSession()
@@ -79,18 +79,18 @@ class MurmerViewModel: ObservableObject {
             showError(error.localizedDescription)
         }
     }
-    
+
     func stopListening() {
         speechRecognizer.stopRecognition()
         audioManager.stopAudioSession()
         isListening = false
     }
-    
+
     private func processRecognizedText(_ text: String) {
         Task {
             // Stop listening while processing
             stopListening()
-            
+
             do {
                 // Create reminder using the tool
                 let arguments = MurmerRemindersTool.Arguments(
@@ -98,25 +98,25 @@ class MurmerViewModel: ObservableObject {
                     timeExpression: extractTimeExpression(from: text),
                     listName: selectedList == "Default" ? nil : selectedList
                 )
-                
+
                 let output = try await reminderTool.call(arguments: arguments)
-                
-                if let reminder = output.namedValues["reminder"] as? ReminderOutput {
-                    lastCreatedReminder = reminder.title
-                    showSuccessAnimation()
-                    provideHapticFeedback("success")
-                    
-                    // Clear the recognized text after a delay
-                    try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
-                    recognizedText = ""
-                }
+
+                // The tool returns properties directly in the GeneratedContent
+                // We can access the success status and title from the output
+                lastCreatedReminder = recognizedText // Use the original text as the reminder title
+                showSuccessAnimation()
+                provideHapticFeedback("success")
+
+                // Clear the recognized text after a delay
+                try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+                recognizedText = ""
             } catch {
                 showError("Failed to create reminder: \(error.localizedDescription)")
                 provideHapticFeedback("error")
             }
         }
     }
-    
+
     private func extractTimeExpression(from text: String) -> String? {
         // Common time patterns
         let timePatterns = [
@@ -126,43 +126,43 @@ class MurmerViewModel: ObservableObject {
             "at \\d+(:\\d+)? ?(am|pm)?",
             "(monday|tuesday|wednesday|thursday|friday|saturday|sunday)"
         ]
-        
+
         let lowercased = text.lowercased()
-        
+
         for pattern in timePatterns {
             if let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) {
                 let matches = regex.matches(in: lowercased, range: NSRange(lowercased.startIndex..., in: lowercased))
-                
+
                 if let match = matches.first,
                    let range = Range(match.range, in: lowercased) {
                     // Extract the time expression and any surrounding context
                     let startIndex = lowercased.index(range.lowerBound, offsetBy: -10, limitedBy: lowercased.startIndex) ?? lowercased.startIndex
                     let endIndex = lowercased.index(range.upperBound, offsetBy: 10, limitedBy: lowercased.endIndex) ?? lowercased.endIndex
-                    
+
                     return String(lowercased[startIndex..<endIndex]).trimmingCharacters(in: .whitespaces)
                 }
             }
         }
-        
+
         return nil
     }
-    
+
     func loadReminderLists() {
         Task {
             let calendars = eventStore.calendars(for: .reminder)
             let listNames = calendars.map { $0.title }.sorted()
-            
+
             await MainActor.run {
                 self.availableLists = ["Default"] + listNames
             }
         }
     }
-    
+
     private func showSuccessAnimation() {
         withAnimation(.easeInOut(duration: 0.3)) {
             showSuccess = true
         }
-        
+
         // Hide after delay
         Task {
             try? await Task.sleep(nanoseconds: 3_000_000_000) // 3 seconds
@@ -171,13 +171,13 @@ class MurmerViewModel: ObservableObject {
             }
         }
     }
-    
+
     private func showError(_ message: String) {
         errorMessage = message
         withAnimation(.easeInOut(duration: 0.3)) {
             showError = true
         }
-        
+
         // Hide after delay
         Task {
             try? await Task.sleep(nanoseconds: 5_000_000_000) // 5 seconds
@@ -186,12 +186,12 @@ class MurmerViewModel: ObservableObject {
             }
         }
     }
-    
+
     private func provideHapticFeedback(_ type: String) {
         #if os(iOS)
         let generator = UINotificationFeedbackGenerator()
         generator.prepare()
-        
+
         switch type {
         case "success":
             generator.notificationOccurred(.success)

@@ -60,8 +60,10 @@ struct GlassDropdown: View {
                                 }
                                 
                                 // Haptic feedback
+                                #if os(iOS)
                                 let impact = UIImpactFeedbackGenerator(style: .light)
                                 impact.impactOccurred()
+                                #endif
                             }) {
                                 HStack {
                                     Text(option)

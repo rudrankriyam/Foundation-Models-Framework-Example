@@ -9,6 +9,8 @@ import Foundation
 import AVFoundation
 import Speech
 import EventKit
+import Combine
+import UIKit
 
 @MainActor
 class PermissionManager: ObservableObject {

@@ -51,7 +51,10 @@ struct MurmerRemindersTool: Tool {
         if let listName = arguments.listName {
             calendar = try await getOrCreateList(named: listName)
         } else {
-            calendar = eventStore.defaultCalendarForNewReminders() ?? throw MurmerError.noDefaultList
+            guard let defaultCalendar = eventStore.defaultCalendarForNewReminders() else {
+                throw MurmerError.noDefaultList
+            }
+            calendar = defaultCalendar
         }
         
         reminder.calendar = calendar
@@ -68,9 +71,7 @@ struct MurmerRemindersTool: Tool {
             message: "Reminder created successfully"
         )
         
-        return ToolOutput(namedValues: [
-            "reminder": output
-        ])
+        return ToolOutput(output.generatedContent)
     }
     
     private func parseTimeExpression(_ expression: String) -> Date? {
@@ -243,13 +244,24 @@ struct MurmerRemindersTool: Tool {
 }
 
 // MARK: - Output Types
-struct ReminderOutput: GeneratedContent {
+struct ReminderOutput: ConvertibleToGeneratedContent {
     let id: String
     let title: String
     let dueDate: Date?
     let listName: String
     let success: Bool
     let message: String
+    
+    var generatedContent: GeneratedContent {
+        GeneratedContent(properties: [
+            "id": id,
+            "title": title,
+            "dueDate": dueDate?.description ?? "",
+            "listName": listName,
+            "success": success,
+            "message": message
+        ])
+    }
 }
 
 // MARK: - Errors
