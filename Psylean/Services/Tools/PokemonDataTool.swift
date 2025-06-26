@@ -43,14 +43,14 @@ final class PokemonDataTool: Tool {
 
     func call(arguments: Arguments) async throws -> ToolOutput {
         do {
-            let pokemonData = try await PokeAPIClient.shared.fetchPokemon(identifier: arguments.identifier)
+            let pokemonData = try await PokeAPIClient.fetchPokemon(identifier: arguments.identifier)
             await recordFetch(pokemonName: pokemonData.name, success: true)
 
             var output = formatPokemonData(pokemonData)
 
             if arguments.includeEvolutions {
                 do {
-                    let evolutionChain = try await PokeAPIClient.shared.fetchEvolutionChain(from: pokemonData.species.url)
+                    let evolutionChain = try await PokeAPIClient.fetchEvolutionChain(from: pokemonData.species.url)
                     output += "\n\n" + formatEvolutionChain(evolutionChain)
                 } catch {
                     output += "\n\nEvolution Chain: Unable to fetch evolution data."

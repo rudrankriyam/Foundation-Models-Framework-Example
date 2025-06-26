@@ -9,16 +9,12 @@ import Foundation
 
 /// Client for interacting with the PokeAPI
 struct PokeAPIClient {
-    static let shared = PokeAPIClient()
-    
-    private let baseURL = "pokeapi.co"
-    private let apiVersion = "v2"
-    private let session = URLSession.shared
-    
-    private init() {}
+    private static let baseURL = "pokeapi.co"
+    private static let apiVersion = "v2"
+    private static let session = URLSession.shared
     
     /// Fetches Pokemon data for the given identifier
-    func fetchPokemon(identifier: String) async throws -> PokemonAPIData {
+    static func fetchPokemon(identifier: String) async throws -> PokemonAPIData {
         var components = URLComponents()
         components.scheme = "https"
         components.host = baseURL
@@ -47,7 +43,7 @@ struct PokeAPIClient {
     }
     
     /// Fetches evolution chain for a species URL
-    func fetchEvolutionChain(from speciesURL: String) async throws -> EvolutionChain {
+    static func fetchEvolutionChain(from speciesURL: String) async throws -> EvolutionChain {
         guard let url = URL(string: speciesURL) else {
             throw APIError.invalidURL
         }
