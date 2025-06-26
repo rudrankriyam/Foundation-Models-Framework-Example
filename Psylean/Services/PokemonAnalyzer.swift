@@ -64,7 +64,7 @@ final class PokemonAnalyzer {
             ) {
                 "Analyze the Pokemon: \(identifier)"
                 
-                "First, fetch the Pokemon's data using the tool."
+                "First, fetch the Pokemon's data using the tool (make sure to include evolution data)."
                 
                 "Then provide a comprehensive analysis including:"
                 "- An epic title that captures this Pokemon's essence"
@@ -75,6 +75,7 @@ final class PokemonAnalyzer {
                 "- Type matchups (strengths and weaknesses) with battle tips"
                 "- 4 recommended competitive moves"
                 "- Competitive tier placement"
+                "- Evolution chain (if available) with evolution methods and requirements"
                 "- 2-3 fascinating fun facts"
                 "- A legendary quote that embodies this Pokemon's spirit"
                 

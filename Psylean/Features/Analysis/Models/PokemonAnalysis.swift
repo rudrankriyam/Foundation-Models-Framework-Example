@@ -52,6 +52,9 @@ struct PokemonAnalysis: Equatable {
     
     @Guide(description: "A legendary quote about this Pokemon")
     let legendaryQuote: String
+    
+    @Guide(description: "Evolution chain showing how this Pokemon evolves")
+    let evolutionChain: [Evolution]?
 }
 
 @Generable
@@ -133,4 +136,18 @@ enum CompetitiveTier: String {
     case rarelyUsed = "RU (RarelyUsed)"
     case neverUsed = "NU (NeverUsed)"
     case littleCup = "LC (Little Cup)"
+}
+
+@Generable
+struct Evolution: Equatable {
+    var id = GenerationID()
+    
+    @Guide(description: "The Pokemon name in this evolution stage")
+    let pokemonName: String
+    
+    @Guide(description: "The evolution method (Level up, Stone, Trade, etc.)")
+    let evolutionMethod: String?
+    
+    @Guide(description: "Level or condition required for evolution")
+    let evolutionRequirement: String?
 }

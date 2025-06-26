@@ -105,6 +105,11 @@ struct StreamingPokemonView: View {
                 }
             }
             
+            // Evolution Chain
+            if let evolutions = analysis.evolutionChain, !evolutions.isEmpty {
+                EvolutionChainView(evolutions: evolutions)
+            }
+            
             // Fun Facts
             if let facts = analysis.funFacts, !facts.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
