@@ -22,12 +22,50 @@ struct PokemonSelectorView: View {
     
     var body: some View {
         VStack(spacing: 20) {
-            TextField("Enter Pokemon name or ID", text: $pokemonIdentifier)
-                .textFieldStyle(.roundedBorder)
-                .autocorrectionDisabled()
-                #if os(iOS)
-                .textInputAutocapitalization(.never)
-                #endif
+            VStack(alignment: .leading, spacing: 8) {
+                TextField("Enter Pokemon name, ID, or description", text: $pokemonIdentifier)
+                    .textFieldStyle(.roundedBorder)
+                    .autocorrectionDisabled()
+                    #if os(iOS)
+                    .textInputAutocapitalization(.never)
+                    #endif
+                
+                Text("Try: 'cute grass pokemon', 'fierce fire type', or 'pikachu'")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            
+            // Example Searches
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Example Searches")
+                    .font(.headline)
+                    .foregroundStyle(.secondary)
+                
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach([
+                            "cute water pokemon",
+                            "fierce dragon type",
+                            "small electric pokemon",
+                            "legendary psychic",
+                            "fast flying type"
+                        ], id: \.self) { example in
+                            Button {
+                                pokemonIdentifier = example
+                            } label: {
+                                Text(example)
+                                    .font(.caption)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .foregroundStyle(.primary)
+                            }
+                            #if os(iOS) || os(macOS)
+                            .glassEffect(.regular.interactive(), in: .capsule)
+                            #endif
+                        }
+                    }
+                }
+            }
             
             VStack(alignment: .leading, spacing: 12) {
                 Text("Popular Pokemon")

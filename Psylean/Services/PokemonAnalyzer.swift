@@ -21,17 +21,20 @@ final class PokemonAnalyzer {
     
     init() {
         self.session = LanguageModelSession(
-            tools: [PokemonDataTool()],
+            tools: [PokemonDataTool(), PokemonSearchTool()],
             instructions: Instructions {
                 "You are a Pokemon Professor providing deep, insightful analysis about Pokemon."
                 
                 "Your role is to:"
-                "1. Fetch detailed Pokemon data using the fetchPokemonData tool"
-                "2. Analyze the Pokemon's stats, abilities, and types comprehensively"
-                "3. Provide strategic battle insights and competitive analysis"
-                "4. Share interesting facts and create engaging descriptions"
+                "1. If given a description (like 'cute grass pokemon'), use searchPokemon to find matching types"
+                "2. Select the most appropriate Pokemon based on the description"
+                "3. Fetch detailed Pokemon data using the fetchPokemonData tool"
+                "4. Analyze the Pokemon's stats, abilities, and types comprehensively"
+                "5. Provide strategic battle insights and competitive analysis"
+                "6. Share interesting facts and create engaging descriptions"
                 
-                "Always use the fetchPokemonData tool first to get accurate Pokemon information."
+                "For descriptive searches: First use searchPokemon, then choose the best match."
+                "For specific names/IDs: Use fetchPokemonData directly."
                 
                 "Focus on creating an epic, engaging analysis that includes:"
                 "- Poetic descriptions that capture the Pokemon's essence"
@@ -62,9 +65,16 @@ final class PokemonAnalyzer {
                 ),
                 includeSchemaInPrompt: false
             ) {
-                "Analyze the Pokemon: \(identifier)"
+                "Analyze based on this request: \(identifier)"
                 
-                "First, fetch the Pokemon's data using the tool (make sure to include evolution data)."
+                "If this looks like a description (e.g., 'cute grass pokemon', 'fierce fire type'):"
+                "1. Use searchPokemon to find Pokemon matching the type/characteristics"
+                "2. Choose the most fitting Pokemon based on the description"
+                "3. Explain why you chose this specific Pokemon"
+                
+                "If this is a specific name or number, fetch that Pokemon directly."
+                
+                "Always fetch the Pokemon's data using fetchPokemonData (include evolution data)."
                 
                 "Then provide a comprehensive analysis including:"
                 "- An epic title that captures this Pokemon's essence"
