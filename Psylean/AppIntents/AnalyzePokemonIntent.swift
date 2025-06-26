@@ -39,7 +39,7 @@ struct AnalyzePokemonIntent: AppIntent {
         
         for attempt in 1...3 {
             do {
-                basicInfo = try await analyzer.getPokemonBasicInfoWithCache(cleanedQuery)
+                basicInfo = try await analyzer.getPokemonBasicInfo(cleanedQuery)
                 break // Success, exit retry loop
             } catch {
                 lastError = error
@@ -75,8 +75,9 @@ struct AnalyzePokemonIntent: AppIntent {
             throw IntentError.invalidPokemonData
         }
         
-        // Download image with caching and retry logic
-        let imageData: Data? = await getCachedOrDownloadImage(for: number)
+        // Download image with retry logic
+        let imageURL = URL(string: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/\(number).png")!
+        let imageData: Data? = await downloadImageWithRetry(from: imageURL, maxRetries: 3)
         
         let snippetView = PokemonSnippetView(
             name: name,
@@ -87,24 +88,6 @@ struct AnalyzePokemonIntent: AppIntent {
         )
         
         return .result(dialog: IntentDialog("Found \(name)!"), view: snippetView)
-    }
-    
-    private func getCachedOrDownloadImage(for pokemonNumber: Int) async -> Data? {
-        // Check cache first
-        if let cachedImage = await PokemonCache.shared.getCachedImage(for: pokemonNumber) {
-            return cachedImage
-        }
-        
-        // Download if not cached
-        let imageURL = URL(string: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/\(pokemonNumber).png")!
-        
-        if let imageData = await downloadImageWithRetry(from: imageURL, maxRetries: 3) {
-            // Cache the downloaded image
-            await PokemonCache.shared.cacheImage(imageData, for: pokemonNumber)
-            return imageData
-        }
-        
-        return nil
     }
     
     private func downloadImageWithRetry(from url: URL, maxRetries: Int) async -> Data? {
