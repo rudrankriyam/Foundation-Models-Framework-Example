@@ -21,8 +21,8 @@ final class PokemonDataTool: Tool {
         @Guide(description: "The Pokemon name or ID to fetch (e.g., 'pikachu' or '25')")
         let identifier: String
 
-        @Guide(description: "Whether to fetch evolution chain data (default: true)")
-        let includeEvolutions: Bool = true
+        @Guide(description: "Whether to fetch evolution chain data")
+        let includeEvolutions: Bool
     }
 
     struct PokemonFetch: Identifiable {
