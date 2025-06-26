@@ -46,9 +46,30 @@ struct LegendaryPokemonIntent: AppIntent {
     static var openAppWhenRun: Bool = false
     
     private let legendaryPokemon = [
-        "Mewtwo", "Mew", "Articuno", "Zapdos", "Moltres",
-        "Lugia", "Ho-Oh", "Celebi", "Kyogre", "Groudon",
-        "Rayquaza", "Dialga", "Palkia", "Giratina", "Arceus"
+        // Gen 1
+        "Articuno", "Zapdos", "Moltres", "Mewtwo",
+        // Gen 2
+        "Raikou", "Entei", "Suicune", "Lugia", "Ho-Oh",
+        // Gen 3
+        "Regirock", "Regice", "Registeel", "Latias", "Latios",
+        "Kyogre", "Groudon", "Rayquaza",
+        // Gen 4
+        "Uxie", "Mesprit", "Azelf", "Dialga", "Palkia",
+        "Heatran", "Regigigas", "Giratina", "Cresselia",
+        // Gen 5
+        "Cobalion", "Terrakion", "Virizion", "Tornadus",
+        "Thundurus", "Reshiram", "Zekrom", "Landorus", "Kyurem",
+        // Gen 6
+        "Xerneas", "Yveltal", "Zygarde",
+        // Gen 7
+        "Tapu Koko", "Tapu Lele", "Tapu Bulu", "Tapu Fini",
+        "Solgaleo", "Lunala", "Necrozma",
+        // Gen 8
+        "Zacian", "Zamazenta", "Eternatus", "Kubfu", "Urshifu",
+        "Regieleki", "Regidrago", "Glastrier", "Spectrier", "Calyrex",
+        // Gen 9
+        "Koraidon", "Miraidon", "Wo-Chien", "Chien-Pao",
+        "Ting-Lu", "Chi-Yu", "Ogerpon", "Terapagos"
     ]
     
     func perform() async throws -> some IntentResult & ShowsSnippetView & ProvidesDialog {
