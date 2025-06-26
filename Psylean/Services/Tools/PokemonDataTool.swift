@@ -32,77 +32,6 @@ final class PokemonDataTool: Tool {
         let success: Bool
     }
 
-    struct PokemonAPIData: Codable {
-        let id: Int
-        let name: String
-        let height: Int
-        let weight: Int
-        let baseExperience: Int?
-        let sprites: Sprites
-        let types: [TypeElement]
-        let abilities: [AbilityElement]
-        let stats: [StatElement]
-
-        struct Sprites: Codable {
-            let frontDefault: String?
-            let other: Other?
-
-            struct Other: Codable {
-                let officialArtwork: OfficialArtwork?
-
-                enum CodingKeys: String, CodingKey {
-                    case officialArtwork = "official-artwork"
-                }
-
-                struct OfficialArtwork: Codable {
-                    let frontDefault: String?
-
-                    enum CodingKeys: String, CodingKey {
-                        case frontDefault = "front_default"
-                    }
-                }
-            }
-
-            enum CodingKeys: String, CodingKey {
-                case frontDefault = "front_default"
-                case other
-            }
-        }
-
-        struct TypeElement: Codable {
-            let type: NamedResource
-        }
-
-        struct AbilityElement: Codable {
-            let ability: NamedResource
-            let isHidden: Bool
-
-            enum CodingKeys: String, CodingKey {
-                case ability
-                case isHidden = "is_hidden"
-            }
-        }
-
-        struct StatElement: Codable {
-            let baseStat: Int
-            let stat: NamedResource
-
-            enum CodingKeys: String, CodingKey {
-                case baseStat = "base_stat"
-                case stat
-            }
-        }
-
-        struct NamedResource: Codable {
-            let name: String
-            let url: String
-        }
-
-        enum CodingKeys: String, CodingKey {
-            case id, name, height, weight, sprites, types, abilities, stats
-            case baseExperience = "base_experience"
-        }
-    }
 
     @MainActor func recordFetch(pokemonName: String, success: Bool) {
         fetchHistory.append(PokemonFetch(
@@ -114,31 +43,25 @@ final class PokemonDataTool: Tool {
 
     func call(arguments: Arguments) async throws -> ToolOutput {
         do {
-            let pokemonData = try await fetchPokemon(identifier: arguments.identifier)
-            recordFetch(pokemonName: pokemonData.name, success: true)
+            let pokemonData = try await PokeAPIClient.shared.fetchPokemon(identifier: arguments.identifier)
+            await recordFetch(pokemonName: pokemonData.name, success: true)
 
             var output = formatPokemonData(pokemonData)
 
             if arguments.includeEvolutions {
-                // For simplicity, we'll add a note about evolution
-                output += "\n\nEvolution Chain: Check the Pokemon's species for evolution details."
+                do {
+                    let evolutionChain = try await PokeAPIClient.shared.fetchEvolutionChain(from: pokemonData.species.url)
+                    output += "\n\n" + formatEvolutionChain(evolutionChain)
+                } catch {
+                    output += "\n\nEvolution Chain: Unable to fetch evolution data."
+                }
             }
 
             return ToolOutput(output)
         } catch {
-            recordFetch(pokemonName: arguments.identifier, success: false)
+            await recordFetch(pokemonName: arguments.identifier, success: false)
             throw error
         }
-    }
-
-    private func fetchPokemon(identifier: String) async throws -> PokemonAPIData {
-        let urlString = "https://pokeapi.co/api/v2/pokemon/\(identifier.lowercased())"
-        guard let url = URL(string: urlString) else {
-            throw URLError(.badURL)
-        }
-
-        let (data, _) = try await URLSession.shared.data(from: url)
-        return try JSONDecoder().decode(PokemonAPIData.self, from: data)
     }
 
     private func formatPokemonData(_ pokemon: PokemonAPIData) -> String {
@@ -174,6 +97,24 @@ final class PokemonDataTool: Tool {
             output += "\nOfficial Artwork: \(imageUrl)"
         }
 
+        return output
+    }
+    
+    private func formatEvolutionChain(_ evolution: EvolutionChain) -> String {
+        var output = "Evolution Chain:\n"
+        
+        func formatChainLink(_ link: EvolutionChain.ChainLink, level: Int = 0) -> String {
+            let indent = String(repeating: "  ", count: level)
+            var result = "\(indent)→ \(link.species.name.capitalized)\n"
+            
+            for evolution in link.evolvesTo {
+                result += formatChainLink(evolution, level: level + 1)
+            }
+            
+            return result
+        }
+        
+        output += formatChainLink(evolution.chain)
         return output
     }
 }
