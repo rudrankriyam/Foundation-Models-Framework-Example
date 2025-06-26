@@ -95,46 +95,7 @@ struct PokemonSnippetView: View {
                     }
                 }
             }
-            
-            // Original AsyncImage code (commented out for debugging)
-            /*
-            AsyncImage(url: URL(string: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/\(number).png")) { phase in
-                let _ = print("DEBUG: AsyncImage URL: https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/\(number).png")
-                let _ = print("DEBUG: AsyncImage phase: \(phase)")
-                switch phase {
-                case .empty:
-                    // Loading state
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.gray.opacity(0.2))
-                        .frame(width: 120, height: 120)
-                        .overlay(
-                            ProgressView()
-                                .tint(.gray)
-                        )
-                case .success(let image):
-                    // Success state
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 120, height: 120)
-                        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
-                case .failure(_):
-                    // Error state - show Pokemon silhouette
-                    Image(systemName: "questionmark.square.dashed")
-                        .font(.system(size: 60))
-                        .foregroundColor(.gray.opacity(0.5))
-                        .frame(width: 120, height: 120)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.gray.opacity(0.1))
-                        )
-                @unknown default:
-                    // Fallback
-                    EmptyView()
-                }
-            }
-            */
-            
+
             // Name and Number
             VStack(spacing: 6) {
                 Text(name.capitalized)
@@ -174,18 +135,6 @@ struct PokemonSnippetView: View {
                 }
             }
         }
-        .padding(.vertical, 20)
-        .padding(.horizontal, 16)
         .frame(maxWidth: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                #if os(macOS)
-                .fill(Color(NSColor.windowBackgroundColor))
-                #else
-                .fill(Color(UIColor.systemBackground))
-                #endif
-                .shadow(color: .black.opacity(0.05), radius: 10, x: 0, y: 2)
-        )
-        .padding(.horizontal, 4)
     }
 }
