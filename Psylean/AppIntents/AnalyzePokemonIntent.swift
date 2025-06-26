@@ -13,6 +13,7 @@ struct AnalyzePokemonIntent: AppIntent {
     static var title: LocalizedStringResource = "Analyze Pokemon"
     static var description = IntentDescription("Get detailed information about a Pokemon by name or description")
     static var openAppWhenRun: Bool = false
+    static var isDiscoverable: Bool = true
     
     @Parameter(title: "Pokemon", description: "Enter a Pokemon name or description (e.g., 'Pikachu' or 'cute grass pokemon')")
     var pokemonQuery: String
@@ -69,6 +70,7 @@ struct AnalyzePokemonIntent: AppIntent {
                 name: name,
                 number: number,
                 types: types,
+                description: basicInfo.description,
                 imageData: imageData
             )
             

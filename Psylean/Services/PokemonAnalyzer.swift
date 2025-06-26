@@ -204,7 +204,7 @@ final class PokemonAnalyzer {
         let result = try await session.respond(
             generating: PokemonBasicInfo.self,
             options: GenerationOptions(
-                temperature: 0.1  // Very low temperature for maximum determinism
+                temperature: 0.3  // Slightly higher for creative descriptions
             ),
             includeSchemaInPrompt: false
         ) {
@@ -213,17 +213,25 @@ final class PokemonAnalyzer {
             "Instructions:"
             "1. If it's a description like 'cute grass pokemon', use searchPokemon"
             "2. If it's a specific name like 'pikachu', use fetchPokemonData"
-            "3. Return ONLY the name, number, and types from the tool response"
+            "3. Return the name, number, types, and a brief description"
             
             "The response should contain:"
             "- name: The Pokemon's name from the tool"
             "- number: The Pokedex number from the tool"
             "- types: Array of type names (e.g., ['Water', 'Flying'])"
+            "- description: A brief, engaging 1-2 sentence description that captures the Pokemon's essence"
             
-            "Example: For Buizel, return:"
-            "name: 'Buizel'"
-            "number: 418"
-            "types: ['Water']"
+            "For the description, make it:"
+            "- Vivid and engaging"
+            "- Highlight what makes this Pokemon special"
+            "- Reference its appearance, abilities, or personality"
+            "- Keep it concise but memorable"
+            
+            "Example: For Pikachu, return:"
+            "name: 'Pikachu'"
+            "number: 25"
+            "types: ['Electric']"
+            "description: 'The beloved electric mouse Pokemon whose adorable appearance and loyal nature have made it the most iconic Pokemon in the world.'"
         }
         
         return result.content

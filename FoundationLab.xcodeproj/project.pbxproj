@@ -13,6 +13,16 @@
 		0ADB46DC2E0CE81900C29293 /* Psylean.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Psylean.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		8FE6666A2E0D1BC10062EE2F /* Exceptions for "Psylean" folder in "Psylean" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 0ADB46DB2E0CE81900C29293 /* Psylean */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		0ABC0C9C2E09AB5300A09018 /* Body Buddy */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
@@ -26,6 +36,9 @@
 		};
 		0ADB46DD2E0CE81900C29293 /* Psylean */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				8FE6666A2E0D1BC10062EE2F /* Exceptions for "Psylean" folder in "Psylean" target */,
+			);
 			path = Psylean;
 			sourceTree = "<group>";
 		};

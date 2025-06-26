@@ -11,6 +11,7 @@ struct PokemonSnippetView: View {
     let name: String
     let number: Int
     let types: [String]
+    let description: String
     let imageData: Data?
     
     private var pokemonGradient: LinearGradient {
@@ -134,6 +135,14 @@ struct PokemonSnippetView: View {
                     .foregroundColor(Color.pokemonType(type))
                 }
             }
+            
+            // Description
+            Text(description)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+                .padding(.top, 4)
         }
         .frame(maxWidth: .infinity)
     }
