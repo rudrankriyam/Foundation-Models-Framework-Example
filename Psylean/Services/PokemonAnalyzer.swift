@@ -15,6 +15,7 @@ import Observation
 final class PokemonAnalyzer {
     private(set) var analysis: PokemonAnalysis.PartiallyGenerated?
     private var session: LanguageModelSession
+    private var currentTask: Task<Void, Error>?
     
     var error: Error?
     var isAnalyzing = false
@@ -50,15 +51,34 @@ final class PokemonAnalyzer {
     }
     
     func analyzePokemon(_ identifier: String) async throws {
+        // Cancel any existing analysis
+        currentTask?.cancel()
+        
         isAnalyzing = true
         error = nil
         
         defer {
             isAnalyzing = false
+            currentTask = nil
+        }
+        
+        // Create a new task for this analysis
+        currentTask = Task {
+            try await performAnalysis(identifier)
         }
         
         do {
-            let stream = session.streamResponse(
+            try await currentTask?.value
+        } catch {
+            if !Task.isCancelled {
+                self.error = error
+                throw error
+            }
+        }
+    }
+    
+    private func performAnalysis(_ identifier: String) async throws {
+        let stream = session.streamResponse(
                 generating: PokemonAnalysis.self,
                 options: GenerationOptions(
                     temperature: 0.8
@@ -94,18 +114,21 @@ final class PokemonAnalyzer {
                 "Make it engaging, insightful, and worthy of a true Pokemon master!"
             }
             
-            // Stream the partially generated response
-            for try await partialAnalysis in stream {
-                analysis = partialAnalysis
-            }
-            
-        } catch {
-            self.error = error
-            throw error
+        // Stream the partially generated response
+        for try await partialAnalysis in stream {
+            // Check for cancellation
+            try Task.checkCancellation()
+            analysis = partialAnalysis
         }
     }
     
+    func stopAnalysis() {
+        currentTask?.cancel()
+        isAnalyzing = false
+    }
+    
     func reset() {
+        currentTask?.cancel()
         analysis = nil
         error = nil
         isAnalyzing = false

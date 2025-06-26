@@ -19,41 +19,81 @@ struct PokemonAnalysisView: View {
     }
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                // Pokemon Selector
-                if !hasStartedAnalysis {
-                    PokemonSelectorView(
-                        pokemonIdentifier: $pokemonIdentifier,
-                        showingPicker: .constant(false)
-                    )
-                    .transition(.scale.combined(with: .opacity))
-                }
-                
-                // Analysis Content
-                if let analysis = analyzer.analysis {
-                    StreamingPokemonView(analysis: analysis)
-                } else if analyzer.isAnalyzing {
-                    LoadingView(message: "Analyzing \(pokemonIdentifier.capitalized)...")
-                } else if let error = analyzer.error {
-                    ErrorView(error: error) {
-                        Task {
-                            await retryAnalysis()
+        ZStack {
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Pokemon Selector
+                    if !hasStartedAnalysis {
+                        PokemonSelectorView(
+                            pokemonIdentifier: $pokemonIdentifier,
+                            showingPicker: .constant(false)
+                        )
+                        .transition(.scale.combined(with: .opacity))
+                    }
+                    
+                    // Analysis Content
+                    if let analysis = analyzer.analysis {
+                        StreamingPokemonView(analysis: analysis)
+                    } else if analyzer.isAnalyzing {
+                        LoadingView(message: "Analyzing \(pokemonIdentifier.capitalized)...")
+                    } else if let error = analyzer.error {
+                        ErrorView(error: error) {
+                            Task {
+                                await retryAnalysis()
+                            }
                         }
                     }
                 }
+                .padding()
             }
-            .padding()
+            
+            // Floating Stop Button
+            if analyzer.isAnalyzing {
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        Button {
+                            analyzer.stopAnalysis()
+                        } label: {
+                            HStack {
+                                Image(systemName: "stop.circle.fill")
+                                Text("Stop Analysis")
+                            }
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
+                            .background(Color.red)
+                            .clipShape(Capsule())
+                            .shadow(radius: 8)
+                        }
+                        .padding()
+                    }
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .animation(.spring(response: 0.3), value: analyzer.isAnalyzing)
+            }
         }
         .navigationTitle("Psylean")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
         #endif
         .toolbar {
-            if hasStartedAnalysis && !analyzer.isAnalyzing {
+            if hasStartedAnalysis {
                 ToolbarItem(placement: .primaryAction) {
-                    Button("New Analysis") {
-                        resetAnalysis()
+                    if analyzer.isAnalyzing {
+                        Button {
+                            analyzer.stopAnalysis()
+                        } label: {
+                            Label("Stop", systemImage: "stop.circle.fill")
+                                .foregroundStyle(.red)
+                        }
+                    } else {
+                        Button("New Analysis") {
+                            resetAnalysis()
+                        }
                     }
                 }
             }
