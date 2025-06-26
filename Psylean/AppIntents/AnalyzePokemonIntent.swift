@@ -15,7 +15,23 @@ struct AnalyzePokemonIntent: AppIntent {
     static var openAppWhenRun: Bool = false
     static var isDiscoverable: Bool = true
     
-    @Parameter(title: "Pokemon", description: "Enter a Pokemon name or description (e.g., 'Pikachu' or 'cute grass pokemon')")
+    // Siri phrase suggestions  
+    static var searchPhrases: [AppShortcutPhrase<AnalyzePokemonIntent>] = [
+        "Analyze \(\.$pokemonQuery) in \(.applicationName)",
+        "Search for \(\.$pokemonQuery) Pokemon in \(.applicationName)",
+        "Tell me about \(\.$pokemonQuery) with \(.applicationName)"
+    ]
+    
+    // Parameter summary for better Siri integration
+    static var parameterSummary: some ParameterSummary {
+        Summary("Search for \(\.$pokemonQuery)")
+    }
+    
+    @Parameter(
+        title: "Pokemon",
+        description: "Enter a Pokemon name or description (e.g., 'Pikachu' or 'cute grass pokemon')",
+        optionsProvider: PokemonQueryProvider()
+    )
     var pokemonQuery: String
     
     func perform() async throws -> some IntentResult & ShowsSnippetView & ProvidesDialog {
@@ -87,7 +103,20 @@ struct AnalyzePokemonIntent: AppIntent {
             imageData: imageData
         )
         
-        return .result(dialog: IntentDialog("Found \(name)!"), view: snippetView)
+        // Intent will be automatically donated when executed
+        
+        // Create a voice-friendly response
+        let voiceResponse = createVoiceResponse(for: name, types: types, description: basicInfo.description)
+        
+        return .result(
+            dialog: IntentDialog(stringLiteral: voiceResponse),
+            view: snippetView
+        )
+    }
+    
+    private func createVoiceResponse(for name: String, types: [String], description: String) -> String {
+        let typeString = types.count > 1 ? "\(types[0]) and \(types[1])" : types.first ?? ""
+        return "\(name) is a \(typeString) type Pokemon. \(description)"
     }
     
     private func downloadImageWithRetry(from url: URL, maxRetries: Int) async -> Data? {
