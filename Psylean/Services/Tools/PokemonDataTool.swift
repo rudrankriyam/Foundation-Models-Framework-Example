@@ -69,7 +69,8 @@ final class PokemonDataTool: Tool {
     private func formatPokemonData(_ pokemon: PokemonAPIData) -> String {
         var output = "Pokemon: \(pokemon.name.capitalized)\n"
         output += "Pokedex Number: \(pokemon.id)\n"
-        output += "IMPORTANT: Use exactly this Pokedex number: \(pokemon.id)\n\n"
+        output += "CRITICAL: The pokedexNumber field MUST be exactly \(pokemon.id) (not any other number)\n"
+        output += "DO NOT use any other number. The correct Pokedex number for \(pokemon.name) is \(pokemon.id)\n\n"
 
         // Basic Info
         output += "Height: \(Double(pokemon.height) / 10.0)m\n"

@@ -19,62 +19,31 @@ struct PokemonAnalysisView: View {
     }
     
     var body: some View {
-        ZStack {
-            ScrollView {
-                VStack(spacing: 24) {
-                    // Pokemon Selector
-                    if !hasStartedAnalysis {
-                        PokemonSelectorView(
-                            pokemonIdentifier: $pokemonIdentifier,
-                            showingPicker: .constant(false)
-                        )
-                        .transition(.scale.combined(with: .opacity))
-                    }
-                    
-                    // Analysis Content
-                    if let analysis = analyzer.analysis {
-                        StreamingPokemonView(analysis: analysis)
-                    } else if analyzer.isAnalyzing {
-                        LoadingView(message: "Analyzing \(pokemonIdentifier.capitalized)...")
-                    } else if let error = analyzer.error {
-                        ErrorView(error: error) {
-                            Task {
-                                await retryAnalysis()
-                            }
+        ScrollView {
+            VStack(spacing: 24) {
+                // Pokemon Selector
+                if !hasStartedAnalysis {
+                    PokemonSelectorView(
+                        pokemonIdentifier: $pokemonIdentifier,
+                        showingPicker: .constant(false)
+                    )
+                    .transition(.scale.combined(with: .opacity))
+                }
+                
+                // Analysis Content
+                if let analysis = analyzer.analysis {
+                    StreamingPokemonView(analysis: analysis)
+                } else if analyzer.isAnalyzing {
+                    LoadingView(message: "Analyzing \(pokemonIdentifier.capitalized)...")
+                } else if let error = analyzer.error {
+                    ErrorView(error: error) {
+                        Task {
+                            await retryAnalysis()
                         }
                     }
                 }
-                .padding()
             }
-            
-            // Floating Stop Button
-            if analyzer.isAnalyzing {
-                VStack {
-                    Spacer()
-                    HStack {
-                        Spacer()
-                        Button {
-                            analyzer.stopAnalysis()
-                        } label: {
-                            HStack {
-                                Image(systemName: "stop.circle.fill")
-                                Text("Stop Analysis")
-                            }
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 12)
-                            .background(Color.red)
-                            .clipShape(Capsule())
-                            .shadow(radius: 8)
-                        }
-                        .padding()
-                    }
-                }
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-                .animation(.spring(response: 0.3), value: analyzer.isAnalyzing)
-            }
+            .padding()
         }
         .navigationTitle("Psylean")
         #if os(iOS)
