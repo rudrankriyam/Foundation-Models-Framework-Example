@@ -1,0 +1,195 @@
+//
+//  MurmerViewModel.swift
+//  Murmer
+//
+//  Created by Rudrank Riyam on 6/26/25.
+//
+
+import Foundation
+import SwiftUI
+import Combine
+import EventKit
+import FoundationModels
+
+@MainActor
+class MurmerViewModel: ObservableObject {
+    @Published var isListening = false
+    @Published var recognizedText = ""
+    @Published var selectedList = "Default"
+    @Published var availableLists: [String] = ["Default"]
+    @Published var showSuccess = false
+    @Published var showError = false
+    @Published var errorMessage = ""
+    @Published var lastCreatedReminder: String = ""
+    
+    let audioManager = AudioManager()
+    let speechRecognizer = SpeechRecognizer()
+    let permissionManager = PermissionManager()
+    
+    private let eventStore = EKEventStore()
+    private let reminderTool = MurmerRemindersTool()
+    private let modelRunner = ModelRunner(systemPrompt: "You are a helpful assistant that creates reminders from voice input. Extract the reminder text and any time expressions mentioned.")
+    
+    private var cancellables = Set<AnyCancellable>()
+    
+    init() {
+        setupBindings()
+        loadReminderLists()
+    }
+    
+    private func setupBindings() {
+        // Bind speech recognition text
+        speechRecognizer.$recognizedText
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] text in
+                if !text.isEmpty {
+                    self?.recognizedText = text
+                    self?.processRecognizedText(text)
+                }
+            }
+            .store(in: &cancellables)
+        
+        // Handle errors
+        speechRecognizer.$error
+            .compactMap { $0 }
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] error in
+                self?.showError(error.localizedDescription)
+            }
+            .store(in: &cancellables)
+    }
+    
+    func startListening() async {
+        guard permissionManager.allPermissionsGranted else {
+            let granted = await permissionManager.requestAllPermissions()
+            if !granted {
+                permissionManager.showSettingsAlert()
+                return
+            }
+        }
+        
+        do {
+            try speechRecognizer.startRecognition()
+            audioManager.startAudioSession()
+            isListening = true
+            recognizedText = ""
+            showSuccess = false
+            showError = false
+        } catch {
+            showError(error.localizedDescription)
+        }
+    }
+    
+    func stopListening() {
+        speechRecognizer.stopRecognition()
+        audioManager.stopAudioSession()
+        isListening = false
+    }
+    
+    private func processRecognizedText(_ text: String) {
+        Task {
+            // Stop listening while processing
+            stopListening()
+            
+            do {
+                // Create reminder using the tool
+                let arguments = MurmerRemindersTool.Arguments(
+                    text: text,
+                    timeExpression: extractTimeExpression(from: text),
+                    listName: selectedList == "Default" ? nil : selectedList
+                )
+                
+                let output = try await reminderTool.call(arguments: arguments)
+                
+                if let reminder = output.namedValues["reminder"] as? ReminderOutput {
+                    lastCreatedReminder = reminder.title
+                    showSuccessAnimation()
+                    provideHapticFeedback(.success)
+                    
+                    // Clear the recognized text after a delay
+                    try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+                    recognizedText = ""
+                }
+            } catch {
+                showError("Failed to create reminder: \(error.localizedDescription)")
+                provideHapticFeedback(.error)
+            }
+        }
+    }
+    
+    private func extractTimeExpression(from text: String) -> String? {
+        // Common time patterns
+        let timePatterns = [
+            "tomorrow", "today", "tonight",
+            "next week", "next month",
+            "in \\d+ (hour|minute|day|week)",
+            "at \\d+(:\\d+)? ?(am|pm)?",
+            "(monday|tuesday|wednesday|thursday|friday|saturday|sunday)"
+        ]
+        
+        let lowercased = text.lowercased()
+        
+        for pattern in timePatterns {
+            if let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) {
+                let matches = regex.matches(in: lowercased, range: NSRange(lowercased.startIndex..., in: lowercased))
+                
+                if let match = matches.first,
+                   let range = Range(match.range, in: lowercased) {
+                    // Extract the time expression and any surrounding context
+                    let startIndex = lowercased.index(range.lowerBound, offsetBy: -10, limitedBy: lowercased.startIndex) ?? lowercased.startIndex
+                    let endIndex = lowercased.index(range.upperBound, offsetBy: 10, limitedBy: lowercased.endIndex) ?? lowercased.endIndex
+                    
+                    return String(lowercased[startIndex..<endIndex]).trimmingCharacters(in: .whitespaces)
+                }
+            }
+        }
+        
+        return nil
+    }
+    
+    func loadReminderLists() {
+        Task {
+            let calendars = eventStore.calendars(for: .reminder)
+            let listNames = calendars.map { $0.title }.sorted()
+            
+            await MainActor.run {
+                self.availableLists = ["Default"] + listNames
+            }
+        }
+    }
+    
+    private func showSuccessAnimation() {
+        withAnimation(.easeInOut(duration: 0.3)) {
+            showSuccess = true
+        }
+        
+        // Hide after delay
+        Task {
+            try? await Task.sleep(nanoseconds: 3_000_000_000) // 3 seconds
+            withAnimation(.easeInOut(duration: 0.3)) {
+                showSuccess = false
+            }
+        }
+    }
+    
+    private func showError(_ message: String) {
+        errorMessage = message
+        withAnimation(.easeInOut(duration: 0.3)) {
+            showError = true
+        }
+        
+        // Hide after delay
+        Task {
+            try? await Task.sleep(nanoseconds: 5_000_000_000) // 5 seconds
+            withAnimation(.easeInOut(duration: 0.3)) {
+                showError = false
+            }
+        }
+    }
+    
+    private func provideHapticFeedback(_ type: UINotificationFeedbackGenerator.FeedbackType) {
+        let generator = UINotificationFeedbackGenerator()
+        generator.prepare()
+        generator.notificationOccurred(type)
+    }
+}
