@@ -59,6 +59,7 @@ struct ToolViewBase<Content: View>: View {
         Image(systemName: icon)
           .font(.system(size: 32))
           .foregroundColor(.accentColor)
+          .accessibilityLabel("\(title) tool")
 
         VStack(alignment: .leading, spacing: 4) {
           Text(title)
@@ -75,6 +76,7 @@ struct ToolViewBase<Content: View>: View {
         if isRunning {
           ProgressView()
             .scaleEffect(0.8)
+            .accessibilityLabel("Processing request")
         }
       }
 
@@ -93,6 +95,7 @@ struct ErrorBanner: View {
     HStack {
       Image(systemName: "exclamationmark.triangle.fill")
         .foregroundColor(.red)
+        .accessibilityLabel("Error")
 
       Text(message)
         .font(.caption)
@@ -104,6 +107,8 @@ struct ErrorBanner: View {
     .padding(.vertical, 8)
     .background(Color.red.opacity(0.1))
     .cornerRadius(8)
+    .accessibilityElement(children: .combine)
+    .accessibilityLabel("Error: \(message)")
   }
 }
 
@@ -115,6 +120,7 @@ struct SuccessBanner: View {
     HStack {
       Image(systemName: "checkmark.circle.fill")
         .foregroundColor(.green)
+        .accessibilityLabel("Success")
 
       Text(message)
         .font(.caption)
@@ -126,6 +132,8 @@ struct SuccessBanner: View {
     .padding(.vertical, 8)
     .background(Color.green.opacity(0.1))
     .cornerRadius(8)
+    .accessibilityElement(children: .combine)
+    .accessibilityLabel("Success: \(message)")
   }
 }
 
@@ -144,6 +152,7 @@ struct ResultDisplay: View {
 
         Image(systemName: isSuccess ? "checkmark.circle.fill" : "xmark.circle.fill")
           .foregroundColor(isSuccess ? .green : .red)
+          .accessibilityLabel(isSuccess ? "Success" : "Error")
       }
 
       ScrollView {

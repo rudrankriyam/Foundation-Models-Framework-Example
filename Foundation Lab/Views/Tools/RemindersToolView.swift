@@ -9,6 +9,16 @@ import FoundationModels
 import SwiftUI
 
 struct RemindersToolView: View {
+  // MARK: - Constants
+  private enum Constants {
+    static let defaultDateOffset: TimeInterval = 3600  // 1 hour
+    static let maxNotesLines = 4
+    static let minNotesLines = 2
+    static let maxPromptLines = 6
+    static let minPromptLines = 3
+  }
+
+  // MARK: - State Properties
   @State private var isRunning = false
   @State private var result: String = ""
   @State private var errorMessage: String?
@@ -17,12 +27,13 @@ struct RemindersToolView: View {
   // Input fields
   @State private var reminderTitle: String = ""
   @State private var reminderNotes: String = ""
-  @State private var selectedDate = Date().addingTimeInterval(3600)  // 1 hour from now
+  @State private var selectedDate = Date().addingTimeInterval(Constants.defaultDateOffset)
   @State private var hasDueDate = true
   @State private var selectedPriority: ReminderPriority = .none
   @State private var customPrompt: String = ""
   @State private var useCustomPrompt = false
 
+  // MARK: - Body
   var body: some View {
     ToolViewBase(
       title: "Reminders",
@@ -45,6 +56,7 @@ struct RemindersToolView: View {
     }
   }
 
+  // MARK: - View Components
   private var inputSection: some View {
     VStack(alignment: .leading, spacing: 16) {
       // Mode selector
@@ -67,8 +79,10 @@ struct RemindersToolView: View {
             ProgressView()
               .scaleEffect(0.8)
               .foregroundColor(.white)
+              .accessibilityLabel("Processing")
           } else {
             Image(systemName: useCustomPrompt ? "bubble.left.and.bubble.right" : "plus")
+              .accessibilityHidden(true)
           }
 
           Text(useCustomPrompt ? "Process Request" : "Create Reminder")
@@ -79,7 +93,13 @@ struct RemindersToolView: View {
         .padding(.vertical, 8)
       }
       .buttonStyle(.glassProminent)
-      .disabled(isRunning || (useCustomPrompt ? customPrompt.isEmpty : reminderTitle.isEmpty))
+      .disabled(
+        isRunning || (useCustomPrompt ? !validateCustomPromptInput() : !validateQuickCreateInput())
+      )
+      .accessibilityLabel(
+        useCustomPrompt ? "Process custom reminder request" : "Create new reminder"
+      )
+      .accessibilityHint(isRunning ? "Processing request" : "Tap to execute")
     }
   }
 
@@ -97,7 +117,7 @@ struct RemindersToolView: View {
         axis: .vertical
       )
       .textFieldStyle(RoundedBorderTextFieldStyle())
-      .lineLimit(3...6)
+      .lineLimit(Constants.minPromptLines...Constants.maxPromptLines)
     }
   }
 
@@ -124,7 +144,7 @@ struct RemindersToolView: View {
 
         TextField("Additional details (optional)", text: $reminderNotes, axis: .vertical)
           .textFieldStyle(RoundedBorderTextFieldStyle())
-          .lineLimit(2...4)
+          .lineLimit(Constants.minNotesLines...Constants.maxNotesLines)
       }
 
       // Due date section
@@ -162,6 +182,7 @@ struct RemindersToolView: View {
     }
   }
 
+  // MARK: - Actions
   private func executeReminder() {
     Task {
       await performReminderAction()
@@ -194,11 +215,16 @@ struct RemindersToolView: View {
 
     } catch {
       errorMessage = handleFoundationModelsError(error)
+      // Clear success message on error
+      successMessage = nil
     }
 
     isRunning = false
   }
 
+  /// Executes a custom natural language prompt for reminder operations
+  /// - Returns: The response content from the AI assistant
+  /// - Throws: Foundation Models errors or networking errors
   private func executeCustomPrompt() async throws -> String {
     let currentDate = Date()
     let formatter = DateFormatter()
@@ -223,6 +249,9 @@ struct RemindersToolView: View {
     return response.content
   }
 
+  /// Executes a structured reminder creation using form data
+  /// - Returns: The response content from the AI assistant
+  /// - Throws: Foundation Models errors or networking errors
   private func executeQuickCreate() async throws -> String {
     let currentDate = Date()
     let formatter = DateFormatter()
@@ -261,13 +290,26 @@ struct RemindersToolView: View {
     return response.content
   }
 
+  // MARK: - Helper Methods
   private func clearQuickCreateForm() {
     reminderTitle = ""
     reminderNotes = ""
-    selectedDate = Date().addingTimeInterval(3600)
+    selectedDate = Date().addingTimeInterval(Constants.defaultDateOffset)
     selectedPriority = .none
+    customPrompt = ""
   }
 
+  private func validateQuickCreateInput() -> Bool {
+    return !reminderTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+  }
+
+  private func validateCustomPromptInput() -> Bool {
+    return !customPrompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+  }
+
+  /// Handles various Foundation Models errors and returns user-friendly messages
+  /// - Parameter error: The error to handle
+  /// - Returns: A localized error message suitable for display to users
   private func handleFoundationModelsError(_ error: Error) -> String {
     if let generationError = error as? LanguageModelSession.GenerationError {
       return FoundationModelsErrorHandler.handleGenerationError(generationError)
@@ -281,6 +323,7 @@ struct RemindersToolView: View {
   }
 }
 
+// MARK: - Supporting Types
 enum ReminderPriority: String, CaseIterable {
   case none = "none"
   case low = "low"
