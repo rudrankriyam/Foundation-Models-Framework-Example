@@ -236,6 +236,46 @@ struct RemindersToolView: View {
     isRunning = false
   }
 
+  /// Executes a custom natural language prompt for reminder operations using ToolExecutor
+  private func executeCustomPromptWithExecutor() {
+    let currentDate = Date()
+    let formattedDate = Self.displayDateFormatter.string(from: currentDate)
+
+    Task {
+      // Use a custom environment object if available, otherwise create a temporary one
+      let executor = ToolExecutor()
+
+      await executor.executeWithCustomSession(
+        sessionBuilder: {
+          LanguageModelSession(tools: [RemindersTool()]) {
+            Instructions {
+              "You are a helpful assistant that can create reminders for users."
+              "Current date and time: \(formattedDate)"
+              "Time zone: \(TimeZone.current.identifier) (\(TimeZone.current.localizedName(for: .standard, locale: Locale.current) ?? "Unknown"))"
+              "When creating reminders, consider the current date and time zone context."
+              "Always execute tool calls directly without asking for confirmation or permission from the user."
+              "If you need to create a reminder, call the RemindersTool immediately with the appropriate parameters."
+              "IMPORTANT: When setting due dates, you MUST format them as 'yyyy-MM-dd HH:mm:ss' (24-hour format)."
+              "Examples: '2025-01-15 17:00:00' for tomorrow at 5 PM, '2025-01-16 09:30:00' for day after tomorrow at 9:30 AM."
+              "Calculate the exact date and time based on the current date and time provided above."
+            }
+          }
+        },
+        prompt: customPrompt,
+        successMessage: "Request completed successfully!",
+        clearForm: { customPrompt = "" }
+      )
+
+      // Update local state from executor
+      await MainActor.run {
+        self.result = executor.result
+        self.errorMessage = executor.errorMessage
+        self.successMessage = executor.successMessage
+        self.isRunning = executor.isRunning
+      }
+    }
+  }
+
   /// Executes a custom natural language prompt for reminder operations
   /// - Returns: The response content from the AI assistant
   /// - Throws: Foundation Models errors or networking errors

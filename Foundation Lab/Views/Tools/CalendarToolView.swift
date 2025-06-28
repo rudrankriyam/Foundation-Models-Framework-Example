@@ -9,9 +9,7 @@ import FoundationModels
 import SwiftUI
 
 struct CalendarToolView: View {
-  @State private var isRunning = false
-  @State private var result: String = ""
-  @State private var errorMessage: String?
+  @Environment(ToolExecutor.self) private var executor
   @State private var query: String = "What events do I have today?"
 
   var body: some View {
@@ -19,10 +17,14 @@ struct CalendarToolView: View {
       title: "Calendar",
       icon: "calendar",
       description: "Create, search, and manage calendar events",
-      isRunning: isRunning,
-      errorMessage: errorMessage
+      isRunning: executor.isRunning,
+      errorMessage: executor.errorMessage
     ) {
       VStack(alignment: .leading, spacing: 16) {
+        if let successMessage = executor.successMessage {
+          SuccessBanner(message: successMessage)
+        }
+
         VStack(alignment: .leading, spacing: 8) {
           Text("Calendar Query")
             .font(.subheadline)
@@ -34,12 +36,14 @@ struct CalendarToolView: View {
 
         Button(action: executeCalendarQuery) {
           HStack {
-            if isRunning {
+            if executor.isRunning {
               ProgressView()
                 .scaleEffect(0.8)
                 .foregroundColor(.white)
+                .accessibilityLabel("Processing")
             } else {
               Image(systemName: "calendar")
+                .accessibilityHidden(true)
             }
 
             Text("Query Calendar")
@@ -51,10 +55,12 @@ struct CalendarToolView: View {
           .foregroundColor(.white)
           .cornerRadius(12)
         }
-        .disabled(isRunning || query.isEmpty)
+        .disabled(executor.isRunning || query.isEmpty)
+        .accessibilityLabel("Query calendar events")
+        .accessibilityHint(executor.isRunning ? "Processing request" : "Tap to search calendar")
 
-        if !result.isEmpty {
-          ResultDisplay(result: result, isSuccess: errorMessage == nil)
+        if !executor.result.isEmpty {
+          ResultDisplay(result: executor.result, isSuccess: executor.errorMessage == nil)
         }
       }
     }
@@ -62,30 +68,18 @@ struct CalendarToolView: View {
 
   private func executeCalendarQuery() {
     Task {
-      await performCalendarQuery()
+      await executor.execute(
+        tool: CalendarTool(),
+        prompt: query,
+        successMessage: "Calendar query completed successfully!"
+      )
     }
-  }
-
-  @MainActor
-  private func performCalendarQuery() async {
-    isRunning = true
-    errorMessage = nil
-    result = ""
-
-    do {
-      let session = LanguageModelSession(tools: [CalendarTool()])
-      let response = try await session.respond(to: Prompt(query))
-      result = response.content
-    } catch {
-      errorMessage = "Failed to query calendar: \(error.localizedDescription)"
-    }
-
-    isRunning = false
   }
 }
 
 #Preview {
   NavigationStack {
     CalendarToolView()
+      .withToolExecutor()
   }
 }

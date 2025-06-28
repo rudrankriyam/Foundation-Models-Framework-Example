@@ -9,27 +9,31 @@ import FoundationModels
 import SwiftUI
 
 struct LocationToolView: View {
-  @State private var isRunning = false
-  @State private var result: String = ""
-  @State private var errorMessage: String?
+  @Environment(ToolExecutor.self) private var executor
 
   var body: some View {
     ToolViewBase(
       title: "Location",
       icon: "location",
       description: "Get location information and perform geocoding",
-      isRunning: isRunning,
-      errorMessage: errorMessage
+      isRunning: executor.isRunning,
+      errorMessage: executor.errorMessage
     ) {
       VStack(alignment: .leading, spacing: 16) {
+        if let successMessage = executor.successMessage {
+          SuccessBanner(message: successMessage)
+        }
+
         Button(action: getCurrentLocation) {
           HStack {
-            if isRunning {
+            if executor.isRunning {
               ProgressView()
                 .scaleEffect(0.8)
                 .foregroundColor(.white)
+                .accessibilityLabel("Processing")
             } else {
               Image(systemName: "location")
+                .accessibilityHidden(true)
             }
 
             Text("Get Current Location")
@@ -41,10 +45,13 @@ struct LocationToolView: View {
           .foregroundColor(.white)
           .cornerRadius(12)
         }
-        .disabled(isRunning)
+        .disabled(executor.isRunning)
+        .accessibilityLabel("Get current location")
+        .accessibilityHint(
+          executor.isRunning ? "Processing request" : "Tap to get your current location")
 
-        if !result.isEmpty {
-          ResultDisplay(result: result, isSuccess: errorMessage == nil)
+        if !executor.result.isEmpty {
+          ResultDisplay(result: executor.result, isSuccess: executor.errorMessage == nil)
         }
       }
     }
@@ -52,30 +59,18 @@ struct LocationToolView: View {
 
   private func getCurrentLocation() {
     Task {
-      await performLocationRequest()
+      await executor.execute(
+        tool: LocationTool(),
+        prompt: "What's my current location?",
+        successMessage: "Location retrieved successfully!"
+      )
     }
-  }
-
-  @MainActor
-  private func performLocationRequest() async {
-    isRunning = true
-    errorMessage = nil
-    result = ""
-
-    do {
-      let session = LanguageModelSession(tools: [LocationTool()])
-      let response = try await session.respond(to: Prompt("What's my current location?"))
-      result = response.content
-    } catch {
-      errorMessage = "Failed to get location: \(error.localizedDescription)"
-    }
-
-    isRunning = false
   }
 }
 
 #Preview {
   NavigationStack {
     LocationToolView()
+      .withToolExecutor()
   }
 }

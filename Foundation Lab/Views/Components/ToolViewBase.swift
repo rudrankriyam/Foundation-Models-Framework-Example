@@ -5,6 +5,7 @@
 //  Created by Claude on 1/14/25.
 //
 
+import FoundationModels
 import SwiftUI
 
 /// Base component for tool views providing consistent UI elements
@@ -245,5 +246,130 @@ extension Color {
         Button("Test Button") {}
       }
     }
+  }
+}
+
+// MARK: - Tool Executor Helper
+
+/// A reusable helper class that eliminates code duplication across tool views
+/// by providing a standardized pattern for executing tool operations
+@MainActor
+@Observable
+final class ToolExecutor {
+  var isRunning = false
+  var result: String = ""
+  var errorMessage: String?
+  var successMessage: String?
+
+  /// Executes a tool operation with standardized state management
+  /// - Parameters:
+  ///   - operation: The async operation to execute
+  ///   - successMessage: Optional success message to display
+  ///   - clearForm: Optional closure to clear form data on success
+  func execute<T: Tool>(
+    tool: T,
+    prompt: String,
+    successMessage: String? = nil,
+    clearForm: (() -> Void)? = nil
+  ) async {
+    isRunning = true
+    errorMessage = nil
+    self.successMessage = nil
+    result = ""
+
+    do {
+      let session = LanguageModelSession(tools: [tool])
+      let response = try await session.respond(to: Prompt(prompt))
+      result = response.content
+
+      if let successMessage = successMessage {
+        self.successMessage = successMessage
+      }
+
+      clearForm?()
+
+    } catch {
+      errorMessage = handleError(error)
+      // Clear success message on error
+      self.successMessage = nil
+    }
+
+    isRunning = false
+  }
+
+  /// Executes a tool operation with a custom session configuration
+  /// - Parameters:
+  ///   - sessionBuilder: Custom session builder closure
+  ///   - successMessage: Optional success message to display
+  ///   - clearForm: Optional closure to clear form data on success
+  func executeWithCustomSession(
+    sessionBuilder: () -> LanguageModelSession,
+    prompt: String,
+    successMessage: String? = nil,
+    clearForm: (() -> Void)? = nil
+  ) async {
+    isRunning = true
+    errorMessage = nil
+    self.successMessage = nil
+    result = ""
+
+    do {
+      let session = sessionBuilder()
+      let response = try await session.respond(to: Prompt(prompt))
+      result = response.content
+
+      if let successMessage = successMessage {
+        self.successMessage = successMessage
+      }
+
+      clearForm?()
+
+    } catch {
+      errorMessage = handleError(error)
+      // Clear success message on error
+      self.successMessage = nil
+    }
+
+    isRunning = false
+  }
+
+  /// Clears all state
+  func clear() {
+    isRunning = false
+    result = ""
+    errorMessage = nil
+    successMessage = nil
+  }
+
+  /// Handles various error types and returns user-friendly messages
+  private func handleError(_ error: Error) -> String {
+    if let generationError = error as? LanguageModelSession.GenerationError {
+      return FoundationModelsErrorHandler.handleGenerationError(generationError)
+    } else if let toolCallError = error as? LanguageModelSession.ToolCallError {
+      return FoundationModelsErrorHandler.handleToolCallError(toolCallError)
+    } else if let customError = error as? FoundationModelsError {
+      return customError.localizedDescription
+    } else {
+      return "Unexpected error: \(error.localizedDescription)"
+    }
+  }
+}
+
+// MARK: - Tool Executor View Modifier
+
+/// View modifier that provides a ToolExecutor instance to views
+struct ToolExecutorModifier: ViewModifier {
+  @State private var executor = ToolExecutor()
+
+  func body(content: Content) -> some View {
+    content
+      .environment(executor)
+  }
+}
+
+extension View {
+  /// Provides a ToolExecutor instance to the view hierarchy
+  func withToolExecutor() -> some View {
+    modifier(ToolExecutorModifier())
   }
 }

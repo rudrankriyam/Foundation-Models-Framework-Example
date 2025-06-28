@@ -9,9 +9,7 @@ import FoundationModels
 import SwiftUI
 
 struct ContactsToolView: View {
-  @State private var isRunning = false
-  @State private var result: String = ""
-  @State private var errorMessage: String?
+  @Environment(ToolExecutor.self) private var executor
   @State private var searchQuery: String = ""
 
   var body: some View {
@@ -19,10 +17,14 @@ struct ContactsToolView: View {
       title: "Contacts",
       icon: "person.2",
       description: "Search and display contact information",
-      isRunning: isRunning,
-      errorMessage: errorMessage
+      isRunning: executor.isRunning,
+      errorMessage: executor.errorMessage
     ) {
       VStack(alignment: .leading, spacing: 16) {
+        if let successMessage = executor.successMessage {
+          SuccessBanner(message: successMessage)
+        }
+
         VStack(alignment: .leading, spacing: 8) {
           Text("Search Contacts")
             .font(.subheadline)
@@ -34,12 +36,14 @@ struct ContactsToolView: View {
 
         Button(action: executeContactsSearch) {
           HStack {
-            if isRunning {
+            if executor.isRunning {
               ProgressView()
                 .scaleEffect(0.8)
                 .foregroundColor(.white)
+                .accessibilityLabel("Processing")
             } else {
               Image(systemName: "person.2")
+                .accessibilityHidden(true)
             }
 
             Text("Search Contacts")
@@ -51,10 +55,12 @@ struct ContactsToolView: View {
           .foregroundColor(.white)
           .cornerRadius(12)
         }
-        .disabled(isRunning || searchQuery.isEmpty)
+        .disabled(executor.isRunning || searchQuery.isEmpty)
+        .accessibilityLabel("Search contacts")
+        .accessibilityHint(executor.isRunning ? "Processing request" : "Tap to search contacts")
 
-        if !result.isEmpty {
-          ResultDisplay(result: result, isSuccess: errorMessage == nil)
+        if !executor.result.isEmpty {
+          ResultDisplay(result: executor.result, isSuccess: executor.errorMessage == nil)
         }
       }
     }
@@ -62,30 +68,19 @@ struct ContactsToolView: View {
 
   private func executeContactsSearch() {
     Task {
-      await performContactsSearch()
+      await executor.execute(
+        tool: ContactsTool(),
+        prompt: "Find contacts named \(searchQuery)",
+        successMessage: "Contact search completed successfully!",
+        clearForm: { searchQuery = "" }
+      )
     }
-  }
-
-  @MainActor
-  private func performContactsSearch() async {
-    isRunning = true
-    errorMessage = nil
-    result = ""
-
-    do {
-      let session = LanguageModelSession(tools: [ContactsTool()])
-      let response = try await session.respond(to: Prompt("Find contacts named \(searchQuery)"))
-      result = response.content
-    } catch {
-      errorMessage = "Failed to search contacts: \(error.localizedDescription)"
-    }
-
-    isRunning = false
   }
 }
 
 #Preview {
   NavigationStack {
     ContactsToolView()
+      .withToolExecutor()
   }
 }

@@ -9,9 +9,7 @@ import FoundationModels
 import SwiftUI
 
 struct HealthToolView: View {
-  @State private var isRunning = false
-  @State private var result: String = ""
-  @State private var errorMessage: String?
+  @Environment(ToolExecutor.self) private var executor
   @State private var query: String = "How many steps have I taken today?"
 
   var body: some View {
@@ -19,10 +17,14 @@ struct HealthToolView: View {
       title: "Health",
       icon: "heart",
       description: "Access health data like steps, heart rate, and workouts",
-      isRunning: isRunning,
-      errorMessage: errorMessage
+      isRunning: executor.isRunning,
+      errorMessage: executor.errorMessage
     ) {
       VStack(alignment: .leading, spacing: 16) {
+        if let successMessage = executor.successMessage {
+          SuccessBanner(message: successMessage)
+        }
+
         VStack(alignment: .leading, spacing: 8) {
           Text("Health Query")
             .font(.subheadline)
@@ -34,12 +36,14 @@ struct HealthToolView: View {
 
         Button(action: executeHealthQuery) {
           HStack {
-            if isRunning {
+            if executor.isRunning {
               ProgressView()
                 .scaleEffect(0.8)
                 .foregroundColor(.white)
+                .accessibilityLabel("Processing")
             } else {
               Image(systemName: "heart")
+                .accessibilityHidden(true)
             }
 
             Text("Query Health Data")
@@ -51,10 +55,12 @@ struct HealthToolView: View {
           .foregroundColor(.white)
           .cornerRadius(12)
         }
-        .disabled(isRunning || query.isEmpty)
+        .disabled(executor.isRunning || query.isEmpty)
+        .accessibilityLabel("Query health data")
+        .accessibilityHint(executor.isRunning ? "Processing request" : "Tap to query health data")
 
-        if !result.isEmpty {
-          ResultDisplay(result: result, isSuccess: errorMessage == nil)
+        if !executor.result.isEmpty {
+          ResultDisplay(result: executor.result, isSuccess: executor.errorMessage == nil)
         }
       }
     }
@@ -62,30 +68,18 @@ struct HealthToolView: View {
 
   private func executeHealthQuery() {
     Task {
-      await performHealthQuery()
+      await executor.execute(
+        tool: HealthTool(),
+        prompt: query,
+        successMessage: "Health data query completed successfully!"
+      )
     }
-  }
-
-  @MainActor
-  private func performHealthQuery() async {
-    isRunning = true
-    errorMessage = nil
-    result = ""
-
-    do {
-      let session = LanguageModelSession(tools: [HealthTool()])
-      let response = try await session.respond(to: Prompt(query))
-      result = response.content
-    } catch {
-      errorMessage = "Failed to query health data: \(error.localizedDescription)"
-    }
-
-    isRunning = false
   }
 }
 
 #Preview {
   NavigationStack {
     HealthToolView()
+      .withToolExecutor()
   }
 }
