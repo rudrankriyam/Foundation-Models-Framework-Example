@@ -20,15 +20,13 @@ struct ToolsView: View {
   @Namespace private var glassNamespace
 
   var body: some View {
-    NavigationStack {
-      ScrollView {
-        VStack(alignment: .leading, spacing: 20) {
-          toolButtonsView
-        }
-        .padding(.vertical)
+    ScrollView {
+      VStack(alignment: .leading, spacing: 20) {
+        toolButtonsView
       }
-      .navigationTitle("Tools")
+      .padding(.vertical)
     }
+    .navigationTitle("Tools")
   }
 
   private var toolButtonsView: some View {
@@ -150,7 +148,7 @@ struct ToolsView: View {
             .textSelection(.enabled)
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(secondaryBackgroundColor)
+            .background(Color.secondaryBackgroundColor)
             .cornerRadius(8)
         }
         .frame(maxHeight: 300)
@@ -158,7 +156,6 @@ struct ToolsView: View {
     }
     .padding(.horizontal)
   }
-
 }
 
 // MARK: - Tool Button Component
@@ -170,40 +167,36 @@ struct ToolButton: View {
   let namespace: Namespace.ID
 
   var body: some View {
-    Button(action: {}) {
-      VStack(spacing: 12) {
-        ZStack {
-          Image(systemName: tool.icon)
-            .font(.system(size: 28))
-            .foregroundColor(isSelected ? .white : .accentColor)
-            .opacity(isRunning ? 0 : 1)
+    VStack(spacing: 12) {
+      ZStack {
+        Image(systemName: tool.icon)
+          .font(.system(size: 28))
+          .foregroundColor(isSelected ? .white : .accentColor)
+          .opacity(isRunning ? 0 : 1)
 
-          if isRunning {
-            ProgressView()
-              .progressViewStyle(CircularProgressViewStyle())
-              .scaleEffect(0.8)
-          }
-        }
-        .frame(width: 50, height: 50)
-
-        VStack(spacing: 4) {
-          Text(tool.displayName)
-            .font(.headline)
-            .foregroundColor(isSelected ? .white : .primary)
-            .multilineTextAlignment(.center)
-
-          Text(tool.shortDescription)
-            .font(.caption)
-            .foregroundColor(isSelected ? .white.opacity(0.8) : .secondary)
-            .multilineTextAlignment(.center)
-            .lineLimit(2)
+        if isRunning {
+          ProgressView()
+            .progressViewStyle(CircularProgressViewStyle())
+            .scaleEffect(0.8)
         }
       }
-      .padding()
-      .frame(maxWidth: .infinity, minHeight: 140)
+      .frame(width: 50, height: 50)
+
+      VStack(spacing: 4) {
+        Text(tool.displayName)
+          .font(.headline)
+          .foregroundColor(isSelected ? .white : .primary)
+          .multilineTextAlignment(.center)
+
+        Text(tool.shortDescription)
+          .font(.caption)
+          .foregroundColor(isSelected ? .white.opacity(0.8) : .secondary)
+          .multilineTextAlignment(.center)
+          .lineLimit(2)
+      }
     }
-    .buttonStyle(PlainButtonStyle())
-    .disabled(isRunning)
+    .padding()
+    .frame(maxWidth: .infinity, minHeight: 140)
     #if os(iOS) || os(macOS)
       .glassEffect(
         isSelected ? .regular.tint(.accentColor).interactive(true) : .regular.interactive(true),

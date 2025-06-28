@@ -74,12 +74,11 @@ struct RemindersToolView: View {
           Text(useCustomPrompt ? "Process Request" : "Create Reminder")
             .fontWeight(.medium)
         }
-        .frame(maxWidth: .infinity)
-        .padding()
-        .background(Color.accentColor)
         .foregroundColor(.white)
-        .cornerRadius(12)
+        .padding(.horizontal)
+        .padding(.vertical, 8
       }
+      .buttonStyle(.glassProminent)
       .disabled(isRunning || (useCustomPrompt ? customPrompt.isEmpty : reminderTitle.isEmpty))
     }
   }

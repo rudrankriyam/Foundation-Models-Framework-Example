@@ -30,8 +30,10 @@ struct WebMetadataToolView: View {
 
           TextField("Enter website URL", text: $url)
             .textFieldStyle(RoundedBorderTextFieldStyle())
+            #if os(iOS)
             .keyboardType(.URL)
             .autocapitalization(.none)
+            #endif
         }
 
         Button(action: executeWebMetadata) {
