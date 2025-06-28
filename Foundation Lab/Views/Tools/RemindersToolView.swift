@@ -18,6 +18,20 @@ struct RemindersToolView: View {
     static let minPromptLines = 3
   }
 
+  // MARK: - Static Properties
+  private static let displayDateFormatter: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.dateStyle = .full
+    formatter.timeStyle = .short
+    return formatter
+  }()
+
+  private static let apiDateFormatter: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+    return formatter
+  }()
+
   // MARK: - State Properties
   @State private var isRunning = false
   @State private var result: String = ""
@@ -227,14 +241,12 @@ struct RemindersToolView: View {
   /// - Throws: Foundation Models errors or networking errors
   private func executeCustomPrompt() async throws -> String {
     let currentDate = Date()
-    let formatter = DateFormatter()
-    formatter.dateStyle = .full
-    formatter.timeStyle = .short
+    let formattedDate = Self.displayDateFormatter.string(from: currentDate)
 
     let session = LanguageModelSession(tools: [RemindersTool()]) {
       Instructions {
         "You are a helpful assistant that can create reminders for users."
-        "Current date and time: \(formatter.string(from: currentDate))"
+        "Current date and time: \(formattedDate)"
         "Time zone: \(TimeZone.current.identifier) (\(TimeZone.current.localizedName(for: .standard, locale: Locale.current) ?? "Unknown"))"
         "When creating reminders, consider the current date and time zone context."
         "Always execute tool calls directly without asking for confirmation or permission from the user."
@@ -254,14 +266,12 @@ struct RemindersToolView: View {
   /// - Throws: Foundation Models errors or networking errors
   private func executeQuickCreate() async throws -> String {
     let currentDate = Date()
-    let formatter = DateFormatter()
-    formatter.dateStyle = .full
-    formatter.timeStyle = .short
+    let formattedDate = Self.displayDateFormatter.string(from: currentDate)
 
     let session = LanguageModelSession(tools: [RemindersTool()]) {
       Instructions {
         "You are a helpful assistant that creates reminders based on structured input."
-        "Current date and time: \(formatter.string(from: currentDate))"
+        "Current date and time: \(formattedDate)"
         "Time zone: \(TimeZone.current.identifier) (\(TimeZone.current.localizedName(for: .standard, locale: Locale.current) ?? "Unknown"))"
         "Always execute the RemindersTool directly with the provided information."
         "Format due dates as 'yyyy-MM-dd HH:mm:ss' (24-hour format)."
@@ -277,9 +287,7 @@ struct RemindersToolView: View {
     }
 
     if hasDueDate {
-      let dateFormatter = DateFormatter()
-      dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-      promptText += "Due date: \(dateFormatter.string(from: selectedDate))\n"
+      promptText += "Due date: \(Self.apiDateFormatter.string(from: selectedDate))\n"
     }
 
     if selectedPriority != .none {
