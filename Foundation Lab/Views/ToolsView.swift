@@ -244,6 +244,9 @@ struct ToolsView: View {
         "When creating reminders, consider the current date and time zone context."
         "Always execute tool calls directly without asking for confirmation or permission from the user."
         "If you need to create a reminder, call the RemindersTool immediately with the appropriate parameters."
+        "IMPORTANT: When setting due dates, you MUST format them as 'yyyy-MM-dd HH:mm:ss' (24-hour format)."
+        "Examples: '2025-01-15 17:00:00' for tomorrow at 5 PM, '2025-01-16 09:30:00' for day after tomorrow at 9:30 AM."
+        "Calculate the exact date and time based on the current date and time provided above."
       }
     }
     let response = try await session.respond(
