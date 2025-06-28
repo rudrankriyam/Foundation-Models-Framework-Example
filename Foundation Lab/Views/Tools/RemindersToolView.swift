@@ -76,7 +76,7 @@ struct RemindersToolView: View {
         }
         .foregroundColor(.white)
         .padding(.horizontal)
-        .padding(.vertical, 8
+        .padding(.vertical, 8)
       }
       .buttonStyle(.glassProminent)
       .disabled(isRunning || (useCustomPrompt ? customPrompt.isEmpty : reminderTitle.isEmpty))

@@ -40,7 +40,17 @@ struct ToolViewBase<Content: View>: View {
       }
       .padding()
     }
+    #if os(iOS)
+      .scrollDismissesKeyboard(.interactively)
+    #endif
     .navigationTitle(title)
+    .onTapGesture {
+      // Dismiss keyboard when tapping outside text fields
+      #if os(iOS)
+        UIApplication.shared.sendAction(
+          #selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+      #endif
+    }
   }
 
   private var headerView: some View {
@@ -121,45 +131,45 @@ struct SuccessBanner: View {
 
 /// Result display component
 struct ResultDisplay: View {
-    let result: String
-    let isSuccess: Bool
+  let result: String
+  let isSuccess: Bool
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Result")
-                    .font(.headline)
+  var body: some View {
+    VStack(alignment: .leading, spacing: 12) {
+      HStack {
+        Text("Result")
+          .font(.headline)
 
-                Spacer()
+        Spacer()
 
-                Image(systemName: isSuccess ? "checkmark.circle.fill" : "xmark.circle.fill")
-                    .foregroundColor(isSuccess ? .green : .red)
-            }
+        Image(systemName: isSuccess ? "checkmark.circle.fill" : "xmark.circle.fill")
+          .foregroundColor(isSuccess ? .green : .red)
+      }
 
-            ScrollView {
-                Text(result)
-                    .font(.system(.body, design: .monospaced))
-                    .textSelection(.enabled)
-                    .padding()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.secondaryBackgroundColor)
-                    .cornerRadius(8)
-            }
-            .frame(maxHeight: 300)
-        }
+      ScrollView {
+        Text(result)
+          .font(.system(.body, design: .monospaced))
+          .textSelection(.enabled)
+          .padding()
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .background(Color.secondaryBackgroundColor)
+          .cornerRadius(8)
+      }
+      .frame(maxHeight: 300)
     }
+  }
 }
 
 extension Color {
-    static var secondaryBackgroundColor: Color {
-#if os(iOS)
-        Color(UIColor.secondarySystemBackground)
-#elseif os(macOS)
-        Color(NSColor.controlBackgroundColor)
-#else
-        Color.gray.opacity(0.1)
-#endif
-    }
+  static var secondaryBackgroundColor: Color {
+    #if os(iOS)
+      Color(UIColor.secondarySystemBackground)
+    #elseif os(macOS)
+      Color(NSColor.controlBackgroundColor)
+    #else
+      Color.gray.opacity(0.1)
+    #endif
+  }
 }
 
 #Preview {
