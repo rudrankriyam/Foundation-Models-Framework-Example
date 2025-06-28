@@ -27,6 +27,9 @@ struct ToolsView: View {
       .padding(.vertical)
     }
     .navigationTitle("Tools")
+    .navigationDestination(for: ToolExample.self) { tool in
+      tool.createView()
+    }
   }
 
   private var toolButtonsView: some View {
@@ -34,7 +37,7 @@ struct ToolsView: View {
       GlassEffectContainer(spacing: gridSpacing) {
         LazyVGrid(columns: adaptiveGridColumns, spacing: gridSpacing) {
           ForEach(ToolExample.allCases, id: \.self) { tool in
-            NavigationLink(destination: destinationView(for: tool)) {
+            NavigationLink(value: tool) {
               ToolButton(
                 tool: tool,
                 isSelected: false,
@@ -50,7 +53,7 @@ struct ToolsView: View {
     #else
       LazyVGrid(columns: adaptiveGridColumns, spacing: gridSpacing) {
         ForEach(ToolExample.allCases, id: \.self) { tool in
-          NavigationLink(destination: destinationView(for: tool)) {
+          NavigationLink(value: tool) {
             ToolButton(
               tool: tool,
               isSelected: false,
@@ -63,30 +66,6 @@ struct ToolsView: View {
       }
       .padding(.horizontal)
     #endif
-  }
-
-  @ViewBuilder
-  private func destinationView(for tool: ToolExample) -> some View {
-    switch tool {
-    case .reminders:
-      RemindersToolView()
-    case .weather:
-      WeatherToolView()
-    case .web:
-      WebToolView()
-    case .contacts:
-      ContactsToolView()
-    case .calendar:
-      CalendarToolView()
-    case .location:
-      LocationToolView()
-    case .health:
-      HealthToolView()
-    case .music:
-      MusicToolView()
-    case .webMetadata:
-      WebMetadataToolView()
-    }
   }
 
   private var adaptiveGridColumns: [GridItem] {
@@ -206,76 +185,6 @@ struct ToolButton: View {
     #endif
     .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isSelected)
     .animation(.spring(response: 0.3, dampingFraction: 0.9), value: isRunning)
-  }
-}
-
-// MARK: - Tool Example Enum
-
-enum ToolExample: String, CaseIterable {
-  case weather
-  case web
-  case contacts
-  case calendar
-  case reminders
-  case location
-  case health
-  case music
-  case webMetadata
-
-  var displayName: String {
-    switch self {
-    case .weather: return "Weather"
-    case .web: return "Web Search"
-    case .contacts: return "Contacts"
-    case .calendar: return "Calendar"
-    case .reminders: return "Reminders"
-    case .location: return "Location"
-    case .health: return "Health"
-    case .music: return "Music"
-    case .webMetadata: return "Web Metadata"
-    }
-  }
-
-  var icon: String {
-    switch self {
-    case .weather: return "cloud.sun"
-    case .web: return "magnifyingglass"
-    case .contacts: return "person.2"
-    case .calendar: return "calendar"
-    case .reminders: return "checklist"
-    case .location: return "location"
-    case .health: return "heart"
-    case .music: return "music.note"
-    case .webMetadata: return "link.circle"
-    }
-  }
-
-  var shortDescription: String {
-    switch self {
-    case .weather: return "Get weather info"
-    case .web: return "Search the web"
-    case .contacts: return "Find contacts"
-    case .calendar: return "View events"
-    case .reminders: return "Manage tasks"
-    case .location: return "Get location"
-    case .health: return "Health data"
-    case .music: return "Play music"
-    case .webMetadata: return "Social summaries"
-    }
-  }
-
-  var description: String {
-    switch self {
-    case .weather: return "Get current weather information for any location"
-    case .web: return "Search the web for any topic using AI-powered search"
-    case .contacts: return "Search and display contact information"
-    case .calendar: return "Create, search, and manage calendar events"
-    case .reminders: return "Create and manage reminder tasks"
-    case .location: return "Get location information and perform geocoding"
-    case .health: return "Access health data like steps, heart rate, and workouts"
-    case .music: return "Search and play music, manage playlists, get recommendations"
-    case .webMetadata: return "Fetch webpage metadata and generate social media summaries"
-    }
   }
 }
 
