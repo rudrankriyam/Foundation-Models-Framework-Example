@@ -242,6 +242,8 @@ struct ToolsView: View {
         "Current date and time: \(formatter.string(from: currentDate))"
         "Time zone: \(TimeZone.current.identifier) (\(TimeZone.current.localizedName(for: .standard, locale: Locale.current) ?? "Unknown"))"
         "When creating reminders, consider the current date and time zone context."
+        "Always execute tool calls directly without asking for confirmation or permission from the user."
+        "If you need to create a reminder, call the RemindersTool immediately with the appropriate parameters."
       }
     }
     let response = try await session.respond(
