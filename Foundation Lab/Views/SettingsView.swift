@@ -18,12 +18,8 @@ struct SettingsView: View {
       Form {
         Section {
           VStack(alignment: .leading, spacing: 8) {
-            HStack {
-              Image(systemName: "magnifyingglass.circle.fill")
-                .foregroundColor(.blue)
-              Text("Exa Web Search")
-                .font(.headline)
-            }
+            Text("Exa Web Search")
+              .font(.headline)
             
             Text("Configure your Exa API key to enable web search functionality.")
               .font(.caption)
@@ -60,13 +56,9 @@ struct SettingsView: View {
           }
           
           if !exaAPIKey.isEmpty {
-            HStack {
-              Image(systemName: "checkmark.circle.fill")
-                .foregroundColor(.green)
-              Text("API key configured")
-                .font(.caption)
-                .foregroundColor(.secondary)
-            }
+            Text("✓ API key configured")
+              .font(.caption)
+              .foregroundColor(.secondary)
           }
           
         } header: {
@@ -82,7 +74,48 @@ struct SettingsView: View {
               .foregroundColor(.secondary)
           }
         }
+        
+        Section {
+          Link(destination: URL(string: "https://github.com/rudrankriyam/Foundation-Models-Framework-Example/issues")!) {
+            HStack {
+              Text("Bug/Feature Request")
+              Spacer()
+              Image(systemName: "arrow.up.right.square")
+                .foregroundColor(.secondary)
+                .font(.caption)
+            }
+          }
+          .foregroundColor(.primary)
+          
+          Link(destination: URL(string: "https://x.com/rudrankriyam")!) {
+            HStack {
+              Text("Made by Rudrank Riyam")
+              Spacer()
+              Image(systemName: "arrow.up.right.square")
+                .foregroundColor(.secondary)
+                .font(.caption)
+            }
+          }
+          .foregroundColor(.primary)
+          
+          HStack {
+            Text("Version")
+            Spacer()
+            Text(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "")
+              .foregroundColor(.secondary)
+          }
+        } header: {
+          Text("About")
+        } footer: {
+          Text("Explore on-device AI with Apple's Foundation Models framework.")
+            .font(.caption)
+            .foregroundColor(.secondary)
+        }
       }
+      .formStyle(.grouped)
+      #if os(macOS)
+      .padding()
+      #endif
       .navigationTitle("Settings")
       .alert("Settings", isPresented: $showingAlert) {
         Button("OK") { }
