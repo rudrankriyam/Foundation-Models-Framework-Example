@@ -25,46 +25,53 @@ struct ExamplesView: View {
       .padding(.vertical)
     }
     .navigationDestination(for: ExampleType.self) { exampleType in
+      switch exampleType {
+      case .basicChat:
+        BasicChatView()
+      case .structuredData:
+        StructuredDataView()
+      case .generationGuides:
+        GenerationGuidesView()
+      case .streamingResponse:
+        StreamingResponseView()
+      case .businessIdeas:
+        BusinessIdeasView()
+      case .creativeWriting:
+        CreativeWritingView()
+      case .modelAvailability:
+        ModelAvailabilityView()
+      case .generationOptions:
         GenerationOptionsView()
+      }
     }
   }
 
   // MARK: - View Components
 
   private var headerView: some View {
-    VStack(alignment: .leading, spacing: 8) {
+    VStack(alignment: .leading, spacing: Spacing.small) {
       Text("Foundation Models")
         .font(.largeTitle)
         .fontWeight(.bold)
+      Text("Explore Apple's AI capabilities")
+        .font(.callout)
+        .foregroundColor(.secondary)
     }
-    .padding(.horizontal)
+    .padding(.horizontal, Spacing.medium)
   }
 
   private var exampleButtonsView: some View {
     VStack(spacing: gridSpacing) {
-      LazyVGrid(columns: adaptiveGridColumns, spacing: gridSpacing) {
+      LazyVGrid(columns: adaptiveGridColumns, spacing: Spacing.medium) {
         ForEach(ExampleType.allCases) { exampleType in
-          if exampleType == .generationOptions {
-            NavigationLink(value: exampleType) {
-                ExampleCardView(type: exampleType)
-            }
-            .buttonStyle(.plain)
-            #if os(iOS) || os(macOS)
-            .glassEffect(.regular.interactive(true), in: .rect(cornerRadius: 12))
-            .glassEffectID(exampleType.id, in: glassNamespace)
-            #endif
-          } else {
-            ExampleButton(exampleType: exampleType) {
-              await exampleType.execute(with: viewModel)
-            }
-            #if os(iOS) || os(macOS)
-            .glassEffect(.regular.interactive(true), in: .rect(cornerRadius: 12))
-            .glassEffectID(exampleType.id, in: glassNamespace)
-            #endif
+          NavigationLink(value: exampleType) {
+            ExampleCardView(type: exampleType)
+              .contentShape(Rectangle())
           }
+          .buttonStyle(.plain)
         }
       }
-      .padding(.horizontal)
+      .padding(.horizontal, Spacing.medium)
     }
   }
 

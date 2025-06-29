@@ -84,28 +84,6 @@ enum ExampleType: String, CaseIterable, Identifiable {
     }
   }
 
-  @MainActor
-  func execute(with viewModel: ContentViewModel) async {
-    switch self {
-    case .basicChat:
-      await viewModel.executeBasicChat()
-    case .businessIdeas:
-      await viewModel.executeBusinessIdea()
-    case .creativeWriting:
-      await viewModel.executeCreativeWriting()
-    case .structuredData:
-      await viewModel.executeStructuredData()
-    case .streamingResponse:
-      await viewModel.executeStreaming()
-    case .modelAvailability:
-      await viewModel.executeModelAvailability()
-    case .generationGuides:
-      await viewModel.executeGenerationGuides()
-    case .generationOptions:
-      // Navigation handled by NavigationLink in ExamplesView
-      break
-    }
-  }
 }
 
 // MARK: - Tool Example Enum
