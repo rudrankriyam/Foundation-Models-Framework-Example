@@ -37,18 +37,20 @@ struct CodeViewer: View {
         .buttonStyle(.plain)
       }
       
-      ScrollView(.horizontal, showsIndicators: true) {
-        ScrollView(.vertical, showsIndicators: true) {
-          Text(code)
-            .font(.system(.body, design: .monospaced))
-            .textSelection(.enabled)
-            .padding()
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .frame(maxHeight: 400)
+      ScrollView {
+        Text(code)
+          .font(.system(.body, design: .monospaced))
+          .textSelection(.enabled)
+          .padding(16)
+          .frame(maxWidth: .infinity, alignment: .leading)
       }
+      .frame(maxHeight: 400)
       .background(Color.secondaryBackgroundColor)
-      .cornerRadius(8)
+      .clipShape(RoundedRectangle(cornerRadius: 12))
+      .overlay(
+        RoundedRectangle(cornerRadius: 12)
+          .stroke(Color.primary.opacity(0.1), lineWidth: 1)
+      )
     }
   }
   
@@ -110,7 +112,7 @@ struct CodeDisclosure: View {
       
       if isExpanded {
         CodeViewer(code: code, language: language)
-          .padding(.top, 8)
+          .padding(.top, 12)
           .transition(.asymmetric(
             insertion: .push(from: .top).combined(with: .opacity),
             removal: .push(from: .bottom).combined(with: .opacity)

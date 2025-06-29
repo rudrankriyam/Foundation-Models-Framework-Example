@@ -11,7 +11,6 @@ import SwiftUI
 /// Base component for example views providing consistent UI elements
 struct ExampleViewBase<Content: View>: View {
   let title: String
-  let icon: String
   let description: String
   let defaultPrompt: String
   @Binding var currentPrompt: String
@@ -24,7 +23,6 @@ struct ExampleViewBase<Content: View>: View {
   
   init(
     title: String,
-    icon: String,
     description: String,
     defaultPrompt: String,
     currentPrompt: Binding<String>,
@@ -36,7 +34,6 @@ struct ExampleViewBase<Content: View>: View {
     @ViewBuilder content: () -> Content
   ) {
     self.title = title
-    self.icon = icon
     self.description = description
     self.defaultPrompt = defaultPrompt
     self._currentPrompt = currentPrompt
@@ -226,7 +223,6 @@ struct ExampleResultDisplay: View {
   NavigationStack {
     ExampleViewBase(
       title: "Sample Example",
-      icon: "sparkles",
       description: "This is a sample example for demonstration",
       defaultPrompt: "Tell me a joke",
       currentPrompt: .constant("Tell me a joke"),

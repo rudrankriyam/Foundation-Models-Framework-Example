@@ -17,7 +17,6 @@ struct StreamingResponseView: View {
   var body: some View {
     ExampleViewBase(
       title: "Streaming Response",
-      icon: "wave.3.right",
       description: "Real-time response streaming as text is generated",
       defaultPrompt: DefaultPrompts.streaming,
       currentPrompt: $currentPrompt,

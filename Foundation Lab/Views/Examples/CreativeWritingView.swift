@@ -15,7 +15,6 @@ struct CreativeWritingView: View {
   var body: some View {
     ExampleViewBase(
       title: "Creative Writing",
-      icon: "pencil.and.outline",
       description: "Generate stories, poems, and creative content",
       defaultPrompt: DefaultPrompts.creativeWriting,
       currentPrompt: $currentPrompt,

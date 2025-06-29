@@ -15,7 +15,6 @@ struct GenerationGuidesView: View {
   var body: some View {
     ExampleViewBase(
       title: "Generation Guides",
-      icon: "slider.horizontal.3",
       description: "Guided generation with constraints and structured output",
       defaultPrompt: DefaultPrompts.generationGuides,
       currentPrompt: $currentPrompt,

@@ -108,17 +108,17 @@ extension DefaultPrompts {
   static let basicChatCode = """
 import FoundationModels
 
-// Create a language model session
-let session = LanguageModelSession()
+// Create a language model session with optional instructions
+let session: LanguageModelSession
+if let instructions = instructions {
+    session = LanguageModelSession(instructions: Instructions(instructions))
+} else {
+    session = LanguageModelSession()
+}
 
-// Generate a response with optional instructions
-let response = try await session.generate(
-    with: prompt,
-    instructions: instructions,
-    using: .conversational
-)
-
-print(response)
+// Generate a response
+let response = try await session.respond(to: Prompt(prompt))
+print(response.content)
 """
   
   static let structuredDataCode = """
@@ -131,18 +131,19 @@ struct Book {
     let author: String
     let genre: String
     let yearPublished: Int
-    let summary: String
+    let description: String
 }
 
 // Generate structured data
 let session = LanguageModelSession()
 let book = try await session.generate(
-    prompt: prompt,
+    prompt: Prompt(prompt),
     as: Book.self
 )
 
 print("Title: \\(book.title)")
 print("Author: \\(book.author)")
+print("Genre: \\(book.genre)")
 """
   
   static let generationGuidesCode = """
@@ -162,9 +163,12 @@ struct ProductReview {
 
 let session = LanguageModelSession()
 let review = try await session.generate(
-    prompt: prompt,
+    prompt: Prompt(prompt),
     as: ProductReview.self
 )
+
+print("Review: \\(review.reviewText)")
+print("Rating: \\(review.rating)/5")
 """
   
   static let streamingResponseCode = """
@@ -173,11 +177,8 @@ import FoundationModels
 let session = LanguageModelSession()
 
 // Stream the response token by token
-for try await token in session.generateStream(
-    with: prompt,
-    using: .conversational
-) {
-    print(token, terminator: "")
+for try await chunk in session.responseStream(to: Prompt(prompt)) {
+    print(chunk.content, terminator: "")
 }
 """
   
@@ -196,9 +197,12 @@ struct BusinessIdea {
 
 let session = LanguageModelSession()
 let idea = try await session.generate(
-    prompt: prompt,
+    prompt: Prompt(prompt),
     as: BusinessIdea.self
 )
+
+print("Business: \\(idea.name)")
+print("Target Market: \\(idea.targetMarket)")
 """
   
   static let creativeWritingCode = """
@@ -224,9 +228,12 @@ struct Chapter {
 
 let session = LanguageModelSession()
 let story = try await session.generate(
-    prompt: prompt,
+    prompt: Prompt(prompt),
     as: StoryOutline.self
 )
+
+print("Title: \\(story.title)")
+print("Genre: \\(story.genre)")
 """
   
   static let modelAvailabilityCode = """

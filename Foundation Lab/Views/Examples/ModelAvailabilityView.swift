@@ -16,7 +16,6 @@ struct ModelAvailabilityView: View {
   var body: some View {
     ExampleViewBase(
       title: "Model Availability",
-      icon: "checkmark.shield",
       description: "Check if Apple Intelligence is available on this device",
       defaultPrompt: DefaultPrompts.modelAvailability,
       currentPrompt: .constant(DefaultPrompts.modelAvailability),

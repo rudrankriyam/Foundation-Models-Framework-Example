@@ -15,7 +15,6 @@ struct BusinessIdeasView: View {
   var body: some View {
     ExampleViewBase(
       title: "Business Ideas",
-      icon: "lightbulb",
       description: "Generate innovative business concepts and strategies",
       defaultPrompt: DefaultPrompts.businessIdeas,
       currentPrompt: $currentPrompt,

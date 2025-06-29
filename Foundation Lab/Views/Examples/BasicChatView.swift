@@ -17,7 +17,6 @@ struct BasicChatView: View {
   var body: some View {
     ExampleViewBase(
       title: "Basic Chat",
-      icon: "bubble.left.and.bubble.right",
       description: "Simple conversation with the AI assistant",
       defaultPrompt: DefaultPrompts.basicChat,
       currentPrompt: $currentPrompt,

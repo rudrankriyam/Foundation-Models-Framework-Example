@@ -15,7 +15,6 @@ struct StructuredDataView: View {
   var body: some View {
     ExampleViewBase(
       title: "Structured Data",
-      icon: "list.bullet.rectangle",
       description: "Generate and parse structured information",
       defaultPrompt: DefaultPrompts.structuredData,
       currentPrompt: $currentPrompt,
