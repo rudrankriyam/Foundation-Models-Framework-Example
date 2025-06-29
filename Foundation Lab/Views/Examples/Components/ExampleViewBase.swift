@@ -113,7 +113,7 @@ struct ExampleViewBase<Content: View>: View {
           .frame(maxWidth: .infinity)
           .padding(.vertical, Spacing.small)
       }
-      .buttonStyle(.borderedProminent)
+      .buttonStyle(.glassProminent)
       .tint(.secondary)
       .disabled(currentPrompt == defaultPrompt)
       
@@ -131,7 +131,7 @@ struct ExampleViewBase<Content: View>: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, Spacing.small)
       }
-      .buttonStyle(.borderedProminent)
+      .buttonStyle(.glassProminent)
       .disabled(isRunning || currentPrompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
     }
   }
