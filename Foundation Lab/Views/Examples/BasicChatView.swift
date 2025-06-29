@@ -18,7 +18,7 @@ struct BasicChatView: View {
     ExampleViewBase(
       title: "Basic Chat",
       icon: "bubble.left.and.bubble.right",
-      description: "Simple back-and-forth conversation with the AI",
+      description: "Simple conversation with the AI assistant",
       defaultPrompt: DefaultPrompts.basicChat,
       currentPrompt: $currentPrompt,
       isRunning: executor.isRunning,

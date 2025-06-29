@@ -48,7 +48,6 @@ struct ExampleViewBase<Content: View>: View {
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 20) {
-        headerView
         promptSection
         actionButtons
         
@@ -64,29 +63,17 @@ struct ExampleViewBase<Content: View>: View {
     .scrollDismissesKeyboard(.interactively)
     #endif
     .navigationTitle(title)
+    #if os(iOS)
     .navigationBarTitleDisplayMode(.large)
-  }
-  
-  private var headerView: some View {
-    HStack(alignment: .top) {
-      Image(systemName: icon)
-        .font(.system(size: 40))
-        .foregroundColor(.accentColor)
-        .frame(width: 60, height: 60)
-        .background(Color.accentColor.opacity(0.1))
-        .cornerRadius(12)
-      
-      VStack(alignment: .leading, spacing: 4) {
-        Text(title)
-          .font(.title2)
-          .fontWeight(.semibold)
-        
-        Text(description)
-          .font(.subheadline)
-          .foregroundColor(.secondary)
-      }
-      
-      Spacer()
+    #endif
+    .safeAreaInset(edge: .top) {
+      Text(description)
+        .font(.subheadline)
+        .foregroundColor(.secondary)
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+        .background(.ultraThinMaterial)
     }
   }
   

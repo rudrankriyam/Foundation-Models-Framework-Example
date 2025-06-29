@@ -42,9 +42,11 @@
       "Bash(/Applications/Xcode-26.0.0-Beta.2.app/Contents/Developer/usr/bin/xcodebuild -scheme Psylean -configuration Debug -destination \"platform=macOS\" -showBuildSettings)",
       "Bash(/Applications/Xcode\\ 16.2\\ beta\\ 2.app/Contents/Developer/usr/bin/xcodebuild -scheme \"Psylean\" -destination \"platform=macOS\" build)",
       "Bash(sudo xcode-select:*)",
-      "Bash(git mv:*)"
+      "Bash(git mv:*)",
+      "Bash(xcrun devicectl device install app:*)",
+      "Bash(xcrun devicectl device process launch:*)"
     ],
-    "includeCoAuthoredBy": false,
-    "deny": []
+    "deny": [],
+    "includeCoAuthoredBy": false
   }
 }
