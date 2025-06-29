@@ -44,79 +44,42 @@ struct ExampleCardView: View {
     let type: ExampleType
 
     var body: some View {
-#if os(iOS)
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                iconView
-                Spacer()
-                chevronIcon
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            Image(systemName: type.icon)
+                .font(.title2)
+                .foregroundStyle(.tint)
+                .frame(width: 32, height: 32)
+            
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                Text(type.title)
+                    .font(.callout)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                
+                Text(type.subtitle)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-
-            VStack(alignment: .leading, spacing: 6) {
-                titleText
-                subtitleText
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-        .frame(minHeight: buttonMinHeight)
-        .padding(16)
-#else
-        HStack(spacing: 12) {
-            iconView
-
-            VStack(alignment: .leading, spacing: 4) {
-                titleText
-                subtitleText
-            }
-
-            Spacer()
-            chevronIcon
+            
+            Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .frame(minHeight: buttonMinHeight)
-        .padding(16)
-#endif
+        .padding(Spacing.md)
+        #if os(iOS)
+        .background(Color(UIColor.quaternarySystemFill))
+        #else
+        .background(Color(NSColor.quaternaryLabelColor).opacity(0.05))
+        #endif
+        .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .strokeBorder(Color.primary.opacity(0.05), lineWidth: 1)
+        )
     }
 
-    private var iconView: some View {
-        Image(systemName: type.icon)
-            .font(.title2)
-            .foregroundStyle(.tint)
-            .frame(width: 24, height: 24)
-    }
-
-    private var titleText: some View {
-        Text(type.title)
-            .font(.subheadline)
-            .fontWeight(.medium)
-            .foregroundStyle(.primary)
-            .lineLimit(2)
-            .fixedSize(horizontal: false, vertical: true)
-            .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private var subtitleText: some View {
-        Text(type.subtitle)
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            .lineLimit(1)
-            .truncationMode(.tail)
-            .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private var chevronIcon: some View {
-        Image(systemName: "chevron.right")
-            .font(.caption)
-            .foregroundStyle(.tertiary)
-    }
-
-    private var buttonMinHeight: CGFloat {
-#if os(iOS)
-        return 85
-#else
-        return 70
-#endif
-    }
 
     func pressed(_ isPressed: Bool) -> some View {
         self

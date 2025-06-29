@@ -19,38 +19,37 @@ struct CodeViewer: View {
   }
   
   var body: some View {
-    VStack(alignment: .leading, spacing: 12) {
+    VStack(alignment: .leading, spacing: Spacing.sm) {
       HStack {
-        Label("Code Example", systemImage: "chevron.left.forwardslash.chevron.right")
-          .font(.headline)
+        Text("CODE")
+          .font(.footnote)
+          .fontWeight(.medium)
+          .foregroundColor(.secondary)
         
         Spacer()
         
         Button(action: copyToClipboard) {
-          HStack(spacing: 4) {
-            Image(systemName: isCopied ? "checkmark" : "doc.on.doc")
-            Text(isCopied ? "Copied" : "Copy")
-              .font(.caption)
-          }
-          .foregroundColor(.accentColor)
+          Text(isCopied ? "Copied" : "Copy")
+            .font(.callout)
+            .foregroundColor(.accentColor)
         }
         .buttonStyle(.plain)
       }
       
       ScrollView {
         Text(code)
-          .font(.system(.body, design: .monospaced))
+          .font(.system(.callout, design: .monospaced))
           .textSelection(.enabled)
-          .padding(16)
+          .padding(Spacing.md)
           .frame(maxWidth: .infinity, alignment: .leading)
       }
       .frame(maxHeight: 400)
-      .background(Color.secondaryBackgroundColor)
-      .clipShape(RoundedRectangle(cornerRadius: 12))
-      .overlay(
-        RoundedRectangle(cornerRadius: 12)
-          .stroke(Color.primary.opacity(0.1), lineWidth: 1)
-      )
+      #if os(iOS)
+      .background(Color(UIColor.quaternarySystemFill))
+      #else
+      .background(Color(NSColor.quaternaryLabelColor).opacity(0.05))
+      #endif
+      .cornerRadius(12)
     }
   }
   
@@ -83,40 +82,35 @@ struct CodeDisclosure: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
       Button(action: { 
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+        withAnimation(.easeInOut(duration: 0.2)) {
           isExpanded.toggle()
         }
       }) {
-        HStack {
+        HStack(spacing: Spacing.sm) {
           Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
-            .font(.caption)
-            .frame(width: 20)
+            .font(.caption2)
+            .foregroundColor(.secondary)
           
           Text("View Code")
-            .font(.subheadline)
-            .fontWeight(.medium)
+            .font(.callout)
+            .foregroundColor(.primary)
           
           Spacer()
-          
-          Image(systemName: "swift")
-            .font(.caption)
-            .foregroundColor(.orange)
         }
-        .foregroundColor(.primary)
-        .padding(.vertical, 12)
-        .padding(.horizontal, 16)
-        .background(Color.secondaryBackgroundColor)
-        .cornerRadius(8)
+        .padding(Spacing.md)
+        #if os(iOS)
+      .background(Color(UIColor.quaternarySystemFill))
+      #else
+      .background(Color(NSColor.quaternaryLabelColor).opacity(0.05))
+      #endif
+        .cornerRadius(12)
       }
       .buttonStyle(.plain)
       
       if isExpanded {
         CodeViewer(code: code, language: language)
-          .padding(.top, 12)
-          .transition(.asymmetric(
-            insertion: .push(from: .top).combined(with: .opacity),
-            removal: .push(from: .bottom).combined(with: .opacity)
-          ))
+          .padding(.top, Spacing.sm)
+          .transition(.opacity.combined(with: .move(edge: .top)))
       }
     }
   }

@@ -29,29 +29,50 @@ struct BasicChatView: View {
       onRun: executeChat,
       onReset: resetToDefaults
     ) {
-      VStack(spacing: 16) {
+      VStack(spacing: Spacing.lg) {
         // Instructions Section
-        VStack(alignment: .leading, spacing: 8) {
-          Button(action: { showInstructions.toggle() }) {
-            HStack {
-              Label("Instructions", systemImage: "text.alignleft")
-                .font(.headline)
-              Spacer()
-              Image(systemName: showInstructions ? "chevron.up" : "chevron.down")
-                .font(.caption)
+        if showInstructions || !instructions.isEmpty {
+          VStack(alignment: .leading, spacing: Spacing.sm) {
+            Button(action: { showInstructions.toggle() }) {
+              HStack(spacing: Spacing.sm) {
+                Image(systemName: showInstructions ? "chevron.down" : "chevron.right")
+                  .font(.caption2)
+                  .foregroundColor(.secondary)
+                
+                Text("INSTRUCTIONS")
+                  .font(.footnote)
+                  .fontWeight(.medium)
+                  .foregroundColor(.secondary)
+                
+                Spacer()
+              }
             }
-            .foregroundColor(.primary)
+            .buttonStyle(.plain)
+            
+            if showInstructions {
+              TextEditor(text: $instructions)
+                .font(.body)
+                .padding(Spacing.md)
+                #if os(iOS)
+                .background(Color(UIColor.quaternarySystemFill))
+                #else
+                .background(Color(NSColor.quaternaryLabelColor).opacity(0.05))
+                #endif
+                .cornerRadius(12)
+                .frame(minHeight: 80)
+            }
+          }
+        } else {
+          Button(action: { showInstructions = true }) {
+            HStack(spacing: Spacing.sm) {
+              Image(systemName: "plus.circle")
+                .font(.callout)
+              Text("Add Instructions")
+                .font(.callout)
+            }
+            .foregroundColor(.accentColor)
           }
           .buttonStyle(.plain)
-          
-          if showInstructions {
-            TextEditor(text: $instructions)
-              .font(.body)
-              .padding(8)
-              .background(Color.secondaryBackgroundColor)
-              .cornerRadius(8)
-              .frame(minHeight: 80)
-          }
         }
         
         // Prompt Suggestions

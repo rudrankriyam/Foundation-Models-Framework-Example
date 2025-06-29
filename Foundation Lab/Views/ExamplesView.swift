@@ -49,30 +49,29 @@ struct ExamplesView: View {
   // MARK: - View Components
 
   private var headerView: some View {
-    VStack(alignment: .leading, spacing: 8) {
+    VStack(alignment: .leading, spacing: Spacing.xs) {
       Text("Foundation Models")
         .font(.largeTitle)
         .fontWeight(.bold)
+      Text("Explore Apple's AI capabilities")
+        .font(.callout)
+        .foregroundColor(.secondary)
     }
-    .padding(.horizontal)
+    .padding(.horizontal, Spacing.md)
   }
 
   private var exampleButtonsView: some View {
     VStack(spacing: gridSpacing) {
-      LazyVGrid(columns: adaptiveGridColumns, spacing: gridSpacing) {
+      LazyVGrid(columns: adaptiveGridColumns, spacing: Spacing.md) {
         ForEach(ExampleType.allCases) { exampleType in
           NavigationLink(value: exampleType) {
             ExampleCardView(type: exampleType)
               .contentShape(Rectangle())
           }
           .buttonStyle(.plain)
-          #if os(iOS) || os(macOS)
-          .glassEffect(.regular.interactive(true), in: .rect(cornerRadius: 12))
-          .glassEffectID(exampleType.id, in: glassNamespace)
-          #endif
         }
       }
-      .padding(.horizontal)
+      .padding(.horizontal, Spacing.md)
     }
   }
 

@@ -101,36 +101,48 @@ struct PromptHistory: View {
   @State private var isExpanded = false
   
   var body: some View {
-    VStack(alignment: .leading, spacing: 8) {
-      Button(action: { isExpanded.toggle() }) {
-        HStack {
-          Label("Recent Prompts", systemImage: "clock.arrow.circlepath")
-            .font(.caption)
+    VStack(alignment: .leading, spacing: Spacing.sm) {
+      Button(action: { 
+        withAnimation(.easeInOut(duration: 0.2)) {
+          isExpanded.toggle()
+        }
+      }) {
+        HStack(spacing: Spacing.sm) {
+          Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
+            .font(.caption2)
+            .foregroundColor(.secondary)
+          
+          Text("RECENT")
+            .font(.footnote)
+            .fontWeight(.medium)
+            .foregroundColor(.secondary)
           
           Spacer()
-          
-          Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-            .font(.caption)
         }
-        .foregroundColor(.secondary)
       }
       .buttonStyle(.plain)
       
       if isExpanded && !history.isEmpty {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
           ForEach(history.prefix(5), id: \.self) { prompt in
             Button(action: { onSelect(prompt) }) {
               Text(prompt)
-                .font(.caption)
+                .font(.callout)
                 .lineLimit(2)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(8)
-                .background(Color.secondary.opacity(0.1))
-                .cornerRadius(6)
+                .padding(Spacing.sm)
+                #if os(iOS)
+                .background(Color(UIColor.quaternarySystemFill))
+                #else
+                .background(Color(NSColor.quaternaryLabelColor).opacity(0.05))
+                #endif
+                .cornerRadius(8)
             }
             .buttonStyle(.plain)
+            .foregroundColor(.primary)
           }
         }
+        .transition(.opacity.combined(with: .move(edge: .top)))
       }
     }
   }

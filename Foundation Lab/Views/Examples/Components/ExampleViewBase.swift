@@ -47,88 +47,104 @@ struct ExampleViewBase<Content: View>: View {
   
   var body: some View {
     ScrollView {
-      VStack(alignment: .leading, spacing: 20) {
+      VStack(alignment: .leading, spacing: Spacing.lg) {
+        // Title and description at top
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+          Text(title)
+            .font(.title3)
+            .fontWeight(.semibold)
+          Text(description)
+            .font(.callout)
+            .foregroundColor(.secondary)
+        }
+        
         promptSection
         actionButtons
         
         if let error = errorMessage {
-          ErrorBanner(message: error)
+          Text(error)
+            .font(.callout)
+            .foregroundColor(.secondary)
+            .padding(Spacing.md)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            #if os(iOS)
+            #if os(iOS)
+          .background(Color(UIColor.quaternarySystemFill))
+          #else
+          .background(Color(NSColor.quaternaryLabelColor).opacity(0.05))
+          #endif
+            #else
+            .background(Color(NSColor.quaternaryLabelColor).opacity(0.05))
+            #endif
+            .cornerRadius(12)
         }
         
         content
         
-        // Code disclosure section
         if let code = codeExample {
           CodeDisclosure(code: code)
-            .padding(.top, 8)
         }
       }
-      .padding()
+      .padding(.horizontal, Spacing.md)
+      .padding(.vertical, Spacing.lg)
     }
     #if os(iOS)
     .scrollDismissesKeyboard(.interactively)
+    .navigationBarHidden(true)
     #endif
-    .navigationTitle(title)
-    #if os(iOS)
-    .navigationBarTitleDisplayMode(.inline)
-    #endif
-    .toolbar {
-      ToolbarItem(placement: .principal) {
-        VStack(spacing: 2) {
-          Text(title)
-            .font(.headline)
-            .foregroundColor(.primary)
-          Text(description)
-            .font(.caption)
-            .foregroundColor(.secondary)
-        }
-      }
-    }
   }
   
   private var promptSection: some View {
-    VStack(alignment: .leading, spacing: 12) {
-      Label("Prompt", systemImage: "text.quote")
-        .font(.headline)
+    VStack(alignment: .leading, spacing: Spacing.sm) {
+      Text("PROMPT")
+        .font(.footnote)
+        .fontWeight(.medium)
+        .foregroundColor(.secondary)
       
       #if os(iOS)
       TextEditor(text: $currentPrompt)
         .font(.body)
-        .padding(8)
-        .background(Color(UIColor.secondarySystemBackground))
-        .cornerRadius(8)
+        .padding(Spacing.md)
+        .background(Color(UIColor.quaternarySystemFill))
+        .cornerRadius(12)
         .frame(minHeight: 100)
       #else
       TextEditor(text: $currentPrompt)
         .font(.body)
-        .padding(8)
-        .background(Color(NSColor.controlBackgroundColor))
-        .cornerRadius(8)
+        .padding(Spacing.md)
+        .background(Color(NSColor.quaternarySystemFill))
+        .cornerRadius(12)
         .frame(minHeight: 100)
       #endif
     }
   }
   
   private var actionButtons: some View {
-    HStack(spacing: 12) {
+    HStack(spacing: Spacing.sm) {
       Button(action: onReset) {
-        Label("Reset", systemImage: "arrow.counterclockwise")
+        Text("Reset")
+          .font(.callout)
+          .fontWeight(.medium)
           .frame(maxWidth: .infinity)
+          .padding(.vertical, Spacing.sm)
       }
-      .buttonStyle(.bordered)
+      .buttonStyle(.borderedProminent)
+      .tint(.secondary)
       .disabled(currentPrompt == defaultPrompt)
       
       Button(action: onRun) {
-        HStack {
+        HStack(spacing: Spacing.xs) {
           if isRunning {
             ProgressView()
               .scaleEffect(0.8)
-          } else {
-            Image(systemName: "play.fill")
+              .tint(.white)
           }
-          Text("Run Example")
+          Text(isRunning ? "Running..." : "Run")
+            .font(.callout)
+            .fontWeight(.medium)
         }
         .frame(maxWidth: .infinity)
+        .padding(.vertical, Spacing.sm)
       }
       .buttonStyle(.borderedProminent)
       .disabled(isRunning || currentPrompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -144,22 +160,31 @@ struct PromptSuggestions: View {
   let onSelect: (String) -> Void
   
   var body: some View {
-    VStack(alignment: .leading, spacing: 8) {
-      Text("Try these prompts:")
-        .font(.caption)
+    VStack(alignment: .leading, spacing: Spacing.sm) {
+      Text("SUGGESTIONS")
+        .font(.footnote)
+        .fontWeight(.medium)
         .foregroundColor(.secondary)
       
       ScrollView(.horizontal, showsIndicators: false) {
-        HStack(spacing: 8) {
+        HStack(spacing: Spacing.sm) {
           ForEach(suggestions, id: \.self) { suggestion in
             Button(action: { onSelect(suggestion) }) {
               Text(suggestion)
-                .font(.caption)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(Color.accentColor.opacity(0.1))
-                .foregroundColor(.accentColor)
-                .cornerRadius(15)
+                .font(.callout)
+                .padding(.horizontal, Spacing.md)
+                .padding(.vertical, Spacing.sm)
+                #if os(iOS)
+            #if os(iOS)
+          .background(Color(UIColor.quaternarySystemFill))
+          #else
+          .background(Color(NSColor.quaternaryLabelColor).opacity(0.05))
+          #endif
+            #else
+            .background(Color(NSColor.quaternaryLabelColor).opacity(0.05))
+            #endif
+                .foregroundColor(.primary)
+                .cornerRadius(20)
             }
             .buttonStyle(.plain)
           }
@@ -176,16 +201,18 @@ struct ExampleResultDisplay: View {
   @State private var isCopied = false
   
   var body: some View {
-    VStack(alignment: .leading, spacing: 12) {
+    VStack(alignment: .leading, spacing: Spacing.sm) {
       HStack {
-        Label("Result", systemImage: isSuccess ? "checkmark.circle" : "xmark.circle")
-          .font(.headline)
-          .foregroundColor(isSuccess ? .green : .red)
+        Text("RESULT")
+          .font(.footnote)
+          .fontWeight(.medium)
+          .foregroundColor(.secondary)
         
         Spacer()
         
         Button(action: copyToClipboard) {
-          Image(systemName: isCopied ? "checkmark" : "doc.on.doc")
+          Text(isCopied ? "Copied" : "Copy")
+            .font(.callout)
             .foregroundColor(.accentColor)
         }
         .buttonStyle(.plain)
@@ -193,12 +220,16 @@ struct ExampleResultDisplay: View {
       
       ScrollView {
         Text(result)
-          .font(.system(.body, design: .monospaced))
+          .font(.body)
           .textSelection(.enabled)
-          .padding()
+          .padding(Spacing.md)
           .frame(maxWidth: .infinity, alignment: .leading)
-          .background(Color.secondaryBackgroundColor)
-          .cornerRadius(8)
+          #if os(iOS)
+          .background(Color(UIColor.quaternarySystemFill))
+          #else
+          .background(Color(NSColor.quaternaryLabelColor).opacity(0.05))
+          #endif
+          .cornerRadius(12)
       }
       .frame(maxHeight: 300)
     }
