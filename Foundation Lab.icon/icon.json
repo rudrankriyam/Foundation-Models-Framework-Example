@@ -15,7 +15,14 @@
           "glass" : true,
           "hidden" : false,
           "image-name" : "Alex-Image-1751189635.png",
-          "name" : "Alex-Image-1751189635"
+          "name" : "Alex-Image-1751189635",
+          "position" : {
+            "scale" : 1.2,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
         }
       ],
       "lighting" : "individual",
