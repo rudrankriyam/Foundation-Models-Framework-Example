@@ -64,16 +64,19 @@ struct ExampleViewBase<Content: View>: View {
     #endif
     .navigationTitle(title)
     #if os(iOS)
-    .navigationBarTitleDisplayMode(.large)
+    .navigationBarTitleDisplayMode(.inline)
     #endif
-    .safeAreaInset(edge: .top) {
-      Text(description)
-        .font(.subheadline)
-        .foregroundColor(.secondary)
-        .frame(maxWidth: .infinity)
-        .padding(.horizontal)
-        .padding(.vertical, 8)
-        .background(.ultraThinMaterial)
+    .toolbar {
+      ToolbarItem(placement: .principal) {
+        VStack(spacing: 2) {
+          Text(title)
+            .font(.headline)
+            .foregroundColor(.primary)
+          Text(description)
+            .font(.caption)
+            .foregroundColor(.secondary)
+        }
+      }
     }
   }
   

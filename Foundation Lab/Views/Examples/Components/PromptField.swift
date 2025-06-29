@@ -51,10 +51,6 @@ struct PromptField: View {
           .background(backgroundColor)
           .cornerRadius(8)
           .frame(minHeight: minHeight)
-          .overlay(
-            RoundedRectangle(cornerRadius: 8)
-              .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
-          )
         
         if text.isEmpty {
           Text(placeholder)
