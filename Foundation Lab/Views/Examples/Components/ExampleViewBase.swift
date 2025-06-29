@@ -2,7 +2,7 @@
 //  ExampleViewBase.swift
 //  FoundationLab
 //
-//  Created by Claude on 1/29/25.
+//  Created by Rudrank Riyam on 6/29/25.
 //
 
 import FoundationModels
@@ -47,9 +47,9 @@ struct ExampleViewBase<Content: View>: View {
   
   var body: some View {
     ScrollView {
-      VStack(alignment: .leading, spacing: Spacing.lg) {
+      VStack(alignment: .leading, spacing: Spacing.large) {
         // Title and description at top
-        VStack(alignment: .leading, spacing: Spacing.xs) {
+        VStack(alignment: .leading, spacing: Spacing.small) {
           Text(title)
             .font(.title3)
             .fontWeight(.semibold)
@@ -65,7 +65,7 @@ struct ExampleViewBase<Content: View>: View {
           Text(error)
             .font(.callout)
             .foregroundColor(.secondary)
-            .padding(Spacing.md)
+            .padding(Spacing.medium)
             .frame(maxWidth: .infinity, alignment: .leading)
             #if os(iOS)
             #if os(iOS)
@@ -85,8 +85,8 @@ struct ExampleViewBase<Content: View>: View {
           CodeDisclosure(code: code)
         }
       }
-      .padding(.horizontal, Spacing.md)
-      .padding(.vertical, Spacing.lg)
+      .padding(.horizontal, Spacing.medium)
+      .padding(.vertical, Spacing.large)
     }
     #if os(iOS)
     .scrollDismissesKeyboard(.interactively)
@@ -95,7 +95,7 @@ struct ExampleViewBase<Content: View>: View {
   }
   
   private var promptSection: some View {
-    VStack(alignment: .leading, spacing: Spacing.sm) {
+    VStack(alignment: .leading, spacing: Spacing.small) {
       Text("PROMPT")
         .font(.footnote)
         .fontWeight(.medium)
@@ -104,14 +104,14 @@ struct ExampleViewBase<Content: View>: View {
       #if os(iOS)
       TextEditor(text: $currentPrompt)
         .font(.body)
-        .padding(Spacing.md)
+        .padding(Spacing.medium)
         .background(Color(UIColor.quaternarySystemFill))
         .cornerRadius(12)
         .frame(minHeight: 100)
       #else
       TextEditor(text: $currentPrompt)
         .font(.body)
-        .padding(Spacing.md)
+        .padding(Spacing.medium)
         .background(Color(NSColor.quaternarySystemFill))
         .cornerRadius(12)
         .frame(minHeight: 100)
@@ -120,20 +120,20 @@ struct ExampleViewBase<Content: View>: View {
   }
   
   private var actionButtons: some View {
-    HStack(spacing: Spacing.sm) {
+    HStack(spacing: Spacing.small) {
       Button(action: onReset) {
         Text("Reset")
           .font(.callout)
           .fontWeight(.medium)
           .frame(maxWidth: .infinity)
-          .padding(.vertical, Spacing.sm)
+          .padding(.vertical, Spacing.small)
       }
       .buttonStyle(.borderedProminent)
       .tint(.secondary)
       .disabled(currentPrompt == defaultPrompt)
       
       Button(action: onRun) {
-        HStack(spacing: Spacing.xs) {
+        HStack(spacing: Spacing.small) {
           if isRunning {
             ProgressView()
               .scaleEffect(0.8)
@@ -144,7 +144,7 @@ struct ExampleViewBase<Content: View>: View {
             .fontWeight(.medium)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, Spacing.sm)
+        .padding(.vertical, Spacing.small)
       }
       .buttonStyle(.borderedProminent)
       .disabled(isRunning || currentPrompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -160,20 +160,20 @@ struct PromptSuggestions: View {
   let onSelect: (String) -> Void
   
   var body: some View {
-    VStack(alignment: .leading, spacing: Spacing.sm) {
+    VStack(alignment: .leading, spacing: Spacing.small) {
       Text("SUGGESTIONS")
         .font(.footnote)
         .fontWeight(.medium)
         .foregroundColor(.secondary)
       
       ScrollView(.horizontal, showsIndicators: false) {
-        HStack(spacing: Spacing.sm) {
+        HStack(spacing: Spacing.small) {
           ForEach(suggestions, id: \.self) { suggestion in
             Button(action: { onSelect(suggestion) }) {
               Text(suggestion)
                 .font(.callout)
-                .padding(.horizontal, Spacing.md)
-                .padding(.vertical, Spacing.sm)
+                .padding(.horizontal, Spacing.medium)
+                .padding(.vertical, Spacing.small)
                 #if os(iOS)
             #if os(iOS)
           .background(Color(UIColor.quaternarySystemFill))
@@ -201,7 +201,7 @@ struct ExampleResultDisplay: View {
   @State private var isCopied = false
   
   var body: some View {
-    VStack(alignment: .leading, spacing: Spacing.sm) {
+    VStack(alignment: .leading, spacing: Spacing.small) {
       HStack {
         Text("RESULT")
           .font(.footnote)
@@ -222,7 +222,7 @@ struct ExampleResultDisplay: View {
         Text(result)
           .font(.body)
           .textSelection(.enabled)
-          .padding(Spacing.md)
+          .padding(Spacing.medium)
           .frame(maxWidth: .infinity, alignment: .leading)
           #if os(iOS)
           .background(Color(UIColor.quaternarySystemFill))

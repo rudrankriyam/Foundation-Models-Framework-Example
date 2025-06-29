@@ -2,7 +2,7 @@
 //  BasicChatView.swift
 //  FoundationLab
 //
-//  Created by Claude on 1/29/25.
+//  Created by Rudrank Riyam on 6/29/25.
 //
 
 import FoundationModels
@@ -29,12 +29,12 @@ struct BasicChatView: View {
       onRun: executeChat,
       onReset: resetToDefaults
     ) {
-      VStack(spacing: Spacing.lg) {
+      VStack(spacing: Spacing.large) {
         // Instructions Section
         if showInstructions || !instructions.isEmpty {
-          VStack(alignment: .leading, spacing: Spacing.sm) {
+          VStack(alignment: .leading, spacing: Spacing.small) {
             Button(action: { showInstructions.toggle() }) {
-              HStack(spacing: Spacing.sm) {
+              HStack(spacing: Spacing.small) {
                 Image(systemName: showInstructions ? "chevron.down" : "chevron.right")
                   .font(.caption2)
                   .foregroundColor(.secondary)
@@ -52,7 +52,7 @@ struct BasicChatView: View {
             if showInstructions {
               TextEditor(text: $instructions)
                 .font(.body)
-                .padding(Spacing.md)
+                .padding(Spacing.medium)
                 #if os(iOS)
                 .background(Color(UIColor.quaternarySystemFill))
                 #else
@@ -64,7 +64,7 @@ struct BasicChatView: View {
           }
         } else {
           Button(action: { showInstructions = true }) {
-            HStack(spacing: Spacing.sm) {
+            HStack(spacing: Spacing.small) {
               Image(systemName: "plus.circle")
                 .font(.callout)
               Text("Add Instructions")

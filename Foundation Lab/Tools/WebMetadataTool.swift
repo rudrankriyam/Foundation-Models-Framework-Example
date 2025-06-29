@@ -2,7 +2,7 @@
 //  WebMetadataTool.swift
 //  FoundationLab
 //
-//  Created by Claude on 6/18/25.
+//  Created by Rudrank Riyam on 6/29/25.
 //
 
 import Foundation

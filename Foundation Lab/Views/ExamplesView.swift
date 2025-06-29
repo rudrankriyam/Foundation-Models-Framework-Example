@@ -49,7 +49,7 @@ struct ExamplesView: View {
   // MARK: - View Components
 
   private var headerView: some View {
-    VStack(alignment: .leading, spacing: Spacing.xs) {
+    VStack(alignment: .leading, spacing: Spacing.small) {
       Text("Foundation Models")
         .font(.largeTitle)
         .fontWeight(.bold)
@@ -57,12 +57,12 @@ struct ExamplesView: View {
         .font(.callout)
         .foregroundColor(.secondary)
     }
-    .padding(.horizontal, Spacing.md)
+    .padding(.horizontal, Spacing.medium)
   }
 
   private var exampleButtonsView: some View {
     VStack(spacing: gridSpacing) {
-      LazyVGrid(columns: adaptiveGridColumns, spacing: Spacing.md) {
+      LazyVGrid(columns: adaptiveGridColumns, spacing: Spacing.medium) {
         ForEach(ExampleType.allCases) { exampleType in
           NavigationLink(value: exampleType) {
             ExampleCardView(type: exampleType)
@@ -71,7 +71,7 @@ struct ExamplesView: View {
           .buttonStyle(.plain)
         }
       }
-      .padding(.horizontal, Spacing.md)
+      .padding(.horizontal, Spacing.medium)
     }
   }
 

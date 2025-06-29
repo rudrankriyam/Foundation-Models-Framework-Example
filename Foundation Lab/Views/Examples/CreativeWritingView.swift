@@ -2,7 +2,7 @@
 //  CreativeWritingView.swift
 //  FoundationLab
 //
-//  Created by Claude on 1/29/25.
+//  Created by Rudrank Riyam on 6/29/25.
 //
 
 import FoundationModels

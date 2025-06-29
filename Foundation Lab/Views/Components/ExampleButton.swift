@@ -44,13 +44,13 @@ struct ExampleCardView: View {
     let type: ExampleType
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.sm) {
+        VStack(alignment: .leading, spacing: Spacing.small) {
             Image(systemName: type.icon)
                 .font(.title2)
                 .foregroundStyle(.tint)
                 .frame(width: 32, height: 32)
             
-            VStack(alignment: .leading, spacing: Spacing.xs) {
+            VStack(alignment: .leading, spacing: Spacing.small) {
                 Text(type.title)
                     .font(.callout)
                     .fontWeight(.medium)
@@ -67,7 +67,7 @@ struct ExampleCardView: View {
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(Spacing.md)
+        .padding(Spacing.medium)
         #if os(iOS)
         .background(Color(UIColor.quaternarySystemFill))
         #else

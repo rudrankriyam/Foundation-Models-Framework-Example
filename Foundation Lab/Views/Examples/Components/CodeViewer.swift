@@ -2,7 +2,7 @@
 //  CodeViewer.swift
 //  FoundationLab
 //
-//  Created by Claude on 1/29/25.
+//  Created by Rudrank Riyam on 6/29/25.
 //
 
 import SwiftUI
@@ -19,7 +19,7 @@ struct CodeViewer: View {
   }
   
   var body: some View {
-    VStack(alignment: .leading, spacing: Spacing.sm) {
+    VStack(alignment: .leading, spacing: Spacing.small) {
       HStack {
         Text("CODE")
           .font(.footnote)
@@ -40,7 +40,7 @@ struct CodeViewer: View {
         Text(code)
           .font(.system(.callout, design: .monospaced))
           .textSelection(.enabled)
-          .padding(Spacing.md)
+          .padding(Spacing.medium)
           .frame(maxWidth: .infinity, alignment: .leading)
       }
       .frame(maxHeight: 400)
@@ -86,7 +86,7 @@ struct CodeDisclosure: View {
           isExpanded.toggle()
         }
       }) {
-        HStack(spacing: Spacing.sm) {
+        HStack(spacing: Spacing.small) {
           Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
             .font(.caption2)
             .foregroundColor(.secondary)
@@ -97,7 +97,7 @@ struct CodeDisclosure: View {
           
           Spacer()
         }
-        .padding(Spacing.md)
+        .padding(Spacing.medium)
         #if os(iOS)
       .background(Color(UIColor.quaternarySystemFill))
       #else
@@ -109,7 +109,7 @@ struct CodeDisclosure: View {
       
       if isExpanded {
         CodeViewer(code: code, language: language)
-          .padding(.top, Spacing.sm)
+          .padding(.top, Spacing.small)
           .transition(.opacity.combined(with: .move(edge: .top)))
       }
     }

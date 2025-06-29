@@ -2,7 +2,7 @@
 //  PromptField.swift
 //  FoundationLab
 //
-//  Created by Claude on 1/29/25.
+//  Created by Rudrank Riyam on 6/29/25.
 //
 
 import SwiftUI
@@ -101,13 +101,13 @@ struct PromptHistory: View {
   @State private var isExpanded = false
   
   var body: some View {
-    VStack(alignment: .leading, spacing: Spacing.sm) {
+    VStack(alignment: .leading, spacing: Spacing.small) {
       Button(action: { 
         withAnimation(.easeInOut(duration: 0.2)) {
           isExpanded.toggle()
         }
       }) {
-        HStack(spacing: Spacing.sm) {
+        HStack(spacing: Spacing.small) {
           Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
             .font(.caption2)
             .foregroundColor(.secondary)
@@ -123,14 +123,14 @@ struct PromptHistory: View {
       .buttonStyle(.plain)
       
       if isExpanded && !history.isEmpty {
-        VStack(alignment: .leading, spacing: Spacing.xs) {
+        VStack(alignment: .leading, spacing: Spacing.small) {
           ForEach(history.prefix(5), id: \.self) { prompt in
             Button(action: { onSelect(prompt) }) {
               Text(prompt)
                 .font(.callout)
                 .lineLimit(2)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(Spacing.sm)
+                .padding(Spacing.small)
                 #if os(iOS)
                 .background(Color(UIColor.quaternarySystemFill))
                 #else
