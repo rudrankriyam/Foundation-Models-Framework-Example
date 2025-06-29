@@ -109,7 +109,6 @@ struct ExampleViewBase<Content: View>: View {
         Text("Reset")
           .font(.callout)
           .fontWeight(.medium)
-          .foregroundColor(.white)
           .frame(maxWidth: .infinity)
           .padding(.vertical, Spacing.small)
       }
