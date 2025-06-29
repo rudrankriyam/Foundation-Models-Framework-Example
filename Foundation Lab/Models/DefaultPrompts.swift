@@ -102,26 +102,31 @@ enum DefaultPrompts {
   ]
 }
 
-// MARK: - Code Examples
+// MARK: - Dynamic Code Examples
 
 extension DefaultPrompts {
-  static let basicChatCode = """
-import FoundationModels
-
-// Create a language model session with optional instructions
-let session: LanguageModelSession
-if let instructions = instructions {
-    session = LanguageModelSession(instructions: Instructions(instructions))
-} else {
-    session = LanguageModelSession()
-}
-
-// Generate a response
-let response = try await session.respond(to: Prompt(prompt))
-print(response.content)
-"""
+  static func basicChatCode(prompt: String, instructions: String? = nil) -> String {
+    var code = "import FoundationModels\n\n"
+    
+    if let instructions = instructions, !instructions.isEmpty {
+      code += "// Create a session with custom instructions\n"
+      code += "let session = LanguageModelSession(\n"
+      code += "    instructions: Instructions(\"\(instructions)\")\n"
+      code += ")\n"
+    } else {
+      code += "// Create a basic language model session\n"
+      code += "let session = LanguageModelSession()\n"
+    }
+    
+    code += "\n// Generate a response\n"
+    code += "let response = try await session.respond(to: \"\(prompt)\")\n"
+    code += "print(response.content)"
+    
+    return code
+  }
   
-  static let structuredDataCode = """
+  static func structuredDataCode(prompt: String) -> String {
+    return """
 import FoundationModels
 
 // Define your data structure
@@ -137,7 +142,7 @@ struct Book {
 // Generate structured data
 let session = LanguageModelSession()
 let response = try await session.respond(
-    to: Prompt(prompt),
+    to: "\(prompt)",
     generating: Book.self
 )
 let book = response.content
@@ -146,8 +151,10 @@ print("Title: \\(book.title)")
 print("Author: \\(book.author)")
 print("Genre: \\(book.genre)")
 """
+  }
   
-  static let generationGuidesCode = """
+  static func generationGuidesCode(prompt: String) -> String {
+    return """
 import FoundationModels
 
 @Generable
@@ -164,7 +171,7 @@ struct ProductReview {
 
 let session = LanguageModelSession()
 let response = try await session.respond(
-    to: Prompt(prompt),
+    to: "\(prompt)",
     generating: ProductReview.self
 )
 let review = response.content
@@ -172,20 +179,24 @@ let review = response.content
 print("Review: \\(review.reviewText)")
 print("Rating: \\(review.rating)/5")
 """
+  }
   
-  static let streamingResponseCode = """
+  static func streamingResponseCode(prompt: String) -> String {
+    return """
 import FoundationModels
 
 let session = LanguageModelSession()
 
 // Stream the response token by token
-let stream = session.streamResponse(to: Prompt(prompt))
+let stream = session.streamResponse(to: "\(prompt)")
 for try await partialResponse in stream {
     print(partialResponse, terminator: "")
 }
 """
+  }
   
-  static let businessIdeasCode = """
+  static func businessIdeasCode(prompt: String) -> String {
+    return """
 import FoundationModels
 
 @Generable
@@ -200,7 +211,7 @@ struct BusinessIdea {
 
 let session = LanguageModelSession()
 let response = try await session.respond(
-    to: Prompt(prompt),
+    to: "\(prompt)",
     generating: BusinessIdea.self
 )
 let idea = response.content
@@ -208,38 +219,46 @@ let idea = response.content
 print("Business: \\(idea.name)")
 print("Target Market: \\(idea.targetMarket)")
 """
+  }
   
-  static let creativeWritingCode = """
-import FoundationModels
-
-@Generable
-struct StoryOutline {
-    let title: String
-    let genre: String
-    let protagonist: String
-    let antagonist: String?
-    let setting: String
-    let conflict: String
-    let chapters: [Chapter]
-}
-
-@Generable
-struct Chapter {
-    let number: Int
-    let title: String
-    let summary: String
-}
-
-let session = LanguageModelSession()
-let response = try await session.respond(
-    to: Prompt(prompt),
-    generating: StoryOutline.self
-)
-let story = response.content
-
-print("Title: \\(story.title)")
-print("Genre: \\(story.genre)")
-"""
+  static func creativeWritingCode(prompt: String, instructions: String? = nil) -> String {
+    var code = "import FoundationModels\n\n"
+    code += "@Generable\n"
+    code += "struct StoryOutline {\n"
+    code += "    let title: String\n"
+    code += "    let genre: String\n"
+    code += "    let protagonist: String\n"
+    code += "    let antagonist: String?\n"
+    code += "    let setting: String\n"
+    code += "    let conflict: String\n"
+    code += "    let chapters: [Chapter]\n"
+    code += "}\n\n"
+    code += "@Generable\n"
+    code += "struct Chapter {\n"
+    code += "    let number: Int\n"
+    code += "    let title: String\n"
+    code += "    let summary: String\n"
+    code += "}\n\n"
+    
+    if let instructions = instructions, !instructions.isEmpty {
+      code += "// Create session with creative writing instructions\n"
+      code += "let session = LanguageModelSession(\n"
+      code += "    instructions: Instructions(\"\(instructions)\")\n"
+      code += ")\n\n"
+    } else {
+      code += "let session = LanguageModelSession()\n\n"
+    }
+    
+    code += "let response = try await session.respond(\n"
+    code += "    to: \"\(prompt)\",\n"
+    code += "    generating: StoryOutline.self\n"
+    code += ")\n\n"
+    code += "let story = response.content\n"
+    code += "print(\"Title: \\(story.title)\")\n"
+    code += "print(\"Genre: \\(story.genre)\")"
+    
+    return code
+  }
   
   static let modelAvailabilityCode = """
 import FoundationModels

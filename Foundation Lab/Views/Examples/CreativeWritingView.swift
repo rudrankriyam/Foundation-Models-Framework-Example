@@ -10,7 +10,9 @@ import SwiftUI
 
 struct CreativeWritingView: View {
   @State private var currentPrompt = DefaultPrompts.creativeWriting
+  @State private var instructions = ""
   @State private var executor = ExampleExecutor()
+  @State private var showInstructions = false
   
   var body: some View {
     ExampleViewBase(
@@ -20,7 +22,7 @@ struct CreativeWritingView: View {
       currentPrompt: $currentPrompt,
       isRunning: executor.isRunning,
       errorMessage: executor.errorMessage,
-      codeExample: DefaultPrompts.creativeWritingCode,
+      codeExample: DefaultPrompts.creativeWritingCode(prompt: currentPrompt, instructions: showInstructions && !instructions.isEmpty ? instructions : nil),
       onRun: executeCreativeWriting,
       onReset: resetToDefaults
     ) {

@@ -22,7 +22,10 @@ struct BasicChatView: View {
       currentPrompt: $currentPrompt,
       isRunning: executor.isRunning,
       errorMessage: executor.errorMessage,
-      codeExample: DefaultPrompts.basicChatCode,
+      codeExample: DefaultPrompts.basicChatCode(
+        prompt: currentPrompt,
+        instructions: showInstructions && !instructions.isEmpty ? instructions : nil
+      ),
       onRun: executeChat,
       onReset: resetToDefaults
     ) {

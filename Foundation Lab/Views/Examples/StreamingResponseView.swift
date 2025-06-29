@@ -22,7 +22,7 @@ struct StreamingResponseView: View {
       currentPrompt: $currentPrompt,
       isRunning: isStreaming,
       errorMessage: executor.errorMessage,
-      codeExample: DefaultPrompts.streamingResponseCode,
+      codeExample: DefaultPrompts.streamingResponseCode(prompt: currentPrompt),
       onRun: executeStreaming,
       onReset: resetToDefaults
     ) {

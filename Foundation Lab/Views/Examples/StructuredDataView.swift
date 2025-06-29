@@ -20,7 +20,7 @@ struct StructuredDataView: View {
       currentPrompt: $currentPrompt,
       isRunning: executor.isRunning,
       errorMessage: executor.errorMessage,
-      codeExample: DefaultPrompts.structuredDataCode,
+      codeExample: DefaultPrompts.structuredDataCode(prompt: currentPrompt),
       onRun: executeStructuredData,
       onReset: resetToDefaults
     ) {

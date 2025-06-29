@@ -20,7 +20,7 @@ struct BusinessIdeasView: View {
       currentPrompt: $currentPrompt,
       isRunning: executor.isRunning,
       errorMessage: executor.errorMessage,
-      codeExample: DefaultPrompts.businessIdeasCode,
+      codeExample: DefaultPrompts.businessIdeasCode(prompt: currentPrompt),
       onRun: executeBusinessIdea,
       onReset: resetToDefaults
     ) {
