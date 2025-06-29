@@ -31,48 +31,36 @@ struct BasicChatView: View {
     ) {
       VStack(spacing: Spacing.large) {
         // Instructions Section
-        if showInstructions || !instructions.isEmpty {
-          VStack(alignment: .leading, spacing: Spacing.small) {
-            Button(action: { showInstructions.toggle() }) {
-              HStack(spacing: Spacing.small) {
-                Image(systemName: showInstructions ? "chevron.down" : "chevron.right")
-                  .font(.caption2)
-                  .foregroundColor(.secondary)
-                
-                Text("INSTRUCTIONS")
-                  .font(.footnote)
-                  .fontWeight(.medium)
-                  .foregroundColor(.secondary)
-                
-                Spacer()
-              }
+        VStack(alignment: .leading, spacing: 0) {
+          Button(action: { showInstructions.toggle() }) {
+            HStack(spacing: Spacing.small) {
+              Image(systemName: showInstructions ? "chevron.down" : "chevron.right")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+              
+              Text("Instructions")
+                .font(.callout)
+                .foregroundColor(.primary)
+              
+              Spacer()
             }
-            .buttonStyle(.plain)
-            
-            if showInstructions {
+          }
+          .buttonStyle(.plain)
+          
+          if showInstructions {
+            VStack(alignment: .leading, spacing: Spacing.small) {
               TextEditor(text: $instructions)
                 .font(.body)
+                .scrollContentBackground(.hidden)
                 .padding(Spacing.medium)
-                #if os(iOS)
-                .background(Color(UIColor.quaternarySystemFill))
-                #else
-                .background(Color(NSColor.quaternaryLabelColor).opacity(0.05))
-                #endif
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.gray.opacity(0.1))
                 .cornerRadius(12)
                 .frame(minHeight: 80)
             }
+            .padding(.top, Spacing.small)
+            .transition(.opacity.combined(with: .move(edge: .top)))
           }
-        } else {
-          Button(action: { showInstructions = true }) {
-            HStack(spacing: Spacing.small) {
-              Image(systemName: "plus.circle")
-                .font(.callout)
-              Text("Add Instructions")
-                .font(.callout)
-            }
-            .foregroundColor(.accentColor)
-          }
-          .buttonStyle(.plain)
         }
         
         // Prompt Suggestions

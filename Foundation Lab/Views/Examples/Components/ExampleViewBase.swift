@@ -67,15 +67,7 @@ struct ExampleViewBase<Content: View>: View {
             .foregroundColor(.secondary)
             .padding(Spacing.medium)
             .frame(maxWidth: .infinity, alignment: .leading)
-            #if os(iOS)
-            #if os(iOS)
-          .background(Color(UIColor.quaternarySystemFill))
-          #else
-          .background(Color(NSColor.quaternaryLabelColor).opacity(0.05))
-          #endif
-            #else
-            .background(Color(NSColor.quaternaryLabelColor).opacity(0.05))
-            #endif
+            .background(Color.gray.opacity(0.1))
             .cornerRadius(12)
         }
         
@@ -101,21 +93,13 @@ struct ExampleViewBase<Content: View>: View {
         .fontWeight(.medium)
         .foregroundColor(.secondary)
       
-      #if os(iOS)
       TextEditor(text: $currentPrompt)
         .font(.body)
+        .scrollContentBackground(.hidden)
         .padding(Spacing.medium)
-        .background(Color(UIColor.quaternarySystemFill))
+        .background(Color.gray.opacity(0.1))
         .cornerRadius(12)
         .frame(minHeight: 100)
-      #else
-      TextEditor(text: $currentPrompt)
-        .font(.body)
-        .padding(Spacing.medium)
-        .background(Color(NSColor.quaternarySystemFill))
-        .cornerRadius(12)
-        .frame(minHeight: 100)
-      #endif
     }
   }
   
@@ -125,6 +109,7 @@ struct ExampleViewBase<Content: View>: View {
         Text("Reset")
           .font(.callout)
           .fontWeight(.medium)
+          .foregroundColor(.white)
           .frame(maxWidth: .infinity)
           .padding(.vertical, Spacing.small)
       }
@@ -174,16 +159,12 @@ struct PromptSuggestions: View {
                 .font(.callout)
                 .padding(.horizontal, Spacing.medium)
                 .padding(.vertical, Spacing.small)
-                #if os(iOS)
-            #if os(iOS)
-          .background(Color(UIColor.quaternarySystemFill))
-          #else
-          .background(Color(NSColor.quaternaryLabelColor).opacity(0.05))
-          #endif
-            #else
-            .background(Color(NSColor.quaternaryLabelColor).opacity(0.05))
-            #endif
+                .background(Color.gray.opacity(0.1))
                 .foregroundColor(.primary)
+                .overlay(
+                  RoundedRectangle(cornerRadius: 20)
+                    .strokeBorder(Color.gray.opacity(0.2), lineWidth: 1)
+                )
                 .cornerRadius(20)
             }
             .buttonStyle(.plain)
@@ -214,6 +195,10 @@ struct ExampleResultDisplay: View {
           Text(isCopied ? "Copied" : "Copy")
             .font(.callout)
             .foregroundColor(.accentColor)
+            .padding(.horizontal, Spacing.small)
+            .padding(.vertical, 4)
+            .background(Color.secondary.opacity(0.2))
+            .cornerRadius(8)
         }
         .buttonStyle(.plain)
       }
@@ -224,11 +209,7 @@ struct ExampleResultDisplay: View {
           .textSelection(.enabled)
           .padding(Spacing.medium)
           .frame(maxWidth: .infinity, alignment: .leading)
-          #if os(iOS)
-          .background(Color(UIColor.quaternarySystemFill))
-          #else
-          .background(Color(NSColor.quaternaryLabelColor).opacity(0.05))
-          #endif
+          .background(Color.gray.opacity(0.1))
           .cornerRadius(12)
       }
       .frame(maxHeight: 300)

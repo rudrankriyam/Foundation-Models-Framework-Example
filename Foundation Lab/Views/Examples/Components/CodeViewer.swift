@@ -32,6 +32,10 @@ struct CodeViewer: View {
           Text(isCopied ? "Copied" : "Copy")
             .font(.callout)
             .foregroundColor(.accentColor)
+            .padding(.horizontal, Spacing.small)
+            .padding(.vertical, 4)
+            .background(Color.secondary.opacity(0.2))
+            .cornerRadius(8)
         }
         .buttonStyle(.plain)
       }
@@ -44,11 +48,7 @@ struct CodeViewer: View {
           .frame(maxWidth: .infinity, alignment: .leading)
       }
       .frame(maxHeight: 400)
-      #if os(iOS)
-      .background(Color(UIColor.quaternarySystemFill))
-      #else
-      .background(Color(NSColor.quaternaryLabelColor).opacity(0.05))
-      #endif
+      .background(Color.gray.opacity(0.1))
       .cornerRadius(12)
     }
   }
@@ -82,9 +82,7 @@ struct CodeDisclosure: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
       Button(action: { 
-        withAnimation(.easeInOut(duration: 0.2)) {
-          isExpanded.toggle()
-        }
+        isExpanded.toggle()
       }) {
         HStack(spacing: Spacing.small) {
           Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
@@ -97,13 +95,6 @@ struct CodeDisclosure: View {
           
           Spacer()
         }
-        .padding(Spacing.medium)
-        #if os(iOS)
-      .background(Color(UIColor.quaternarySystemFill))
-      #else
-      .background(Color(NSColor.quaternaryLabelColor).opacity(0.05))
-      #endif
-        .cornerRadius(12)
       }
       .buttonStyle(.plain)
       

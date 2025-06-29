@@ -68,11 +68,7 @@ struct ExampleCardView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Spacing.medium)
-        #if os(iOS)
-        .background(Color(UIColor.quaternarySystemFill))
-        #else
-        .background(Color(NSColor.quaternaryLabelColor).opacity(0.05))
-        #endif
+        .background(Color.gray.opacity(0.1))
         .cornerRadius(12)
         .overlay(
             RoundedRectangle(cornerRadius: 12)

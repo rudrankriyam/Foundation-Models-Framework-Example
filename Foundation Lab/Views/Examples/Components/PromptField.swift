@@ -39,16 +39,11 @@ struct PromptField: View {
       }
       
       ZStack(alignment: .topLeading) {
-        #if os(iOS)
-        let backgroundColor = Color(UIColor.secondarySystemBackground)
-        #else
-        let backgroundColor = Color(NSColor.controlBackgroundColor)
-        #endif
-        
         TextEditor(text: $text)
           .font(.body)
+          .scrollContentBackground(.hidden)
           .padding(8)
-          .background(backgroundColor)
+          .background(Color.gray.opacity(0.1))
           .cornerRadius(8)
           .frame(minHeight: minHeight)
         
@@ -101,21 +96,18 @@ struct PromptHistory: View {
   @State private var isExpanded = false
   
   var body: some View {
-    VStack(alignment: .leading, spacing: Spacing.small) {
+    VStack(alignment: .leading, spacing: 0) {
       Button(action: { 
-        withAnimation(.easeInOut(duration: 0.2)) {
-          isExpanded.toggle()
-        }
+        isExpanded.toggle()
       }) {
         HStack(spacing: Spacing.small) {
           Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
             .font(.caption2)
             .foregroundColor(.secondary)
           
-          Text("RECENT")
-            .font(.footnote)
-            .fontWeight(.medium)
-            .foregroundColor(.secondary)
+          Text("Recent")
+            .font(.callout)
+            .foregroundColor(.primary)
           
           Spacer()
         }
@@ -131,17 +123,14 @@ struct PromptHistory: View {
                 .lineLimit(2)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(Spacing.small)
-                #if os(iOS)
-                .background(Color(UIColor.quaternarySystemFill))
-                #else
-                .background(Color(NSColor.quaternaryLabelColor).opacity(0.05))
-                #endif
+                .background(Color.gray.opacity(0.1))
                 .cornerRadius(8)
             }
             .buttonStyle(.plain)
             .foregroundColor(.primary)
           }
         }
+        .padding(.top, Spacing.small)
         .transition(.opacity.combined(with: .move(edge: .top)))
       }
     }
