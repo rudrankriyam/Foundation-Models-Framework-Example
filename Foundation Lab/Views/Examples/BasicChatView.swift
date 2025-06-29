@@ -23,6 +23,7 @@ struct BasicChatView: View {
       currentPrompt: $currentPrompt,
       isRunning: executor.isRunning,
       errorMessage: executor.errorMessage,
+      codeExample: DefaultPrompts.basicChatCode,
       onRun: executeChat,
       onReset: resetToDefaults
     ) {

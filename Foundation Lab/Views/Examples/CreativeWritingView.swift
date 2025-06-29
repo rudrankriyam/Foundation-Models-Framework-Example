@@ -21,6 +21,7 @@ struct CreativeWritingView: View {
       currentPrompt: $currentPrompt,
       isRunning: executor.isRunning,
       errorMessage: executor.errorMessage,
+      codeExample: DefaultPrompts.creativeWritingCode,
       onRun: executeCreativeWriting,
       onReset: resetToDefaults
     ) {

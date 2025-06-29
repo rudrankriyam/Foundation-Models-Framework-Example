@@ -93,4 +93,155 @@ enum DefaultPrompts {
   static let creativeWritingInstructions = "You are a creative writing assistant. Help users develop compelling stories, characters, and narratives."
   
   static let businessIdeasInstructions = "You are a business strategy consultant. Generate innovative, practical, and market-viable business ideas."
+  
+  // Model Availability
+  static let modelAvailabilitySuggestions = [
+    "Check if Apple Intelligence is available",
+    "Show me the current model status",
+    "What AI capabilities are enabled?"
+  ]
+}
+
+// MARK: - Code Examples
+
+extension DefaultPrompts {
+  static let basicChatCode = """
+import FoundationModels
+
+// Create a language model session
+let session = LanguageModelSession()
+
+// Generate a response with optional instructions
+let response = try await session.generate(
+    with: prompt,
+    instructions: instructions,
+    using: .conversational
+)
+
+print(response)
+"""
+  
+  static let structuredDataCode = """
+import FoundationModels
+
+// Define your data structure
+@Generable
+struct Book {
+    let title: String
+    let author: String
+    let genre: String
+    let yearPublished: Int
+    let summary: String
+}
+
+// Generate structured data
+let session = LanguageModelSession()
+let book = try await session.generate(
+    prompt: prompt,
+    as: Book.self
+)
+
+print("Title: \\(book.title)")
+print("Author: \\(book.author)")
+"""
+  
+  static let generationGuidesCode = """
+import FoundationModels
+
+@Generable
+struct ProductReview {
+    @Guidance("Keep under 50 words") 
+    let reviewText: String
+    
+    @Guidance("Format as bullet points") 
+    let features: [String]
+    
+    @Guidance("Range 1-5") 
+    let rating: Int
+}
+
+let session = LanguageModelSession()
+let review = try await session.generate(
+    prompt: prompt,
+    as: ProductReview.self
+)
+"""
+  
+  static let streamingResponseCode = """
+import FoundationModels
+
+let session = LanguageModelSession()
+
+// Stream the response token by token
+for try await token in session.generateStream(
+    with: prompt,
+    using: .conversational
+) {
+    print(token, terminator: "")
+}
+"""
+  
+  static let businessIdeasCode = """
+import FoundationModels
+
+@Generable
+struct BusinessIdea {
+    let name: String
+    let description: String
+    let targetMarket: String
+    let advantages: [String]
+    let challenges: [String]
+    let estimatedCost: String
+}
+
+let session = LanguageModelSession()
+let idea = try await session.generate(
+    prompt: prompt,
+    as: BusinessIdea.self
+)
+"""
+  
+  static let creativeWritingCode = """
+import FoundationModels
+
+@Generable
+struct StoryOutline {
+    let title: String
+    let genre: String
+    let protagonist: String
+    let antagonist: String?
+    let setting: String
+    let conflict: String
+    let chapters: [Chapter]
+}
+
+@Generable
+struct Chapter {
+    let number: Int
+    let title: String
+    let summary: String
+}
+
+let session = LanguageModelSession()
+let story = try await session.generate(
+    prompt: prompt,
+    as: StoryOutline.self
+)
+"""
+  
+  static let modelAvailabilityCode = """
+import FoundationModels
+
+// Check Apple Intelligence availability
+let availability = SystemLanguageModel.default.availability
+
+switch availability {
+case .available:
+    print("Apple Intelligence is available!")
+case .notAvailable(let reason):
+    print("Not available: \\(reason)")
+@unknown default:
+    print("Unknown availability status")
+}
+"""
 }

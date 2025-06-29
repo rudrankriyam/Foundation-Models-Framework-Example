@@ -21,6 +21,7 @@ struct GenerationGuidesView: View {
       currentPrompt: $currentPrompt,
       isRunning: executor.isRunning,
       errorMessage: executor.errorMessage,
+      codeExample: DefaultPrompts.generationGuidesCode,
       onRun: executeGenerationGuides,
       onReset: resetToDefaults
     ) {

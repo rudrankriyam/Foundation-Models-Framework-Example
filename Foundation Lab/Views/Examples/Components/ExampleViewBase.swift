@@ -17,6 +17,7 @@ struct ExampleViewBase<Content: View>: View {
   @Binding var currentPrompt: String
   let isRunning: Bool
   let errorMessage: String?
+  let codeExample: String?
   let onRun: () -> Void
   let onReset: () -> Void
   let content: Content
@@ -29,6 +30,7 @@ struct ExampleViewBase<Content: View>: View {
     currentPrompt: Binding<String>,
     isRunning: Bool = false,
     errorMessage: String? = nil,
+    codeExample: String? = nil,
     onRun: @escaping () -> Void,
     onReset: @escaping () -> Void,
     @ViewBuilder content: () -> Content
@@ -40,6 +42,7 @@ struct ExampleViewBase<Content: View>: View {
     self._currentPrompt = currentPrompt
     self.isRunning = isRunning
     self.errorMessage = errorMessage
+    self.codeExample = codeExample
     self.onRun = onRun
     self.onReset = onReset
     self.content = content()
@@ -56,6 +59,12 @@ struct ExampleViewBase<Content: View>: View {
         }
         
         content
+        
+        // Code disclosure section
+        if let code = codeExample {
+          CodeDisclosure(code: code)
+            .padding(.top, 8)
+        }
       }
       .padding()
     }

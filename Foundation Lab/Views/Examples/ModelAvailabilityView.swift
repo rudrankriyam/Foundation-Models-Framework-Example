@@ -22,6 +22,7 @@ struct ModelAvailabilityView: View {
       currentPrompt: .constant(DefaultPrompts.modelAvailability),
       isRunning: isChecking,
       errorMessage: nil,
+      codeExample: DefaultPrompts.modelAvailabilityCode,
       onRun: checkAvailability,
       onReset: resetStatus
     ) {

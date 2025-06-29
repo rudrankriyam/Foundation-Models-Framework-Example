@@ -21,6 +21,7 @@ struct BusinessIdeasView: View {
       currentPrompt: $currentPrompt,
       isRunning: executor.isRunning,
       errorMessage: executor.errorMessage,
+      codeExample: DefaultPrompts.businessIdeasCode,
       onRun: executeBusinessIdea,
       onReset: resetToDefaults
     ) {
