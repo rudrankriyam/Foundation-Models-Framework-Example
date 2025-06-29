@@ -200,7 +200,7 @@ struct ExampleResultDisplay: View {
       }
       
       ScrollView {
-        Text(result)
+        Text(LocalizedStringKey(result))
           .font(.body)
           .textSelection(.enabled)
           .padding(Spacing.medium)
