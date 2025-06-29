@@ -68,7 +68,7 @@ struct ExampleViewBase<Content: View>: View {
   }
   
   private var headerView: some View {
-    HStack(alignment: top) {
+    HStack(alignment: .top) {
       Image(systemName: icon)
         .font(.system(size: 40))
         .foregroundColor(.accentColor)
