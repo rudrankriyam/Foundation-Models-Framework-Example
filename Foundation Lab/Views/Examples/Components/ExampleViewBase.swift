@@ -194,13 +194,10 @@ struct ExampleResultDisplay: View {
         Button(action: copyToClipboard) {
           Text(isCopied ? "Copied" : "Copy")
             .font(.callout)
-            .foregroundColor(.accentColor)
             .padding(.horizontal, Spacing.small)
             .padding(.vertical, 4)
-            .background(Color.secondary.opacity(0.2))
-            .cornerRadius(8)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.glassProminent)
       }
       
       ScrollView {
