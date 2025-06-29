@@ -129,27 +129,19 @@ extension DefaultPrompts {
     return """
 import FoundationModels
 
-// Define your data structure
-@Generable
-struct Book {
-    let title: String
-    let author: String
-    let genre: String
-    let yearPublished: Int
-    let description: String
-}
-
+// Uses BookRecommendation struct from DataModels.swift
 // Generate structured data
 let session = LanguageModelSession()
 let response = try await session.respond(
     to: "\(prompt)",
-    generating: Book.self
+    generating: BookRecommendation.self
 )
 let book = response.content
 
 print("Title: \\(book.title)")
 print("Author: \\(book.author)")
 print("Genre: \\(book.genre)")
+print("Description: \\(book.description)")
 """
   }
   
@@ -157,27 +149,7 @@ print("Genre: \\(book.genre)")
     return """
 import FoundationModels
 
-@Generable
-struct ProductReview {
-    @Guide(description: "Product name")
-    let productName: String
-    
-    @Guide(description: "Rating from 1 to 5")
-    let rating: Int
-    
-    @Guide(description: "Review text between 50-200 words")
-    let reviewText: String
-    
-    @Guide(description: "Would recommend this product")
-    let recommendation: String
-    
-    @Guide(description: "Key pros of the product")
-    let pros: [String]
-    
-    @Guide(description: "Key cons of the product")
-    let cons: [String]
-}
-
+// Uses ProductReview struct from DataModels.swift
 let session = LanguageModelSession()
 let response = try await session.respond(
     to: "\(prompt)",
@@ -211,30 +183,7 @@ for try await partialResponse in stream {
     return """
 import FoundationModels
 
-@Generable
-struct BusinessIdea {
-    @Guide(description: "Name of the business")
-    let name: String
-    
-    @Guide(description: "Brief description of what the business does")
-    let description: String
-    
-    @Guide(description: "Target market or customer base")
-    let targetMarket: String
-    
-    @Guide(description: "Primary revenue model")
-    let revenueModel: String
-    
-    @Guide(description: "Key advantages or unique selling points")
-    let advantages: [String]
-    
-    @Guide(description: "Initial startup costs estimate")
-    let estimatedStartupCost: String
-    
-    @Guide(description: "Expected timeline or phases for launch and growth")
-    let timeline: String?
-}
-
+// Uses BusinessIdea struct from DataModels.swift
 let session = LanguageModelSession()
 let response = try await session.respond(
     to: "\(prompt)",
@@ -250,31 +199,7 @@ print("Startup Cost: \\(idea.estimatedStartupCost)")
   
   static func creativeWritingCode(prompt: String, instructions: String? = nil) -> String {
     var code = "import FoundationModels\n\n"
-    code += "@Generable\n"
-    code += "struct StoryOutline {\n"
-    code += "    @Guide(description: \"The title of the story\")\n"
-    code += "    let title: String\n"
-    code += "    \n"
-    code += "    @Guide(description: \"Main character name and brief description\")\n"
-    code += "    let protagonist: String\n"
-    code += "    \n"
-    code += "    @Guide(description: \"The central conflict or challenge\")\n"
-    code += "    let conflict: String\n"
-    code += "    \n"
-    code += "    @Guide(description: \"The setting where the story takes place\")\n"
-    code += "    let setting: String\n"
-    code += "    \n"
-    code += "    @Guide(description: \"Story genre\")\n"
-    code += "    let genre: StoryGenre\n"
-    code += "    \n"
-    code += "    @Guide(description: \"Major themes explored in the story\")\n"
-    code += "    let themes: [String]\n"
-    code += "}\n\n"
-    code += "@Generable\n"
-    code += "enum StoryGenre {\n"
-    code += "    case adventure, mystery, romance, thriller\n"
-    code += "    case fantasy, sciFi, horror, comedy\n"
-    code += "}\n\n"
+    code += "// Uses StoryOutline struct from DataModels.swift\n"
     
     if let instructions = instructions, !instructions.isEmpty {
       code += "// Create session with creative writing instructions\n"
