@@ -57,7 +57,7 @@ struct ExampleCardView: View {
                 subtitleText
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         .frame(minHeight: buttonMinHeight)
         .padding(16)
 #else
@@ -72,6 +72,7 @@ struct ExampleCardView: View {
             Spacer()
             chevronIcon
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .frame(minHeight: buttonMinHeight)
         .padding(16)
 #endif

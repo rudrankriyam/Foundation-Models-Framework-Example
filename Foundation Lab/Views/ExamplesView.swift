@@ -63,6 +63,7 @@ struct ExamplesView: View {
         ForEach(ExampleType.allCases) { exampleType in
           NavigationLink(value: exampleType) {
             ExampleCardView(type: exampleType)
+              .contentShape(Rectangle())
           }
           .buttonStyle(.plain)
           #if os(iOS) || os(macOS)
