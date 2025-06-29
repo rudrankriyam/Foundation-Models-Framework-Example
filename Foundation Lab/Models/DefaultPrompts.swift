@@ -159,14 +159,23 @@ import FoundationModels
 
 @Generable
 struct ProductReview {
-    @Guidance("Keep under 50 words") 
+    @Guide(description: "Product name")
+    let productName: String
+    
+    @Guide(description: "Rating from 1 to 5")
+    let rating: Int
+    
+    @Guide(description: "Review text between 50-200 words")
     let reviewText: String
     
-    @Guidance("Format as bullet points") 
-    let features: [String]
+    @Guide(description: "Would recommend this product")
+    let recommendation: String
     
-    @Guidance("Range 1-5") 
-    let rating: Int
+    @Guide(description: "Key pros of the product")
+    let pros: [String]
+    
+    @Guide(description: "Key cons of the product")
+    let cons: [String]
 }
 
 let session = LanguageModelSession()
@@ -176,8 +185,11 @@ let response = try await session.respond(
 )
 let review = response.content
 
-print("Review: \\(review.reviewText)")
+print("Product: \\(review.productName)")
 print("Rating: \\(review.rating)/5")
+print("Recommendation: \\(review.recommendation)")
+print("Pros: \\(review.pros.joined(separator: ", "))")
+print("Cons: \\(review.cons.joined(separator: ", "))")
 """
   }
   
@@ -201,12 +213,26 @@ import FoundationModels
 
 @Generable
 struct BusinessIdea {
+    @Guide(description: "Name of the business")
     let name: String
+    
+    @Guide(description: "Brief description of what the business does")
     let description: String
+    
+    @Guide(description: "Target market or customer base")
     let targetMarket: String
+    
+    @Guide(description: "Primary revenue model")
+    let revenueModel: String
+    
+    @Guide(description: "Key advantages or unique selling points")
     let advantages: [String]
-    let challenges: [String]
-    let estimatedCost: String
+    
+    @Guide(description: "Initial startup costs estimate")
+    let estimatedStartupCost: String
+    
+    @Guide(description: "Expected timeline or phases for launch and growth")
+    let timeline: String?
 }
 
 let session = LanguageModelSession()
@@ -217,7 +243,8 @@ let response = try await session.respond(
 let idea = response.content
 
 print("Business: \\(idea.name)")
-print("Target Market: \\(idea.targetMarket)")
+print("Revenue Model: \\(idea.revenueModel)")
+print("Startup Cost: \\(idea.estimatedStartupCost)")
 """
   }
   
@@ -225,19 +252,28 @@ print("Target Market: \\(idea.targetMarket)")
     var code = "import FoundationModels\n\n"
     code += "@Generable\n"
     code += "struct StoryOutline {\n"
+    code += "    @Guide(description: \"The title of the story\")\n"
     code += "    let title: String\n"
-    code += "    let genre: String\n"
+    code += "    \n"
+    code += "    @Guide(description: \"Main character name and brief description\")\n"
     code += "    let protagonist: String\n"
-    code += "    let antagonist: String?\n"
-    code += "    let setting: String\n"
+    code += "    \n"
+    code += "    @Guide(description: \"The central conflict or challenge\")\n"
     code += "    let conflict: String\n"
-    code += "    let chapters: [Chapter]\n"
+    code += "    \n"
+    code += "    @Guide(description: \"The setting where the story takes place\")\n"
+    code += "    let setting: String\n"
+    code += "    \n"
+    code += "    @Guide(description: \"Story genre\")\n"
+    code += "    let genre: StoryGenre\n"
+    code += "    \n"
+    code += "    @Guide(description: \"Major themes explored in the story\")\n"
+    code += "    let themes: [String]\n"
     code += "}\n\n"
     code += "@Generable\n"
-    code += "struct Chapter {\n"
-    code += "    let number: Int\n"
-    code += "    let title: String\n"
-    code += "    let summary: String\n"
+    code += "enum StoryGenre {\n"
+    code += "    case adventure, mystery, romance, thriller\n"
+    code += "    case fantasy, sciFi, horror, comedy\n"
     code += "}\n\n"
     
     if let instructions = instructions, !instructions.isEmpty {
@@ -255,7 +291,8 @@ print("Target Market: \\(idea.targetMarket)")
     code += ")\n\n"
     code += "let story = response.content\n"
     code += "print(\"Title: \\(story.title)\")\n"
-    code += "print(\"Genre: \\(story.genre)\")"
+    code += "print(\"Genre: \\(story.genre)\")\n"
+    code += "print(\"Themes: \\(story.themes.joined(separator: \", \"))\")"
     
     return code
   }
