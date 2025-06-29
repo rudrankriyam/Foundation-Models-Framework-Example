@@ -25,7 +25,24 @@ struct ExamplesView: View {
       .padding(.vertical)
     }
     .navigationDestination(for: ExampleType.self) { exampleType in
+      switch exampleType {
+      case .basicChat:
+        BasicChatView()
+      case .structuredData:
+        StructuredDataView()
+      case .generationGuides:
+        GenerationGuidesView()
+      case .streamingResponse:
+        StreamingResponseView()
+      case .businessIdeas:
+        BusinessIdeasView()
+      case .creativeWriting:
+        CreativeWritingView()
+      case .modelAvailability:
+        ModelAvailabilityView()
+      case .generationOptions:
         GenerationOptionsView()
+      }
     }
   }
 
@@ -44,24 +61,14 @@ struct ExamplesView: View {
     VStack(spacing: gridSpacing) {
       LazyVGrid(columns: adaptiveGridColumns, spacing: gridSpacing) {
         ForEach(ExampleType.allCases) { exampleType in
-          if exampleType == .generationOptions {
-            NavigationLink(value: exampleType) {
-                ExampleCardView(type: exampleType)
-            }
-            .buttonStyle(.plain)
-            #if os(iOS) || os(macOS)
-            .glassEffect(.regular.interactive(true), in: .rect(cornerRadius: 12))
-            .glassEffectID(exampleType.id, in: glassNamespace)
-            #endif
-          } else {
-            ExampleButton(exampleType: exampleType) {
-              await exampleType.execute(with: viewModel)
-            }
-            #if os(iOS) || os(macOS)
-            .glassEffect(.regular.interactive(true), in: .rect(cornerRadius: 12))
-            .glassEffectID(exampleType.id, in: glassNamespace)
-            #endif
+          NavigationLink(value: exampleType) {
+            ExampleCardView(type: exampleType)
           }
+          .buttonStyle(.plain)
+          #if os(iOS) || os(macOS)
+          .glassEffect(.regular.interactive(true), in: .rect(cornerRadius: 12))
+          .glassEffectID(exampleType.id, in: glassNamespace)
+          #endif
         }
       }
       .padding(.horizontal)
