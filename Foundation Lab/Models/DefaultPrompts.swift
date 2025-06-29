@@ -136,10 +136,11 @@ struct Book {
 
 // Generate structured data
 let session = LanguageModelSession()
-let book = try await session.generate(
-    prompt: Prompt(prompt),
-    as: Book.self
+let response = try await session.respond(
+    to: Prompt(prompt),
+    generating: Book.self
 )
+let book = response.content
 
 print("Title: \\(book.title)")
 print("Author: \\(book.author)")
@@ -162,10 +163,11 @@ struct ProductReview {
 }
 
 let session = LanguageModelSession()
-let review = try await session.generate(
-    prompt: Prompt(prompt),
-    as: ProductReview.self
+let response = try await session.respond(
+    to: Prompt(prompt),
+    generating: ProductReview.self
 )
+let review = response.content
 
 print("Review: \\(review.reviewText)")
 print("Rating: \\(review.rating)/5")
@@ -177,8 +179,9 @@ import FoundationModels
 let session = LanguageModelSession()
 
 // Stream the response token by token
-for try await chunk in session.responseStream(to: Prompt(prompt)) {
-    print(chunk.content, terminator: "")
+let stream = session.streamResponse(to: Prompt(prompt))
+for try await partialResponse in stream {
+    print(partialResponse, terminator: "")
 }
 """
   
@@ -196,10 +199,11 @@ struct BusinessIdea {
 }
 
 let session = LanguageModelSession()
-let idea = try await session.generate(
-    prompt: Prompt(prompt),
-    as: BusinessIdea.self
+let response = try await session.respond(
+    to: Prompt(prompt),
+    generating: BusinessIdea.self
 )
+let idea = response.content
 
 print("Business: \\(idea.name)")
 print("Target Market: \\(idea.targetMarket)")
@@ -227,10 +231,11 @@ struct Chapter {
 }
 
 let session = LanguageModelSession()
-let story = try await session.generate(
-    prompt: Prompt(prompt),
-    as: StoryOutline.self
+let response = try await session.respond(
+    to: Prompt(prompt),
+    generating: StoryOutline.self
 )
+let story = response.content
 
 print("Title: \\(story.title)")
 print("Genre: \\(story.genre)")
