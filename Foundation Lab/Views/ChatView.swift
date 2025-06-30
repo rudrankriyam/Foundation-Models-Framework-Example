@@ -12,10 +12,13 @@ struct ChatView: View {
     @Binding var viewModel: ChatViewModel
     @State private var scrollID: String?
     @State private var messageText = ""
+    @State private var showInstructions = false
     @FocusState private var isTextFieldFocused: Bool
 
     var body: some View {
         VStack(spacing: 0) {
+            instructionsView
+            
             messagesView
             
             ChatInputView(
@@ -42,6 +45,67 @@ struct ChatView: View {
 
 
     // MARK: - View Components
+    
+    private var instructionsView: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Button(action: { showInstructions.toggle() }) {
+                HStack(spacing: 8) {
+                    Image(systemName: showInstructions ? "chevron.down" : "chevron.right")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    Text("Instructions")
+                        .font(.callout)
+                        .foregroundColor(.primary)
+                    
+                    Spacer()
+                    
+                    if !showInstructions {
+                        Text("Customize AI behavior")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 8)
+            }
+            .buttonStyle(.plain)
+            
+            if showInstructions {
+                VStack(alignment: .leading, spacing: 8) {
+                    TextEditor(text: $viewModel.instructions)
+                        .font(.body)
+                        .scrollContentBackground(.hidden)
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.gray.opacity(0.1))
+                        .cornerRadius(8)
+                        .frame(minHeight: 80, maxHeight: 150)
+                    
+                    HStack {
+                        Text("Changes will apply to new conversations")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        
+                        Spacer()
+                        
+                        Button("Apply Now") {
+                            viewModel.updateInstructions(viewModel.instructions)
+                            viewModel.clearChat()
+                            showInstructions = false
+                        }
+                        .font(.caption)
+                        .buttonStyle(.bordered)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 8)
+                }
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .background(Color(NSColor.controlBackgroundColor))
+        .animation(.easeInOut(duration: 0.2), value: showInstructions)
+    }
 
     private var messagesView: some View {
         ScrollViewReader { proxy in

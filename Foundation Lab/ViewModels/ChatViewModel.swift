@@ -17,6 +17,7 @@ final class ChatViewModel {
     var isLoading: Bool = false
     var isSummarizing: Bool = false
     var sessionCount: Int = 1
+    var instructions: String = "You are a helpful, friendly AI assistant. Engage in natural conversation and provide thoughtful, detailed responses."
 
     // MARK: - Public Properties
 
@@ -106,9 +107,17 @@ final class ChatViewModel {
         sessionCount = 1
         feedbackState.removeAll()
         session = LanguageModelSession(
-            instructions: Instructions(
-                "You are a helpful, friendly AI assistant. Engage in natural conversation and provide thoughtful, detailed responses."
-            )
+            instructions: Instructions(instructions)
+        )
+    }
+    
+    @MainActor
+    func updateInstructions(_ newInstructions: String) {
+        instructions = newInstructions
+        // Create a new session with updated instructions
+        // Note: The transcript is read-only, so we start fresh with new instructions
+        session = LanguageModelSession(
+            instructions: Instructions(instructions)
         )
     }
 
@@ -180,7 +189,9 @@ final class ChatViewModel {
 
     private func createNewSessionWithContext(summary: ConversationSummary) {
         let contextInstructions = """
-      You are a helpful, friendly AI assistant. You are continuing a conversation with a user. Here's a summary of your previous conversation:
+      \(instructions)
+      
+      You are continuing a conversation with a user. Here's a summary of your previous conversation:
       
       CONVERSATION SUMMARY:
       \(summary.summary)
