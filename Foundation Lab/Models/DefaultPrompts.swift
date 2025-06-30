@@ -94,6 +94,12 @@ enum DefaultPrompts {
   
   static let businessIdeasInstructions = "You are a business strategy consultant. Generate innovative, practical, and market-viable business ideas."
   
+  static let structuredDataInstructions = "You are a helpful assistant that provides well-structured data in the requested format. Be accurate and comprehensive."
+  
+  static let generationGuidesInstructions = "You are a product review expert. Write detailed, balanced, and informative reviews that help consumers make informed decisions."
+  
+  static let streamingInstructions = "You are a creative poet and writer. Craft beautiful, meaningful verses that capture emotions and imagery."
+  
   // Model Availability
   static let modelAvailabilitySuggestions = [
     "Check if Apple Intelligence is available",
@@ -125,76 +131,101 @@ extension DefaultPrompts {
     return code
   }
   
-  static func structuredDataCode(prompt: String) -> String {
-    return """
-import FoundationModels
-
-// Uses BookRecommendation struct from DataModels.swift
-// Generate structured data
-let session = LanguageModelSession()
-let response = try await session.respond(
-    to: "\(prompt)",
-    generating: BookRecommendation.self
-)
-let book = response.content
-
-print("Title: \\(book.title)")
-print("Author: \\(book.author)")
-print("Genre: \\(book.genre)")
-print("Description: \\(book.description)")
-"""
+  static func structuredDataCode(prompt: String, instructions: String? = nil) -> String {
+    var code = "import FoundationModels\n\n"
+    code += "// Uses BookRecommendation struct from DataModels.swift\n"
+    code += "// Generate structured data\n"
+    
+    if let instructions = instructions, !instructions.isEmpty {
+      code += "let session = LanguageModelSession(\n"
+      code += "    instructions: Instructions(\"\(instructions)\")\n"
+      code += ")\n\n"
+    } else {
+      code += "let session = LanguageModelSession()\n\n"
+    }
+    
+    code += "let response = try await session.respond(\n"
+    code += "    to: \"\(prompt)\",\n"
+    code += "    generating: BookRecommendation.self\n"
+    code += ")\n\n"
+    code += "let book = response.content\n"
+    code += "print(\"Title: \\(book.title)\")\n"
+    code += "print(\"Author: \\(book.author)\")\n"
+    code += "print(\"Genre: \\(book.genre)\")\n"
+    code += "print(\"Description: \\(book.description)\")"
+    
+    return code
   }
   
-  static func generationGuidesCode(prompt: String) -> String {
-    return """
-import FoundationModels
-
-// Uses ProductReview struct from DataModels.swift
-let session = LanguageModelSession()
-let response = try await session.respond(
-    to: "\(prompt)",
-    generating: ProductReview.self
-)
-let review = response.content
-
-print("Product: \\(review.productName)")
-print("Rating: \\(review.rating)/5")
-print("Recommendation: \\(review.recommendation)")
-print("Pros: \\(review.pros.joined(separator: ", "))")
-print("Cons: \\(review.cons.joined(separator: ", "))")
-"""
+  static func generationGuidesCode(prompt: String, instructions: String? = nil) -> String {
+    var code = "import FoundationModels\n\n"
+    code += "// Uses ProductReview struct from DataModels.swift\n"
+    
+    if let instructions = instructions, !instructions.isEmpty {
+      code += "let session = LanguageModelSession(\n"
+      code += "    instructions: Instructions(\"\(instructions)\")\n"
+      code += ")\n\n"
+    } else {
+      code += "let session = LanguageModelSession()\n\n"
+    }
+    
+    code += "let response = try await session.respond(\n"
+    code += "    to: \"\(prompt)\",\n"
+    code += "    generating: ProductReview.self\n"
+    code += ")\n\n"
+    code += "let review = response.content\n"
+    code += "print(\"Product: \\(review.productName)\")\n"
+    code += "print(\"Rating: \\(review.rating)/5\")\n"
+    code += "print(\"Recommendation: \\(review.recommendation)\")\n"
+    code += "print(\"Pros: \\(review.pros.joined(separator: \", \"))\")\n"
+    code += "print(\"Cons: \\(review.cons.joined(separator: \", \"))\")"
+    
+    return code
   }
   
-  static func streamingResponseCode(prompt: String) -> String {
-    return """
-import FoundationModels
-
-let session = LanguageModelSession()
-
-// Stream the response token by token
-let stream = session.streamResponse(to: "\(prompt)")
-for try await partialResponse in stream {
-    print(partialResponse, terminator: "")
-}
-"""
+  static func streamingResponseCode(prompt: String, instructions: String? = nil) -> String {
+    var code = "import FoundationModels\n\n"
+    
+    if let instructions = instructions, !instructions.isEmpty {
+      code += "let session = LanguageModelSession(\n"
+      code += "    instructions: Instructions(\"\(instructions)\")\n"
+      code += ")\n\n"
+    } else {
+      code += "let session = LanguageModelSession()\n\n"
+    }
+    
+    code += "// Stream the response token by token\n"
+    code += "let stream = session.streamResponse(to: \"\(prompt)\")\n"
+    code += "for try await partialResponse in stream {\n"
+    code += "    print(partialResponse, terminator: \"\")\n"
+    code += "}"
+    
+    return code
   }
   
-  static func businessIdeasCode(prompt: String) -> String {
-    return """
-import FoundationModels
-
-// Uses BusinessIdea struct from DataModels.swift
-let session = LanguageModelSession()
-let response = try await session.respond(
-    to: "\(prompt)",
-    generating: BusinessIdea.self
-)
-let idea = response.content
-
-print("Business: \\(idea.name)")
-print("Revenue Model: \\(idea.revenueModel)")
-print("Startup Cost: \\(idea.estimatedStartupCost)")
-"""
+  static func businessIdeasCode(prompt: String, instructions: String? = nil) -> String {
+    var code = "import FoundationModels\n\n"
+    code += "// Uses BusinessIdea struct from DataModels.swift\n"
+    
+    if let instructions = instructions, !instructions.isEmpty {
+      code += "// Create session with business strategy instructions\n"
+      code += "let session = LanguageModelSession(\n"
+      code += "    instructions: Instructions(\"\(instructions)\")\n"
+      code += ")\n\n"
+    } else {
+      code += "let session = LanguageModelSession()\n\n"
+    }
+    
+    code += "let response = try await session.respond(\n"
+    code += "    to: \"\(prompt)\",\n"
+    code += "    generating: BusinessIdea.self\n"
+    code += ")\n\n"
+    code += "let idea = response.content\n"
+    code += "print(\"Business: \\(idea.name)\")\n"
+    code += "print(\"Revenue Model: \\(idea.revenueModel)\")\n"
+    code += "print(\"Startup Cost: \\(idea.estimatedStartupCost)\")"
+    
+    return code
   }
   
   static func creativeWritingCode(prompt: String, instructions: String? = nil) -> String {

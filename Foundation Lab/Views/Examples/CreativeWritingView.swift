@@ -10,7 +10,7 @@ import SwiftUI
 
 struct CreativeWritingView: View {
   @State private var currentPrompt = DefaultPrompts.creativeWriting
-  @State private var instructions = ""
+  @State private var instructions = DefaultPrompts.creativeWritingInstructions
   @State private var executor = ExampleExecutor()
   @State private var showInstructions = false
   
@@ -27,6 +27,39 @@ struct CreativeWritingView: View {
       onReset: resetToDefaults
     ) {
       VStack(spacing: 16) {
+        // Instructions Section
+        VStack(alignment: .leading, spacing: 0) {
+          Button(action: { showInstructions.toggle() }) {
+            HStack(spacing: Spacing.small) {
+              Image(systemName: showInstructions ? "chevron.down" : "chevron.right")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+              
+              Text("Instructions")
+                .font(.callout)
+                .foregroundColor(.primary)
+              
+              Spacer()
+            }
+          }
+          .buttonStyle(.plain)
+          
+          if showInstructions {
+            VStack(alignment: .leading, spacing: Spacing.small) {
+              TextEditor(text: $instructions)
+                .font(.body)
+                .scrollContentBackground(.hidden)
+                .padding(Spacing.medium)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.gray.opacity(0.1))
+                .cornerRadius(12)
+                .frame(minHeight: 80)
+            }
+            .padding(.top, Spacing.small)
+            .transition(.opacity.combined(with: .move(edge: .top)))
+          }
+        }
+        
         // Info Banner
         HStack {
           Image(systemName: "info.circle")
@@ -74,7 +107,8 @@ struct CreativeWritingView: View {
     Task {
       await executor.executeStructured(
         prompt: currentPrompt,
-        type: StoryOutline.self
+        type: StoryOutline.self,
+        instructions: instructions.isEmpty ? nil : instructions
       ) { story in
         """
         📖 Title: \(story.title)
@@ -99,6 +133,7 @@ struct CreativeWritingView: View {
   
   private func resetToDefaults() {
     currentPrompt = DefaultPrompts.creativeWriting
+    instructions = DefaultPrompts.creativeWritingInstructions
   }
 }
 

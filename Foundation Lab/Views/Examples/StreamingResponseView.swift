@@ -10,9 +10,11 @@ import SwiftUI
 
 struct StreamingResponseView: View {
   @State private var currentPrompt = DefaultPrompts.streaming
+  @State private var instructions = DefaultPrompts.streamingInstructions
   @State private var executor = ExampleExecutor()
   @State private var streamingText = ""
   @State private var isStreaming = false
+  @State private var showInstructions = false
   
   var body: some View {
     ExampleViewBase(
@@ -22,11 +24,47 @@ struct StreamingResponseView: View {
       currentPrompt: $currentPrompt,
       isRunning: isStreaming,
       errorMessage: executor.errorMessage,
-      codeExample: DefaultPrompts.streamingResponseCode(prompt: currentPrompt),
+      codeExample: DefaultPrompts.streamingResponseCode(
+        prompt: currentPrompt,
+        instructions: showInstructions && !instructions.isEmpty ? instructions : nil
+      ),
       onRun: executeStreaming,
       onReset: resetToDefaults
     ) {
       VStack(spacing: 16) {
+        // Instructions Section
+        VStack(alignment: .leading, spacing: 0) {
+          Button(action: { showInstructions.toggle() }) {
+            HStack(spacing: Spacing.small) {
+              Image(systemName: showInstructions ? "chevron.down" : "chevron.right")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+              
+              Text("Instructions")
+                .font(.callout)
+                .foregroundColor(.primary)
+              
+              Spacer()
+            }
+          }
+          .buttonStyle(.plain)
+          
+          if showInstructions {
+            VStack(alignment: .leading, spacing: Spacing.small) {
+              TextEditor(text: $instructions)
+                .font(.body)
+                .scrollContentBackground(.hidden)
+                .padding(Spacing.medium)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.gray.opacity(0.1))
+                .cornerRadius(12)
+                .frame(minHeight: 80)
+            }
+            .padding(.top, Spacing.small)
+            .transition(.opacity.combined(with: .move(edge: .top)))
+          }
+        }
+        
         // Info Banner
         HStack {
           Image(systemName: "info.circle")
@@ -100,7 +138,7 @@ struct StreamingResponseView: View {
       
       await executor.executeStreaming(
         prompt: currentPrompt,
-        instructions: "You are a creative writer. Generate engaging and vivid content."
+        instructions: instructions.isEmpty ? nil : instructions
       ) { partialResult in
         streamingText = partialResult
       }
@@ -111,6 +149,7 @@ struct StreamingResponseView: View {
   
   private func resetToDefaults() {
     currentPrompt = DefaultPrompts.streaming
+    instructions = DefaultPrompts.streamingInstructions
     streamingText = ""
   }
 }

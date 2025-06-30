@@ -65,6 +65,7 @@ final class ExampleExecutor {
   func executeStructured<T: Generable>(
     prompt: String,
     type: T.Type,
+    instructions: String? = nil,
     formatter: @escaping (T) -> String
   ) async {
     guard !prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
@@ -81,7 +82,13 @@ final class ExampleExecutor {
     addToHistory(prompt)
     
     do {
-      let session = LanguageModelSession()
+      let session: LanguageModelSession
+      if let instructions = instructions {
+        session = LanguageModelSession(instructions: Instructions(instructions))
+      } else {
+        session = LanguageModelSession()
+      }
+      
       let response = try await session.respond(
         to: Prompt(prompt),
         generating: type
