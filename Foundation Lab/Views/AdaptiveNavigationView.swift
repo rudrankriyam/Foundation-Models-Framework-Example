@@ -89,17 +89,25 @@ struct AdaptiveNavigationView: View {
     private var detailView: some View {
         switch navigationCoordinator.splitViewSelection ?? .examples {
         case .examples:
-            ExamplesView(viewModel: $contentViewModel)
-                .navigationTitle("Foundation Models")
+            NavigationStack {
+                ExamplesView(viewModel: $contentViewModel)
+                    .navigationTitle("Foundation Models")
+            }
         case .chat:
-            ChatView(viewModel: $chatViewModel)
-                .navigationTitle("Chat")
+            NavigationStack {
+                ChatView(viewModel: $chatViewModel)
+                    .navigationTitle("Chat")
+            }
         case .tools:
-            ToolsView()
-                .navigationTitle("Tools")
+            NavigationStack {
+                ToolsView()
+                    .navigationTitle("Tools")
+            }
         case .settings:
-            SettingsView()
-                .navigationTitle("Settings")
+            NavigationStack {
+                SettingsView()
+                    .navigationTitle("Settings")
+            }
         }
     }
 }

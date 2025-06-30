@@ -6,7 +6,7 @@
 
 A practical iOS app demonstrating Apple's Foundation Models framework with various examples of on-device AI capabilities.
 
-## Support
+## Exploring AI for iOS Development
 
 Love this project? Check out my books to explore more of AI and iOS development:
 - [Exploring AI for iOS Development](https://academy.rudrank.com/product/ai)
@@ -18,6 +18,10 @@ Love this project? Check out my books to explore more of AI and iOS development:
 - **Beta 2 version of the framework is required**
 - Apple Intelligence enabled
 - Compatible Apple device with Apple Silicon
+
+## Try it on TestFlight
+
+You can now try Foundation Lab on TestFlight! Join the beta: [https://testflight.apple.com/join/JWR9FpP3](https://testflight.apple.com/join/JWR9FpP3)
 
 ## Features
 
