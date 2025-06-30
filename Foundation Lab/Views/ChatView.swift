@@ -49,13 +49,14 @@ struct ChatView: View {
     private var instructionsView: some View {
         VStack(alignment: .leading, spacing: 0) {
             Button(action: { showInstructions.toggle() }) {
-                HStack(spacing: 8) {
+                HStack(spacing: Spacing.small) {
                     Image(systemName: showInstructions ? "chevron.down" : "chevron.right")
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundColor(.secondary)
                     
                     Text("Instructions")
                         .font(.callout)
+                        .fontWeight(.medium)
                         .foregroundColor(.primary)
                     
                     Spacer()
@@ -66,20 +67,20 @@ struct ChatView: View {
                             .foregroundColor(.secondary)
                     }
                 }
-                .padding(.horizontal)
-                .padding(.vertical, 8)
+                .padding(.horizontal, Spacing.medium)
+                .padding(.vertical, Spacing.small)
             }
             .buttonStyle(.plain)
             
             if showInstructions {
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: Spacing.small) {
                     TextEditor(text: $viewModel.instructions)
                         .font(.body)
                         .scrollContentBackground(.hidden)
-                        .padding(12)
+                        .padding(Spacing.medium)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Color.gray.opacity(0.1))
-                        .cornerRadius(8)
+                        .cornerRadius(12)
                         .frame(minHeight: 80, maxHeight: 150)
                     
                     HStack {
@@ -95,15 +96,27 @@ struct ChatView: View {
                             showInstructions = false
                         }
                         .font(.caption)
+                        .fontWeight(.medium)
+                        #if os(iOS) || os(macOS)
+                        .buttonStyle(.glassProminent)
+                        #else
                         .buttonStyle(.bordered)
+                        #endif
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.bottom, 8)
                 }
+                .padding(.horizontal, Spacing.medium)
+                .padding(.bottom, Spacing.small)
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
+        #if os(iOS) || os(macOS)
+        .background(.regularMaterial)
+        #else
         .background(Color(NSColor.controlBackgroundColor))
+        #endif
+        .cornerRadius(12)
+        .padding(.horizontal, Spacing.medium)
+        .padding(.top, Spacing.small)
         .animation(.easeInOut(duration: 0.2), value: showInstructions)
     }
 
