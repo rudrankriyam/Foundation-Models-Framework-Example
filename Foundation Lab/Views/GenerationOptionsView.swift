@@ -2,7 +2,7 @@
 //  GenerationOptionsView.swift
 //  FoundationLab
 //
-//  Created by Assistant on 6/20/25.
+//  Created by Rudrank Riyam on 6/20/25.
 //
 
 import SwiftUI
