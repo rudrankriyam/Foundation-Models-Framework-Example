@@ -41,14 +41,9 @@ class SpeechRecognizer: NSObject, ObservableObject {
     deinit {
         print("🎙️ SpeechRecognizer: deinit - Entering")
         print("🎙️ SpeechRecognizer: deinit - Current state:")
-        print("  - isRecognizing: \(isRecognizing)")
         print("  - audioEngine.isRunning: \(audioEngine.isRunning)")
         print("  - recognitionTask exists: \(recognitionTask != nil)")
         print("  - recognitionRequest exists: \(recognitionRequest != nil)")
-        
-        if isRecognizing {
-            print("🎙️ SpeechRecognizer: deinit - WARNING: Deallocating while still recognizing")
-        }
         
         print("🎙️ SpeechRecognizer: deinit - Exiting")
     }

@@ -7,32 +7,42 @@
   },
   "groups" : [
     {
-      "blur-material" : null,
+      "blur-material" : 0.5,
       "hidden" : false,
       "layers" : [
         {
+          "blend-mode" : "normal",
           "fill" : "automatic",
           "glass" : true,
           "hidden" : false,
           "image-name" : "Alex-Image-1751189635.png",
           "name" : "Alex-Image-1751189635",
+          "opacity" : 1,
           "position" : {
-            "scale" : 1.2,
+            "scale" : 1.27,
             "translation-in-points" : [
               0,
-              0
+              -25
             ]
           }
         }
       ],
-      "lighting" : "individual",
+      "lighting" : "combined",
+      "position" : {
+        "scale" : 1,
+        "translation-in-points" : [
+          0,
+          0
+        ]
+      },
       "shadow" : {
         "kind" : "neutral",
         "opacity" : 0.5
       },
+      "specular" : true,
       "translucency" : {
         "enabled" : true,
-        "value" : 0.2
+        "value" : 0.3
       }
     }
   ],

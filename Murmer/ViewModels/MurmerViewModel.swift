@@ -72,10 +72,7 @@ class MurmerViewModel: ObservableObject {
 
     guard permissionManager.allPermissionsGranted else {
       print("⚠️ MurmerViewModel: Not all permissions granted, checking...")
-      print("  - Speech Recognition: \(permissionManager.speechRecognitionGranted)")
-      print("  - Microphone: \(permissionManager.microphoneGranted)")
-      print("  - Reminders: \(permissionManager.remindersGranted)")
-
+   
       let granted = await permissionManager.requestAllPermissions()
       print("🔐 MurmerViewModel: Permission request result: \(granted)")
 
