@@ -6,15 +6,30 @@
 //
 
 import Foundation
-import AVFoundation
 import Speech
 import EventKit
 import Combine
+
+#if os(iOS)
+import AVFoundation
 import UIKit
+#endif
 
 @MainActor
 class PermissionManager: ObservableObject {
+    
+    #if os(iOS)
     @Published var microphonePermissionStatus: AVAudioSession.RecordPermission = .undetermined
+    #else
+    /// Custom microphone permission enum for macOS placeholder
+    enum MicrophonePermissionStatus {
+        case notDetermined
+        case denied
+        case granted
+    }
+    @Published var microphonePermissionStatus: MicrophonePermissionStatus = .notDetermined
+    #endif
+    
     @Published var speechPermissionStatus: SFSpeechRecognizerAuthorizationStatus = .notDetermined
     @Published var remindersPermissionStatus: EKAuthorizationStatus = .notDetermined
     @Published var allPermissionsGranted = false
@@ -28,14 +43,22 @@ class PermissionManager: ObservableObject {
     }
     
     func checkAllPermissions() {
+        #if os(iOS)
         checkMicrophonePermission()
+        #endif
+        
         checkSpeechPermission()
         checkRemindersPermission()
         updateAllPermissionsStatus()
     }
     
     func requestAllPermissions() async -> Bool {
+        #if os(iOS)
         let micGranted = await requestMicrophonePermission()
+        #else
+        let micGranted = true // Assume granted or not applicable on macOS
+        #endif
+        
         let speechGranted = await requestSpeechPermission()
         let remindersGranted = await requestRemindersPermission()
         
@@ -44,6 +67,8 @@ class PermissionManager: ObservableObject {
     }
     
     // MARK: - Microphone Permission
+    
+    #if os(iOS)
     private func checkMicrophonePermission() {
         microphonePermissionStatus = AVAudioSession.sharedInstance().recordPermission
     }
@@ -62,8 +87,23 @@ class PermissionManager: ObservableObject {
             }
         }
     }
+    #else
+    // macOS stub implementations for microphone permission
+    
+    private func checkMicrophonePermission() {
+        // No direct equivalent or always granted, placeholder implementation
+        microphonePermissionStatus = .granted
+    }
+    
+    private func requestMicrophonePermission() async -> Bool {
+        // macOS does not require explicit microphone permission requesting here
+        microphonePermissionStatus = .granted
+        return true
+    }
+    #endif
     
     // MARK: - Speech Recognition Permission
+    
     private func checkSpeechPermission() {
         speechPermissionStatus = SFSpeechRecognizer.authorizationStatus()
     }
@@ -84,6 +124,7 @@ class PermissionManager: ObservableObject {
     }
     
     // MARK: - Reminders Permission
+    
     private func checkRemindersPermission() {
         if #available(iOS 17.0, *) {
             remindersPermissionStatus = EKEventStore.authorizationStatus(for: .reminder)
@@ -114,8 +155,15 @@ class PermissionManager: ObservableObject {
     }
     
     // MARK: - Helpers
+    
     private func updateAllPermissionsStatus() {
-        allPermissionsGranted = microphonePermissionStatus == .granted &&
+        #if os(iOS)
+        let micGranted = microphonePermissionStatus == .granted
+        #else
+        let micGranted = microphonePermissionStatus == .granted
+        #endif
+        
+        allPermissionsGranted = micGranted &&
                                 speechPermissionStatus == .authorized &&
                                 (remindersPermissionStatus == .authorized || remindersPermissionStatus == .fullAccess)
     }
@@ -123,9 +171,14 @@ class PermissionManager: ObservableObject {
     func showSettingsAlert() {
         var deniedPermissions: [String] = []
         
+        #if os(iOS)
         if microphonePermissionStatus == .denied {
             deniedPermissions.append("Microphone")
         }
+        #else
+        // On macOS, microphone permission is always granted or handled differently, no alert needed
+        #endif
+        
         if speechPermissionStatus == .denied || speechPermissionStatus == .restricted {
             deniedPermissions.append("Speech Recognition")
         }
@@ -139,9 +192,11 @@ class PermissionManager: ObservableObject {
         }
     }
     
+    #if os(iOS)
     func openSettings() {
         if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
             UIApplication.shared.open(settingsURL)
         }
     }
+    #endif
 }

@@ -50,7 +50,7 @@ struct BlobStylesView: View {
                         LinearGradient(
                             colors: [
                                 Color(.systemBackground),
-                                Color(.systemGray6)
+                                Color.gray.opacity(0.07)
                             ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
@@ -340,7 +340,7 @@ struct AudioLevelProgressStyle: ProgressViewStyle {
         GeometryReader { geometry in
             ZStack(alignment: .leading) {
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(Color(.systemGray5))
+                    .fill(Color.gray.opacity(0.15))
 
                 RoundedRectangle(cornerRadius: 10)
                     .fill(

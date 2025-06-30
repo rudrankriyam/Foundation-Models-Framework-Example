@@ -7,7 +7,9 @@
 
 import Foundation
 import Speech
+#if os(iOS)
 import AVFoundation
+#endif
 import Combine
 
 @MainActor
@@ -129,7 +131,8 @@ class SpeechRecognizer: NSObject, ObservableObject {
         print("🎙️ SpeechRecognizer: startRecognition() - Stopping any ongoing recognition")
         stopRecognition()
         
-        // Configure audio session
+        #if os(iOS)
+        // Configure audio session - available only on iOS
         print("🎙️ SpeechRecognizer: startRecognition() - Configuring audio session")
         let audioSession = AVAudioSession.sharedInstance()
         
@@ -148,6 +151,10 @@ class SpeechRecognizer: NSObject, ObservableObject {
             print("🎙️ SpeechRecognizer: startRecognition() - ERROR: Failed to activate audio session: \(error)")
             throw error
         }
+        #else
+        // AVAudioSession is not available on macOS, skipping audio session configuration
+        print("🎙️ SpeechRecognizer: startRecognition() - Skipping audio session configuration (not available on this platform)")
+        #endif
         
         // Create and configure recognition request
         print("🎙️ SpeechRecognizer: startRecognition() - Creating recognition request")
