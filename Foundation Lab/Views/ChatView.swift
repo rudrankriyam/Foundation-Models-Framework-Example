@@ -117,7 +117,6 @@ struct ChatView: View {
         .cornerRadius(12)
         .padding(.horizontal, Spacing.medium)
         .padding(.top, Spacing.small)
-        .animation(.easeInOut(duration: 0.2), value: showInstructions)
     }
 
     private var messagesView: some View {
@@ -209,6 +208,7 @@ struct TranscriptEntryView: View {
                     isFromUser: false
                 ))
                 .id(entry.id)
+                .animation(.easeInOut(duration: 0.3), value: text)
             }
             
         case .instructions:
