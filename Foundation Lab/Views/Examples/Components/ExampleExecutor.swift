@@ -125,11 +125,9 @@ final class ExampleExecutor {
       
       let stream = session.streamResponse(to: Prompt(prompt))
       
-      var fullResponse = ""
       for try await partialResponse in stream {
-        fullResponse += partialResponse
-        result = fullResponse
-        onPartialResult(fullResponse)
+        result = partialResponse
+        onPartialResult(partialResponse)
       }
       
     } catch {
