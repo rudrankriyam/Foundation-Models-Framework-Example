@@ -23,40 +23,22 @@ struct WeatherToolView: View {
       errorMessage: errorMessage
     ) {
       VStack(alignment: .leading, spacing: Spacing.large) {
-        VStack(alignment: .leading, spacing: Spacing.small) {
-          Text("LOCATION")
-            .font(.footnote)
-            .fontWeight(.medium)
-            .foregroundColor(.secondary)
+        ToolInputField(
+          label: "Location",
+          text: $location,
+          placeholder: "Enter city name"
+        )
 
-          TextEditor(text: $location)
-            .font(.body)
-            .scrollContentBackground(.hidden)
-            .padding(Spacing.medium)
-            .frame(height: 50)
-            .background(Color.gray.opacity(0.1))
-            .cornerRadius(12)
-        }
-
-        Button(action: executeWeatherTool) {
-          HStack(spacing: Spacing.small) {
-            if isRunning {
-              ProgressView()
-                .scaleEffect(0.8)
-                .tint(.white)
-            }
-            Text(isRunning ? "Getting Weather..." : "Get Weather")
-              .font(.callout)
-              .fontWeight(.medium)
-          }
-          .frame(maxWidth: .infinity)
-          .padding(.vertical, Spacing.small)
-        }
-        .buttonStyle(.glassProminent)
-        .disabled(isRunning || location.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        ToolExecuteButton(
+          "Get Weather",
+          systemImage: "cloud.sun",
+          isRunning: isRunning,
+          action: executeWeatherTool
+        )
+        .disabled(location.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
 
         if !result.isEmpty {
-          ExampleResultDisplay(
+          ResultDisplay(
             result: result,
             isSuccess: errorMessage == nil
           )

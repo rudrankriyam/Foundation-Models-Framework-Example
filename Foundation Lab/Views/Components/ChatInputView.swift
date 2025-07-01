@@ -74,6 +74,7 @@ struct ChatInputView: View {
                         messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .gray : .blue
                     )
             }
+            .buttonStyle(.plain)
             .padding(8)
             .disabled(
                 messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
