@@ -5,6 +5,7 @@
 //  Created by Rudrank Riyam on 6/29/25.
 //
 
+import HighlightSwift
 import SwiftUI
 
 /// A view for displaying syntax-highlighted code snippets
@@ -12,6 +13,9 @@ struct CodeViewer: View {
   let code: String
   let language: String
   @State private var isCopied = false
+  
+  @Environment(\.colorScheme) private var colorScheme
+  @State var highlightedCode: AttributedString?
   
   init(code: String, language: String = "swift") {
     self.code = code
@@ -38,15 +42,29 @@ struct CodeViewer: View {
       }
       
       ScrollView {
-        Text(code)
-          .font(.system(.callout, design: .monospaced))
-          .textSelection(.enabled)
-          .padding(Spacing.medium)
-          .frame(maxWidth: .infinity, alignment: .leading)
+        ScrollView {
+          Text(highlightedCode ?? AttributedString(code))
+            .font(highlightedCode == nil ? .system(.callout, design: .monospaced) : nil)
+            .textSelection(.enabled)
+            .padding(Spacing.medium)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
       }
       .frame(maxHeight: 400)
       .background(Color.gray.opacity(0.1))
       .cornerRadius(12)
+      .task {
+          do {
+              let highlight = Highlight()
+              self.highlightedCode = try await highlight
+                  .attributedText(code,
+                    language: "swift",
+                    colors: colorScheme == .dark ? .dark(.xcode) : .light(.xcode)
+                  )
+          } catch {
+              self.highlightedCode = nil
+          }
+      }
     }
   }
   
@@ -78,7 +96,7 @@ struct CodeDisclosure: View {
   
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
-      Button(action: { 
+      Button(action: {
         isExpanded.toggle()
       }) {
         HStack(spacing: Spacing.small) {
