@@ -36,16 +36,6 @@ struct ToolViewBase<Content: View>: View {
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: Spacing.large) {
-        // Title and description at top
-        VStack(alignment: .leading, spacing: Spacing.small) {
-          Text(title)
-            .font(.title3)
-            .fontWeight(.semibold)
-          Text(description)
-            .font(.callout)
-            .foregroundColor(.secondary)
-        }
-        
         if let error = errorMessage {
           Text(error)
             .font(.callout)
@@ -63,7 +53,11 @@ struct ToolViewBase<Content: View>: View {
     }
     #if os(iOS)
     .scrollDismissesKeyboard(.interactively)
-    .navigationBarHidden(true)
+    #endif
+    .navigationTitle(title)
+    #if os(iOS)
+    .navigationBarTitleDisplayMode(.large)
+    .navigationSubtitle(description)
     #endif
   }
 }
@@ -424,7 +418,6 @@ struct ToolInputField: View {
         .font(.body)
         .scrollContentBackground(.hidden)
         .padding(Spacing.medium)
-        .frame(height: 50)
         .background(Color.gray.opacity(0.1))
         .cornerRadius(12)
     }

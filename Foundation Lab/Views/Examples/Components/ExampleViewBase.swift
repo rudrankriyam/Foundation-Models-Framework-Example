@@ -48,16 +48,6 @@ struct ExampleViewBase<Content: View>: View {
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: Spacing.large) {
-        // Title and description at top
-        VStack(alignment: .leading, spacing: Spacing.small) {
-          Text(title)
-            .font(.title3)
-            .fontWeight(.semibold)
-          Text(description)
-            .font(.callout)
-            .foregroundColor(.secondary)
-        }
-        
         promptSection
         actionButtons
         
@@ -82,7 +72,11 @@ struct ExampleViewBase<Content: View>: View {
     }
     #if os(iOS)
     .scrollDismissesKeyboard(.interactively)
-    .navigationBarHidden(true)
+    #endif
+    .navigationTitle(title)
+    #if os(iOS)
+    .navigationBarTitleDisplayMode(.large)
+    .navigationSubtitle(description)
     #endif
   }
   
