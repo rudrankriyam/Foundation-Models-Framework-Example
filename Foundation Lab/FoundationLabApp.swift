@@ -43,6 +43,13 @@ struct FoundationLabApp: App {
     switch model.availability {
     case .available:
       isModelAvailable = true
+      // TEST: Simulate unavailable state after 2 seconds
+      #if DEBUG
+      DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+        self.isModelAvailable = false
+        self.unavailabilityReason = .appleIntelligenceNotEnabled
+      }
+      #endif
     case .unavailable(let reason):
       isModelAvailable = false
       unavailabilityReason = reason
