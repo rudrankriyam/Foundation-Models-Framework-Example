@@ -195,45 +195,36 @@ struct ExampleToolButton: View {
   let namespace: Namespace.ID
 
   var body: some View {
-    VStack(spacing: 12) {
-      ZStack {
-        Image(systemName: tool.icon)
-          .font(.system(size: 28))
-          .foregroundColor(isSelected ? .white : .accentColor)
-          .opacity(isRunning ? 0 : 1)
-
-        if isRunning {
-          ProgressView()
-            .progressViewStyle(CircularProgressViewStyle())
-            .scaleEffect(0.8)
-        }
-      }
-      .frame(width: 50, height: 50)
-
-      VStack(spacing: 4) {
+    VStack(alignment: .leading, spacing: Spacing.small) {
+      Image(systemName: tool.icon)
+        .font(.title2)
+        .foregroundStyle(.tint)
+        .frame(width: 32, height: 32)
+      
+      VStack(alignment: .leading, spacing: Spacing.small) {
         Text(tool.displayName)
-          .font(.headline)
-          .foregroundColor(isSelected ? .white : .primary)
-          .multilineTextAlignment(.center)
-
+          .font(.callout)
+          .fontWeight(.medium)
+          .foregroundStyle(.primary)
+          .lineLimit(1)
+        
         Text(tool.shortDescription)
           .font(.caption)
-          .foregroundColor(isSelected ? .white.opacity(0.8) : .secondary)
-          .multilineTextAlignment(.center)
+          .foregroundStyle(.secondary)
           .lineLimit(2)
+          .fixedSize(horizontal: false, vertical: true)
       }
+      
+      Spacer(minLength: 0)
     }
-    .padding()
-    .frame(maxWidth: .infinity, minHeight: 140)
-    #if os(iOS) || os(macOS)
-      .glassEffect(
-        isSelected ? .regular.tint(.accentColor).interactive(true) : .regular.interactive(true),
-        in: .rect(cornerRadius: 12)
-      )
-      .glassEffectID("tool-\(tool.rawValue)", in: namespace)
-    #endif
-    .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isSelected)
-    .animation(.spring(response: 0.3, dampingFraction: 0.9), value: isRunning)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(Spacing.medium)
+    .background(Color.gray.opacity(0.1))
+    .cornerRadius(12)
+    .overlay(
+      RoundedRectangle(cornerRadius: 12)
+        .strokeBorder(Color.primary.opacity(0.05), lineWidth: 1)
+    )
   }
 }
 
