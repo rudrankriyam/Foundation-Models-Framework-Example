@@ -9,7 +9,7 @@ import Foundation
 import FoundationModels
 
 @Generable
-struct ConversationSummary {
+struct HealthConversationSummary {
     @Guide(description: "A comprehensive summary of the health coaching conversation")
     let summary: String
     

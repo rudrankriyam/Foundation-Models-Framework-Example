@@ -124,13 +124,14 @@ struct InsightCardView: View {
                 }
             }
         }
-        .overlay(
-            Group {
-                if showCelebration && insight.category == .achievement {
-                    Color.clear.modifier(CelebrationEffect())
-                }
-            }
-        )
+        // Celebration effect temporarily disabled
+        // .overlay(
+        //     Group {
+        //         if showCelebration && insight.category == .achievement {
+        //             Color.clear.modifier(CelebrationEffect())
+        //         }
+        //     }
+        // )
     }
     
     private var categoryColor: Color {

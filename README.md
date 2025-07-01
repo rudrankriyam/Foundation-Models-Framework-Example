@@ -6,6 +6,10 @@
 
 A practical iOS app demonstrating Apple's Foundation Models framework with various examples of on-device AI capabilities.
 
+## FoundationLabsKit Package
+
+This repository also includes **FoundationLabsKit**, a Swift Package with shared UI components and utilities used across the Foundation Labs apps. See [Package-README.md](Package-README.md) for details on using the package.
+
 ## Exploring AI for iOS Development
 
 Love this project? Check out my books to explore more of AI and iOS development:

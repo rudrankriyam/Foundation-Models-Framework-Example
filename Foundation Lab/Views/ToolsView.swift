@@ -128,7 +128,7 @@ struct ToolsView: View {
             .textSelection(.enabled)
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.secondaryBackgroundColor)
+            .background(Color.secondary.opacity(0.1))
             .cornerRadius(8)
         }
         .frame(maxHeight: 300)
