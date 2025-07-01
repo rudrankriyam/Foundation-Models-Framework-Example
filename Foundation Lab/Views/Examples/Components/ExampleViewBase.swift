@@ -93,7 +93,6 @@ struct ExampleViewBase<Content: View>: View {
         .padding(Spacing.medium)
         .background(Color.gray.opacity(0.1))
         .cornerRadius(12)
-        .frame(minHeight: 100)
     }
   }
   

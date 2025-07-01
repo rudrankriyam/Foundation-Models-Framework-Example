@@ -14,7 +14,7 @@ struct ExamplesView: View {
 
   var body: some View {
     ScrollView {
-      VStack(alignment: .leading, spacing: 20) {
+      VStack(alignment: .leading, spacing: Spacing.large) {
 #if os(iOS)
         headerView
 #endif

@@ -35,6 +35,13 @@ struct ChatView: View {
                 .disabled(viewModel.session.transcript.isEmpty)
             }
         }
+        .alert("Error", isPresented: $viewModel.showError) {
+            Button("OK") {
+                viewModel.dismissError()
+            }
+        } message: {
+            Text(viewModel.errorMessage ?? "An unknown error occurred")
+        }
         .onAppear {
             // Auto-focus when chat appears
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -81,7 +88,6 @@ struct ChatView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Color.gray.opacity(0.1))
                         .cornerRadius(12)
-                        .frame(minHeight: 80, maxHeight: 150)
                     
                     HStack {
                         Text("Changes will apply to new conversations")
@@ -122,7 +128,7 @@ struct ChatView: View {
     private var messagesView: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(spacing: 12) {
+                LazyVStack(spacing: Spacing.medium) {
                     ForEach(viewModel.session.transcript) { entry in
                         TranscriptEntryView(entry: entry)
                             .id(entry.id)

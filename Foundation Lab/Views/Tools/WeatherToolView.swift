@@ -64,6 +64,10 @@ struct WeatherToolView: View {
       let response = try await session.respond(
         to: Prompt("What's the weather like in \(location)?"))
       result = response.content
+    } catch let generationError as LanguageModelSession.GenerationError {
+      errorMessage = FoundationModelsErrorHandler.handleGenerationError(generationError)
+    } catch let toolCallError as LanguageModelSession.ToolCallError {
+      errorMessage = FoundationModelsErrorHandler.handleToolCallError(toolCallError)
     } catch {
       errorMessage = "Failed to get weather: \(error.localizedDescription)"
     }

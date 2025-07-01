@@ -14,7 +14,7 @@ struct ResponseDisplayView: View {
   let onClear: () -> Void
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 12) {
+    VStack(alignment: .leading, spacing: Spacing.medium) {
       headerView
       requestView
       responseView

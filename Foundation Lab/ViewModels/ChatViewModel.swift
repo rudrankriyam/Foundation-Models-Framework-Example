@@ -18,6 +18,8 @@ final class ChatViewModel {
     var isSummarizing: Bool = false
     var sessionCount: Int = 1
     var instructions: String = "You are a helpful, friendly AI assistant. Engage in natural conversation and provide thoughtful, detailed responses."
+    var errorMessage: String?
+    var showError: Bool = false
 
     // MARK: - Public Properties
 
@@ -56,8 +58,9 @@ final class ChatViewModel {
             await handleContextWindowExceeded(userMessage: content)
 
         } catch {
-            // For errors, we'll need to manually add an error message to show in UI
-            // This is handled in the computed property by checking for incomplete responses
+            // Handle other errors by showing an error message
+            errorMessage = error.localizedDescription
+            showError = true
         }
 
         isLoading = session.isResponding
@@ -135,6 +138,8 @@ final class ChatViewModel {
             try await respondWithNewSession(to: userMessage)
         } catch {
             handleSummarizationError(error)
+            errorMessage = "Failed to summarize conversation: \(error.localizedDescription)"
+            showError = true
         }
     }
 
@@ -221,7 +226,13 @@ final class ChatViewModel {
     @MainActor
     private func handleSummarizationError(_ error: Error) {
         isSummarizing = false
-        // Error handling could be implemented by adding a synthetic transcript entry
-        // or by showing an alert - for now we'll rely on the UI to show the error state
+        errorMessage = error.localizedDescription
+        showError = true
+    }
+    
+    @MainActor
+    func dismissError() {
+        showError = false
+        errorMessage = nil
     }
 }
