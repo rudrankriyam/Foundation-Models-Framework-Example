@@ -108,8 +108,10 @@ struct InsightCardView: View {
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.secondary.opacity(0.1))
-        .cornerRadius(16)
+        .glassEffect(
+            .regular,
+            in: .rect(cornerRadius: 16)
+        )
         .overlay(
             RoundedRectangle(cornerRadius: 16)
                 .stroke(insight.isRead ? Color.clear : Color.primary.opacity(0.1), lineWidth: 1)
