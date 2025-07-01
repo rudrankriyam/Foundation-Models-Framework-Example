@@ -19,6 +19,7 @@ struct ExamplesView: View {
         headerView
 #endif
         exampleButtonsView
+        toolsSection
         responseView
         loadingView
       }
@@ -44,6 +45,10 @@ struct ExamplesView: View {
         GenerationOptionsView()
       }
     }
+    .navigationDestination(for: ToolExample.self) { tool in
+      tool.createView()
+        .withToolExecutor()
+    }
   }
 
   // MARK: - View Components
@@ -61,7 +66,12 @@ struct ExamplesView: View {
   }
 
   private var exampleButtonsView: some View {
-    VStack(spacing: gridSpacing) {
+    VStack(alignment: .leading, spacing: 12) {
+      Text("Examples")
+        .font(.title2)
+        .fontWeight(.semibold)
+        .padding(.horizontal, Spacing.medium)
+      
       LazyVGrid(columns: adaptiveGridColumns, spacing: Spacing.medium) {
         ForEach(ExampleType.allCases) { exampleType in
           NavigationLink(value: exampleType) {
@@ -128,6 +138,102 @@ struct ExamplesView: View {
       .glassEffect(.regular, in: .capsule)
       #endif
     }
+  }
+  
+  private var toolsSection: some View {
+    VStack(alignment: .leading, spacing: 12) {
+      Text("Tools")
+        .font(.title2)
+        .fontWeight(.semibold)
+        .padding(.horizontal, Spacing.medium)
+      
+      #if os(iOS) || os(macOS)
+      GlassEffectContainer(spacing: gridSpacing) {
+        LazyVGrid(columns: adaptiveGridColumns, spacing: gridSpacing) {
+          ForEach(ToolExample.allCases, id: \.self) { tool in
+            NavigationLink(value: tool) {
+              ExampleToolButton(
+                tool: tool,
+                isSelected: false,
+                isRunning: false,
+                namespace: glassNamespace
+              )
+              .contentShape(Rectangle())
+            }
+            .buttonStyle(PlainButtonStyle())
+          }
+        }
+      }
+      .padding(.horizontal)
+      #else
+      LazyVGrid(columns: adaptiveGridColumns, spacing: gridSpacing) {
+        ForEach(ToolExample.allCases, id: \.self) { tool in
+          NavigationLink(value: tool) {
+            ExampleToolButton(
+              tool: tool,
+              isSelected: false,
+              isRunning: false,
+              namespace: glassNamespace
+            )
+            .contentShape(Rectangle())
+          }
+          .buttonStyle(PlainButtonStyle())
+        }
+      }
+      .padding(.horizontal)
+      #endif
+    }
+  }
+}
+
+// MARK: - Tool Button Component
+
+struct ExampleToolButton: View {
+  let tool: ToolExample
+  let isSelected: Bool
+  let isRunning: Bool
+  let namespace: Namespace.ID
+
+  var body: some View {
+    VStack(spacing: 12) {
+      ZStack {
+        Image(systemName: tool.icon)
+          .font(.system(size: 28))
+          .foregroundColor(isSelected ? .white : .accentColor)
+          .opacity(isRunning ? 0 : 1)
+
+        if isRunning {
+          ProgressView()
+            .progressViewStyle(CircularProgressViewStyle())
+            .scaleEffect(0.8)
+        }
+      }
+      .frame(width: 50, height: 50)
+
+      VStack(spacing: 4) {
+        Text(tool.displayName)
+          .font(.headline)
+          .foregroundColor(isSelected ? .white : .primary)
+          .multilineTextAlignment(.center)
+
+        Text(tool.shortDescription)
+          .font(.caption)
+          .foregroundColor(isSelected ? .white.opacity(0.8) : .secondary)
+          .multilineTextAlignment(.center)
+          .lineLimit(2)
+      }
+    }
+    .padding()
+    .frame(maxWidth: .infinity, minHeight: 140)
+    #if os(iOS) || os(macOS)
+      .glassEffect(
+        isSelected ? .regular.tint(.accentColor).interactive(true) : .regular.interactive(true),
+        in: .rect(cornerRadius: 12)
+      )
+      .glassEffectID("tool-\(tool.rawValue)", in: namespace)
+    #endif
+    .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isSelected)
+    .animation(.spring(response: 0.3, dampingFraction: 0.9), value: isRunning)
   }
 }
 

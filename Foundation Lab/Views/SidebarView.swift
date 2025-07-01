@@ -35,8 +35,6 @@ extension TabSelection {
             return "sparkles"
         case .chat:
             return "bubble.left.and.bubble.right"
-        case .tools:
-            return "wrench.and.screwdriver"
         case .settings:
             return "gear"
         }
@@ -49,10 +47,8 @@ extension TabSelection {
             return "1"
         case .chat:
             return "2"
-        case .tools:
-            return "3"
         case .settings:
-            return "4"
+            return "3"
         }
     }
 #endif
