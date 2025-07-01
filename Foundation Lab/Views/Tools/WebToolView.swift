@@ -22,36 +22,38 @@ struct WebToolView: View {
       isRunning: isRunning,
       errorMessage: errorMessage
     ) {
-      VStack(alignment: .leading, spacing: 16) {
-        VStack(alignment: .leading, spacing: 8) {
-          Text("Search Query")
-            .font(.subheadline)
+      VStack(alignment: .leading, spacing: Spacing.large) {
+        VStack(alignment: .leading, spacing: Spacing.small) {
+          Text("SEARCH QUERY")
+            .font(.footnote)
             .fontWeight(.medium)
+            .foregroundColor(.secondary)
 
-          TextField("What would you like to search for?", text: $searchQuery)
-            .textFieldStyle(RoundedBorderTextFieldStyle())
+          TextEditor(text: $searchQuery)
+            .font(.body)
+            .scrollContentBackground(.hidden)
+            .padding(Spacing.medium)
+            .frame(height: 50)
+            .background(Color.gray.opacity(0.1))
+            .cornerRadius(12)
         }
 
         Button(action: executeWebSearch) {
-          HStack {
+          HStack(spacing: Spacing.small) {
             if isRunning {
               ProgressView()
                 .scaleEffect(0.8)
-                .foregroundColor(.white)
-            } else {
-              Image(systemName: "magnifyingglass")
+                .tint(.white)
             }
-
-            Text("Search Web")
+            Text(isRunning ? "Searching..." : "Search Web")
+              .font(.callout)
               .fontWeight(.medium)
           }
           .frame(maxWidth: .infinity)
-          .padding()
-          .background(Color.accentColor)
-          .foregroundColor(.white)
-          .cornerRadius(12)
+          .padding(.vertical, Spacing.small)
         }
-        .disabled(isRunning || searchQuery.isEmpty)
+        .buttonStyle(.glassProminent)
+        .disabled(isRunning || searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
 
         if !result.isEmpty {
           ResultDisplay(result: result, isSuccess: errorMessage == nil)

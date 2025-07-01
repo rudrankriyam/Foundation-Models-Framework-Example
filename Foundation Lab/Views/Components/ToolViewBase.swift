@@ -35,56 +35,36 @@ struct ToolViewBase<Content: View>: View {
 
   var body: some View {
     ScrollView {
-      VStack(alignment: .leading, spacing: 20) {
-        headerView
-        content
-      }
-      .padding()
-    }
-    #if os(iOS)
-      .scrollDismissesKeyboard(.interactively)
-    #endif
-    .navigationTitle(title)
-    .onTapGesture {
-      // Dismiss keyboard when tapping outside text fields
-      #if os(iOS)
-        UIApplication.shared.sendAction(
-          #selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-      #endif
-    }
-  }
-
-  private var headerView: some View {
-    VStack(alignment: .leading, spacing: 12) {
-      HStack {
-        Image(systemName: icon)
-          .font(.system(size: 32))
-          .foregroundColor(.accentColor)
-          .accessibilityLabel("\(title) tool")
-
-        VStack(alignment: .leading, spacing: 4) {
+      VStack(alignment: .leading, spacing: Spacing.large) {
+        // Title and description at top
+        VStack(alignment: .leading, spacing: Spacing.small) {
           Text(title)
-            .font(.title2)
+            .font(.title3)
             .fontWeight(.semibold)
-
           Text(description)
-            .font(.subheadline)
+            .font(.callout)
             .foregroundColor(.secondary)
         }
-
-        Spacer()
-
-        if isRunning {
-          ProgressView()
-            .scaleEffect(0.8)
-            .accessibilityLabel("Processing request")
+        
+        if let error = errorMessage {
+          Text(error)
+            .font(.callout)
+            .foregroundColor(.secondary)
+            .padding(Spacing.medium)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.gray.opacity(0.1))
+            .cornerRadius(12)
         }
+        
+        content
       }
-
-      if let error = errorMessage {
-        ErrorBanner(message: error)
-      }
+      .padding(.horizontal, Spacing.medium)
+      .padding(.vertical, Spacing.large)
     }
+    #if os(iOS)
+    .scrollDismissesKeyboard(.interactively)
+    .navigationBarHidden(true)
+    #endif
   }
 }
 
@@ -192,30 +172,51 @@ struct SuccessBanner: View {
 struct ResultDisplay: View {
   let result: String
   let isSuccess: Bool
+  @State private var isCopied = false
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 12) {
+    VStack(alignment: .leading, spacing: Spacing.small) {
       HStack {
-        Text("Result")
-          .font(.headline)
-
+        Text("RESULT")
+          .font(.footnote)
+          .fontWeight(.medium)
+          .foregroundColor(.secondary)
+        
         Spacer()
-
-        Image(systemName: isSuccess ? "checkmark.circle.fill" : "xmark.circle.fill")
-          .foregroundColor(isSuccess ? .green : .red)
-          .accessibilityLabel(isSuccess ? "Success" : "Error")
+        
+        Button(action: copyToClipboard) {
+          Text(isCopied ? "Copied" : "Copy")
+            .font(.callout)
+            .padding(.horizontal, Spacing.small)
+            .padding(.vertical, 4)
+        }
+        .buttonStyle(.glassProminent)
       }
 
       ScrollView {
-        Text(result)
-          .font(.system(.body, design: .monospaced))
+        Text(LocalizedStringKey(result))
+          .font(.body)
           .textSelection(.enabled)
-          .padding()
+          .padding(Spacing.medium)
           .frame(maxWidth: .infinity, alignment: .leading)
-          .background(Color.secondaryBackgroundColor)
-          .cornerRadius(8)
+          .background(Color.gray.opacity(0.1))
+          .cornerRadius(12)
       }
       .frame(maxHeight: 300)
+    }
+  }
+  
+  private func copyToClipboard() {
+    #if os(iOS)
+    UIPasteboard.general.string = result
+    #elseif os(macOS)
+    NSPasteboard.general.clearContents()
+    NSPasteboard.general.setString(result, forType: .string)
+    #endif
+    
+    isCopied = true
+    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+      isCopied = false
     }
   }
 }

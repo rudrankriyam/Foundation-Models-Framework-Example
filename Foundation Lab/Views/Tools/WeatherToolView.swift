@@ -22,39 +22,44 @@ struct WeatherToolView: View {
       isRunning: isRunning,
       errorMessage: errorMessage
     ) {
-      VStack(alignment: .leading, spacing: 16) {
-        VStack(alignment: .leading, spacing: 8) {
-          Text("Location")
-            .font(.subheadline)
+      VStack(alignment: .leading, spacing: Spacing.large) {
+        VStack(alignment: .leading, spacing: Spacing.small) {
+          Text("LOCATION")
+            .font(.footnote)
             .fontWeight(.medium)
+            .foregroundColor(.secondary)
 
-          TextField("Enter city name", text: $location)
-            .textFieldStyle(RoundedBorderTextFieldStyle())
+          TextEditor(text: $location)
+            .font(.body)
+            .scrollContentBackground(.hidden)
+            .padding(Spacing.medium)
+            .frame(height: 50)
+            .background(Color.gray.opacity(0.1))
+            .cornerRadius(12)
         }
 
         Button(action: executeWeatherTool) {
-          HStack {
+          HStack(spacing: Spacing.small) {
             if isRunning {
               ProgressView()
                 .scaleEffect(0.8)
-                .foregroundColor(.white)
-            } else {
-              Image(systemName: "cloud.sun")
+                .tint(.white)
             }
-
-            Text("Get Weather")
+            Text(isRunning ? "Getting Weather..." : "Get Weather")
+              .font(.callout)
               .fontWeight(.medium)
           }
           .frame(maxWidth: .infinity)
-          .padding()
-          .background(Color.accentColor)
-          .foregroundColor(.white)
-          .cornerRadius(12)
+          .padding(.vertical, Spacing.small)
         }
-        .disabled(isRunning || location.isEmpty)
+        .buttonStyle(.glassProminent)
+        .disabled(isRunning || location.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
 
         if !result.isEmpty {
-          ResultDisplay(result: result, isSuccess: errorMessage == nil)
+          ExampleResultDisplay(
+            result: result,
+            isSuccess: errorMessage == nil
+          )
         }
       }
     }
