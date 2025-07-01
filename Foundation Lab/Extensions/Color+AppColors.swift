@@ -6,7 +6,8 @@
 //
 
 import SwiftUI
-import FoundationLabsKit
+// When using as remote dependency:
+// import FoundationLabsKit
 
 // MARK: - Foundation Lab App Colors
 extension Color {

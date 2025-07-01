@@ -6,7 +6,8 @@
 //
 
 import SwiftUI
-import FoundationLabsKit
+// When using as remote dependency:
+// import FoundationLabsKit
 
 // MARK: - Legacy Health Color Mappings
 // These extensions map the old color names to the new HealthColors namespace
