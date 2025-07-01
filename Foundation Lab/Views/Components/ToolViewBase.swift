@@ -89,7 +89,7 @@ enum BannerType {
     case .error: return .red
     case .success: return .green
     case .warning: return .orange
-    case .info: return Color.accentColor
+    case .info: return .main
     }
   }
 
@@ -221,17 +221,6 @@ struct ResultDisplay: View {
   }
 }
 
-extension Color {
-  static var secondaryBackgroundColor: Color {
-    #if os(iOS)
-      Color(UIColor.secondarySystemBackground)
-    #elseif os(macOS)
-      Color(NSColor.controlBackgroundColor)
-    #else
-      Color.gray.opacity(0.1)
-    #endif
-  }
-}
 
 #Preview {
   NavigationStack {

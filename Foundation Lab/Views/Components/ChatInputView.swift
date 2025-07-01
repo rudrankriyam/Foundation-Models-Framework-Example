@@ -35,13 +35,13 @@ struct ChatInputView: View {
                     Image(systemName: "arrow.up.circle.fill")
                         .font(.system(size: 24))
                         .foregroundStyle(
-                            messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .gray : Color.accentColor
+                            messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .gray : .main
                         )
                 }
                 .padding(8)
                 .glassEffect(
                     .regular
-                        .tint(messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .clear : Color.accentColor)
+                        .tint(messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .clear : .main)
                         .interactive(true)
                 )
                 .glassEffectID("sendButton", in: glassNamespace)

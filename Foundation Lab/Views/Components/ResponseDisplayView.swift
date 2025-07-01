@@ -87,10 +87,10 @@ struct ResponseDisplayView: View {
 
   private var requestBackgroundView: some View {
     RoundedRectangle(cornerRadius: 8)
-      .fill(Color.accentColor.opacity(0.1))
+      .fill(Color.main.opacity(0.1))
       .overlay(
         RoundedRectangle(cornerRadius: 8)
-          .stroke(Color.accentColor.opacity(0.2), lineWidth: 1)
+          .stroke(Color.main.opacity(0.2), lineWidth: 1)
       )
   }
   

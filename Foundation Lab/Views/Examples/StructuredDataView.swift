@@ -35,7 +35,7 @@ struct StructuredDataView: View {
           Spacer()
         }
         .padding()
-        .background(Color.accentColor.opacity(0.1))
+        .background(Color.main.opacity(0.1))
         .cornerRadius(8)
         
         // Prompt Suggestions
