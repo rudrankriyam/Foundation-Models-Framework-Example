@@ -19,6 +19,25 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		8F774D6F2E1390DB00C5700E /* Exceptions for "Body Buddy" folder in "Foundation Lab" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Models/AI/BodyBuddy.swift,
+				Models/AI/ConversationSummary.swift,
+				Models/AI/HealthAnalysis.swift,
+				Models/AI/HealthAnalysisTool.swift,
+				Models/AI/PersonalizedHealthPlan.swift,
+				Models/BodyBuddySession.swift,
+				Models/HealthDataManager.swift,
+				Models/HealthInsight.swift,
+				Models/HealthMetric.swift,
+				Views/Dashboard/DailyProgressView.swift,
+				Views/Dashboard/HealthDashboardView.swift,
+				Views/Dashboard/InsightCardView.swift,
+				Views/Dashboard/MetricCardView.swift,
+			);
+			target = 0AAE4FFE2DF76E6600838F13 /* Foundation Lab */;
+		};
 		8FE6666A2E0D1BC10062EE2F /* Exceptions for "Psylean" folder in "Psylean" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -31,6 +50,9 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		0ABC0C9C2E09AB5300A09018 /* Body Buddy */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				8F774D6F2E1390DB00C5700E /* Exceptions for "Body Buddy" folder in "Foundation Lab" target */,
+			);
 			path = "Body Buddy";
 			sourceTree = "<group>";
 		};
