@@ -16,7 +16,9 @@ struct SidebarView: View {
                 Label(tab.rawValue, systemImage: tab.systemImage)
                     .tag(tab)
 #if os(macOS)
-                    .keyboardShortcut(tab.keyboardShortcut, modifiers: .command)
+                    .if(tab.keyboardShortcut != nil) { view in
+                        view.keyboardShortcut(tab.keyboardShortcut!, modifiers: .command)
+                    }
 #endif
             }
         }
@@ -45,19 +47,11 @@ extension TabSelection {
     }
     
 #if os(macOS)
-    var keyboardShortcut: KeyEquivalent {
-        switch self {
-        case .examples:
-            return "1"
-        case .chat:
-            return "2"
-        case .bodyBuddy:
-            return "3"
-        case .psylean:
-            return "4"
-        case .settings:
-            return "5"
-        }
+    var keyboardShortcut: KeyEquivalent? {
+        let allCases = TabSelection.allCases
+        guard let index = allCases.firstIndex(of: self),
+              index < 9 else { return nil } // Only support 1-9
+        return KeyEquivalent(Character(String(index + 1)))
     }
 #endif
 }
