@@ -36,7 +36,7 @@ struct CodeViewer: View {
           Text(isCopied ? "Copied" : "Copy")
             .font(.callout)
             .padding(.horizontal, Spacing.small)
-            .padding(.vertical, 4)
+            .padding(.vertical, Spacing.xSmall)
         }
         .buttonStyle(.glassProminent)
       }
@@ -50,9 +50,9 @@ struct CodeViewer: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
       }
-      .frame(maxHeight: 400)
+      .frame(maxHeight: 400)  // TODO: Make this configurable or remove constraint
       .background(Color.gray.opacity(0.1))
-      .cornerRadius(12)
+      .cornerRadius(CornerRadius.medium)
       .task {
           do {
               let highlight = Highlight()
@@ -124,7 +124,7 @@ struct CodeDisclosure: View {
 
 #Preview("CodeViewer") {
   ScrollView {
-    VStack(spacing: 20) {
+    VStack(spacing: Spacing.large) {
       CodeViewer(code: """
 import FoundationModels
 
@@ -157,7 +157,7 @@ let book = try await session.generate(
 
 #Preview("CodeDisclosure") {
   ScrollView {
-    VStack(spacing: 20) {
+    VStack(spacing: Spacing.large) {
       CodeDisclosure(code: """
 // Basic chat example
 let session = LanguageModelSession()

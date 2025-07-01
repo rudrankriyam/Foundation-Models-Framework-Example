@@ -15,14 +15,14 @@ struct ChatInputView: View {
     
     var body: some View {
 #if os(iOS) || os(macOS)
-        GlassEffectContainer(spacing: 12) {
-            HStack(spacing: 12) {
+        GlassEffectContainer(spacing: Spacing.medium) {
+            HStack(spacing: Spacing.medium) {
                 TextField("Type your message...", text: $messageText, axis: .vertical)
                     .textFieldStyle(.plain)
                     .focused($isTextFieldFocused)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .glassEffect(.regular, in: .rect(cornerRadius: 20))
+                    .padding(.horizontal, Spacing.medium)
+                    .padding(.vertical, Spacing.small)
+                    .glassEffect(.regular, in: .rect(cornerRadius: CornerRadius.xLarge))
                     .glassEffectID("textField", in: glassNamespace)
                     .onSubmit {
                         sendMessage()
@@ -33,12 +33,12 @@ struct ChatInputView: View {
                 
                 Button(action: sendMessage) {
                     Image(systemName: "arrow.up.circle.fill")
-                        .font(.system(size: 24))
+                        .font(.title2)
                         .foregroundStyle(
                             messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .gray : .main
                         )
                 }
-                .padding(8)
+                .padding(Spacing.small)
                 .glassEffect(
                     .regular
                         .tint(messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .clear : .main)
@@ -57,25 +57,25 @@ struct ChatInputView: View {
         }
         .padding()
 #else
-        HStack(spacing: 12) {
+        HStack(spacing: Spacing.medium) {
             TextField("Type your message...", text: $messageText, axis: .vertical)
                 .textFieldStyle(.plain)
                 .focused($isTextFieldFocused)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
+                .padding(.horizontal, Spacing.medium)
+                .padding(.vertical, Spacing.small)
                 .onSubmit {
                     sendMessage()
                 }
             
             Button(action: sendMessage) {
                 Image(systemName: "arrow.up.circle.fill")
-                    .font(.system(size: 24))
+                    .font(.title2)
                     .foregroundStyle(
                         messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .gray : Color.accentColor
                     )
             }
             .buttonStyle(.plain)
-            .padding(8)
+            .padding(Spacing.small)
             .disabled(
                 messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
                 chatViewModel.isLoading ||
@@ -87,12 +87,12 @@ struct ChatInputView: View {
 #if os(iOS)
         .background(
             Color(UIColor.systemBackground)
-                .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: -2)
+                .shadow(color: .black.opacity(0.05), radius: Spacing.small, x: 0, y: -2)
         )
 #elseif os(macOS)
         .background(
             Color(NSColor.windowBackgroundColor)
-                .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: -2)
+                .shadow(color: .black.opacity(0.05), radius: Spacing.small, x: 0, y: -2)
         )
 #endif
 #endif

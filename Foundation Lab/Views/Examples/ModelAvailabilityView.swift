@@ -25,11 +25,11 @@ struct ModelAvailabilityView: View {
       onRun: checkAvailability,
       onReset: resetStatus
     ) {
-      VStack(spacing: 16) {
+      VStack(spacing: Spacing.large) {
         // Status Card
-        VStack(spacing: 12) {
+        VStack(spacing: Spacing.medium) {
           Image(systemName: isAvailable == true ? "checkmark.circle.fill" : isAvailable == false ? "xmark.circle.fill" : "questionmark.circle")
-            .font(.system(size: 60))
+            .font(.largeTitle)
             .foregroundColor(isAvailable == true ? .green : isAvailable == false ? .red : .gray)
           
           Text(availabilityStatus)
@@ -38,9 +38,9 @@ struct ModelAvailabilityView: View {
             .foregroundColor(.primary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 30)
+        .padding(.vertical, Spacing.xxLarge)
         .background(Color.secondaryBackgroundColor)
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.medium)
         
         // Info Section
         VStack(alignment: .leading, spacing: 12) {

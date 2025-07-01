@@ -69,7 +69,10 @@ final class ChatViewModel {
     @MainActor
     func submitFeedback(for entryID: Transcript.Entry.ID, sentiment: LanguageModelFeedbackAttachment.Sentiment) {
         guard let entryIndex = session.transcript.firstIndex(where: { $0.id == entryID }) else {
+            // Log error in debug mode only
+            #if DEBUG
             print("Error: Could not find transcript entry for feedback.")
+            #endif
             return
         }
 
@@ -92,11 +95,15 @@ final class ChatViewModel {
             encoder.outputFormatting = .prettyPrinted
             let data = try encoder.encode(feedback)
             let jsonString = String(data: data, encoding: .utf8) ?? ""
+            #if DEBUG
             print("\n--- Feedback Submitted ---")
             print(jsonString)
             print("------------------------\n")
+            #endif
         } catch {
+            #if DEBUG
             print("Error encoding feedback: \(error)")
+            #endif
         }
     }
     

@@ -24,7 +24,7 @@ struct PromptField: View {
   }
   
   var body: some View {
-    VStack(alignment: .leading, spacing: 8) {
+    VStack(alignment: .leading, spacing: Spacing.small) {
       HStack {
         Label("Prompt", systemImage: "text.quote")
           .font(.headline)
@@ -42,17 +42,17 @@ struct PromptField: View {
         TextEditor(text: $text)
           .font(.body)
           .scrollContentBackground(.hidden)
-          .padding(8)
+          .padding(Spacing.small)
           .background(Color.gray.opacity(0.1))
-          .cornerRadius(8)
+          .cornerRadius(CornerRadius.small)
           .frame(minHeight: minHeight)
         
         if text.isEmpty {
           Text(placeholder)
             .font(.body)
             .foregroundColor(.secondary.opacity(0.6))
-            .padding(.horizontal, 12)
-            .padding(.vertical, 16)
+            .padding(.horizontal, Spacing.medium)
+            .padding(.vertical, Spacing.large)
             .allowsHitTesting(false)
         }
       }
@@ -124,7 +124,7 @@ struct PromptHistory: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(Spacing.small)
                 .background(Color.gray.opacity(0.1))
-                .cornerRadius(8)
+                .cornerRadius(CornerRadius.small)
             }
             .buttonStyle(.plain)
             .foregroundColor(.primary)
@@ -138,7 +138,7 @@ struct PromptHistory: View {
 }
 
 #Preview("PromptField") {
-  VStack(spacing: 20) {
+  VStack(spacing: Spacing.xLarge) {
     PromptField(
       text: .constant(""),
       placeholder: "What would you like to know?"
@@ -146,14 +146,14 @@ struct PromptHistory: View {
     
     PromptField(
       text: .constant("Tell me about Swift programming"),
-      minHeight: 60
+      minHeight: 80
     )
   }
   .padding()
 }
 
 #Preview("SimplePromptField") {
-  VStack(spacing: 20) {
+  VStack(spacing: Spacing.xLarge) {
     SimplePromptField(
       text: .constant(""),
       placeholder: "Enter city name",
