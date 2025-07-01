@@ -52,6 +52,7 @@ struct AdaptiveNavigationView: View {
                 }
             }
         }
+        .tabBarMinimizeBehavior(.onScrollDown)
 #if os(iOS)
         .ignoresSafeArea(.keyboard)
 #endif
