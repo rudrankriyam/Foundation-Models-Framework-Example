@@ -35,6 +35,10 @@ extension TabSelection {
             return "sparkles"
         case .chat:
             return "bubble.left.and.bubble.right"
+        case .bodyBuddy:
+            return "heart.text.square"
+        case .psylean:
+            return "sparkles.rectangle.stack"
         case .settings:
             return "gear"
         }
@@ -47,8 +51,12 @@ extension TabSelection {
             return "1"
         case .chat:
             return "2"
-        case .settings:
+        case .bodyBuddy:
             return "3"
+        case .psylean:
+            return "4"
+        case .settings:
+            return "5"
         }
     }
 #endif

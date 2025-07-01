@@ -10,5 +10,7 @@ import Foundation
 enum TabSelection: String, CaseIterable, Hashable {
   case examples = "Examples"
   case chat = "Chat"
+  case bodyBuddy = "Body Buddy"
+  case psylean = "Psylean"
   case settings = "Settings"
 }

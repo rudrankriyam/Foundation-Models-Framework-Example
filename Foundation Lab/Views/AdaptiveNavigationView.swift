@@ -46,6 +46,18 @@ struct AdaptiveNavigationView: View {
                 }
             }
             
+            Tab("Body Buddy", systemImage: "heart.text.square", value: .bodyBuddy) {
+                NavigationStack {
+                    BodyBuddyMainView()
+                }
+            }
+            
+            Tab("Psylean", systemImage: "sparkles.rectangle.stack", value: .psylean) {
+                NavigationStack {
+                    PsyleanMainView()
+                }
+            }
+            
             Tab("Settings", systemImage: "gear", value: .settings) {
                 NavigationStack {
                     SettingsView()
@@ -91,6 +103,16 @@ struct AdaptiveNavigationView: View {
             NavigationStack {
                 ChatView(viewModel: $chatViewModel)
                     .navigationTitle("Chat")
+            }
+        case .bodyBuddy:
+            NavigationStack {
+                BodyBuddyMainView()
+                    .navigationTitle("Body Buddy")
+            }
+        case .psylean:
+            NavigationStack {
+                PsyleanMainView()
+                    .navigationTitle("Psylean")
             }
         case .settings:
             NavigationStack {

@@ -26,6 +26,18 @@ struct ContentView: View {
                     ChatView(viewModel: $chatViewModel)
                 }
             }
+            
+            Tab("Body Buddy", systemImage: "heart.text.square", value: .bodyBuddy) {
+                NavigationStack {
+                    BodyBuddyMainView()
+                }
+            }
+            
+            Tab("Psylean", systemImage: "sparkles.rectangle.stack", value: .psylean) {
+                NavigationStack {
+                    PsyleanMainView()
+                }
+            }
 
             Tab("Settings", systemImage: "gear", value: .settings) {
                 NavigationStack {
