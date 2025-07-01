@@ -22,14 +22,20 @@ struct WebMetadataToolView: View {
       isRunning: isRunning,
       errorMessage: errorMessage
     ) {
-      VStack(alignment: .leading, spacing: 16) {
-        VStack(alignment: .leading, spacing: 8) {
-          Text("Website URL")
-            .font(.subheadline)
+      VStack(alignment: .leading, spacing: Spacing.large) {
+        VStack(alignment: .leading, spacing: Spacing.small) {
+          Text("WEBSITE URL")
+            .font(.footnote)
             .fontWeight(.medium)
+            .foregroundColor(.secondary)
 
-          TextField("Enter website URL", text: $url)
-            .textFieldStyle(RoundedBorderTextFieldStyle())
+          TextEditor(text: $url)
+            .font(.body)
+            .scrollContentBackground(.hidden)
+            .padding(Spacing.medium)
+            .frame(height: 50)
+            .background(Color.gray.opacity(0.1))
+            .cornerRadius(12)
             #if os(iOS)
               .keyboardType(.URL)
               .autocapitalization(.none)
@@ -37,25 +43,21 @@ struct WebMetadataToolView: View {
         }
 
         Button(action: executeWebMetadata) {
-          HStack {
+          HStack(spacing: Spacing.small) {
             if isRunning {
               ProgressView()
                 .scaleEffect(0.8)
-                .foregroundColor(.white)
-            } else {
-              Image(systemName: "link.circle")
+                .tint(.white)
             }
-
-            Text("Generate Summary")
+            Text(isRunning ? "Generating Summary..." : "Generate Summary")
+              .font(.callout)
               .fontWeight(.medium)
           }
           .frame(maxWidth: .infinity)
-          .padding()
-          .background(Color.accentColor)
-          .foregroundColor(.white)
-          .cornerRadius(12)
+          .padding(.vertical, Spacing.small)
         }
-        .disabled(isRunning || url.isEmpty)
+        .buttonStyle(.glassProminent)
+        .disabled(isRunning || url.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
 
         if !result.isEmpty {
           ResultDisplay(result: result, isSuccess: errorMessage == nil)
