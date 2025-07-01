@@ -13,13 +13,6 @@ struct MessageBubbleView: View {
   @Environment(ChatViewModel.self) var viewModel
   @State private var animateTyping = false
   @AccessibilityFocusState private var isMessageFocused: Bool
-  
-  private var feedbackSent: LanguageModelFeedbackAttachment.Sentiment? {
-    guard let entryID = message.entryID else { 
-      return nil 
-    }
-    return viewModel.getFeedback(for: entryID)
-  }
 
   var body: some View {
     HStack {
@@ -77,10 +70,6 @@ struct MessageBubbleView: View {
         messageText
       }
       
-      if !message.isFromUser && !message.content.characters.isEmpty {
-        feedbackButtons
-          .padding(.top, Spacing.xSmall)
-      }
       
       if message.isContextSummary {
         contextSummaryIndicator
@@ -151,48 +140,6 @@ struct MessageBubbleView: View {
     .accessibilityValue("This message contains a summary of previous conversation context")
   }
 
-  private var feedbackButtons: some View {
-    HStack(spacing: 1) {
-      Button(action: { 
-        sendFeedback(.positive) 
-      }) {
-        Image(systemName: "hand.thumbsup")
-          .padding(Spacing.small)
-          #if os(macOS) || os(iOS)
-          .glassEffect(.regular.tint(feedbackSent == .positive ? .green.opacity(0.5) : .gray.opacity(0.2)), in: .circle)
-          #endif
-          .foregroundStyle(feedbackSent == .positive ? .green : .secondary)
-      }
-      .buttonStyle(.plain)
-      .disabled(feedbackSent != nil)
-      .accessibilityLabel(feedbackSent == .positive ? "Positive feedback sent" : "Send positive feedback")
-
-      Button(action: { 
-        sendFeedback(.negative) 
-      }) {
-        Image(systemName: "hand.thumbsdown")
-          .padding(Spacing.small)
-#if os(macOS) || os(iOS)
-          .glassEffect(.regular.tint(feedbackSent == .negative ? .red.opacity(0.5) : .gray.opacity(0.2)), in: .circle)
-#endif
-          .foregroundStyle(feedbackSent == .negative ? .red : .secondary)
-      }
-      .buttonStyle(.plain)
-      .disabled(feedbackSent != nil)
-      .accessibilityLabel(feedbackSent == .negative ? "Negative feedback sent" : "Send negative feedback")
-    }
-    .padding(.leading, Spacing.small + 2)
-  }
-
-  private func sendFeedback(_ sentiment: LanguageModelFeedbackAttachment.Sentiment) {
-    guard let entryID = message.entryID else { 
-      return 
-    }
-    viewModel.submitFeedback(for: entryID, sentiment: sentiment)
-    #if os(iOS)
-    UIAccessibility.post(notification: .announcement, argument: "Feedback sent")
-    #endif
-  }
 
   // MARK: - Accessibility Computed Properties
 
