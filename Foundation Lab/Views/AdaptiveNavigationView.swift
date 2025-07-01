@@ -34,33 +34,11 @@ struct AdaptiveNavigationView: View {
             get: { navigationCoordinator.tabSelection },
             set: { navigationCoordinator.tabSelection = $0 }
         )) {
-            Tab("Examples", systemImage: "sparkles", value: .examples) {
-                NavigationStack {
-                    ExamplesView(viewModel: $contentViewModel)
-                }
-            }
-            
-            Tab("Chat", systemImage: "bubble.left.and.bubble.right", value: .chat) {
-                NavigationStack {
-                    ChatView(viewModel: $chatViewModel)
-                }
-            }
-            
-            Tab("Body Buddy", systemImage: "heart.text.square", value: .bodyBuddy) {
-                NavigationStack {
-                    BodyBuddyMainView()
-                }
-            }
-            
-            Tab("Psylean", systemImage: "sparkles.rectangle.stack", value: .psylean) {
-                NavigationStack {
-                    PsyleanMainView()
-                }
-            }
-            
-            Tab("Settings", systemImage: "gear", value: .settings) {
-                NavigationStack {
-                    SettingsView()
+            ForEach(TabSelection.allCases, id: \.self) { tab in
+                Tab(tab.rawValue, systemImage: tab.systemImage, value: tab) {
+                    NavigationStack {
+                        contentView(for: tab)
+                    }
                 }
             }
         }
@@ -93,32 +71,40 @@ struct AdaptiveNavigationView: View {
     
     @ViewBuilder
     private var detailView: some View {
-        switch navigationCoordinator.splitViewSelection ?? .examples {
+        NavigationStack {
+            contentView(for: navigationCoordinator.splitViewSelection ?? .examples)
+                .navigationTitle(navigationTitle(for: navigationCoordinator.splitViewSelection ?? .examples))
+        }
+    }
+    
+    @ViewBuilder
+    private func contentView(for tab: TabSelection) -> some View {
+        switch tab {
         case .examples:
-            NavigationStack {
-                ExamplesView(viewModel: $contentViewModel)
-                    .navigationTitle("Foundation Models")
-            }
+            ExamplesView(viewModel: $contentViewModel)
         case .chat:
-            NavigationStack {
-                ChatView(viewModel: $chatViewModel)
-                    .navigationTitle("Chat")
-            }
+            ChatView(viewModel: $chatViewModel)
         case .bodyBuddy:
-            NavigationStack {
-                BodyBuddyMainView()
-                    .navigationTitle("Body Buddy")
-            }
+            BodyBuddyMainView()
         case .psylean:
-            NavigationStack {
-                PsyleanMainView()
-                    .navigationTitle("Psylean")
-            }
+            PsyleanMainView()
         case .settings:
-            NavigationStack {
-                SettingsView()
-                    .navigationTitle("Settings")
-            }
+            SettingsView()
+        }
+    }
+    
+    private func navigationTitle(for tab: TabSelection) -> String {
+        switch tab {
+        case .examples:
+            return "Foundation Models"
+        case .chat:
+            return "Chat"
+        case .bodyBuddy:
+            return "Body Buddy"
+        case .psylean:
+            return "Psylean"
+        case .settings:
+            return "Settings"
         }
     }
 }

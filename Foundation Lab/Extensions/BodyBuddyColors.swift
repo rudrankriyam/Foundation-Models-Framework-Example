@@ -1,14 +1,14 @@
 //
-//  HealthColors+App.swift
-//  Body Buddy
+//  BodyBuddyColors.swift
+//  Foundation Lab
 //
 //  Created by Rudrank Riyam on 7/1/25.
 //
 
 import SwiftUI
 
-// MARK: - Health Colors
-extension Color {
+// MARK: - Body Buddy Color Extensions
+public extension Color {
     // Primary Colors
     static let healthPrimary = Color(red: 0.0, green: 0.62, blue: 0.57) // Mint green
     static let healthSecondary = Color(red: 0.0, green: 0.48, blue: 1.0) // Blue
@@ -32,7 +32,7 @@ extension Color {
 }
 
 // MARK: - Gradient Extensions
-extension LinearGradient {
+public extension LinearGradient {
     static let healthGradient = LinearGradient(
         colors: [.healthPrimary, .healthSecondary],
         startPoint: .topLeading,
@@ -62,30 +62,4 @@ extension LinearGradient {
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
-}
-
-// MARK: - Metric Type Extensions
-extension MetricType {
-    var themeColor: Color {
-        switch self {
-        case .steps: return .stepsColor
-        case .heartRate: return .heartColor
-        case .sleep: return .sleepColor
-        case .activeEnergy: return .caloriesColor
-        case .distance: return .healthSecondary
-        case .weight: return Color.brown
-        case .bloodPressure: return .heartColor.opacity(0.8)
-        case .bloodOxygen: return Color.cyan
-        }
-    }
-    
-    var gradient: LinearGradient {
-        switch self {
-        case .steps: return .activityGradient
-        case .heartRate: return .heartGradient
-        case .sleep: return .sleepGradient
-        case .activeEnergy: return .energyGradient
-        default: return .healthGradient
-        }
-    }
 }

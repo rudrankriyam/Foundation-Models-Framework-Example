@@ -39,7 +39,7 @@ struct ModelAvailabilityView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 30)
-        .background(Color.secondaryBackgroundColor)
+        .background(Color.secondary.opacity(0.1))
         .cornerRadius(12)
         
         // Info Section
@@ -68,7 +68,7 @@ struct ModelAvailabilityView: View {
           }
         }
         .padding()
-        .background(Color.secondaryBackgroundColor)
+        .background(Color.secondary.opacity(0.1))
         .cornerRadius(8)
       }
     }

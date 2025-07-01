@@ -228,7 +228,7 @@ final class BodyBuddyChatViewModel {
     }
     
     @MainActor
-    private func generateConversationSummary() async throws -> ConversationSummary {
+    private func generateConversationSummary() async throws -> HealthConversationSummary {
         let summarySession = LanguageModelSession(
             instructions: Instructions(
                 "You are an expert at summarizing health coaching conversations. Create comprehensive summaries that preserve all health metrics discussed, goals set, and advice given."
@@ -244,13 +244,13 @@ final class BodyBuddyChatViewModel {
         
         let summaryResponse = try await summarySession.respond(
             to: Prompt(summaryPrompt),
-            generating: ConversationSummary.self
+            generating: HealthConversationSummary.self
         )
         
         return summaryResponse.content
     }
     
-    private func createNewSessionWithContext(summary: ConversationSummary) {
+    private func createNewSessionWithContext(summary: HealthConversationSummary) {
         let contextInstructions = """
         You are Body Buddy, a friendly and knowledgeable health coach AI assistant. 
         Based on the user's health data, provide personalized, encouraging responses. 

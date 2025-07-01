@@ -18,7 +18,7 @@ extension Color {
 }
 
 // MARK: - Foundation Lab Color Scheme
-struct FoundationLabColors: AppColorScheme {
+struct FoundationLabColors {
     static var primary: Color { .mint }
     static var secondary: Color { .cyan }
     static var accent: Color { .teal }

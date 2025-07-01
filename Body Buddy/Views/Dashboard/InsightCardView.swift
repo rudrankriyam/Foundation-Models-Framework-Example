@@ -108,10 +108,8 @@ struct InsightCardView: View {
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
-        .glassEffect(
-            .regular,
-            in: .rect(cornerRadius: 16)
-        )
+        .background(Color.secondary.opacity(0.1))
+        .cornerRadius(16)
         .overlay(
             RoundedRectangle(cornerRadius: 16)
                 .stroke(insight.isRead ? Color.clear : Color.primary.opacity(0.1), lineWidth: 1)
@@ -124,13 +122,14 @@ struct InsightCardView: View {
                 }
             }
         }
-        .overlay(
-            Group {
-                if showCelebration && insight.category == .achievement {
-                    Color.clear.modifier(CelebrationEffect())
-                }
-            }
-        )
+        // Celebration effect temporarily disabled
+        // .overlay(
+        //     Group {
+        //         if showCelebration && insight.category == .achievement {
+        //             Color.clear.modifier(CelebrationEffect())
+        //         }
+        //     }
+        // )
     }
     
     private var categoryColor: Color {
