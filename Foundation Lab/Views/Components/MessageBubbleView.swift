@@ -130,7 +130,7 @@ struct MessageBubbleView: View {
       #if os(iOS) || os(macOS)
       .glassEffect(
         message.isFromUser
-          ? .regular.tint(.blue).interactive()
+          ? .regular.tint(Color.accentColor).interactive()
           : .regular.tint(.gray.opacity(0.3)),
         in: .rect(cornerRadius: 18)
       )

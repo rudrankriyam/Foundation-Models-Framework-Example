@@ -89,7 +89,7 @@ enum BannerType {
     case .error: return .red
     case .success: return .green
     case .warning: return .orange
-    case .info: return .blue
+    case .info: return Color.accentColor
     }
   }
 

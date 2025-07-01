@@ -151,7 +151,7 @@ struct ToolButton: View {
       ZStack {
         Image(systemName: tool.icon)
           .font(.system(size: 28))
-          .foregroundColor(isSelected ? .white : .accentColor)
+          .foregroundStyle(isSelected ? .white : Color.accentColor)
           .opacity(isRunning ? 0 : 1)
 
         if isRunning {
@@ -179,7 +179,7 @@ struct ToolButton: View {
     .frame(maxWidth: .infinity, minHeight: 140)
     #if os(iOS) || os(macOS)
       .glassEffect(
-        isSelected ? .regular.tint(.accentColor).interactive(true) : .regular.interactive(true),
+        isSelected ? .regular.tint(Color.accentColor).interactive(true) : .regular.interactive(true),
         in: .rect(cornerRadius: 12)
       )
       .glassEffectID("tool-\(tool.rawValue)", in: namespace)
