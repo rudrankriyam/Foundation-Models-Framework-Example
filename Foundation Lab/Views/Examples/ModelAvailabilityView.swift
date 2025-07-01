@@ -56,7 +56,7 @@ struct ModelAvailabilityView: View {
             
             RequirementRow(
               icon: "gear",
-              text: "iOS 26.0+ or macOS 26.0+",
+              text: "iOS 26.0+, macOS 26.0+, or visionOS 26.0+",
               isMet: isAvailable
             )
             
@@ -86,7 +86,7 @@ struct ModelAvailabilityView: View {
         availabilityStatus = "✅ Apple Intelligence is available and ready to use!"
       } else {
         isAvailable = false
-        availabilityStatus = "❌ Apple Intelligence is not available on this device. This feature requires iOS 26.0+ or macOS 26.0+ and a compatible Apple device with Apple Intelligence enabled."
+        availabilityStatus = "Apple Intelligence is not available on this device. This feature requires iOS 26.0+, macOS 26.0+, or visionOS 26.0+ and a compatible Apple device with Apple Intelligence enabled."
       }
       
       isChecking = false
