@@ -27,12 +27,6 @@ struct ContentView: View {
                 }
             }
 
-            Tab("Tools", systemImage: "wrench.and.screwdriver", value: .tools) {
-                NavigationStack {
-                    ToolsView()
-                }
-            }
-
             Tab("Settings", systemImage: "gear", value: .settings) {
                 NavigationStack {
                     SettingsView()

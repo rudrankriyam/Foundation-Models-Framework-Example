@@ -20,41 +20,43 @@ struct HealthToolView: View {
       isRunning: executor.isRunning,
       errorMessage: executor.errorMessage
     ) {
-      VStack(alignment: .leading, spacing: 16) {
+      VStack(alignment: .leading, spacing: Spacing.large) {
         if let successMessage = executor.successMessage {
           SuccessBanner(message: successMessage)
         }
 
         VStack(alignment: .leading, spacing: 8) {
-          Text("Health Query")
-            .font(.subheadline)
+          Text("HEALTH QUERY")
+            .font(.footnote)
             .fontWeight(.medium)
+            .foregroundColor(.secondary)
 
-          TextField("Ask about your health data", text: $query)
-            .textFieldStyle(RoundedBorderTextFieldStyle())
+          TextEditor(text: $query)
+            .scrollContentBackground(.hidden)
+            .padding(Spacing.medium)
+            .frame(height: 50)
+            .background(Color.gray.opacity(0.1))
+            .cornerRadius(12)
         }
 
         Button(action: executeHealthQuery) {
-          HStack {
+          HStack(spacing: Spacing.small) {
             if executor.isRunning {
               ProgressView()
                 .scaleEffect(0.8)
-                .foregroundColor(.white)
                 .accessibilityLabel("Processing")
             } else {
               Image(systemName: "heart")
                 .accessibilityHidden(true)
             }
 
-            Text("Query Health Data")
+            Text(executor.isRunning ? "Querying..." : "Query Health Data")
               .fontWeight(.medium)
           }
           .frame(maxWidth: .infinity)
-          .padding()
-          .background(Color.accentColor)
-          .foregroundColor(.white)
-          .cornerRadius(12)
+          .padding(.vertical, Spacing.small)
         }
+        .buttonStyle(.glassProminent)
         .disabled(executor.isRunning || query.isEmpty)
         .accessibilityLabel("Query health data")
         .accessibilityHint(executor.isRunning ? "Processing request" : "Tap to query health data")

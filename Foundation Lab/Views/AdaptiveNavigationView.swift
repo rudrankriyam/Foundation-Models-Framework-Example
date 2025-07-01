@@ -46,12 +46,6 @@ struct AdaptiveNavigationView: View {
                 }
             }
             
-            Tab("Tools", systemImage: "wrench.and.screwdriver", value: .tools) {
-                NavigationStack {
-                    ToolsView()
-                }
-            }
-            
             Tab("Settings", systemImage: "gear", value: .settings) {
                 NavigationStack {
                     SettingsView()
@@ -97,11 +91,6 @@ struct AdaptiveNavigationView: View {
             NavigationStack {
                 ChatView(viewModel: $chatViewModel)
                     .navigationTitle("Chat")
-            }
-        case .tools:
-            NavigationStack {
-                ToolsView()
-                    .navigationTitle("Tools")
             }
         case .settings:
             NavigationStack {

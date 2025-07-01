@@ -28,14 +28,14 @@ struct StructuredDataView: View {
         // Info Banner
         HStack {
           Image(systemName: "info.circle")
-            .foregroundColor(.blue)
+            .foregroundStyle(.tint)
           Text("Generates structured book recommendations with title, author, genre, and description")
             .font(.caption)
             .foregroundColor(.secondary)
           Spacer()
         }
         .padding()
-        .background(Color.blue.opacity(0.1))
+        .background(Color.main.opacity(0.1))
         .cornerRadius(8)
         
         // Prompt Suggestions

@@ -19,6 +19,7 @@ struct FoundationLabApp: App {
         .onAppear {
           FoundationLabAppShortcuts.updateAppShortcutParameters()
         }
+        .tint(.main)
     }
 #if os(macOS)
     .defaultSize(width: 1000, height: 700)

@@ -35,13 +35,13 @@ struct ChatInputView: View {
                     Image(systemName: "arrow.up.circle.fill")
                         .font(.system(size: 24))
                         .foregroundStyle(
-                            messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .gray : .blue
+                            messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .gray : .main
                         )
                 }
                 .padding(8)
                 .glassEffect(
                     .regular
-                        .tint(messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .clear : .blue)
+                        .tint(messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .clear : .main)
                         .interactive(true)
                 )
                 .glassEffectID("sendButton", in: glassNamespace)
@@ -71,9 +71,10 @@ struct ChatInputView: View {
                 Image(systemName: "arrow.up.circle.fill")
                     .font(.system(size: 24))
                     .foregroundStyle(
-                        messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .gray : .blue
+                        messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .gray : Color.accentColor
                     )
             }
+            .buttonStyle(.plain)
             .padding(8)
             .disabled(
                 messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||

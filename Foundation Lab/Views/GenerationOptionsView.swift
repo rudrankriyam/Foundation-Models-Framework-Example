@@ -231,7 +231,7 @@ struct GenerationOptionsView: View {
                         response = ""
                         showError = nil
                     }
-                    .buttonStyle(.glass)
+                    .buttonStyle(.glassProminent)
                     .font(.caption)
                 }
 
