@@ -36,8 +36,6 @@
 				Views/Chat/BodyBuddyChatInputView.swift,
 				Views/Chat/BodyBuddyChatView.swift,
 				Views/Chat/HealthMessageBubbleView.swift,
-				Views/Components/HealthColors.swift,
-				Views/Components/HealthEffects.swift,
 				Views/Dashboard/DailyProgressView.swift,
 				Views/Dashboard/HealthDashboardView.swift,
 				Views/Dashboard/InsightCardView.swift,
