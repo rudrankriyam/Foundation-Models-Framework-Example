@@ -6,12 +6,12 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct BodyBuddyMainView: View {
     var body: some View {
-        Text("Body Buddy - Coming Soon")
-            .font(.largeTitle)
-            .foregroundStyle(.secondary)
+        HealthDashboardView()
+            .modelContainer(for: [HealthMetric.self, HealthInsight.self, BodyBuddySession.self])
     }
 }
 
