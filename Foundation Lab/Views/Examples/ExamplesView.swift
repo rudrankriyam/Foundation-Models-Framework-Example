@@ -16,6 +16,7 @@ struct ExamplesView: View {
     ScrollView {
       VStack(alignment: .leading, spacing: Spacing.large) {
         exampleButtonsView
+        dynamicSchemaSection
         toolsSection
         responseView
         loadingView
@@ -49,6 +50,39 @@ struct ExamplesView: View {
     .navigationDestination(for: ToolExample.self) { tool in
       tool.createView()
         .withToolExecutor()
+    }
+    .navigationDestination(for: DynamicSchemaExampleType.self) { exampleType in
+      dynamicSchemaView(for: exampleType)
+    }
+  }
+
+  // MARK: - Navigation Builders
+  
+  @ViewBuilder
+  private func dynamicSchemaView(for exampleType: DynamicSchemaExampleType) -> some View {
+    switch exampleType {
+    case .basicObject:
+      BasicDynamicSchemaView()
+    case .arraySchema:
+      ArrayDynamicSchemaView()
+    case .enumSchema:
+      EnumDynamicSchemaView()
+    case .nestedObjects:
+      NestedDynamicSchemaView()
+    case .schemaReferences:
+      ReferencedSchemaView()
+    case .optionalFields:
+      OptionalFieldsSchemaView()
+    case .generationGuides:
+      GuidedDynamicSchemaView()
+    case .unionTypes:
+      UnionTypesSchemaView()
+    case .formBuilder:
+      FormBuilderSchemaView()
+    case .errorHandling:
+      SchemaErrorHandlingView()
+    case .invoiceProcessing:
+      InvoiceProcessingSchemaView()
     }
   }
 
@@ -127,6 +161,62 @@ struct ExamplesView: View {
       #if os(iOS) || os(macOS)
       .glassEffect(.regular, in: .capsule)
       #endif
+    }
+  }
+  
+  private var dynamicSchemaSection: some View {
+    VStack(alignment: .leading, spacing: 12) {
+      Text("Dynamic Schemas")
+        .font(.title2)
+        .fontWeight(.semibold)
+        .padding(.horizontal, Spacing.medium)
+      
+      Text("Build schemas at runtime for flexible data extraction")
+        .font(.callout)
+        .foregroundColor(.secondary)
+        .padding(.horizontal, Spacing.medium)
+      
+      LazyVGrid(columns: gridColumns, spacing: gridSpacing) {
+        ForEach(DynamicSchemaExampleType.allCases) { example in
+          NavigationLink(value: example) {
+            VStack(alignment: .leading, spacing: 8) {
+              HStack {
+                Image(systemName: example.icon)
+                  .font(.title3)
+                  .foregroundColor(.main)
+                
+                Spacer()
+                
+                Text(example.complexity.label)
+                  .font(.caption2)
+                  .fontWeight(.semibold)
+                  .foregroundColor(example.complexity.color)
+                  .padding(.horizontal, 8)
+                  .padding(.vertical, 2)
+                  .background(example.complexity.color.opacity(0.2))
+                  .cornerRadius(4)
+              }
+              
+              Text(example.title)
+                .font(.headline)
+                .foregroundColor(.primary)
+                .multilineTextAlignment(.leading)
+              
+              Text(example.subtitle)
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.leading)
+                .lineLimit(2)
+            }
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.gray.opacity(0.1))
+            .cornerRadius(12)
+          }
+          .buttonStyle(.plain)
+        }
+      }
+      .padding(.horizontal, Spacing.medium)
     }
   }
   
