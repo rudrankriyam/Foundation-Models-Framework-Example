@@ -10,6 +10,7 @@ import FoundationModels
 
 struct ModelUnavailableView: View {
     let reason: SystemLanguageModel.Availability.UnavailableReason?
+    @Environment(\.dismiss) private var dismiss
     
     var body: some View {
         ContentUnavailableView {
@@ -24,6 +25,11 @@ struct ModelUnavailableView: View {
                 }
                 .buttonStyle(.borderedProminent)
             }
+            
+            Button("Continue Anyway") {
+                dismiss()
+            }
+            .buttonStyle(.bordered)
         }
 #if os(iOS)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -40,7 +46,7 @@ struct ModelUnavailableView: View {
         
         switch reason {
         case .deviceNotEligible:
-            return "This device is not eligible for Apple Intelligence. Foundation Models Framework requires an iPhone 15 Pro or later, or a Mac with Apple silicon."
+            return "This device is not eligible for Apple Intelligence. Foundation Models Framework requires an iPhone 15 Pro or later, iPad with A17 Pro or M1 and newer, Apple Vision Pro, or a Mac with Apple silicon."
         case .appleIntelligenceNotEnabled:
             return "Apple Intelligence is not enabled. Please enable Apple Intelligence in Settings to use Foundation Models Framework."
         case .modelNotReady:
