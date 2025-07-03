@@ -29,6 +29,14 @@ struct ChatInputView: View {
                     }
 #if os(iOS)
                     .submitLabel(.send)
+                    .toolbar {
+                        ToolbarItemGroup(placement: .keyboard) {
+                            Spacer()
+                            Button("Done") {
+                                isTextFieldFocused = false
+                            }
+                        }
+                    }
 #endif
                 
                 Button(action: sendMessage) {

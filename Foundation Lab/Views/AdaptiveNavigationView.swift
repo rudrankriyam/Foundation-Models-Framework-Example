@@ -86,17 +86,14 @@ struct AdaptiveNavigationView: View {
         case .examples:
             NavigationStack {
                 ExamplesView(viewModel: $contentViewModel)
-                    .navigationTitle("Foundation Models")
             }
         case .chat:
             NavigationStack {
                 ChatView(viewModel: $chatViewModel)
-                    .navigationTitle("Chat")
             }
         case .settings:
             NavigationStack {
                 SettingsView()
-                    .navigationTitle("Settings")
             }
         }
     }

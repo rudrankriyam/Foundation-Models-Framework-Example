@@ -15,9 +15,6 @@ struct ExamplesView: View {
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: Spacing.large) {
-#if os(iOS)
-        headerView
-#endif
         exampleButtonsView
         toolsSection
         responseView
@@ -25,6 +22,10 @@ struct ExamplesView: View {
       }
       .padding(.vertical)
     }
+    .navigationTitle("Foundation Models")
+#if os(iOS)
+    .navigationBarTitleDisplayMode(.large)
+#endif
     .navigationDestination(for: ExampleType.self) { exampleType in
       switch exampleType {
       case .basicChat:
@@ -53,17 +54,6 @@ struct ExamplesView: View {
 
   // MARK: - View Components
 
-  private var headerView: some View {
-    VStack(alignment: .leading, spacing: Spacing.small) {
-      Text("Foundation Models")
-        .font(.largeTitle)
-        .fontWeight(.bold)
-      Text("Explore Apple's AI capabilities")
-        .font(.callout)
-        .foregroundColor(.secondary)
-    }
-    .padding(.horizontal, Spacing.medium)
-  }
 
   private var exampleButtonsView: some View {
     VStack(alignment: .leading, spacing: 12) {

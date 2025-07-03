@@ -22,6 +22,10 @@ struct ChatView: View {
             instructionsView
 
             messagesView
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    isTextFieldFocused = false
+                }
 
             ChatInputView(
                 messageText: $messageText,
@@ -29,6 +33,10 @@ struct ChatView: View {
             )
         }
         .environment(viewModel)
+        .navigationTitle("Chat")
+#if os(iOS)
+        .navigationBarTitleDisplayMode(.large)
+#endif
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
                 Button(action: { showFeedbackSheet = true }) {
