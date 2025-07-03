@@ -80,6 +80,6 @@ struct ChatInstructionsView: View {
         #endif
         .cornerRadius(12)
         .padding(.horizontal, Spacing.medium)
-        .padding(.top, Spacing.small)
+        .padding(.vertical, Spacing.small)
     }
 }

@@ -19,8 +19,6 @@ struct ChatView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            instructionsView
-
             messagesView
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -31,6 +29,9 @@ struct ChatView: View {
                 messageText: $messageText,
                 isTextFieldFocused: $isTextFieldFocused
             )
+        }
+        .safeAreaInset(edge: .top) {
+            instructionsView
         }
         .environment(viewModel)
         .navigationTitle("Chat")
