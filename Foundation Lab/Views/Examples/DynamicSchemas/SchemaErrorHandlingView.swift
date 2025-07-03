@@ -9,14 +9,19 @@ import SwiftUI
 import FoundationModels
 
 struct SchemaErrorHandlingView: View {
-    @StateObject private var executor = ExampleExecutor()
+    @State private var executor = ExampleExecutor()
     
     var body: some View {
         ExampleViewBase(
             title: "Error Handling",
             description: "Handle schema errors gracefully",
-            code: exampleCode,
-            executor: executor
+            defaultPrompt: "",
+            currentPrompt: .constant(""),
+            isRunning: executor.isRunning,
+            errorMessage: executor.errorMessage,
+            codeExample: exampleCode,
+            onRun: {},
+            onReset: {}
         ) {
             VStack(spacing: Spacing.medium) {
                 Text("Error Handling Examples")

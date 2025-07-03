@@ -9,14 +9,19 @@ import SwiftUI
 import FoundationModels
 
 struct GuidedDynamicSchemaView: View {
-    @StateObject private var executor = ExampleExecutor()
+    @State private var executor = ExampleExecutor()
     
     var body: some View {
         ExampleViewBase(
             title: "Generation Guides",
             description: "Apply constraints to generated values using generation guides",
-            code: exampleCode,
-            executor: executor
+            defaultPrompt: "",
+            currentPrompt: .constant(""),
+            isRunning: executor.isRunning,
+            errorMessage: executor.errorMessage,
+            codeExample: exampleCode,
+            onRun: {},
+            onReset: {}
         ) {
             VStack(spacing: Spacing.medium) {
                 Text("Generation Guides Example")

@@ -9,14 +9,19 @@ import SwiftUI
 import FoundationModels
 
 struct FormBuilderSchemaView: View {
-    @StateObject private var executor = ExampleExecutor()
+    @State private var executor = ExampleExecutor()
     
     var body: some View {
         ExampleViewBase(
             title: "Dynamic Form Builder",
             description: "Build forms dynamically from user input",
-            code: exampleCode,
-            executor: executor
+            defaultPrompt: "",
+            currentPrompt: .constant(""),
+            isRunning: executor.isRunning,
+            errorMessage: executor.errorMessage,
+            codeExample: exampleCode,
+            onRun: {},
+            onReset: {}
         ) {
             VStack(spacing: Spacing.medium) {
                 Text("Dynamic Form Builder")

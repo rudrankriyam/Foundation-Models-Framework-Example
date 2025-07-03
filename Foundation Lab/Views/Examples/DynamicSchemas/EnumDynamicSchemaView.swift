@@ -9,7 +9,7 @@ import SwiftUI
 import FoundationModels
 
 struct EnumDynamicSchemaView: View {
-    @StateObject private var executor = ExampleExecutor()
+    @State private var executor = ExampleExecutor()
     @State private var customerInput = "The customer seems very happy with our service and left a glowing review"
     @State private var taskInput = "This bug fix is urgent and needs to be completed today"
     @State private var weatherInput = "It's a beautiful sunny day with clear skies"
@@ -23,8 +23,13 @@ struct EnumDynamicSchemaView: View {
         ExampleViewBase(
             title: "Enum Schemas",
             description: "Create schemas with predefined string choices using anyOf",
-            code: exampleCode,
-            executor: executor
+            defaultPrompt: customerInput,
+            currentPrompt: .constant(currentInput),
+            isRunning: executor.isRunning,
+            errorMessage: executor.errorMessage,
+            codeExample: exampleCode,
+            onRun: { Task { await runExample() } },
+            onReset: { selectedExample = 0; useCustomChoices = false }
         ) {
             VStack(alignment: .leading, spacing: Spacing.medium) {
                 // Example selector
@@ -83,9 +88,9 @@ struct EnumDynamicSchemaView: View {
                         }
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(executor.isLoading || currentInput.isEmpty)
+                    .disabled(executor.isRunning || currentInput.isEmpty)
                     
-                    if executor.isLoading {
+                    if executor.isRunning {
                         ProgressView()
                             .scaleEffect(0.8)
                     }
@@ -144,7 +149,7 @@ struct EnumDynamicSchemaView: View {
                 options: .init(temperature: 0.1)
             )
             
-            let properties = try response.value.properties()
+            let properties = try response.content.properties()
             let classification = try properties[fieldName]?.value(String.self) ?? "unknown"
             let confidence = try properties["confidence"]?.value(Float.self)
             let reasoning = try properties["reasoning"]?.value(String.self)

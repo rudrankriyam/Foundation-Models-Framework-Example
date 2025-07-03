@@ -9,14 +9,19 @@ import SwiftUI
 import FoundationModels
 
 struct UnionTypesSchemaView: View {
-    @StateObject private var executor = ExampleExecutor()
+    @State private var executor = ExampleExecutor()
     
     var body: some View {
         ExampleViewBase(
             title: "Union Types (anyOf)",
             description: "Create schemas that can be one of several different types",
-            code: exampleCode,
-            executor: executor
+            defaultPrompt: "",
+            currentPrompt: .constant(""),
+            isRunning: executor.isRunning,
+            errorMessage: executor.errorMessage,
+            codeExample: exampleCode,
+            onRun: {},
+            onReset: {}
         ) {
             VStack(spacing: Spacing.medium) {
                 Text("Union Types Example")

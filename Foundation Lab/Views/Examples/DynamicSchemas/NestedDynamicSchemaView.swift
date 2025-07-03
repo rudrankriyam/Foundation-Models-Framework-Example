@@ -9,7 +9,7 @@ import SwiftUI
 import FoundationModels
 
 struct NestedDynamicSchemaView: View {
-    @StateObject private var executor = ExampleExecutor()
+    @State private var executor = ExampleExecutor()
     @State private var companyInput = """
     Apple Inc. is headquartered in Cupertino, California. The CEO is Tim Cook who has been leading \
     the company since 2011. Apple has several major departments including Hardware Engineering led by \
@@ -39,8 +39,13 @@ struct NestedDynamicSchemaView: View {
         ExampleViewBase(
             title: "Nested Objects",
             description: "Create complex nested object structures with multiple levels",
-            code: exampleCode,
-            executor: executor
+            defaultPrompt: companyInput,
+            currentPrompt: .constant(currentInput),
+            isRunning: executor.isRunning,
+            errorMessage: executor.errorMessage,
+            codeExample: exampleCode,
+            onRun: { Task { await runExample() } },
+            onReset: { selectedExample = 0 }
         ) {
             VStack(alignment: .leading, spacing: Spacing.medium) {
                 // Example selector
@@ -84,9 +89,9 @@ struct NestedDynamicSchemaView: View {
                         }
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(executor.isLoading || currentInput.isEmpty)
+                    .disabled(executor.isRunning || currentInput.isEmpty)
                     
-                    if executor.isLoading {
+                    if executor.isRunning {
                         ProgressView()
                             .scaleEffect(0.8)
                     }
@@ -182,9 +187,9 @@ struct NestedDynamicSchemaView: View {
             \(currentInput)
             
             📊 Extracted Nested Structure:
-            \(formatNestedContent(response.value, indent: 0))
+            \(formatNestedContent(response.content, indent: 0))
             
-            🔍 Nesting Levels Found: \(countNestingLevels(response.value))
+            🔍 Nesting Levels Found: \(countNestingLevels(response.content))
             """
         }
     }

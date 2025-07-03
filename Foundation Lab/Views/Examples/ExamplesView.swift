@@ -176,7 +176,7 @@ struct ExamplesView: View {
         .foregroundColor(.secondary)
         .padding(.horizontal, Spacing.medium)
       
-      LazyVGrid(columns: gridColumns, spacing: gridSpacing) {
+      LazyVGrid(columns: adaptiveGridColumns, spacing: gridSpacing) {
         ForEach(DynamicSchemaExampleType.allCases) { example in
           NavigationLink(value: example) {
             VStack(alignment: .leading, spacing: 8) {

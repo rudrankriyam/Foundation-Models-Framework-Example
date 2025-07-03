@@ -9,7 +9,7 @@ import SwiftUI
 import FoundationModels
 
 struct BasicDynamicSchemaView: View {
-    @StateObject private var executor = ExampleExecutor()
+    @State private var executor = ExampleExecutor()
     @State private var personInput = "John Doe is 32 years old, works as a software engineer and loves hiking."
     @State private var productInput = "The iPhone 15 Pro costs $999 and has a 6.1 inch display"
     @State private var customInput = ""
@@ -21,8 +21,13 @@ struct BasicDynamicSchemaView: View {
         ExampleViewBase(
             title: "Basic Object Schema",
             description: "Create simple object schemas at runtime using DynamicGenerationSchema",
-            code: exampleCode,
-            executor: executor
+            defaultPrompt: personInput,
+            currentPrompt: .constant(currentInput),
+            isRunning: executor.isRunning,
+            errorMessage: executor.errorMessage,
+            codeExample: exampleCode,
+            onRun: { Task { await runExample() } },
+            onReset: { selectedExample = 0 }
         ) {
             VStack(alignment: .leading, spacing: Spacing.medium) {
                 // Example selector
@@ -67,9 +72,9 @@ struct BasicDynamicSchemaView: View {
                         }
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(executor.isLoading || currentInput.isEmpty)
+                    .disabled(executor.isRunning || currentInput.isEmpty)
                     
-                    if executor.isLoading {
+                    if executor.isRunning {
                         ProgressView()
                             .scaleEffect(0.8)
                     }
@@ -158,7 +163,7 @@ struct BasicDynamicSchemaView: View {
             \(currentInput)
             
             📊 Extracted Data:
-            \(formatContent(response.value))
+            \(formatContent(response.content))
             
             🔍 Schema Used:
             \(selectedExample == 0 ? "Person" : selectedExample == 1 ? "Product" : "CustomObject")

@@ -9,14 +9,19 @@ import SwiftUI
 import FoundationModels
 
 struct OptionalFieldsSchemaView: View {
-    @StateObject private var executor = ExampleExecutor()
+    @State private var executor = ExampleExecutor()
     
     var body: some View {
         ExampleViewBase(
             title: "Optional vs Required Fields",
             description: "Learn how to handle optional and required fields in dynamic schemas",
-            code: exampleCode,
-            executor: executor
+            defaultPrompt: "",
+            currentPrompt: .constant(""),
+            isRunning: executor.isRunning,
+            errorMessage: executor.errorMessage,
+            codeExample: exampleCode,
+            onRun: {},
+            onReset: {}
         ) {
             VStack(spacing: Spacing.medium) {
                 Text("Example showing optional vs required fields")

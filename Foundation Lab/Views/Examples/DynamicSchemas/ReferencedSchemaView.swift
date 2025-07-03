@@ -9,7 +9,7 @@ import SwiftUI
 import FoundationModels
 
 struct ReferencedSchemaView: View {
-    @StateObject private var executor = ExampleExecutor()
+    @State private var executor = ExampleExecutor()
     @State private var blogInput = """
     The blog post "Understanding AI" was written by John Smith on March 15, 2024. \
     It received 3 comments: Alice said "Great article!", Bob commented "Very informative", \
@@ -37,8 +37,13 @@ struct ReferencedSchemaView: View {
         ExampleViewBase(
             title: "Schema References",
             description: "Use schema references to avoid duplication and create reusable components",
-            code: exampleCode,
-            executor: executor
+            defaultPrompt: blogInput,
+            currentPrompt: .constant(currentInput),
+            isRunning: executor.isRunning,
+            errorMessage: executor.errorMessage,
+            codeExample: exampleCode,
+            onRun: { Task { await runExample() } },
+            onReset: { selectedExample = 0; showReferences = true }
         ) {
             VStack(alignment: .leading, spacing: Spacing.medium) {
                 // Example selector
@@ -91,9 +96,9 @@ struct ReferencedSchemaView: View {
                         }
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(executor.isLoading || currentInput.isEmpty)
+                    .disabled(executor.isRunning || currentInput.isEmpty)
                     
-                    if executor.isLoading {
+                    if executor.isRunning {
                         ProgressView()
                             .scaleEffect(0.8)
                     }
@@ -183,7 +188,7 @@ struct ReferencedSchemaView: View {
             \(currentInput)
             
             📊 Extracted Data:
-            \(formatReferencedContent(response.value))
+            \(formatReferencedContent(response.content))
             
             🔗 Referenced Schemas Used:
             \(referencedSchemas.map { "• \($0)" }.joined(separator: "\n"))

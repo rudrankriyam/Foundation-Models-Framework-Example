@@ -9,7 +9,7 @@ import SwiftUI
 import FoundationModels
 
 struct ArrayDynamicSchemaView: View {
-    @StateObject private var executor = ExampleExecutor()
+    @State private var executor = ExampleExecutor()
     @State private var todoInput = "Today I need to: buy groceries, finish the report, call mom, exercise for 30 minutes, and prepare dinner"
     @State private var ingredientsInput = "For this recipe you'll need eggs, flour, milk, butter, and a pinch of salt"
     @State private var tagsInput = "This article covers machine learning, artificial intelligence, deep learning, neural networks, computer vision, natural language processing, and reinforcement learning"
@@ -23,8 +23,13 @@ struct ArrayDynamicSchemaView: View {
         ExampleViewBase(
             title: "Array Schemas",
             description: "Create array schemas with minimum and maximum element constraints",
-            code: exampleCode,
-            executor: executor
+            defaultPrompt: todoInput,
+            currentPrompt: .constant(currentInput),
+            isRunning: executor.isRunning,
+            errorMessage: executor.errorMessage,
+            codeExample: exampleCode,
+            onRun: { Task { await runExample() } },
+            onReset: { selectedExample = 0; minItems = 2; maxItems = 5 }
         ) {
             VStack(alignment: .leading, spacing: Spacing.medium) {
                 // Example selector
@@ -96,9 +101,9 @@ struct ArrayDynamicSchemaView: View {
                         }
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(executor.isLoading || currentInput.isEmpty)
+                    .disabled(executor.isRunning || currentInput.isEmpty)
                     
-                    if executor.isLoading {
+                    if executor.isRunning {
                         ProgressView()
                             .scaleEffect(0.8)
                     }
@@ -151,7 +156,7 @@ struct ArrayDynamicSchemaView: View {
                 options: .init(temperature: 0.1)
             )
             
-            let items = try response.value.elements()
+            let items = try response.content.elements()
             
             return """
             📝 Input:
