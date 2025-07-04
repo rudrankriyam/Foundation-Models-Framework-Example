@@ -13,6 +13,7 @@ import FoundationModels
 struct FoundationLabApp: App {
     @State private var isModelAvailable = true
     @State private var unavailabilityReason: SystemLanguageModel.Availability.UnavailableReason?
+    @State private var showModelUnavailableWarning = false
 
     var body: some Scene {
         WindowGroup {
@@ -25,12 +26,8 @@ struct FoundationLabApp: App {
                     checkModelAvailability()
                 }
                 .tint(.main)
-                .sheet(isPresented: Binding(
-                    get: { !isModelAvailable },
-                    set: { _ in }
-                )) {
+                .sheet(isPresented: $showModelUnavailableWarning) {
                     ModelUnavailableView(reason: unavailabilityReason)
-                        .interactiveDismissDisabled()
                 }
         }
 #if os(macOS)
@@ -43,9 +40,11 @@ struct FoundationLabApp: App {
         switch model.availability {
         case .available:
             isModelAvailable = true
+            showModelUnavailableWarning = false
         case .unavailable(let reason):
             isModelAvailable = false
             unavailabilityReason = reason
+            showModelUnavailableWarning = true
         }
     }
 }
