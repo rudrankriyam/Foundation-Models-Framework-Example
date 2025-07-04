@@ -1,6 +1,6 @@
 //
-//  BodyBuddyChatView.swift
-//  Body Buddy
+//  PhysiqaChatView.swift
+//  Physiqa
 //
 //  Created by Rudrank Riyam on 6/23/25.
 //
@@ -9,8 +9,8 @@ import SwiftUI
 import FoundationModels
 import SwiftData
 
-struct BodyBuddyChatView: View {
-    @State private var viewModel = BodyBuddyChatViewModel()
+struct PhysiqaChatView: View {
+    @State private var viewModel = PhysiqaChatViewModel()
     @State private var scrollID: String?
     @State private var messageText = ""
     @FocusState private var isTextFieldFocused: Bool
@@ -22,14 +22,14 @@ struct BodyBuddyChatView: View {
             VStack(spacing: 0) {
                 messagesView
                 
-                BodyBuddyChatInputView(
+                PhysiqaChatInputView(
                     messageText: $messageText,
                     chatViewModel: viewModel,
                     isTextFieldFocused: $isTextFieldFocused
                 )
             }
             .background(Color.lightBackground)
-            .navigationTitle("Body Buddy")
+            .navigationTitle("Physiqa")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -89,7 +89,7 @@ struct BodyBuddyChatView: View {
                     }
                     
                     ForEach(viewModel.session.transcript) { entry in
-                        BodyBuddyTranscriptEntryView(entry: entry)
+                        PhysiqaTranscriptEntryView(entry: entry)
                             .id(entry.id)
                     }
                     
@@ -137,7 +137,7 @@ struct BodyBuddyChatView: View {
     }
 }
 
-struct BodyBuddyTranscriptEntryView: View {
+struct PhysiqaTranscriptEntryView: View {
     let entry: Transcript.Entry
     
     var body: some View {
@@ -198,7 +198,7 @@ struct WelcomeMessageView: View {
                     .font(.title2)
                     .foregroundStyle(Color.healthPrimary)
                 
-                Text("Welcome to Body Buddy!")
+                Text("Welcome to Physiqa!")
                     .font(.title3)
                     .fontWeight(.semibold)
             }
@@ -268,6 +268,6 @@ struct ToolCallView: View {
 }
 
 #Preview {
-    BodyBuddyChatView()
-        .modelContainer(for: [BodyBuddySession.self, HealthMetric.self, HealthInsight.self])
+    PhysiqaChatView()
+        .modelContainer(for: [PhysiqaSession.self, HealthMetric.self, HealthInsight.self])
 }

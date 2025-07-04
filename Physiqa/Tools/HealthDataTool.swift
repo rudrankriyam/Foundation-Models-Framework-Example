@@ -1,6 +1,6 @@
 //
 //  HealthDataTool.swift
-//  Body Buddy
+//  Physiqa
 //
 //  Created by Rudrank Riyam on 6/23/25.
 //

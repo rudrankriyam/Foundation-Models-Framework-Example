@@ -1,6 +1,6 @@
 //
-//  BodyBuddyChatViewModel.swift
-//  Body Buddy
+//  PhysiqaChatViewModel.swift
+//  Physiqa
 //
 //  Created by Rudrank Riyam on 6/23/25.
 //
@@ -11,7 +11,7 @@ import Observation
 import SwiftData
 
 @Observable
-final class BodyBuddyChatViewModel {
+final class PhysiqaChatViewModel {
     
     // MARK: - Published Properties
     var isLoading: Bool = false
@@ -36,7 +36,7 @@ final class BodyBuddyChatViewModel {
         self.session = LanguageModelSession(
             tools: tools,
             instructions: Instructions(
-                "You are Body Buddy, a friendly and knowledgeable health coach AI assistant. " +
+                "You are Physiqa, a friendly and knowledgeable health coach AI assistant. " +
                 "Based on the user's health data, provide personalized, encouraging responses. " +
                 "Be supportive and celebrate small wins. Use emojis occasionally."
             )
@@ -104,7 +104,7 @@ final class BodyBuddyChatViewModel {
         session = LanguageModelSession(
             tools: tools,
             instructions: Instructions(
-                "You are Body Buddy, a friendly and knowledgeable health coach AI assistant. " +
+                "You are Physiqa, a friendly and knowledgeable health coach AI assistant. " +
                 "Based on the user's health data, provide personalized, encouraging responses. " +
                 "Be supportive and celebrate small wins. Use emojis occasionally."
             )
@@ -132,20 +132,20 @@ final class BodyBuddyChatViewModel {
         guard let modelContext = modelContext else { return }
         
         // Check if there's an active session or create a new one
-        let descriptor = FetchDescriptor<BodyBuddySession>(
+        let descriptor = FetchDescriptor<PhysiqaSession>(
             sortBy: [SortDescriptor(\.startDate, order: .reverse)]
         )
         
         do {
             let sessions = try modelContext.fetch(descriptor)
-            let activeSession: BodyBuddySession
+            let activeSession: PhysiqaSession
             
             if let existingSession = sessions.first,
                existingSession.startDate.timeIntervalSinceNow > -3600 { // Within last hour
                 activeSession = existingSession
             } else {
                 // Create new session
-                activeSession = BodyBuddySession(sessionType: .coaching)
+                activeSession = PhysiqaSession(sessionType: .coaching)
                 modelContext.insert(activeSession)
             }
             
@@ -220,7 +220,7 @@ final class BodyBuddyChatViewModel {
                     }
                     return nil
                 }.joined(separator: " ")
-                return "Body Buddy: \(text)"
+                return "Physiqa: \(text)"
             default:
                 return nil
             }
@@ -252,7 +252,7 @@ final class BodyBuddyChatViewModel {
     
     private func createNewSessionWithContext(summary: ConversationSummary) {
         let contextInstructions = """
-        You are Body Buddy, a friendly and knowledgeable health coach AI assistant. 
+        You are Physiqa, a friendly and knowledgeable health coach AI assistant. 
         Based on the user's health data, provide personalized, encouraging responses. 
         Be supportive and celebrate small wins. Use emojis occasionally.
         

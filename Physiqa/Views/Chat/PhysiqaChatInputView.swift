@@ -1,6 +1,6 @@
 //
-//  BodyBuddyChatInputView.swift
-//  Body Buddy
+//  PhysiqaChatInputView.swift
+//  Physiqa
 //
 //  Created by Rudrank Riyam on 6/23/25.
 //
@@ -10,9 +10,9 @@ import SwiftUI
 import UIKit
 #endif
 
-struct BodyBuddyChatInputView: View {
+struct PhysiqaChatInputView: View {
     @Binding var messageText: String
-    let chatViewModel: BodyBuddyChatViewModel
+    let chatViewModel: PhysiqaChatViewModel
     @FocusState.Binding var isTextFieldFocused: Bool
     
     private var backgroundColor: Color {
@@ -56,7 +56,7 @@ struct BodyBuddyChatInputView: View {
             
             // Input field
             HStack(spacing: 12) {
-                TextField("Ask Body Buddy anything...", text: $messageText, axis: .vertical)
+                TextField("Ask Physiqa anything...", text: $messageText, axis: .vertical)
                     .textFieldStyle(.plain)
                     .focused($isTextFieldFocused)
                     .padding(.horizontal, 16)
