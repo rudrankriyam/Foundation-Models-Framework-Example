@@ -40,6 +40,18 @@ struct AdaptiveNavigationView: View {
                 }
             }
             
+            Tab("Schemas", systemImage: "doc.text", value: .schemas) {
+                NavigationStack {
+                    SchemaExamplesView()
+                }
+            }
+            
+            Tab("Tools", systemImage: "wrench.and.screwdriver", value: .tools) {
+                NavigationStack {
+                    ToolsExamplesView()
+                }
+            }
+            
             Tab("Chat", systemImage: "bubble.left.and.bubble.right", value: .chat) {
                 NavigationStack {
                     ChatView(viewModel: $chatViewModel)
@@ -86,6 +98,14 @@ struct AdaptiveNavigationView: View {
         case .examples:
             NavigationStack {
                 ExamplesView(viewModel: $contentViewModel)
+            }
+        case .schemas:
+            NavigationStack {
+                SchemaExamplesView()
+            }
+        case .tools:
+            NavigationStack {
+                ToolsExamplesView()
             }
         case .chat:
             NavigationStack {

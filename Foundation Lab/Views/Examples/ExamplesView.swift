@@ -16,8 +16,6 @@ struct ExamplesView: View {
     ScrollView {
       VStack(alignment: .leading, spacing: Spacing.large) {
         exampleButtonsView
-        dynamicSchemaSection
-        toolsSection
         responseView
         loadingView
       }
@@ -46,43 +44,6 @@ struct ExamplesView: View {
       case .generationOptions:
         GenerationOptionsView()
       }
-    }
-    .navigationDestination(for: ToolExample.self) { tool in
-      tool.createView()
-        .withToolExecutor()
-    }
-    .navigationDestination(for: DynamicSchemaExampleType.self) { exampleType in
-      dynamicSchemaView(for: exampleType)
-    }
-  }
-
-  // MARK: - Navigation Builders
-  
-  @ViewBuilder
-  private func dynamicSchemaView(for exampleType: DynamicSchemaExampleType) -> some View {
-    switch exampleType {
-    case .basicObject:
-      BasicDynamicSchemaView()
-    case .arraySchema:
-      ArrayDynamicSchemaView()
-    case .enumSchema:
-      EnumDynamicSchemaView()
-    case .nestedObjects:
-      NestedDynamicSchemaView()
-    case .schemaReferences:
-      ReferencedSchemaView()
-    case .optionalFields:
-      OptionalFieldsSchemaView()
-    case .generationGuides:
-      GuidedDynamicSchemaView()
-    case .unionTypes:
-      UnionTypesSchemaView()
-    case .formBuilder:
-      FormBuilderSchemaView()
-    case .errorHandling:
-      SchemaErrorHandlingView()
-    case .invoiceProcessing:
-      InvoiceProcessingSchemaView()
     }
   }
 
@@ -162,149 +123,6 @@ struct ExamplesView: View {
       .glassEffect(.regular, in: .capsule)
       #endif
     }
-  }
-  
-  private var dynamicSchemaSection: some View {
-    VStack(alignment: .leading, spacing: 12) {
-      Text("Dynamic Schemas")
-        .font(.title2)
-        .fontWeight(.semibold)
-        .padding(.horizontal, Spacing.medium)
-      
-      Text("Build schemas at runtime for flexible data extraction")
-        .font(.callout)
-        .foregroundColor(.secondary)
-        .padding(.horizontal, Spacing.medium)
-      
-      LazyVGrid(columns: adaptiveGridColumns, spacing: gridSpacing) {
-        ForEach(DynamicSchemaExampleType.allCases) { example in
-          NavigationLink(value: example) {
-            VStack(alignment: .leading, spacing: 8) {
-              HStack {
-                Image(systemName: example.icon)
-                  .font(.title3)
-                  .foregroundColor(.main)
-                
-                Spacer()
-                
-                Text(example.complexity.label)
-                  .font(.caption2)
-                  .fontWeight(.semibold)
-                  .foregroundColor(example.complexity.color)
-                  .padding(.horizontal, 8)
-                  .padding(.vertical, 2)
-                  .background(example.complexity.color.opacity(0.2))
-                  .cornerRadius(4)
-              }
-              
-              Text(example.title)
-                .font(.headline)
-                .foregroundColor(.primary)
-                .multilineTextAlignment(.leading)
-              
-              Text(example.subtitle)
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.leading)
-                .lineLimit(2)
-            }
-            .padding()
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.gray.opacity(0.1))
-            .cornerRadius(12)
-          }
-          .buttonStyle(.plain)
-        }
-      }
-      .padding(.horizontal, Spacing.medium)
-    }
-  }
-  
-  private var toolsSection: some View {
-    VStack(alignment: .leading, spacing: 12) {
-      Text("Tools")
-        .font(.title2)
-        .fontWeight(.semibold)
-        .padding(.horizontal, Spacing.medium)
-      
-      #if os(iOS) || os(macOS)
-      GlassEffectContainer(spacing: gridSpacing) {
-        LazyVGrid(columns: adaptiveGridColumns, spacing: gridSpacing) {
-          ForEach(ToolExample.allCases, id: \.self) { tool in
-            NavigationLink(value: tool) {
-              ExampleToolButton(
-                tool: tool,
-                isSelected: false,
-                isRunning: false,
-                namespace: glassNamespace
-              )
-              .contentShape(Rectangle())
-            }
-            .buttonStyle(PlainButtonStyle())
-          }
-        }
-      }
-      .padding(.horizontal)
-      #else
-      LazyVGrid(columns: adaptiveGridColumns, spacing: gridSpacing) {
-        ForEach(ToolExample.allCases, id: \.self) { tool in
-          NavigationLink(value: tool) {
-            ExampleToolButton(
-              tool: tool,
-              isSelected: false,
-              isRunning: false,
-              namespace: glassNamespace
-            )
-            .contentShape(Rectangle())
-          }
-          .buttonStyle(PlainButtonStyle())
-        }
-      }
-      .padding(.horizontal)
-      #endif
-    }
-  }
-}
-
-// MARK: - Tool Button Component
-
-struct ExampleToolButton: View {
-  let tool: ToolExample
-  let isSelected: Bool
-  let isRunning: Bool
-  let namespace: Namespace.ID
-
-  var body: some View {
-    VStack(alignment: .leading, spacing: Spacing.small) {
-      Image(systemName: tool.icon)
-        .font(.title2)
-        .foregroundStyle(.tint)
-        .frame(width: 32, height: 32)
-      
-      VStack(alignment: .leading, spacing: Spacing.small) {
-        Text(tool.displayName)
-          .font(.callout)
-          .fontWeight(.medium)
-          .foregroundStyle(.primary)
-          .lineLimit(1)
-        
-        Text(tool.shortDescription)
-          .font(.caption)
-          .foregroundStyle(.secondary)
-          .lineLimit(2)
-          .fixedSize(horizontal: false, vertical: true)
-      }
-      
-      Spacer(minLength: 0)
-    }
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .padding(Spacing.medium)
-    .background(Color.gray.opacity(0.1))
-    .cornerRadius(12)
-    .overlay(
-      RoundedRectangle(cornerRadius: 12)
-        .strokeBorder(Color.primary.opacity(0.05), lineWidth: 1)
-    )
   }
 }
 
