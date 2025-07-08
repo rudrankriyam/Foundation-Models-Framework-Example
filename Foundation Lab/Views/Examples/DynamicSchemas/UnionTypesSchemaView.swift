@@ -108,8 +108,8 @@ struct UnionTypesSchemaView: View {
     private var schemaDescription: String {
         switch selectedExample {
         case 0: return "Contact can be either:\n• Person (name, email, role)\n• Company (companyName, industry, contactEmail)"
-        case 1: return "Payment can be:\n• Credit Card (amount, lastFourDigits, date)\n• Bank Transfer (amount, accountNumber, routingNumber)\n• Cryptocurrency (amount, cryptocurrency, walletAddress)"
-        case 2: return "Notification can be:\n• System Alert (title, message, timestamp)\n• User Message (from, to, content, timestamp)\n• Error (code, message, stackTrace)"
+        case 1: return "Payment can be:\n• Credit Card (amount with min $0.01, lastFourDigits matching \\d{4}, cardType from list, date)\n• Bank Transfer (amount with min $0.01, accountNumber \\d{4}, routingNumber \\d{9}, date)\n• Cryptocurrency (amount with min $0.01, cryptocurrency from Bitcoin/Ethereum/USDT/USDC, walletAddress, date)"
+        case 2: return "Notification can be:\n• System Alert (severity: info/warning/error/critical, title, message, ISO timestamp)\n• User Message (from, to, content, priority: low/normal/high/urgent, timestamp)\n• Error (code matching [A-Z]{3}-\\d{3,4}, message, stackTrace, timestamp)"
         default: return ""
         }
     }
@@ -148,7 +148,10 @@ struct UnionTypesSchemaView: View {
                     DynamicGenerationSchema.Property(
                         name: "email",
                         description: "Email address",
-                        schema: DynamicGenerationSchema(type: String.self)
+                        schema: DynamicGenerationSchema(
+                            type: String.self,
+                            guides: [.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)]
+                        )
                     ),
                     DynamicGenerationSchema.Property(
                         name: "role",
@@ -177,7 +180,10 @@ struct UnionTypesSchemaView: View {
                     DynamicGenerationSchema.Property(
                         name: "contactEmail",
                         description: "Contact email",
-                        schema: DynamicGenerationSchema(type: String.self),
+                        schema: DynamicGenerationSchema(
+                            type: String.self,
+                            guides: [.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)]
+                        ),
                         isOptional: true
                     )
                 ]
@@ -189,54 +195,279 @@ struct UnionTypesSchemaView: View {
                 anyOf: [personSchema, companySchema]
             )
             
-        case 1: // Payment types - simplified for now
-            // TODO: Implement credit card, bank transfer, crypto schemas
-            return DynamicGenerationSchema(
-                name: "Payment",
-                description: "Payment information",
+        case 1: // Payment types with union schema
+            let creditCardSchema = DynamicGenerationSchema(
+                name: "CreditCard",
+                description: "Credit card payment",
                 properties: [
                     DynamicGenerationSchema.Property(
-                        name: "amount",
-                        description: "Payment amount",
-                        schema: DynamicGenerationSchema(type: Double.self)
+                        name: "type",
+                        description: "Payment type",
+                        schema: DynamicGenerationSchema(
+                            type: String.self,
+                            guides: [.constant("credit_card")]
+                        )
                     ),
                     DynamicGenerationSchema.Property(
-                        name: "method",
-                        description: "Payment method",
-                        schema: DynamicGenerationSchema(type: String.self)
+                        name: "amount",
+                        description: "Payment amount in dollars",
+                        schema: DynamicGenerationSchema(
+                            type: Double.self,
+                            guides: [.minimum(0.01)]
+                        )
+                    ),
+                    DynamicGenerationSchema.Property(
+                        name: "lastFourDigits",
+                        description: "Last four digits of card",
+                        schema: DynamicGenerationSchema(
+                            type: String.self,
+                            guides: [.pattern(/^\d{4}$/)]
+                        )
+                    ),
+                    DynamicGenerationSchema.Property(
+                        name: "cardType",
+                        description: "Card type",
+                        schema: DynamicGenerationSchema(
+                            type: String.self,
+                            guides: [.anyOf(["Visa", "MasterCard", "Amex", "Discover"])]
+                        ),
+                        isOptional: true
                     ),
                     DynamicGenerationSchema.Property(
                         name: "date",
                         description: "Payment date",
+                        schema: DynamicGenerationSchema(type: String.self)
+                    )
+                ]
+            )
+            
+            let bankTransferSchema = DynamicGenerationSchema(
+                name: "BankTransfer",
+                description: "Bank transfer payment",
+                properties: [
+                    DynamicGenerationSchema.Property(
+                        name: "type",
+                        description: "Payment type",
+                        schema: DynamicGenerationSchema(
+                            type: String.self,
+                            guides: [.constant("bank_transfer")]
+                        )
+                    ),
+                    DynamicGenerationSchema.Property(
+                        name: "amount",
+                        description: "Payment amount in dollars",
+                        schema: DynamicGenerationSchema(
+                            type: Double.self,
+                            guides: [.minimum(0.01)]
+                        )
+                    ),
+                    DynamicGenerationSchema.Property(
+                        name: "accountNumber",
+                        description: "Bank account last 4 digits",
+                        schema: DynamicGenerationSchema(
+                            type: String.self,
+                            guides: [.pattern(/^\d{4}$/)]
+                        ),
+                        isOptional: true
+                    ),
+                    DynamicGenerationSchema.Property(
+                        name: "routingNumber",
+                        description: "Bank routing number",
+                        schema: DynamicGenerationSchema(
+                            type: String.self,
+                            guides: [.pattern(/^\d{9}$/)]
+                        ),
+                        isOptional: true
+                    ),
+                    DynamicGenerationSchema.Property(
+                        name: "date",
+                        description: "Payment date",
+                        schema: DynamicGenerationSchema(type: String.self)
+                    )
+                ]
+            )
+            
+            let cryptoSchema = DynamicGenerationSchema(
+                name: "Cryptocurrency",
+                description: "Cryptocurrency payment",
+                properties: [
+                    DynamicGenerationSchema.Property(
+                        name: "type",
+                        description: "Payment type",
+                        schema: DynamicGenerationSchema(
+                            type: String.self,
+                            guides: [.constant("cryptocurrency")]
+                        )
+                    ),
+                    DynamicGenerationSchema.Property(
+                        name: "amount",
+                        description: "Payment amount in USD equivalent",
+                        schema: DynamicGenerationSchema(
+                            type: Double.self,
+                            guides: [.minimum(0.01)]
+                        )
+                    ),
+                    DynamicGenerationSchema.Property(
+                        name: "cryptocurrency",
+                        description: "Cryptocurrency type",
+                        schema: DynamicGenerationSchema(
+                            type: String.self,
+                            guides: [.anyOf(["Bitcoin", "Ethereum", "USDT", "USDC"])]
+                        )
+                    ),
+                    DynamicGenerationSchema.Property(
+                        name: "walletAddress",
+                        description: "Wallet address (partial)",
+                        schema: DynamicGenerationSchema(type: String.self),
+                        isOptional: true
+                    ),
+                    DynamicGenerationSchema.Property(
+                        name: "date",
+                        description: "Payment date",
+                        schema: DynamicGenerationSchema(type: String.self)
+                    )
+                ]
+            )
+            
+            return DynamicGenerationSchema(
+                name: "Payment",
+                description: "Payment information - credit card, bank transfer, or cryptocurrency",
+                anyOf: [creditCardSchema, bankTransferSchema, cryptoSchema]
+            )
+            
+        case 2: // Notification types with union schema
+            let systemAlertSchema = DynamicGenerationSchema(
+                name: "SystemAlert",
+                description: "System-generated alert",
+                properties: [
+                    DynamicGenerationSchema.Property(
+                        name: "type",
+                        description: "Alert type",
+                        schema: DynamicGenerationSchema(
+                            type: String.self,
+                            guides: [.constant("system")]
+                        )
+                    ),
+                    DynamicGenerationSchema.Property(
+                        name: "severity",
+                        description: "Alert severity",
+                        schema: DynamicGenerationSchema(
+                            type: String.self,
+                            guides: [.anyOf(["info", "warning", "error", "critical"])]
+                        )
+                    ),
+                    DynamicGenerationSchema.Property(
+                        name: "title",
+                        description: "Alert title",
+                        schema: DynamicGenerationSchema(type: String.self)
+                    ),
+                    DynamicGenerationSchema.Property(
+                        name: "message",
+                        description: "Alert message",
+                        schema: DynamicGenerationSchema(type: String.self)
+                    ),
+                    DynamicGenerationSchema.Property(
+                        name: "timestamp",
+                        description: "ISO 8601 timestamp",
+                        schema: DynamicGenerationSchema(
+                            type: String.self,
+                            guides: [.pattern(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)]
+                        ),
+                        isOptional: true
+                    )
+                ]
+            )
+            
+            let userMessageSchema = DynamicGenerationSchema(
+                name: "UserMessage",
+                description: "User-to-user message",
+                properties: [
+                    DynamicGenerationSchema.Property(
+                        name: "type",
+                        description: "Message type",
+                        schema: DynamicGenerationSchema(
+                            type: String.self,
+                            guides: [.constant("user_message")]
+                        )
+                    ),
+                    DynamicGenerationSchema.Property(
+                        name: "from",
+                        description: "Sender name",
+                        schema: DynamicGenerationSchema(type: String.self)
+                    ),
+                    DynamicGenerationSchema.Property(
+                        name: "to",
+                        description: "Recipient name",
+                        schema: DynamicGenerationSchema(type: String.self)
+                    ),
+                    DynamicGenerationSchema.Property(
+                        name: "content",
+                        description: "Message content",
+                        schema: DynamicGenerationSchema(type: String.self)
+                    ),
+                    DynamicGenerationSchema.Property(
+                        name: "priority",
+                        description: "Message priority",
+                        schema: DynamicGenerationSchema(
+                            type: String.self,
+                            guides: [.anyOf(["low", "normal", "high", "urgent"])]
+                        ),
+                        isOptional: true
+                    ),
+                    DynamicGenerationSchema.Property(
+                        name: "timestamp",
+                        description: "Message timestamp",
                         schema: DynamicGenerationSchema(type: String.self),
                         isOptional: true
                     )
                 ]
             )
             
-        case 2: // Notification types - simplified for now
-            // TODO: Implement system, user, error notification schemas
-            return DynamicGenerationSchema(
-                name: "Notification",
-                description: "Notification information",
+            let errorNotificationSchema = DynamicGenerationSchema(
+                name: "ErrorNotification",
+                description: "Error notification",
                 properties: [
                     DynamicGenerationSchema.Property(
                         name: "type",
                         description: "Notification type",
-                        schema: DynamicGenerationSchema(type: String.self)
+                        schema: DynamicGenerationSchema(
+                            type: String.self,
+                            guides: [.constant("error")]
+                        )
+                    ),
+                    DynamicGenerationSchema.Property(
+                        name: "code",
+                        description: "Error code",
+                        schema: DynamicGenerationSchema(
+                            type: String.self,
+                            guides: [.pattern(/^[A-Z]{3}-\d{3,4}$/)]
+                        ),
+                        isOptional: true
                     ),
                     DynamicGenerationSchema.Property(
                         name: "message",
-                        description: "Notification message",
+                        description: "Error message",
                         schema: DynamicGenerationSchema(type: String.self)
                     ),
                     DynamicGenerationSchema.Property(
+                        name: "stackTrace",
+                        description: "Stack trace if available",
+                        schema: DynamicGenerationSchema(type: String.self),
+                        isOptional: true
+                    ),
+                    DynamicGenerationSchema.Property(
                         name: "timestamp",
-                        description: "When the notification occurred",
+                        description: "Error timestamp",
                         schema: DynamicGenerationSchema(type: String.self),
                         isOptional: true
                     )
                 ]
+            )
+            
+            return DynamicGenerationSchema(
+                name: "Notification",
+                description: "Notification - system alert, user message, or error",
+                anyOf: [systemAlertSchema, userMessageSchema, errorNotificationSchema]
             )
             
         default:

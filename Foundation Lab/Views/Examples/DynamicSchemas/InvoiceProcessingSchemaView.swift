@@ -261,7 +261,10 @@ struct InvoiceProcessingSchemaView: View {
                 DynamicGenerationSchema.Property(
                     name: "taxId",
                     description: "Tax ID or registration number",
-                    schema: .init(type: String.self),
+                    schema: .init(
+                        type: String.self,
+                        guides: [.pattern(/^\d{2}-\d{7}$/)]
+                    ),
                     isOptional: true
                 )
             ]
@@ -280,19 +283,28 @@ struct InvoiceProcessingSchemaView: View {
                 DynamicGenerationSchema.Property(
                     name: "quantity",
                     description: "Quantity",
-                    schema: .init(type: Double.self),
+                    schema: .init(
+                        type: Double.self,
+                        guides: [.minimum(0.001)]
+                    ),
                     isOptional: true
                 ),
                 DynamicGenerationSchema.Property(
                     name: "unitPrice",
                     description: "Price per unit",
-                    schema: .init(type: Double.self),
+                    schema: .init(
+                        type: Double.self,
+                        guides: [.minimum(0.01)]
+                    ),
                     isOptional: true
                 ),
                 DynamicGenerationSchema.Property(
                     name: "amount",
                     description: "Total amount for this line",
-                    schema: .init(type: Double.self)
+                    schema: .init(
+                        type: Double.self,
+                        guides: [.minimum(0.0)]
+                    )
                 )
             ]
         )
@@ -356,7 +368,10 @@ struct InvoiceProcessingSchemaView: View {
                 DynamicGenerationSchema.Property(
                     name: "subtotal",
                     description: "Subtotal before tax/discount",
-                    schema: .init(type: Double.self)
+                    schema: .init(
+                        type: Double.self,
+                        guides: [.minimum(0.0)]
+                    )
                 ),
                 DynamicGenerationSchema.Property(
                     name: "discount",
@@ -368,13 +383,19 @@ struct InvoiceProcessingSchemaView: View {
                             DynamicGenerationSchema.Property(
                                 name: "percentage",
                                 description: "Discount percentage",
-                                schema: .init(type: Double.self),
+                                schema: .init(
+                                    type: Double.self,
+                                    guides: [.range(0.0...100.0)]
+                                ),
                                 isOptional: true
                             ),
                             DynamicGenerationSchema.Property(
                                 name: "amount",
                                 description: "Discount amount",
-                                schema: .init(type: Double.self),
+                                schema: .init(
+                                    type: Double.self,
+                                    guides: [.minimum(0.0)]
+                                ),
                                 isOptional: true
                             )
                         ]
@@ -391,12 +412,18 @@ struct InvoiceProcessingSchemaView: View {
                             DynamicGenerationSchema.Property(
                                 name: "rate",
                                 description: "Tax rate percentage",
-                                schema: .init(type: Double.self)
+                                schema: .init(
+                                    type: Double.self,
+                                    guides: [.range(0.0...100.0)]
+                                )
                             ),
                             DynamicGenerationSchema.Property(
                                 name: "amount",
                                 description: "Tax amount",
-                                schema: .init(type: Double.self)
+                                schema: .init(
+                                    type: Double.self,
+                                    guides: [.minimum(0.0)]
+                                )
                             )
                         ]
                     ),
@@ -405,7 +432,10 @@ struct InvoiceProcessingSchemaView: View {
                 DynamicGenerationSchema.Property(
                     name: "totalAmount",
                     description: "Total amount due",
-                    schema: .init(type: Double.self)
+                    schema: .init(
+                        type: Double.self,
+                        guides: [.minimum(0.0)]
+                    )
                 ),
                 DynamicGenerationSchema.Property(
                     name: "paymentTerms",
@@ -451,7 +481,10 @@ struct InvoiceProcessingSchemaView: View {
                 DynamicGenerationSchema.Property(
                     name: "totalAmount",
                     description: "Total amount due",
-                    schema: .init(type: Double.self)
+                    schema: .init(
+                        type: Double.self,
+                        guides: [.minimum(0.0)]
+                    )
                 ),
                 DynamicGenerationSchema.Property(
                     name: "currency",
@@ -483,7 +516,10 @@ struct InvoiceProcessingSchemaView: View {
                 DynamicGenerationSchema.Property(
                     name: "lineNumber",
                     description: "Line item number",
-                    schema: .init(type: Int.self),
+                    schema: .init(
+                        type: Int.self,
+                        guides: [.minimum(1)]
+                    ),
                     isOptional: true
                 ),
                 DynamicGenerationSchema.Property(
@@ -500,7 +536,10 @@ struct InvoiceProcessingSchemaView: View {
                 DynamicGenerationSchema.Property(
                     name: "quantity",
                     description: "Quantity",
-                    schema: .init(type: Double.self),
+                    schema: .init(
+                        type: Double.self,
+                        guides: [.minimum(0.001)]
+                    ),
                     isOptional: true
                 ),
                 DynamicGenerationSchema.Property(
@@ -512,13 +551,19 @@ struct InvoiceProcessingSchemaView: View {
                 DynamicGenerationSchema.Property(
                     name: "unitPrice",
                     description: "Price per unit",
-                    schema: .init(type: Double.self),
+                    schema: .init(
+                        type: Double.self,
+                        guides: [.minimum(0.01)]
+                    ),
                     isOptional: true
                 ),
                 DynamicGenerationSchema.Property(
                     name: "amount",
                     description: "Line total",
-                    schema: .init(type: Double.self)
+                    schema: .init(
+                        type: Double.self,
+                        guides: [.minimum(0.0)]
+                    )
                 ),
                 DynamicGenerationSchema.Property(
                     name: "taxable",
@@ -552,17 +597,26 @@ struct InvoiceProcessingSchemaView: View {
                 DynamicGenerationSchema.Property(
                     name: "itemCount",
                     description: "Total number of line items",
-                    schema: .init(type: Int.self)
+                    schema: .init(
+                        type: Int.self,
+                        guides: [.minimum(0)]
+                    )
                 ),
                 DynamicGenerationSchema.Property(
                     name: "subtotal",
                     description: "Sum of all line items",
-                    schema: .init(type: Double.self)
+                    schema: .init(
+                        type: Double.self,
+                        guides: [.minimum(0.0)]
+                    )
                 ),
                 DynamicGenerationSchema.Property(
                     name: "averageItemValue",
                     description: "Average value per line item",
-                    schema: .init(type: Double.self),
+                    schema: .init(
+                        type: Double.self,
+                        guides: [.minimum(0.0)]
+                    ),
                     isOptional: true
                 )
             ]

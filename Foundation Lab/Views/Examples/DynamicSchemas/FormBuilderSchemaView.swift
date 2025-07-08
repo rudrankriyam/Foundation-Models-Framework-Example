@@ -175,7 +175,10 @@ struct FormBuilderSchemaView: View {
                 DynamicGenerationSchema.Property(
                     name: "email",
                     description: "Email address",
-                    schema: .init(type: String.self)
+                    schema: .init(
+                        type: String.self,
+                        guides: [.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)]
+                    )
                 )
             )
         }
@@ -184,8 +187,11 @@ struct FormBuilderSchemaView: View {
             properties.append(
                 DynamicGenerationSchema.Property(
                     name: "phone",
-                    description: "Phone number",
-                    schema: .init(type: String.self),
+                    description: "Phone number (US format)",
+                    schema: .init(
+                        type: String.self,
+                        guides: [.pattern(/\(\d{3}\) \d{3}-\d{4}/)]
+                    ),
                     isOptional: true
                 )
             )
@@ -197,7 +203,10 @@ struct FormBuilderSchemaView: View {
                 DynamicGenerationSchema.Property(
                     name: "yearsOfExperience",
                     description: "Years of professional experience",
-                    schema: .init(type: Int.self),
+                    schema: .init(
+                        type: Int.self,
+                        guides: [.range(0...50)]
+                    ),
                     isOptional: true
                 )
             )
@@ -277,12 +286,18 @@ struct FormBuilderSchemaView: View {
                             DynamicGenerationSchema.Property(
                                 name: "email",
                                 description: "Email address",
-                                schema: .init(type: String.self)
+                                schema: .init(
+                                    type: String.self,
+                                    guides: [.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)]
+                                )
                             ),
                             DynamicGenerationSchema.Property(
                                 name: "phone",
                                 description: "Phone number",
-                                schema: .init(type: String.self),
+                                schema: .init(
+                                    type: String.self,
+                                    guides: [.pattern(/\(\d{3}\) \d{3}-\d{4}/)]
+                                ),
                                 isOptional: true
                             )
                         ]
@@ -297,7 +312,10 @@ struct FormBuilderSchemaView: View {
                             DynamicGenerationSchema.Property(
                                 name: "years",
                                 description: "Years of experience",
-                                schema: .init(type: Int.self)
+                                schema: .init(
+                                    type: Int.self,
+                                    guides: [.range(0...50)]
+                                )
                             ),
                             DynamicGenerationSchema.Property(
                                 name: "currentRole",
@@ -384,8 +402,10 @@ struct FormBuilderSchemaView: View {
                 properties.append(.init(
                     name: "email",
                     description: "Email address",
-                    schema: .init(type: String.self, 
-                                pattern: "^[\\\\w.-]+@[\\\\w.-]+\\\\.\\\\w+$")
+                    schema: .init(
+                        type: String.self,
+                        guides: [.pattern(/^[\\w.-]+@[\\w.-]+\\.\\w+$/)]
+                    )
                 ))
             }
             
@@ -393,7 +413,10 @@ struct FormBuilderSchemaView: View {
                 properties.append(.init(
                     name: "yearsOfExperience",
                     description: "Years of experience",
-                    schema: .init(type: Int.self, minimum: 0, maximum: 50)
+                    schema: .init(
+                        type: Int.self,
+                        guides: [.range(0...50)]
+                    )
                 ))
             }
             
