@@ -292,8 +292,8 @@ struct BasicDynamicSchemaView: View {
             result = String(result.dropLast(2)) // Remove last comma and newline
             result += "\n}"
             return result
-        } catch {
-            return "Error formatting content: \(error)"
+        } catch let error {
+            return "Error formatting content: \(error.localizedDescription)"
         }
     }
     

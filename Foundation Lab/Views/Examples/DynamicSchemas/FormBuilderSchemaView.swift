@@ -386,8 +386,8 @@ struct FormBuilderSchemaView: View {
             let properties = try content.properties()
             let data = try JSONSerialization.data(withJSONObject: properties, options: [.prettyPrinted, .sortedKeys])
             return String(data: data, encoding: .utf8) ?? "Unable to format"
-        } catch {
-            return "Error formatting: \(error)"
+        } catch let error {
+            return "Error formatting content: \(error.localizedDescription)"
         }
     }
     

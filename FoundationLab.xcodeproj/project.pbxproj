@@ -14,7 +14,7 @@
 /* Begin PBXFileReference section */
 		0A5454A72E1148A8002C2152 /* Foundation Lab.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "Foundation Lab.icon"; sourceTree = "<group>"; };
 		0AAE4FFF2DF76E6600838F13 /* Foundation Lab.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Foundation Lab.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		0ABC0C9B2E09AB5300A09018 /* Physiqa.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Physiqa.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		0ABC0C9B2E09AB5300A09018 /* Physiqa.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Physiqa.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0ADB46DC2E0CE81900C29293 /* Psylean.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Psylean.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0ADB48272E0D84EE00C29293 /* Murmer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Murmer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -32,7 +32,7 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		0ABC0C9C2E09AB5300A09018 /* Physiqa */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "Physiqa";
+			path = Physiqa;
 			sourceTree = "<group>";
 		};
 		0ADB46AD2E0CE6C100C29293 /* Foundation Lab */ = {
@@ -152,10 +152,10 @@
 			fileSystemSynchronizedGroups = (
 				0ABC0C9C2E09AB5300A09018 /* Physiqa */,
 			);
-			name = "Physiqa";
+			name = Physiqa;
 			packageProductDependencies = (
 			);
-			productName = "Physiqa";
+			productName = Physiqa;
 			productReference = 0ABC0C9B2E09AB5300A09018 /* Physiqa.app */;
 			productType = "com.apple.product-type.application";
 		};
@@ -587,7 +587,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "Physiqa/Physiqa.entitlements";
+				CODE_SIGN_ENTITLEMENTS = Physiqa/Physiqa.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = YQZQG7N4WG;
@@ -633,7 +633,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "Physiqa/Physiqa.entitlements";
+				CODE_SIGN_ENTITLEMENTS = Physiqa/Physiqa.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = YQZQG7N4WG;

@@ -653,7 +653,7 @@ struct InvoiceProcessingSchemaView: View {
             if difference < 0.01 {
                 validationResults.append("\n✓ Tax calculation is correct: \(taxRate)% = $\(String(format: "%.2f", taxAmount))")
             } else {
-                validationResults.append("\n✗ Tax calculation mismatch: Expected $\(String(format: "%.2f", calculatedTax))")
+                validationResults.append("\n✗ Tax calculation mismatch: Expected $\(String(format: "%.2f", calculatedTax)), got $\(String(format: "%.2f", taxAmount))")
             }
         }
         

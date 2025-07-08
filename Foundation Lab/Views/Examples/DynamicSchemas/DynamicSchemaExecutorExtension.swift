@@ -72,7 +72,11 @@ extension ExampleExecutor {
         do {
             let properties = try content.properties()
             let jsonData = try JSONSerialization.data(withJSONObject: properties, options: [.prettyPrinted, .sortedKeys])
-            return String(data: jsonData, encoding: .utf8) ?? (try? content.value(String.self)) ?? "Unable to format"
+            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                return jsonString
+            } else {
+                return String(describing: properties)
+            }
         } catch {
             // Fallback to simple string value
             return (try? content.value(String.self)) ?? "Error: \(error)"
