@@ -513,37 +513,33 @@ struct NestedDynamicSchemaView: View {
         let indentString = String(repeating: "  ", count: indent)
         var result = ""
         
-        do {
-            if let properties = try? content.properties() {
-                for (key, value) in properties {
-                    result += "\n\(indentString)\(key): "
-                    
-                    if let _ = try? value.properties() {
-                        // Nested object
-                        result += formatNestedContent(value, indent: indent + 1)
-                    } else if let elements = try? value.elements() {
-                        // Array
-                        result += "["
-                        for (i, element) in elements.enumerated() {
-                            result += formatNestedContent(element, indent: indent + 1)
-                            if i < elements.count - 1 {
-                                result += ","
-                            }
+        if let properties = try? content.properties() {
+            for (key, value) in properties {
+                result += "\n\(indentString)\(key): "
+                
+                if let _ = try? value.properties() {
+                    // Nested object
+                    result += formatNestedContent(value, indent: indent + 1)
+                } else if let elements = try? value.elements() {
+                    // Array
+                    result += "["
+                    for (i, element) in elements.enumerated() {
+                        result += formatNestedContent(element, indent: indent + 1)
+                        if i < elements.count - 1 {
+                            result += ","
                         }
-                        result += "\n\(indentString)]"
-                    } else if let stringValue = try? value.value(String.self) {
-                        result += "\"\(stringValue)\""
-                    } else if let intValue = try? value.value(Int.self) {
-                        result += String(intValue)
-                    } else if let floatValue = try? value.value(Float.self) {
-                        result += String(format: "%.2f", floatValue)
                     }
+                    result += "\n\(indentString)]"
+                } else if let stringValue = try? value.value(String.self) {
+                    result += "\"\(stringValue)\""
+                } else if let intValue = try? value.value(Int.self) {
+                    result += String(intValue)
+                } else if let floatValue = try? value.value(Float.self) {
+                    result += String(format: "%.2f", floatValue)
                 }
-            } else if let stringValue = try? content.value(String.self) {
-                result += "\"\(stringValue)\""
             }
-        } catch {
-            result += "error"
+        } else if let stringValue = try? content.value(String.self) {
+            result += "\"\(stringValue)\""
         }
         
         return result

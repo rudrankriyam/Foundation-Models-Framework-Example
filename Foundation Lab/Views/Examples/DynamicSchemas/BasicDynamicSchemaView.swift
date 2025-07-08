@@ -298,42 +298,38 @@ struct BasicDynamicSchemaView: View {
     }
     
     private func formatValue(_ content: GeneratedContent) -> String {
-        do {
-            // Try to get as string first
-            if let stringValue = try? content.value(String.self) {
-                return "\"\(stringValue)\""
-            }
-            
-            // Try as number
-            if let intValue = try? content.value(Int.self) {
-                return String(intValue)
-            }
-            
-            if let floatValue = try? content.value(Float.self) {
-                return String(floatValue)
-            }
-            
-            // Try as array
-            if let elements = try? content.elements() {
-                let formatted = elements.map { formatValue($0) }.joined(separator: ", ")
-                return "[\(formatted)]"
-            }
-            
-            // Try as object
-            if let properties = try? content.properties() {
-                var result = "{ "
-                for (key, value) in properties {
-                    result += "\"\(key)\": \(formatValue(value)), "
-                }
-                result = String(result.dropLast(2)) // Remove last comma and space
-                result += " }"
-                return result
-            }
-            
-            return "unknown"
-        } catch {
-            return "error"
+        // Try to get as string first
+        if let stringValue = try? content.value(String.self) {
+            return "\"\(stringValue)\""
         }
+        
+        // Try as number
+        if let intValue = try? content.value(Int.self) {
+            return String(intValue)
+        }
+        
+        if let floatValue = try? content.value(Float.self) {
+            return String(floatValue)
+        }
+        
+        // Try as array
+        if let elements = try? content.elements() {
+            let formatted = elements.map { formatValue($0) }.joined(separator: ", ")
+            return "[\(formatted)]"
+        }
+        
+        // Try as object
+        if let properties = try? content.properties() {
+            var result = "{ "
+            for (key, value) in properties {
+                result += "\"\(key)\": \(formatValue(value)), "
+            }
+            result = String(result.dropLast(2)) // Remove last comma and space
+            result += " }"
+            return result
+        }
+        
+        return "unknown"
     }
     
     private var exampleCode: String {
