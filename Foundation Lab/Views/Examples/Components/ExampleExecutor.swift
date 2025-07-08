@@ -158,7 +158,7 @@ final class ExampleExecutor {
   }
   
   /// Handles various error types and returns user-friendly messages
-  private func handleError(_ error: Error) -> String {
+  func handleError(_ error: Error) -> String {
     if let generationError = error as? LanguageModelSession.GenerationError {
       return FoundationModelsErrorHandler.handleGenerationError(generationError)
     } else if let toolCallError = error as? LanguageModelSession.ToolCallError {

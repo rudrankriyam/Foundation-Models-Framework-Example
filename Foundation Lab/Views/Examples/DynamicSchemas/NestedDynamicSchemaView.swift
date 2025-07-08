@@ -40,7 +40,7 @@ struct NestedDynamicSchemaView: View {
             title: "Nested Objects",
             description: "Create complex nested object structures with multiple levels",
             defaultPrompt: companyInput,
-            currentPrompt: .constant(currentInput),
+            currentPrompt: bindingForSelectedExample,
             isRunning: executor.isRunning,
             errorMessage: executor.errorMessage,
             codeExample: exampleCode,
@@ -65,19 +65,6 @@ struct NestedDynamicSchemaView: View {
                         .font(.system(.caption, design: .monospaced))
                         .padding(8)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(8)
-                }
-                
-                // Input text
-                VStack(alignment: .leading, spacing: Spacing.small) {
-                    Text("Input Text")
-                        .font(.headline)
-                    
-                    TextEditor(text: bindingForSelectedExample)
-                        .font(.body)
-                        .frame(minHeight: 100)
-                        .padding(8)
                         .background(Color.gray.opacity(0.1))
                         .cornerRadius(8)
                 }

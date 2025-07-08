@@ -22,7 +22,7 @@ struct UnionTypesSchemaView: View {
             title: "Union Types (anyOf)",
             description: "Create schemas that can be one of several different types",
             defaultPrompt: contactInput,
-            currentPrompt: .constant(currentInput),
+            currentPrompt: bindingForSelectedExample,
             isRunning: executor.isRunning,
             errorMessage: executor.errorMessage,
             codeExample: exampleCode,
@@ -38,19 +38,6 @@ struct UnionTypesSchemaView: View {
                 }
                 .pickerStyle(.segmented)
                 .padding(.bottom)
-                
-                // Input field
-                VStack(alignment: .leading, spacing: Spacing.small) {
-                    Text("Input Text")
-                        .font(.headline)
-                    
-                    TextEditor(text: bindingForSelectedExample)
-                        .font(.body)
-                        .frame(minHeight: 60)
-                        .padding(8)
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(8)
-                }
                 
                 // Schema visualization
                 VStack(alignment: .leading, spacing: Spacing.small) {

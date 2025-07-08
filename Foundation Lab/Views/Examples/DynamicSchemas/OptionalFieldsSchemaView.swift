@@ -23,7 +23,7 @@ struct OptionalFieldsSchemaView: View {
             title: "Optional vs Required Fields",
             description: "Learn how to handle optional and required fields in dynamic schemas",
             defaultPrompt: userProfileInput,
-            currentPrompt: .constant(currentInput),
+            currentPrompt: bindingForSelectedExample,
             isRunning: executor.isRunning,
             errorMessage: executor.errorMessage,
             codeExample: exampleCode,
@@ -76,19 +76,6 @@ struct OptionalFieldsSchemaView: View {
                     .padding(8)
                     .background(Color.gray.opacity(0.1))
                     .cornerRadius(8)
-                }
-
-                // Input
-                VStack(alignment: .leading, spacing: Spacing.small) {
-                    Text("Input Text")
-                        .font(.headline)
-
-                    TextEditor(text: bindingForSelectedExample)
-                        .font(.body)
-                        .frame(minHeight: 60)
-                        .padding(8)
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(8)
                 }
 
                 HStack {

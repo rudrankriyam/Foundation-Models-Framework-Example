@@ -85,24 +85,14 @@ struct InvoiceProcessingSchemaView: View {
                 .background(Color.gray.opacity(0.05))
                 .cornerRadius(8)
                 
-                // Invoice input
-                VStack(alignment: .leading, spacing: Spacing.small) {
-                    HStack {
-                        Text("Invoice Text")
-                            .font(.headline)
-                        Spacer()
-                        Button("Load Sample") {
-                            loadSampleInvoice()
-                        }
-                        .font(.caption)
+                // Sample invoice loader
+                HStack {
+                    Spacer()
+                    Button("Load Sample Invoice") {
+                        loadSampleInvoice()
                     }
-                    
-                    TextEditor(text: $invoiceText)
-                        .font(.system(.caption, design: .monospaced))
-                        .frame(minHeight: 200)
-                        .padding(8)
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(8)
+                    .font(.caption)
+                    .buttonStyle(.bordered)
                 }
                 
                 // Results
@@ -263,7 +253,7 @@ struct InvoiceProcessingSchemaView: View {
                     description: "Tax ID or registration number",
                     schema: .init(
                         type: String.self,
-                        guides: [.pattern(/^\d{2}-\d{7}$/)]
+                        guides: [.pattern(/\d{2}-\d{7}/)]
                     ),
                     isOptional: true
                 )

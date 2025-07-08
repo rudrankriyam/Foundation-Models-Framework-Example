@@ -24,7 +24,7 @@ struct EnumDynamicSchemaView: View {
             title: "Enum Schemas",
             description: "Create schemas with predefined string choices using anyOf",
             defaultPrompt: customerInput,
-            currentPrompt: .constant(currentInput),
+            currentPrompt: bindingForSelectedExample,
             isRunning: executor.isRunning,
             errorMessage: executor.errorMessage,
             codeExample: exampleCode,
@@ -67,19 +67,6 @@ struct EnumDynamicSchemaView: View {
                 .padding()
                 .background(Color.gray.opacity(0.1))
                 .cornerRadius(8)
-                
-                // Input text
-                VStack(alignment: .leading, spacing: Spacing.small) {
-                    Text("Input Text")
-                        .font(.headline)
-                    
-                    TextEditor(text: bindingForSelectedExample)
-                        .font(.body)
-                        .frame(minHeight: 60)
-                        .padding(8)
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(8)
-                }
                 
                 HStack {
                     Button("Classify") {

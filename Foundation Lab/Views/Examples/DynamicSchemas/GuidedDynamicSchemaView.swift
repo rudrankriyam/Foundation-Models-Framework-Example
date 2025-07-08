@@ -28,7 +28,7 @@ struct GuidedDynamicSchemaView: View {
             title: "Generation Guides",
             description: "Apply constraints to generated values using schema properties",
             defaultPrompt: patternInput,
-            currentPrompt: .constant(currentInput),
+            currentPrompt: bindingForSelectedGuide,
             isRunning: executor.isRunning,
             errorMessage: executor.errorMessage,
             codeExample: exampleCode,
@@ -47,19 +47,6 @@ struct GuidedDynamicSchemaView: View {
                         }
                     }
                     .pickerStyle(.segmented)
-                }
-                
-                // Input field
-                VStack(alignment: .leading, spacing: Spacing.small) {
-                    Text("Generation Prompt")
-                        .font(.headline)
-                    
-                    TextEditor(text: bindingForSelectedGuide)
-                        .font(.body)
-                        .frame(minHeight: 60)
-                        .padding(8)
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(8)
                 }
                 
                 // Guide explanation

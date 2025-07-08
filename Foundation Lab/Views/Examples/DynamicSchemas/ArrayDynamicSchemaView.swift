@@ -24,7 +24,7 @@ struct ArrayDynamicSchemaView: View {
             title: "Array Schemas",
             description: "Create array schemas with minimum and maximum element constraints",
             defaultPrompt: todoInput,
-            currentPrompt: .constant(currentInput),
+            currentPrompt: bindingForSelectedExample,
             isRunning: executor.isRunning,
             errorMessage: executor.errorMessage,
             codeExample: exampleCode,
@@ -65,19 +65,6 @@ struct ArrayDynamicSchemaView: View {
                     .padding()
                     .background(Color.gray.opacity(0.1))
                     .cornerRadius(8)
-                }
-                
-                // Input
-                VStack(alignment: .leading, spacing: Spacing.small) {
-                    Text("Input Text")
-                        .font(.headline)
-                    
-                    TextEditor(text: bindingForSelectedExample)
-                        .font(.body)
-                        .frame(minHeight: 80)
-                        .padding(8)
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(8)
                 }
                 
                 // Schema info

@@ -43,9 +43,6 @@ struct BasicDynamicSchemaView: View {
                 }
                 .pickerStyle(.segmented)
                 .padding(.bottom)
-                .onChange(of: selectedExample) { _ in
-                    // Update prompt automatically when example changes
-                }
                 
                 
                 // Schema preview

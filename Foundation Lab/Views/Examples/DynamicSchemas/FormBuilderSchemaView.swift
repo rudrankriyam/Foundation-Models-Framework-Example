@@ -57,15 +57,15 @@ struct FormBuilderSchemaView: View {
                 Toggle("Include validation rules", isOn: $includeValidation)
                     .padding(.vertical, 8)
                 
-                // Form data input
+                // Sample data display (read-only)
                 VStack(alignment: .leading, spacing: Spacing.small) {
                     Text("Sample Form Data")
                         .font(.headline)
                     
-                    TextEditor(text: $formData)
-                        .font(.system(.body, design: .monospaced))
-                        .frame(minHeight: 150)
-                        .padding(8)
+                    Text(formData)
+                        .font(.system(.caption, design: .monospaced))
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Color.gray.opacity(0.1))
                         .cornerRadius(8)
                 }

@@ -29,7 +29,7 @@ extension ExampleExecutor {
         do {
             result = try await operation()
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = handleError(error)
         }
         
         isRunning = false
@@ -60,7 +60,7 @@ extension ExampleExecutor {
                 result = formatGeneratedContent(output.content)
             }
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = handleError(error)
         }
         
         isRunning = false
@@ -68,18 +68,57 @@ extension ExampleExecutor {
     
     /// Helper to format GeneratedContent as JSON string
     private func formatGeneratedContent(_ content: GeneratedContent) -> String {
-        // Attempt to convert to JSON
         do {
-            let properties = try content.properties()
-            let jsonData = try JSONSerialization.data(withJSONObject: properties, options: [.prettyPrinted, .sortedKeys])
+            // Build a proper JSON object from the GeneratedContent
+            let jsonObject = try buildJSONObject(from: content)
+            let jsonData = try JSONSerialization.data(withJSONObject: jsonObject, options: [.prettyPrinted, .sortedKeys])
             if let jsonString = String(data: jsonData, encoding: .utf8) {
                 return jsonString
-            } else {
-                return String(describing: properties)
             }
+            return String(describing: jsonObject)
         } catch {
-            // Fallback to simple string value
-            return (try? content.value(String.self)) ?? "Error: \(error)"
+            return "Error formatting content: \(error.localizedDescription)"
         }
+    }
+    
+    /// Recursively build a JSON-compatible object from GeneratedContent
+    private func buildJSONObject(from content: GeneratedContent) throws -> Any {
+        // Try to get as primitive types first
+        if let stringValue = try? content.value(String.self) {
+            return stringValue
+        }
+        
+        if let intValue = try? content.value(Int.self) {
+            return intValue
+        }
+        
+        if let doubleValue = try? content.value(Double.self) {
+            return doubleValue
+        }
+        
+        if let floatValue = try? content.value(Float.self) {
+            return floatValue
+        }
+        
+        if let boolValue = try? content.value(Bool.self) {
+            return boolValue
+        }
+        
+        // Try as array
+        if let elements = try? content.elements() {
+            return try elements.map { try buildJSONObject(from: $0) }
+        }
+        
+        // Try as object with properties
+        if let properties = try? content.properties() {
+            var jsonDict = [String: Any]()
+            for (key, value) in properties {
+                jsonDict[key] = try buildJSONObject(from: value)
+            }
+            return jsonDict
+        }
+        
+        // If all else fails, return a string representation
+        return String(describing: content)
     }
 }
