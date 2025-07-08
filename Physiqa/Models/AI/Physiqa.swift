@@ -1,6 +1,6 @@
 //
-//  BodyBuddy.swift
-//  Body Buddy
+//  Physiqa.swift
+//  Physiqa
 //
 //  Created by Rudrank Riyam on 6/23/25.
 //
@@ -10,12 +10,12 @@ import FoundationModels
 
 /// The main AI character that interacts with users about their health
 @Generable
-struct BodyBuddy {
+struct Physiqa {
     @Guide(description: "A friendly greeting based on time of day and user's recent health data")
     let greeting: String
     
     @Guide(description: "Current mood/personality of the buddy (cheerful, encouraging, concerned, celebratory)")
-    let mood: BuddyMood
+    let mood: PhysiqaMood
     
     @Guide(description: "A motivational message tailored to the user's health goals")
     let motivationalMessage: String
@@ -28,7 +28,7 @@ struct BodyBuddy {
 }
 
 @Generable
-enum BuddyMood {
+enum PhysiqaMood {
     case cheerful
     case encouraging
     case concerned
@@ -38,10 +38,10 @@ enum BuddyMood {
     case calm
 }
 
-/// Represents a personalized response from Body Buddy
+/// Represents a personalized response from Physiqa
 @Generable
-struct BuddyResponse {
-    @Guide(description: "The main message content from Body Buddy")
+struct PhysiqaResponse {
+    @Guide(description: "The main message content from Physiqa")
     let message: String
     
     @Guide(description: "The emotional tone of the response")

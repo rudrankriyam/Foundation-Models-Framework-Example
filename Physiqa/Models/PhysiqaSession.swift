@@ -1,6 +1,6 @@
 //
-//  BodyBuddySession.swift
-//  Body Buddy
+//  PhysiqaSession.swift
+//  Physiqa
 //
 //  Created by Rudrank Riyam on 6/23/25.
 //
@@ -9,7 +9,7 @@ import Foundation
 import SwiftData
 
 @Model
-final class BodyBuddySession {
+final class PhysiqaSession {
     var id: UUID
     var startDate: Date
     var endDate: Date?

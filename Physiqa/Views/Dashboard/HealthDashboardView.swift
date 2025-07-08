@@ -1,6 +1,6 @@
 //
 //  HealthDashboardView.swift
-//  Body Buddy
+//  Physiqa
 //
 //  Created by Rudrank Riyam on 6/23/25.
 //
@@ -68,7 +68,7 @@ struct HealthDashboardView: View {
             #endif
         }
         .sheet(isPresented: $showingBuddyChat) {
-            BodyBuddyChatView()
+            PhysiqaChatView()
         }
         .task {
             await loadHealthData()

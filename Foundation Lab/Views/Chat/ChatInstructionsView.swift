@@ -73,11 +73,7 @@ struct ChatInstructionsView: View {
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
-        #if os(iOS) || os(macOS)
         .background(.regularMaterial)
-        #else
-        .background(Color(NSColor.controlBackgroundColor))
-        #endif
         .cornerRadius(12)
         .padding(.horizontal, Spacing.medium)
         .padding(.vertical, Spacing.small)

@@ -62,7 +62,7 @@ struct ModelUnavailableView: View {
     }
     
     private func openSettings() {
-#if os(iOS)
+#if os(iOS) || os(visionOS)
         if let url = URL(string: UIApplication.openSettingsURLString) {
             UIApplication.shared.open(url)
         }
