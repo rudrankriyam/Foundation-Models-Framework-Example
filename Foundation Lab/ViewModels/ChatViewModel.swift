@@ -59,7 +59,7 @@ final class ChatViewModel {
 
         } catch {
             // Handle other errors by showing an error message
-            errorMessage = error.localizedDescription
+            errorMessage = handleFoundationModelsError(error)
             showError = true
         }
 
@@ -133,6 +133,18 @@ final class ChatViewModel {
 
     // MARK: - Private Methods
 
+    private func handleFoundationModelsError(_ error: Error) -> String {
+        if let generationError = error as? LanguageModelSession.GenerationError {
+            return FoundationModelsErrorHandler.handleGenerationError(generationError)
+        } else if let toolCallError = error as? LanguageModelSession.ToolCallError {
+            return FoundationModelsErrorHandler.handleToolCallError(toolCallError)
+        } else if let customError = error as? FoundationModelsError {
+            return customError.localizedDescription
+        } else {
+            return "Error: \(error)"
+        }
+    }
+
     @MainActor
     private func handleContextWindowExceeded(userMessage: String) async {
         isSummarizing = true
@@ -145,7 +157,7 @@ final class ChatViewModel {
             try await respondWithNewSession(to: userMessage)
         } catch {
             handleSummarizationError(error)
-            errorMessage = "Failed to summarize conversation: \(error.localizedDescription)"
+            errorMessage = handleFoundationModelsError(error)
             showError = true
         }
     }
