@@ -34,7 +34,7 @@ struct HealthMessageBubbleView: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 10)
                     .background(
-                        RoundedRectangle(cornerRadius: 20)
+                        .rect(cornerRadius: 20)
                             .fill(isFromUser ? Color.primary.opacity(0.08) : Color.primary.opacity(0.05))
                     )
                     .overlay(

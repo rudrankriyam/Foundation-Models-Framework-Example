@@ -24,27 +24,11 @@ struct ToolsExamplesView: View {
                 ], spacing: 16) {
                     ForEach(ToolExample.allCases, id: \.self) { tool in
                         NavigationLink(destination: tool.createView()) {
-                            VStack(alignment: .leading, spacing: Spacing.small) {
-                                HStack {
-                                    Image(systemName: tool.icon)
-                                        .font(.title2)
-                                        .foregroundColor(.main)
-                                    Spacer()
-                                }
-                                
-                                Text(tool.displayName)
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
-                                
-                                Text(tool.shortDescription)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                    .lineLimit(2)
-                            }
-                            .padding()
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color.gray.opacity(0.1))
-                            .cornerRadius(12)
+                            GenericCardView(
+                                icon: tool.icon,
+                                title: tool.displayName,
+                                subtitle: tool.shortDescription
+                            )
                         }
                         .buttonStyle(.plain)
                     }

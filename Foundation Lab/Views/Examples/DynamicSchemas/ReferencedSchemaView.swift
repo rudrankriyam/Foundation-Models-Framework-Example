@@ -426,35 +426,31 @@ struct ReferencedSchemaView: View {
             let indentStr = String(repeating: "  ", count: indent)
             var output = ""
             
-            do {
-                if let properties = try? value.properties() {
-                    for (key, val) in properties {
-                        output += "\n\(indentStr)\(key): "
-                        
-                        if let _ = try? val.properties() {
-                            // This is a referenced object
-                            if !processedRefs.contains(key) {
-                                processedRefs.insert(key)
-                                output += "(ref)"
-                            }
-                            output += formatValue(val, indent: indent + 1)
-                        } else if let elements = try? val.elements() {
-                            output += "["
-                            for element in elements {
-                                output += formatValue(element, indent: indent + 1)
-                            }
-                            output += "\n\(indentStr)]"
-                        } else if let str = try? val.value(String.self) {
-                            output += "\"\(str)\""
-                        } else if let num = try? val.value(Int.self) {
-                            output += String(num)
+            if let properties = try? value.properties() {
+                for (key, val) in properties {
+                    output += "\n\(indentStr)\(key): "
+                    
+                    if let _ = try? val.properties() {
+                        // This is a referenced object
+                        if !processedRefs.contains(key) {
+                            processedRefs.insert(key)
+                            output += "(ref)"
                         }
+                        output += formatValue(val, indent: indent + 1)
+                    } else if let elements = try? val.elements() {
+                        output += "["
+                        for element in elements {
+                            output += formatValue(element, indent: indent + 1)
+                        }
+                        output += "\n\(indentStr)]"
+                    } else if let str = try? val.value(String.self) {
+                        output += "\"\(str)\""
+                    } else if let num = try? val.value(Int.self) {
+                        output += String(num)
                     }
-                } else if let str = try? value.value(String.self) {
-                    output += "\"\(str)\""
                 }
-            } catch {
-                output += "error"
+            } else if let str = try? value.value(String.self) {
+                output += "\"\(str)\""
             }
             
             return output

@@ -62,7 +62,7 @@ struct PhysiqaChatInputView: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
                     .background(
-                        RoundedRectangle(cornerRadius: 24)
+                        .rect(cornerRadius: 24)
                             .fill(Color.gray.opacity(0.1))
                     )
                     .overlay(

@@ -13,7 +13,7 @@ struct SidebarView: View {
     var body: some View {
         List(selection: $selection) {
             ForEach(TabSelection.allCases, id: \.self) { tab in
-                Label(tab.rawValue.capitalized, systemImage: tab.systemImage)
+                Label(tab.displayName, systemImage: tab.systemImage)
                     .tag(tab)
 #if os(macOS)
                     .keyboardShortcut(tab.keyboardShortcut, modifiers: .command)

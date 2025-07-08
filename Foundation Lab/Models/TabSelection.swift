@@ -13,4 +13,8 @@ enum TabSelection: String, CaseIterable, Hashable {
   case tools
   case chat
   case settings
+  
+  var displayName: String {
+    rawValue.capitalized
+  }
 }
