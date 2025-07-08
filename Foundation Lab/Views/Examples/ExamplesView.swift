@@ -54,8 +54,12 @@ struct ExamplesView: View {
         LazyVGrid(columns: adaptiveGridColumns, spacing: Spacing.medium) {
             ForEach(ExampleType.allCases) { exampleType in
                 NavigationLink(value: exampleType) {
-                    ExampleCardView(type: exampleType)
-                        .contentShape(Rectangle())
+                    GenericCardView(
+                        icon: exampleType.icon,
+                        title: exampleType.title,
+                        subtitle: exampleType.subtitle
+                    )
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
