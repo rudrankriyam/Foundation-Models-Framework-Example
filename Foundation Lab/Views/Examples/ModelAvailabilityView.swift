@@ -25,11 +25,11 @@ struct ModelAvailabilityView: View {
       onRun: checkAvailability,
       onReset: resetStatus
     ) {
-      VStack(spacing: 16) {
+      VStack(spacing: Spacing.large) {
         // Status Card
-        VStack(spacing: 12) {
+        VStack(spacing: Spacing.medium) {
           Image(systemName: isAvailable == true ? "checkmark.circle.fill" : isAvailable == false ? "xmark.circle.fill" : "questionmark.circle")
-            .font(.system(size: 60))
+            .font(.largeTitle)
             .foregroundColor(isAvailable == true ? .green : isAvailable == false ? .red : .gray)
           
           Text(availabilityStatus)
@@ -38,9 +38,9 @@ struct ModelAvailabilityView: View {
             .foregroundColor(.primary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 30)
+        .padding(.vertical, Spacing.xxLarge)
         .background(Color.secondary.opacity(0.1))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.medium)
         
         // Info Section
         VStack(alignment: .leading, spacing: 12) {
@@ -56,7 +56,7 @@ struct ModelAvailabilityView: View {
             
             RequirementRow(
               icon: "gear",
-              text: "iOS 26.0+ or macOS 26.0+",
+              text: "iOS 26.0+, macOS 26.0+, or visionOS 26.0+",
               isMet: isAvailable
             )
             
@@ -86,7 +86,7 @@ struct ModelAvailabilityView: View {
         availabilityStatus = "✅ Apple Intelligence is available and ready to use!"
       } else {
         isAvailable = false
-        availabilityStatus = "❌ Apple Intelligence is not available on this device. This feature requires iOS 26.0+ or macOS 26.0+ and a compatible Apple device with Apple Intelligence enabled."
+        availabilityStatus = "Apple Intelligence is not available on this device. This feature requires iOS 26.0+, macOS 26.0+, or visionOS 26.0+ and a compatible Apple device with Apple Intelligence enabled."
       }
       
       isChecking = false

@@ -43,6 +43,7 @@ struct AdaptiveNavigationView: View {
             }
         }
 #if os(iOS)
+        .tabBarMinimizeBehavior(.onScrollDown)
         .ignoresSafeArea(.keyboard)
 #endif
         .onChange(of: navigationCoordinator.tabSelection) { _, newValue in
@@ -100,7 +101,7 @@ struct AdaptiveNavigationView: View {
         case .chat:
             return "Chat"
         case .bodyBuddy:
-            return "Body Buddy"
+            return "Physiqa"
         case .psylean:
             return "Psylean"
         case .settings:

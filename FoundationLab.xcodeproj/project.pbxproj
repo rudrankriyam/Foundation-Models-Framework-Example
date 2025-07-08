@@ -8,41 +8,18 @@
 
 /* Begin PBXBuildFile section */
 		0A5454AB2E1148A8002C2152 /* Foundation Lab.icon in Resources */ = {isa = PBXBuildFile; fileRef = 0A5454A72E1148A8002C2152 /* Foundation Lab.icon */; };
+		FA43F9412E13A16E00F24BCC /* HighlightSwift in Frameworks */ = {isa = PBXBuildFile; productRef = FA43F9402E13A16E00F24BCC /* HighlightSwift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		0A5454A72E1148A8002C2152 /* Foundation Lab.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "Foundation Lab.icon"; sourceTree = "<group>"; };
 		0AAE4FFF2DF76E6600838F13 /* Foundation Lab.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Foundation Lab.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		0ABC0C9B2E09AB5300A09018 /* Body Buddy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Body Buddy.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		0ABC0C9B2E09AB5300A09018 /* Physiqa.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Physiqa.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0ADB46DC2E0CE81900C29293 /* Psylean.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Psylean.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0ADB48272E0D84EE00C29293 /* Murmer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Murmer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		8F774D6F2E1390DB00C5700E /* Exceptions for "Body Buddy" folder in "Foundation Lab" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Models/AI/BodyBuddy.swift,
-				Models/AI/ConversationSummary.swift,
-				Models/AI/HealthAnalysis.swift,
-				Models/AI/HealthAnalysisTool.swift,
-				Models/AI/PersonalizedHealthPlan.swift,
-				Models/BodyBuddySession.swift,
-				Models/HealthDataManager.swift,
-				Models/HealthInsight.swift,
-				Models/HealthMetric.swift,
-				Tools/HealthDataTool.swift,
-				ViewModels/BodyBuddyChatViewModel.swift,
-				Views/Chat/BodyBuddyChatInputView.swift,
-				Views/Chat/BodyBuddyChatView.swift,
-				Views/Chat/HealthMessageBubbleView.swift,
-				Views/Dashboard/DailyProgressView.swift,
-				Views/Dashboard/HealthDashboardView.swift,
-				Views/Dashboard/InsightCardView.swift,
-				Views/Dashboard/MetricCardView.swift,
-			);
-			target = 0AAE4FFE2DF76E6600838F13 /* Foundation Lab */;
-		};
 		8FE6666A2E0D1BC10062EE2F /* Exceptions for "Psylean" folder in "Psylean" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -53,12 +30,9 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		0ABC0C9C2E09AB5300A09018 /* Body Buddy */ = {
+		0ABC0C9C2E09AB5300A09018 /* Physiqa */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				8F774D6F2E1390DB00C5700E /* Exceptions for "Body Buddy" folder in "Foundation Lab" target */,
-			);
-			path = "Body Buddy";
+			path = "Physiqa";
 			sourceTree = "<group>";
 		};
 		0ADB46AD2E0CE6C100C29293 /* Foundation Lab */ = {
@@ -86,6 +60,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FA43F9412E13A16E00F24BCC /* HighlightSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -117,7 +92,7 @@
 			isa = PBXGroup;
 			children = (
 				0ADB46AD2E0CE6C100C29293 /* Foundation Lab */,
-				0ABC0C9C2E09AB5300A09018 /* Body Buddy */,
+				0ABC0C9C2E09AB5300A09018 /* Physiqa */,
 				0ADB46DD2E0CE81900C29293 /* Psylean */,
 				0ADB48282E0D84EE00C29293 /* Murmer */,
 				0AAE50002DF76E6600838F13 /* Products */,
@@ -129,7 +104,7 @@
 			isa = PBXGroup;
 			children = (
 				0AAE4FFF2DF76E6600838F13 /* Foundation Lab.app */,
-				0ABC0C9B2E09AB5300A09018 /* Body Buddy.app */,
+				0ABC0C9B2E09AB5300A09018 /* Physiqa.app */,
 				0ADB46DC2E0CE81900C29293 /* Psylean.app */,
 				0ADB48272E0D84EE00C29293 /* Murmer.app */,
 			);
@@ -156,14 +131,15 @@
 			);
 			name = "Foundation Lab";
 			packageProductDependencies = (
+				FA43F9402E13A16E00F24BCC /* HighlightSwift */,
 			);
 			productName = FoundationLab;
 			productReference = 0AAE4FFF2DF76E6600838F13 /* Foundation Lab.app */;
 			productType = "com.apple.product-type.application";
 		};
-		0ABC0C9A2E09AB5300A09018 /* Body Buddy */ = {
+		0ABC0C9A2E09AB5300A09018 /* Physiqa */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 0ABC0CA52E09AB5500A09018 /* Build configuration list for PBXNativeTarget "Body Buddy" */;
+			buildConfigurationList = 0ABC0CA52E09AB5500A09018 /* Build configuration list for PBXNativeTarget "Physiqa" */;
 			buildPhases = (
 				0ABC0C972E09AB5300A09018 /* Sources */,
 				0ABC0C982E09AB5300A09018 /* Frameworks */,
@@ -174,13 +150,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				0ABC0C9C2E09AB5300A09018 /* Body Buddy */,
+				0ABC0C9C2E09AB5300A09018 /* Physiqa */,
 			);
-			name = "Body Buddy";
+			name = "Physiqa";
 			packageProductDependencies = (
 			);
-			productName = "Body Buddy";
-			productReference = 0ABC0C9B2E09AB5300A09018 /* Body Buddy.app */;
+			productName = "Physiqa";
+			productReference = 0ABC0C9B2E09AB5300A09018 /* Physiqa.app */;
 			productType = "com.apple.product-type.application";
 		};
 		0ADB46DB2E0CE81900C29293 /* Psylean */ = {
@@ -260,13 +236,16 @@
 			);
 			mainGroup = 0AAE4FF62DF76E6600838F13;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				FA43F93F2E13A16E00F24BCC /* XCRemoteSwiftPackageReference "HighlightSwift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0AAE50002DF76E6600838F13 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				0AAE4FFE2DF76E6600838F13 /* Foundation Lab */,
-				0ABC0C9A2E09AB5300A09018 /* Body Buddy */,
+				0ABC0C9A2E09AB5300A09018 /* Physiqa */,
 				0ADB46DB2E0CE81900C29293 /* Psylean */,
 				0ADB48262E0D84EE00C29293 /* Murmer */,
 			);
@@ -608,7 +587,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "Body Buddy/Body Buddy.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "Physiqa/Physiqa.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = YQZQG7N4WG;
@@ -617,8 +596,8 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Body Buddy needs access to your health data to provide personalized insights and track your wellness journey.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Body Buddy can save health metrics to help you track your progress over time.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Physiqa needs access to your health data to provide personalized insights and track your wellness journey.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Physiqa can save health metrics to help you track your progress over time.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -654,7 +633,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "Body Buddy/Body Buddy.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "Physiqa/Physiqa.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = YQZQG7N4WG;
@@ -663,8 +642,8 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Body Buddy needs access to your health data to provide personalized insights and track your wellness journey.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Body Buddy can save health metrics to help you track your progress over time.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Physiqa needs access to your health data to provide personalized insights and track your wellness journey.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Physiqa can save health metrics to help you track your progress over time.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -926,7 +905,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		0ABC0CA52E09AB5500A09018 /* Build configuration list for PBXNativeTarget "Body Buddy" */ = {
+		0ABC0CA52E09AB5500A09018 /* Build configuration list for PBXNativeTarget "Physiqa" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				0ABC0CA32E09AB5500A09018 /* Debug */,
@@ -954,6 +933,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		FA43F93F2E13A16E00F24BCC /* XCRemoteSwiftPackageReference "HighlightSwift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/appstefan/HighlightSwift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.9;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		FA43F9402E13A16E00F24BCC /* HighlightSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FA43F93F2E13A16E00F24BCC /* XCRemoteSwiftPackageReference "HighlightSwift" */;
+			productName = HighlightSwift;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 0AAE4FF72DF76E6600838F13 /* Project object */;
 }

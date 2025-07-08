@@ -69,9 +69,9 @@ struct ExampleCardView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Spacing.medium)
         .background(Color.gray.opacity(0.1))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.medium)
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: CornerRadius.medium)
                 .strokeBorder(Color.primary.opacity(0.05), lineWidth: 1)
         )
     }

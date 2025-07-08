@@ -13,22 +13,15 @@ struct MessageBubbleView: View {
   @Environment(ChatViewModel.self) var viewModel
   @State private var animateTyping = false
   @AccessibilityFocusState private var isMessageFocused: Bool
-  
-  private var feedbackSent: LanguageModelFeedbackAttachment.Sentiment? {
-    guard let entryID = message.entryID else { 
-      return nil 
-    }
-    return viewModel.getFeedback(for: entryID)
-  }
 
   var body: some View {
     HStack {
       if message.isFromUser {
-        Spacer(minLength: 50)
+        Spacer(minLength: 60)
         messageContent
       } else {
         messageContent
-        Spacer(minLength: 50)
+        Spacer(minLength: 60)
       }
     }
     .padding(.horizontal)
@@ -61,7 +54,7 @@ struct MessageBubbleView: View {
 
   private var messageContent: some View {
     #if os(iOS) || os(macOS)
-    GlassEffectContainer(spacing: 8) {
+    GlassEffectContainer(spacing: Spacing.small) {
       messageContentStack
     }
     #else
@@ -70,17 +63,13 @@ struct MessageBubbleView: View {
   }
   
   private var messageContentStack: some View {
-    VStack(alignment: message.isFromUser ? .trailing : .leading, spacing: 4) {
+    VStack(alignment: message.isFromUser ? .trailing : .leading, spacing: Spacing.xSmall) {
       if !message.isFromUser && message.content.characters.isEmpty {
         typingIndicator
       } else {
         messageText
       }
       
-      if !message.isFromUser && !message.content.characters.isEmpty {
-        feedbackButtons
-          .padding(.top, 4)
-      }
       
       if message.isContextSummary {
         contextSummaryIndicator
@@ -89,7 +78,7 @@ struct MessageBubbleView: View {
   }
   
   private var typingIndicator: some View {
-    HStack(spacing: 4) {
+    HStack(spacing: Spacing.xSmall) {
       ForEach(0..<3, id: \.self) { index in
         Circle()
           .fill(.secondary)
@@ -103,8 +92,8 @@ struct MessageBubbleView: View {
           )
       }
     }
-    .padding(.horizontal, 12)
-    .padding(.vertical, 8)
+    .padding(.horizontal, Spacing.medium)
+    .padding(.vertical, Spacing.small)
     .onAppear {
       animateTyping = true
     }
@@ -113,15 +102,15 @@ struct MessageBubbleView: View {
     #if os(iOS) || os(macOS)
     .glassEffect(
       .regular.tint(.gray.opacity(0.3)),
-      in: .rect(cornerRadius: 18)
+      in: .rect(cornerRadius: CornerRadius.large + 2)
     )
     #endif
   }
   
   private var messageText: some View {
     Text(LocalizedStringKey(String(message.content.characters)))
-      .padding(.horizontal, 16)
-      .padding(.vertical, 10)
+      .padding(.horizontal, Spacing.large)
+      .padding(.vertical, Spacing.small + 2)
       .textSelection(.enabled)
       .accessibilityRespondsToUserInteraction(true)
       .foregroundStyle(
@@ -132,7 +121,7 @@ struct MessageBubbleView: View {
         message.isFromUser
           ? .regular.tint(.main).interactive()
           : .regular.tint(.gray.opacity(0.3)),
-        in: .rect(cornerRadius: 18)
+        in: .rect(cornerRadius: CornerRadius.large + 2)
       )
       #endif
   }
@@ -151,48 +140,6 @@ struct MessageBubbleView: View {
     .accessibilityValue("This message contains a summary of previous conversation context")
   }
 
-  private var feedbackButtons: some View {
-    HStack(spacing: 1) {
-      Button(action: { 
-        sendFeedback(.positive) 
-      }) {
-        Image(systemName: "hand.thumbsup")
-          .padding(8)
-          #if os(macOS) || os(iOS)
-          .glassEffect(.regular.tint(feedbackSent == .positive ? .green.opacity(0.5) : .gray.opacity(0.2)), in: .circle)
-          #endif
-          .foregroundStyle(feedbackSent == .positive ? .green : .secondary)
-      }
-      .buttonStyle(.plain)
-      .disabled(feedbackSent != nil)
-      .accessibilityLabel(feedbackSent == .positive ? "Positive feedback sent" : "Send positive feedback")
-
-      Button(action: { 
-        sendFeedback(.negative) 
-      }) {
-        Image(systemName: "hand.thumbsdown")
-          .padding(8)
-#if os(macOS) || os(iOS)
-          .glassEffect(.regular.tint(feedbackSent == .negative ? .red.opacity(0.5) : .gray.opacity(0.2)), in: .circle)
-#endif
-          .foregroundStyle(feedbackSent == .negative ? .red : .secondary)
-      }
-      .buttonStyle(.plain)
-      .disabled(feedbackSent != nil)
-      .accessibilityLabel(feedbackSent == .negative ? "Negative feedback sent" : "Send negative feedback")
-    }
-    .padding(.leading, 10)
-  }
-
-  private func sendFeedback(_ sentiment: LanguageModelFeedbackAttachment.Sentiment) {
-    guard let entryID = message.entryID else { 
-      return 
-    }
-    viewModel.submitFeedback(for: entryID, sentiment: sentiment)
-    #if os(iOS)
-    UIAccessibility.post(notification: .announcement, argument: "Feedback sent")
-    #endif
-  }
 
   // MARK: - Accessibility Computed Properties
 
@@ -298,7 +245,7 @@ struct MessageBubbleView: View {
 
 #Preview("Message Bubbles") {
   ScrollView {
-    VStack(spacing: 16) {
+    VStack(spacing: Spacing.large) {
       Text("Chat Message Examples")
         .font(.headline)
         .padding()
@@ -331,7 +278,7 @@ struct MessageBubbleView: View {
 
 #Preview("Conversation Flow") {
   ScrollView {
-    VStack(spacing: 12) {
+    VStack(spacing: Spacing.medium) {
       MessageBubbleView(
         message: ChatMessage(
           content: "Hi! I need help with Foundation Models.",
@@ -368,7 +315,7 @@ struct MessageBubbleView: View {
 
 #Preview("Dark Mode") {
   ScrollView {
-    VStack(spacing: 12) {
+    VStack(spacing: Spacing.medium) {
       MessageBubbleView(message: ChatMessage(
         content: "Hello! How are you today?",
         isFromUser: true

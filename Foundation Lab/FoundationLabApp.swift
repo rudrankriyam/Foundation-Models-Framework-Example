@@ -7,22 +7,44 @@
 
 import SwiftUI
 import AppIntents
+import FoundationModels
 
 @main
 struct FoundationLabApp: App {
-  var body: some Scene {
-    WindowGroup {
-      AdaptiveNavigationView()
+    @State private var isModelAvailable = true
+    @State private var unavailabilityReason: SystemLanguageModel.Availability.UnavailableReason?
+    @State private var showModelUnavailableWarning = false
+
+    var body: some Scene {
+        WindowGroup {
+            AdaptiveNavigationView()
 #if os(macOS)
-        .frame(minWidth: 800, minHeight: 600)
+                .frame(minWidth: 800, minHeight: 600)
 #endif
-        .onAppear {
-          FoundationLabAppShortcuts.updateAppShortcutParameters()
+                .onAppear {
+                    FoundationLabAppShortcuts.updateAppShortcutParameters()
+                    checkModelAvailability()
+                }
+                .tint(.main)
+                .sheet(isPresented: $showModelUnavailableWarning) {
+                    ModelUnavailableView(reason: unavailabilityReason)
+                }
         }
-        .tint(.main)
-    }
 #if os(macOS)
-    .defaultSize(width: 1000, height: 700)
+        .defaultSize(width: 1000, height: 700)
 #endif
-  }
+    }
+
+    private func checkModelAvailability() {
+        let model = SystemLanguageModel.default
+        switch model.availability {
+        case .available:
+            isModelAvailable = true
+            showModelUnavailableWarning = false
+        case .unavailable(let reason):
+            isModelAvailable = false
+            unavailabilityReason = reason
+            showModelUnavailableWarning = true
+        }
+    }
 }

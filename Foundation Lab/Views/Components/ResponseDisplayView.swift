@@ -14,7 +14,7 @@ struct ResponseDisplayView: View {
   let onClear: () -> Void
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 12) {
+    VStack(alignment: .leading, spacing: Spacing.medium) {
       headerView
       requestView
       responseView
@@ -23,7 +23,7 @@ struct ResponseDisplayView: View {
 
   private var headerView: some View {
     HStack {
-      VStack(alignment: .leading, spacing: 2) {
+      VStack(alignment: .leading, spacing: Spacing.xSmall / 2) {
         Text("Request & Response")
           .font(.headline)
         Text(requestResponse.timestamp.formatted(date: .omitted, time: .shortened))
@@ -41,7 +41,7 @@ struct ResponseDisplayView: View {
   }
 
   private var requestView: some View {
-    VStack(alignment: .leading, spacing: 4) {
+    VStack(alignment: .leading, spacing: Spacing.xSmall) {
       Text("Request")
         .font(.subheadline)
         .fontWeight(.medium)
@@ -55,13 +55,13 @@ struct ResponseDisplayView: View {
           .foregroundColor(.primary)
           .textSelection(.enabled)
       }
-      .frame(maxHeight: 100)
+      .frame(maxHeight: 120)
     }
     .padding(.horizontal)
   }
   
   private var responseView: some View {
-    VStack(alignment: .leading, spacing: 4) {
+    VStack(alignment: .leading, spacing: Spacing.xSmall) {
       HStack {
         if requestResponse.isError {
           Image(systemName: "exclamationmark.triangle.fill")
@@ -86,19 +86,19 @@ struct ResponseDisplayView: View {
   }
 
   private var requestBackgroundView: some View {
-    RoundedRectangle(cornerRadius: 8)
+    RoundedRectangle(cornerRadius: CornerRadius.small)
       .fill(Color.main.opacity(0.1))
       .overlay(
-        RoundedRectangle(cornerRadius: 8)
+        RoundedRectangle(cornerRadius: CornerRadius.small)
           .stroke(Color.main.opacity(0.2), lineWidth: 1)
       )
   }
   
   private var responseBackgroundView: some View {
-    RoundedRectangle(cornerRadius: 8)
+    RoundedRectangle(cornerRadius: CornerRadius.small)
       .fill(responseBackgroundColor)
       .overlay(
-        RoundedRectangle(cornerRadius: 8)
+        RoundedRectangle(cornerRadius: CornerRadius.small)
           .stroke(responseBorderColor, lineWidth: 1)
       )
   }

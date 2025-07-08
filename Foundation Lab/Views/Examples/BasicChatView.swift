@@ -56,7 +56,6 @@ struct BasicChatView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color.gray.opacity(0.1))
                 .cornerRadius(12)
-                .frame(minHeight: 80)
             }
             .padding(.top, Spacing.small)
             .transition(.opacity.combined(with: .move(edge: .top)))
