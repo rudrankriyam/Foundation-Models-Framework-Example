@@ -42,14 +42,15 @@ struct SettingsView: View {
               Button("Save") {
                 saveAPIKey()
               }
-              .buttonStyle(.borderedProminent)
+              .buttonStyle(.glassProminent)
               .disabled(tempAPIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
               
               if !exaAPIKey.isEmpty {
                 Button("Clear") {
                   clearAPIKey()
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.glassProminent)
+            .tint(.secondary)
                 .foregroundColor(.red)
               }
             }

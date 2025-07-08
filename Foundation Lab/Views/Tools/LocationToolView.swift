@@ -19,36 +19,27 @@ struct LocationToolView: View {
       isRunning: executor.isRunning,
       errorMessage: executor.errorMessage
     ) {
-      VStack(alignment: .leading, spacing: 16) {
+      VStack(alignment: .leading, spacing: Spacing.large) {
         if let successMessage = executor.successMessage {
           SuccessBanner(message: successMessage)
         }
 
         Button(action: getCurrentLocation) {
-          HStack {
+          HStack(spacing: Spacing.small) {
             if executor.isRunning {
               ProgressView()
                 .scaleEffect(0.8)
-                .foregroundColor(.white)
-                .accessibilityLabel("Processing")
-            } else {
-              Image(systemName: "location")
-                .accessibilityHidden(true)
+                .tint(.white)
             }
-
-            Text("Get Current Location")
+            Text(executor.isRunning ? "Getting Location..." : "Get Current Location")
+              .font(.callout)
               .fontWeight(.medium)
           }
           .frame(maxWidth: .infinity)
-          .padding()
-          .background(Color.accentColor)
-          .foregroundColor(.white)
-          .cornerRadius(12)
+          .padding(.vertical, Spacing.small)
         }
+        .buttonStyle(.glassProminent)
         .disabled(executor.isRunning)
-        .accessibilityLabel("Get current location")
-        .accessibilityHint(
-          executor.isRunning ? "Processing request" : "Tap to get your current location")
 
         if !executor.result.isEmpty {
           ResultDisplay(result: executor.result, isSuccess: executor.errorMessage == nil)

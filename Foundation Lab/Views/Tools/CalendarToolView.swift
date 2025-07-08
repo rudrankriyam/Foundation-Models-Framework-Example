@@ -20,44 +20,42 @@ struct CalendarToolView: View {
       isRunning: executor.isRunning,
       errorMessage: executor.errorMessage
     ) {
-      VStack(alignment: .leading, spacing: 16) {
+      VStack(alignment: .leading, spacing: Spacing.large) {
         if let successMessage = executor.successMessage {
           SuccessBanner(message: successMessage)
         }
 
-        VStack(alignment: .leading, spacing: 8) {
-          Text("Calendar Query")
-            .font(.subheadline)
+        VStack(alignment: .leading, spacing: Spacing.small) {
+          Text("CALENDAR QUERY")
+            .font(.footnote)
             .fontWeight(.medium)
+            .foregroundColor(.secondary)
 
-          TextField("Ask about your calendar", text: $query)
-            .textFieldStyle(RoundedBorderTextFieldStyle())
+          TextEditor(text: $query)
+            .font(.body)
+            .scrollContentBackground(.hidden)
+            .padding(Spacing.medium)
+            .frame(height: 50)
+            .background(Color.gray.opacity(0.1))
+            .cornerRadius(12)
         }
 
         Button(action: executeCalendarQuery) {
-          HStack {
+          HStack(spacing: Spacing.small) {
             if executor.isRunning {
               ProgressView()
                 .scaleEffect(0.8)
-                .foregroundColor(.white)
-                .accessibilityLabel("Processing")
-            } else {
-              Image(systemName: "calendar")
-                .accessibilityHidden(true)
+                .tint(.white)
             }
-
-            Text("Query Calendar")
+            Text(executor.isRunning ? "Querying Calendar..." : "Query Calendar")
+              .font(.callout)
               .fontWeight(.medium)
           }
           .frame(maxWidth: .infinity)
-          .padding()
-          .background(Color.accentColor)
-          .foregroundColor(.white)
-          .cornerRadius(12)
+          .padding(.vertical, Spacing.small)
         }
-        .disabled(executor.isRunning || query.isEmpty)
-        .accessibilityLabel("Query calendar events")
-        .accessibilityHint(executor.isRunning ? "Processing request" : "Tap to search calendar")
+        .buttonStyle(.glassProminent)
+        .disabled(executor.isRunning || query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
 
         if !executor.result.isEmpty {
           ResultDisplay(result: executor.result, isSuccess: executor.errorMessage == nil)

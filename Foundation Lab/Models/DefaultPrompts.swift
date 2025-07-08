@@ -48,12 +48,12 @@ enum DefaultPrompts {
   
   // MARK: - Streaming
   
-  static let streaming = "Write a haiku about the changing seasons."
+  static let streaming = "Write a sonnet about nature"
   
   static let streamingSuggestions = [
     "Write a short poem about technology",
     "Create a limerick about coding",
-    "Write a sonnet about nature",
+    "Write a haiku about the changing seasons.",
     "Compose a haiku about morning coffee",
     "Write a free verse poem about dreams"
   ]

@@ -22,35 +22,37 @@ struct MusicToolView: View {
       isRunning: isRunning,
       errorMessage: errorMessage
     ) {
-      VStack(alignment: .leading, spacing: 16) {
+      VStack(alignment: .leading, spacing: Spacing.large) {
         VStack(alignment: .leading, spacing: 8) {
-          Text("Music Query")
-            .font(.subheadline)
+          Text("MUSIC QUERY")
+            .font(.footnote)
             .fontWeight(.medium)
+            .foregroundColor(.secondary)
 
-          TextField("Search for music or ask about your library", text: $query)
-            .textFieldStyle(RoundedBorderTextFieldStyle())
+          TextEditor(text: $query)
+            .scrollContentBackground(.hidden)
+            .padding(Spacing.medium)
+            .frame(height: 50)
+            .background(Color.gray.opacity(0.1))
+            .cornerRadius(12)
         }
 
         Button(action: executeMusicQuery) {
-          HStack {
+          HStack(spacing: Spacing.small) {
             if isRunning {
               ProgressView()
                 .scaleEffect(0.8)
-                .foregroundColor(.white)
             } else {
               Image(systemName: "music.note")
             }
 
-            Text("Search Music")
+            Text(isRunning ? "Searching..." : "Search Music")
               .fontWeight(.medium)
           }
           .frame(maxWidth: .infinity)
-          .padding()
-          .background(Color.accentColor)
-          .foregroundColor(.white)
-          .cornerRadius(12)
+          .padding(.vertical, Spacing.small)
         }
+        .buttonStyle(.glassProminent)
         .disabled(isRunning || query.isEmpty)
 
         if !result.isEmpty {

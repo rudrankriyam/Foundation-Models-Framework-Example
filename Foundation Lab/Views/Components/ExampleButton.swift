@@ -21,8 +21,13 @@ struct ExampleButton: View {
                 await action()
             }
         } label: {
-            ExampleCardView(type: exampleType)
-                .pressed(isPressed)
+            GenericCardView(
+                icon: exampleType.icon,
+                title: exampleType.title,
+                subtitle: exampleType.subtitle
+            )
+            .scaleEffect(isPressed ? 0.98 : 1.0)
+            .animation(.easeInOut(duration: 0.15), value: isPressed)
         }
         .buttonStyle(PlainButtonStyle())
         .scaleEffect(isPressed ? 0.98 : 1.0)
@@ -40,46 +45,43 @@ struct ExampleButton: View {
     }
 }
 
-struct ExampleCardView: View {
-    let type: ExampleType
+
+/// Generic card view that can be used across all example types
+struct GenericCardView: View {
+    let icon: String
+    let title: String
+    let subtitle: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.small) {
-            Image(systemName: type.icon)
+            Image(systemName: icon)
                 .font(.title2)
                 .foregroundStyle(.tint)
                 .frame(width: 32, height: 32)
-            
+
             VStack(alignment: .leading, spacing: Spacing.small) {
-                Text(type.title)
+                Text(title)
                     .font(.callout)
                     .fontWeight(.medium)
                     .foregroundStyle(.primary)
                     .lineLimit(1)
-                
-                Text(type.subtitle)
+
+                Text(subtitle)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            
+
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Spacing.medium)
         .background(Color.gray.opacity(0.1))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.medium)
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: CornerRadius.medium)
                 .strokeBorder(Color.primary.opacity(0.05), lineWidth: 1)
         )
-    }
-
-
-    func pressed(_ isPressed: Bool) -> some View {
-        self
-            .scaleEffect(isPressed ? 0.98 : 1.0)
-            .animation(.easeInOut(duration: 0.15), value: isPressed)
     }
 }

@@ -20,41 +20,43 @@ struct ContactsToolView: View {
       isRunning: executor.isRunning,
       errorMessage: executor.errorMessage
     ) {
-      VStack(alignment: .leading, spacing: 16) {
+      VStack(alignment: .leading, spacing: Spacing.large) {
         if let successMessage = executor.successMessage {
           SuccessBanner(message: successMessage)
         }
 
         VStack(alignment: .leading, spacing: 8) {
-          Text("Search Contacts")
-            .font(.subheadline)
+          Text("SEARCH CONTACTS")
+            .font(.footnote)
             .fontWeight(.medium)
+            .foregroundColor(.secondary)
 
-          TextField("Enter name to search", text: $searchQuery)
-            .textFieldStyle(RoundedBorderTextFieldStyle())
+          TextEditor(text: $searchQuery)
+            .scrollContentBackground(.hidden)
+            .padding(Spacing.medium)
+            .frame(height: 50)
+            .background(Color.gray.opacity(0.1))
+            .cornerRadius(12)
         }
 
         Button(action: executeContactsSearch) {
-          HStack {
+          HStack(spacing: Spacing.small) {
             if executor.isRunning {
               ProgressView()
                 .scaleEffect(0.8)
-                .foregroundColor(.white)
                 .accessibilityLabel("Processing")
             } else {
               Image(systemName: "person.2")
                 .accessibilityHidden(true)
             }
 
-            Text("Search Contacts")
+            Text(executor.isRunning ? "Searching..." : "Search Contacts")
               .fontWeight(.medium)
           }
           .frame(maxWidth: .infinity)
-          .padding()
-          .background(Color.accentColor)
-          .foregroundColor(.white)
-          .cornerRadius(12)
+          .padding(.vertical, Spacing.small)
         }
+        .buttonStyle(.glassProminent)
         .disabled(executor.isRunning || searchQuery.isEmpty)
         .accessibilityLabel("Search contacts")
         .accessibilityHint(executor.isRunning ? "Processing request" : "Tap to search contacts")

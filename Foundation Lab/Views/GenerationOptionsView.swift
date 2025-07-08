@@ -42,7 +42,7 @@ struct GenerationOptionsView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
+            VStack(alignment: .leading, spacing: Spacing.xLarge) {
                 headerView
                 promptSection
                 optionsSection
@@ -57,7 +57,7 @@ struct GenerationOptionsView: View {
     // MARK: - View Components
 
     private var headerView: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: Spacing.small) {
             Text("Experiment with Generation Parameters")
                 .font(.title2)
                 .fontWeight(.semibold)
@@ -69,7 +69,7 @@ struct GenerationOptionsView: View {
     }
 
     private var promptSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: Spacing.medium) {
             Text("Prompt")
                 .font(.headline)
 
@@ -80,11 +80,11 @@ struct GenerationOptionsView: View {
     }
 
     private var optionsSection: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: Spacing.xLarge) {
             Text("Generation Parameters")
                 .font(.headline)
 
-            VStack(spacing: 16) {
+            VStack(spacing: Spacing.large) {
                 // Temperature
                 temperatureSlider
                 
@@ -96,11 +96,11 @@ struct GenerationOptionsView: View {
             }
         }
         .padding()
-        .background(.regularMaterial, in: .rect(cornerRadius: 16))
+        .background(.regularMaterial, in: .rect(cornerRadius: CornerRadius.large))
     }
 
     private var temperatureSlider: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: Spacing.small) {
             HStack {
                 Text("Temperature")
                     .font(.subheadline)
@@ -118,16 +118,16 @@ struct GenerationOptionsView: View {
                 .foregroundStyle(.secondary)
         }
         .padding()
-        .background(.thinMaterial, in: .rect(cornerRadius: 8))
+        .background(.thinMaterial, in: .rect(cornerRadius: CornerRadius.small))
     }
     
     private var samplingSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: Spacing.medium) {
             Text("Sampling Strategy")
                 .font(.subheadline)
                 .fontWeight(.medium)
 
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: Spacing.small) {
                 Toggle("Use Custom Sampling", isOn: $useSampling)
                     .font(.caption)
 
@@ -171,11 +171,11 @@ struct GenerationOptionsView: View {
             }
         }
         .padding()
-        .background(.thinMaterial, in: .rect(cornerRadius: 8))
+        .background(.thinMaterial, in: .rect(cornerRadius: CornerRadius.small))
     }
 
     private var maxTokensSlider: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: Spacing.small) {
             HStack {
                 Text("Maximum Response Tokens")
                     .font(.subheadline)
@@ -196,7 +196,7 @@ struct GenerationOptionsView: View {
                 .foregroundStyle(.secondary)
         }
         .padding()
-        .background(.thinMaterial, in: .rect(cornerRadius: 8))
+        .background(.thinMaterial, in: .rect(cornerRadius: CornerRadius.small))
     }
 
     private var generateSection: some View {
@@ -222,7 +222,7 @@ struct GenerationOptionsView: View {
     @ViewBuilder
     private var responseSection: some View {
         if !response.isEmpty || showError != nil {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: Spacing.medium) {
                 HStack {
                     Text("Generated Response")
                         .font(.headline)
@@ -231,7 +231,7 @@ struct GenerationOptionsView: View {
                         response = ""
                         showError = nil
                     }
-                    .buttonStyle(.glass)
+                    .buttonStyle(.glassProminent)
                     .font(.caption)
                 }
 
@@ -242,7 +242,7 @@ struct GenerationOptionsView: View {
                         .padding()
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Color.red.opacity(0.1))
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.small)
                 } else if !response.isEmpty {
                     ScrollView {
                         Text(response)
@@ -252,7 +252,7 @@ struct GenerationOptionsView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .frame(maxHeight: 300)
-                    .background(.regularMaterial, in: .rect(cornerRadius: 12))
+                    .background(.regularMaterial, in: .rect(cornerRadius: CornerRadius.medium))
                 }
             }
         }

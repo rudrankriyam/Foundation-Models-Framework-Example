@@ -22,39 +22,26 @@ struct WeatherToolView: View {
       isRunning: isRunning,
       errorMessage: errorMessage
     ) {
-      VStack(alignment: .leading, spacing: 16) {
-        VStack(alignment: .leading, spacing: 8) {
-          Text("Location")
-            .font(.subheadline)
-            .fontWeight(.medium)
+      VStack(alignment: .leading, spacing: Spacing.large) {
+        ToolInputField(
+          label: "Location",
+          text: $location,
+          placeholder: "Enter city name"
+        )
 
-          TextField("Enter city name", text: $location)
-            .textFieldStyle(RoundedBorderTextFieldStyle())
-        }
-
-        Button(action: executeWeatherTool) {
-          HStack {
-            if isRunning {
-              ProgressView()
-                .scaleEffect(0.8)
-                .foregroundColor(.white)
-            } else {
-              Image(systemName: "cloud.sun")
-            }
-
-            Text("Get Weather")
-              .fontWeight(.medium)
-          }
-          .frame(maxWidth: .infinity)
-          .padding()
-          .background(Color.accentColor)
-          .foregroundColor(.white)
-          .cornerRadius(12)
-        }
-        .disabled(isRunning || location.isEmpty)
+        ToolExecuteButton(
+          "Get Weather",
+          systemImage: "cloud.sun",
+          isRunning: isRunning,
+          action: executeWeatherTool
+        )
+        .disabled(location.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
 
         if !result.isEmpty {
-          ResultDisplay(result: result, isSuccess: errorMessage == nil)
+          ResultDisplay(
+            result: result,
+            isSuccess: errorMessage == nil
+          )
         }
       }
     }
@@ -77,6 +64,10 @@ struct WeatherToolView: View {
       let response = try await session.respond(
         to: Prompt("What's the weather like in \(location)?"))
       result = response.content
+    } catch let generationError as LanguageModelSession.GenerationError {
+      errorMessage = FoundationModelsErrorHandler.handleGenerationError(generationError)
+    } catch let toolCallError as LanguageModelSession.ToolCallError {
+      errorMessage = FoundationModelsErrorHandler.handleToolCallError(toolCallError)
     } catch {
       errorMessage = "Failed to get weather: \(error.localizedDescription)"
     }

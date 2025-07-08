@@ -35,56 +35,30 @@ struct ToolViewBase<Content: View>: View {
 
   var body: some View {
     ScrollView {
-      VStack(alignment: .leading, spacing: 20) {
-        headerView
+      VStack(alignment: .leading, spacing: Spacing.large) {
+        if let error = errorMessage {
+          Text(error)
+            .font(.callout)
+            .foregroundColor(.secondary)
+            .padding(Spacing.medium)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.gray.opacity(0.1))
+            .cornerRadius(12)
+        }
+        
         content
       }
-      .padding()
+      .padding(.horizontal, Spacing.medium)
+      .padding(.vertical, Spacing.large)
     }
     #if os(iOS)
-      .scrollDismissesKeyboard(.interactively)
+    .scrollDismissesKeyboard(.interactively)
     #endif
     .navigationTitle(title)
-    .onTapGesture {
-      // Dismiss keyboard when tapping outside text fields
-      #if os(iOS)
-        UIApplication.shared.sendAction(
-          #selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-      #endif
-    }
-  }
-
-  private var headerView: some View {
-    VStack(alignment: .leading, spacing: 12) {
-      HStack {
-        Image(systemName: icon)
-          .font(.system(size: 32))
-          .foregroundColor(.accentColor)
-          .accessibilityLabel("\(title) tool")
-
-        VStack(alignment: .leading, spacing: 4) {
-          Text(title)
-            .font(.title2)
-            .fontWeight(.semibold)
-
-          Text(description)
-            .font(.subheadline)
-            .foregroundColor(.secondary)
-        }
-
-        Spacer()
-
-        if isRunning {
-          ProgressView()
-            .scaleEffect(0.8)
-            .accessibilityLabel("Processing request")
-        }
-      }
-
-      if let error = errorMessage {
-        ErrorBanner(message: error)
-      }
-    }
+    #if os(iOS)
+    .navigationBarTitleDisplayMode(.large)
+    .navigationSubtitle(description)
+    #endif
   }
 }
 
@@ -109,7 +83,7 @@ enum BannerType {
     case .error: return .red
     case .success: return .green
     case .warning: return .orange
-    case .info: return .blue
+    case .info: return .main
     }
   }
 
@@ -192,45 +166,55 @@ struct SuccessBanner: View {
 struct ResultDisplay: View {
   let result: String
   let isSuccess: Bool
+  @State private var isCopied = false
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 12) {
+    VStack(alignment: .leading, spacing: Spacing.small) {
       HStack {
-        Text("Result")
-          .font(.headline)
-
+        Text("RESULT")
+          .font(.footnote)
+          .fontWeight(.medium)
+          .foregroundColor(.secondary)
+        
         Spacer()
-
-        Image(systemName: isSuccess ? "checkmark.circle.fill" : "xmark.circle.fill")
-          .foregroundColor(isSuccess ? .green : .red)
-          .accessibilityLabel(isSuccess ? "Success" : "Error")
+        
+        Button(action: copyToClipboard) {
+          Text(isCopied ? "Copied" : "Copy")
+            .font(.callout)
+            .padding(.horizontal, Spacing.small)
+            .padding(.vertical, 4)
+        }
+        .buttonStyle(.glassProminent)
       }
 
       ScrollView {
-        Text(result)
-          .font(.system(.body, design: .monospaced))
+        Text(LocalizedStringKey(result))
+          .font(.body)
           .textSelection(.enabled)
-          .padding()
+          .padding(Spacing.medium)
           .frame(maxWidth: .infinity, alignment: .leading)
-          .background(Color.secondaryBackgroundColor)
-          .cornerRadius(8)
+          .background(Color.gray.opacity(0.1))
+          .cornerRadius(12)
       }
       .frame(maxHeight: 300)
     }
   }
-}
-
-extension Color {
-  static var secondaryBackgroundColor: Color {
+  
+  private func copyToClipboard() {
     #if os(iOS)
-      Color(UIColor.secondarySystemBackground)
+    UIPasteboard.general.string = result
     #elseif os(macOS)
-      Color(NSColor.controlBackgroundColor)
-    #else
-      Color.gray.opacity(0.1)
+    NSPasteboard.general.clearContents()
+    NSPasteboard.general.setString(result, forType: .string)
     #endif
+    
+    isCopied = true
+    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+      isCopied = false
+    }
   }
 }
+
 
 #Preview {
   NavigationStack {
@@ -371,5 +355,71 @@ extension View {
   /// Provides a ToolExecutor instance to the view hierarchy
   func withToolExecutor() -> some View {
     modifier(ToolExecutorModifier())
+  }
+}
+
+// MARK: - Standard Tool Components
+
+/// Standard execute button for tool views
+struct ToolExecuteButton: View {
+  let title: String
+  let systemImage: String?
+  let isRunning: Bool
+  let action: () -> Void
+  
+  init(
+    _ title: String,
+    systemImage: String? = nil,
+    isRunning: Bool = false,
+    action: @escaping () -> Void
+  ) {
+    self.title = title
+    self.systemImage = systemImage
+    self.isRunning = isRunning
+    self.action = action
+  }
+  
+  var body: some View {
+    Button(action: action) {
+      HStack(spacing: Spacing.small) {
+        if isRunning {
+          ProgressView()
+            .scaleEffect(0.8)
+            .tint(.white)
+        } else if let systemImage {
+          Image(systemName: systemImage)
+        }
+        Text(isRunning ? "\(title)..." : title)
+          .font(.callout)
+          .fontWeight(.medium)
+      }
+      .frame(maxWidth: .infinity)
+      .padding(.vertical, Spacing.small)
+    }
+    .buttonStyle(.glassProminent)
+    .disabled(isRunning)
+  }
+}
+
+/// Standard input field for tool views
+struct ToolInputField: View {
+  let label: String
+  @Binding var text: String
+  let placeholder: String
+  
+  var body: some View {
+    VStack(alignment: .leading, spacing: Spacing.small) {
+      Text(label.uppercased())
+        .font(.footnote)
+        .fontWeight(.medium)
+        .foregroundColor(.secondary)
+      
+      TextEditor(text: $text)
+        .font(.body)
+        .scrollContentBackground(.hidden)
+        .padding(Spacing.medium)
+        .background(Color.gray.opacity(0.1))
+        .cornerRadius(12)
+    }
   }
 }
