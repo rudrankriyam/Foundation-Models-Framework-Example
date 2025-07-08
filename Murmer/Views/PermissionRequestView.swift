@@ -64,17 +64,13 @@ struct PermissionRequestView: View {
                     icon: "checklist",
                     title: "Reminders",
                     description: "To save your reminders",
-                    status: (permissionManager.remindersPermissionStatus == .authorized || 
-                            permissionManager.remindersPermissionStatus == .fullAccess) ? .granted : .pending
+                    status: permissionManager.remindersPermissionStatus == .fullAccess ? .granted : .pending
                 )
             }
             .padding()
             .background {
                 RoundedRectangle(cornerRadius: 20)
                     .fill(.regularMaterial)
-                    #if os(iOS) || os(macOS)
-                    .glassEffect(.regular, in: .rect(cornerRadius: 20))
-                    #endif
             }
             
             Spacer()

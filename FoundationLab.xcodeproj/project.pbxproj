@@ -239,6 +239,9 @@
 			);
 			mainGroup = 0AAE4FF62DF76E6600838F13;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				0AC6037E2E1D5288002106F9 /* XCRemoteSwiftPackageReference "HighlightSwift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0AAE50002DF76E6600838F13 /* Products */;
 			projectDirPath = "";
@@ -946,6 +949,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		0AC6037E2E1D5288002106F9 /* XCRemoteSwiftPackageReference "HighlightSwift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/appstefan/HighlightSwift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.9;
+			};
+		};
 		FA43F93F2E13A16E00F24BCC /* XCRemoteSwiftPackageReference "HighlightSwift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/appstefan/HighlightSwift";

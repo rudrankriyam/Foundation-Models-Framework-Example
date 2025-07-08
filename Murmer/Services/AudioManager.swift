@@ -8,6 +8,9 @@
 import AVFoundation
 import Accelerate
 import Combine
+#if os(iOS)
+import UIKit
+#endif
 
 class AudioManager: ObservableObject {
   @Published var currentAmplitude: Double = 0
@@ -48,6 +51,8 @@ class AudioManager: ObservableObject {
 
   private func setupAudioSession() {
     print("[AudioManager] Setting up audio session")
+    
+    #if os(iOS)
     let audioSession = AVAudioSession.sharedInstance()
 
     do {
@@ -71,6 +76,11 @@ class AudioManager: ObservableObject {
     } catch {
       print("[AudioManager] ERROR: Failed to setup audio session: \(error)")
     }
+    #elseif os(macOS)
+    // On macOS, we don't have AVAudioSession, just set up the engine directly
+    print("[AudioManager] macOS detected, setting up audio engine directly")
+    setupAudioEngine()
+    #endif
   }
 
   private func setupFFT() {

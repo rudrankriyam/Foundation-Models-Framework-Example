@@ -43,7 +43,7 @@ struct MurmerRemindersTool: Tool {
     print("[MurmerRemindersTool] Authorization status: \(authStatus.rawValue)")
 
     // Request access if needed
-    if authStatus != .fullAccess && authStatus != .authorized {
+    if authStatus != .fullAccess {
       print("[MurmerRemindersTool] Requesting reminder access...")
       let authorized = await requestAccess()
       print("[MurmerRemindersTool] Access request result: \(authorized)")

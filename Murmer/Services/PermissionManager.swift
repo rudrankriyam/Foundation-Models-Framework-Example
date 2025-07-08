@@ -13,6 +13,8 @@ import Combine
 #if os(iOS)
 import AVFoundation
 import UIKit
+#elseif os(macOS)
+import AppKit
 #endif
 
 @MainActor
@@ -59,8 +61,8 @@ class PermissionManager: ObservableObject {
         let micGranted = true // Assume granted or not applicable on macOS
         #endif
         
-        let speechGranted = await requestSpeechPermission()
-        let remindersGranted = await requestRemindersPermission()
+        _ = await requestSpeechPermission()
+        _ = await requestRemindersPermission()
         
         updateAllPermissionsStatus()
         return allPermissionsGranted
@@ -134,7 +136,7 @@ class PermissionManager: ObservableObject {
     }
     
     private func requestRemindersPermission() async -> Bool {
-        if remindersPermissionStatus == .authorized || remindersPermissionStatus == .fullAccess {
+        if remindersPermissionStatus == .fullAccess {
             return true
         }
         
@@ -164,8 +166,7 @@ class PermissionManager: ObservableObject {
         #endif
         
         allPermissionsGranted = micGranted &&
-                                speechPermissionStatus == .authorized &&
-                                (remindersPermissionStatus == .authorized || remindersPermissionStatus == .fullAccess)
+                                speechPermissionStatus == .authorized && remindersPermissionStatus == .fullAccess
     }
     
     func showSettingsAlert() {
@@ -192,11 +193,15 @@ class PermissionManager: ObservableObject {
         }
     }
     
-    #if os(iOS)
     func openSettings() {
+        #if os(iOS)
         if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
             UIApplication.shared.open(settingsURL)
         }
+        #elseif os(macOS)
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy") {
+            NSWorkspace.shared.open(url)
+        }
+        #endif
     }
-    #endif
 }

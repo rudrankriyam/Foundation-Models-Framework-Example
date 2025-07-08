@@ -10,6 +10,14 @@ import SwiftUI
 struct BlobStylesView: View {
     @StateObject private var audioManager = AudioManager()
     @State private var selectedStyle: BlobStyle = .organic
+    
+    private var backgroundColor: Color {
+        #if os(iOS)
+        Color(uiColor: .systemBackground)
+        #else
+        Color(nsColor: .windowBackgroundColor)
+        #endif
+    }
 
     enum BlobStyle: String, CaseIterable {
         case organic = "Organic"
@@ -49,7 +57,7 @@ struct BlobStylesView: View {
                     .fill(
                         LinearGradient(
                             colors: [
-                                Color(.systemBackground),
+                                backgroundColor,
                                 Color.gray.opacity(0.07)
                             ],
                             startPoint: .topLeading,
