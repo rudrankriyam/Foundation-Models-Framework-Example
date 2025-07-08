@@ -51,6 +51,8 @@ struct SchemaExamplesView: View {
             OptionalFieldsSchemaView()
         case .generationGuides:
             GuidedDynamicSchemaView()
+        case .generablePattern:
+            GenerablePatternView()
         case .unionTypes:
             UnionTypesSchemaView()
         case .formBuilder:

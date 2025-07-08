@@ -95,6 +95,24 @@ struct EnumDynamicSchemaView: View {
                             .scaleEffect(0.8)
                     }
                 }
+                
+                // Results section
+                if !executor.results.isEmpty {
+                    VStack(alignment: .leading, spacing: Spacing.small) {
+                        Text("Generated Data")
+                            .font(.headline)
+                        
+                        ScrollView {
+                            Text(executor.results)
+                                .font(.system(.caption, design: .monospaced))
+                                .padding()
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(Color.gray.opacity(0.1))
+                                .cornerRadius(8)
+                        }
+                        .frame(maxHeight: 250)
+                    }
+                }
             }
             .padding()
         }

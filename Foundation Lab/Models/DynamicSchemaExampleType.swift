@@ -16,6 +16,7 @@ enum DynamicSchemaExampleType: String, CaseIterable, Identifiable {
     case schemaReferences = "schema_references"
     case optionalFields = "optional_fields"
     case generationGuides = "generation_guides"
+    case generablePattern = "generable_pattern"
     case unionTypes = "union_types"
     case formBuilder = "form_builder"
     case errorHandling = "error_handling"
@@ -39,6 +40,8 @@ enum DynamicSchemaExampleType: String, CaseIterable, Identifiable {
             return "Optional vs Required"
         case .generationGuides:
             return "Generation Guides"
+        case .generablePattern:
+            return "@Generable Pattern"
         case .unionTypes:
             return "Union Types (anyOf)"
         case .formBuilder:
@@ -66,6 +69,8 @@ enum DynamicSchemaExampleType: String, CaseIterable, Identifiable {
             return "Handle optional and required fields"
         case .generationGuides:
             return "Apply constraints to generated values"
+        case .generablePattern:
+            return "Type-safe generation with @Generable"
         case .unionTypes:
             return "Multiple type alternatives"
         case .formBuilder:
@@ -93,6 +98,8 @@ enum DynamicSchemaExampleType: String, CaseIterable, Identifiable {
             return "questionmark.circle"
         case .generationGuides:
             return "ruler"
+        case .generablePattern:
+            return "swift"
         case .unionTypes:
             return "arrow.triangle.branch"
         case .formBuilder:
@@ -108,7 +115,7 @@ enum DynamicSchemaExampleType: String, CaseIterable, Identifiable {
         switch self {
         case .basicObject, .arraySchema, .enumSchema:
             return .beginner
-        case .nestedObjects, .optionalFields, .generationGuides:
+        case .nestedObjects, .optionalFields, .generationGuides, .generablePattern:
             return .intermediate
         case .schemaReferences, .unionTypes, .errorHandling:
             return .advanced
