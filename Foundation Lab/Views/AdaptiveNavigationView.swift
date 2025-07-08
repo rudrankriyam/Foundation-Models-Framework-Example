@@ -34,31 +34,31 @@ struct AdaptiveNavigationView: View {
             get: { navigationCoordinator.tabSelection },
             set: { navigationCoordinator.tabSelection = $0 }
         )) {
-            Tab("Examples", systemImage: "sparkles", value: .examples) {
+            Tab(TabSelection.examples.rawValue.capitalized, systemImage: "sparkles", value: .examples) {
                 NavigationStack {
                     ExamplesView(viewModel: $contentViewModel)
                 }
             }
             
-            Tab("Schemas", systemImage: "doc.text", value: .schemas) {
+            Tab(TabSelection.schemas.rawValue.capitalized, systemImage: "doc.text", value: .schemas) {
                 NavigationStack {
                     SchemaExamplesView()
                 }
             }
             
-            Tab("Tools", systemImage: "wrench.and.screwdriver", value: .tools) {
+            Tab(TabSelection.tools.rawValue.capitalized, systemImage: "wrench.and.screwdriver", value: .tools) {
                 NavigationStack {
                     ToolsExamplesView()
                 }
             }
             
-            Tab("Chat", systemImage: "bubble.left.and.bubble.right", value: .chat) {
+            Tab(TabSelection.chat.rawValue.capitalized, systemImage: "bubble.left.and.bubble.right", value: .chat) {
                 NavigationStack {
                     ChatView(viewModel: $chatViewModel)
                 }
             }
             
-            Tab("Settings", systemImage: "gear", value: .settings) {
+            Tab(TabSelection.settings.rawValue.capitalized, systemImage: "gear", value: .settings) {
                 NavigationStack {
                     SettingsView()
                 }

@@ -11,24 +11,11 @@ struct SchemaExamplesView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.medium) {
-                // Header
-                VStack(alignment: .leading, spacing: Spacing.small) {
-                    HStack {
-                        Image(systemName: "doc.text")
-                            .font(.largeTitle)
-                            .foregroundColor(.purple)
-                        Spacer()
-                    }
-                    
-                    Text("Schema Examples")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                    
-                    Text("Learn how to use DynamicGenerationSchema for structured data extraction")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                }
-                .padding(.bottom)
+                // Description
+                Text("Learn how to use DynamicGenerationSchema for structured data extraction")
+                    .font(.headline)
+                    .foregroundColor(.secondary)
+                    .padding(.bottom)
                 
                 // Dynamic Schemas Grid
                 VStack(alignment: .leading, spacing: Spacing.small) {
@@ -50,7 +37,7 @@ struct SchemaExamplesView: View {
                                     HStack {
                                         Image(systemName: example.icon)
                                             .font(.title2)
-                                            .foregroundColor(.purple)
+                                            .foregroundColor(.main)
                                         Spacer()
                                         
                                         Text(example.complexity.label)
@@ -76,7 +63,7 @@ struct SchemaExamplesView: View {
                                 }
                                 .padding()
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(Color.purple.opacity(0.1))
+                                .background(Color.gray.opacity(0.1))
                                 .cornerRadius(12)
                             }
                             .buttonStyle(.plain)

@@ -11,24 +11,11 @@ struct ToolsExamplesView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.medium) {
-                // Header
-                VStack(alignment: .leading, spacing: Spacing.small) {
-                    HStack {
-                        Image(systemName: "wrench.and.screwdriver")
-                            .font(.largeTitle)
-                            .foregroundColor(.orange)
-                        Spacer()
-                    }
-                    
-                    Text("Tools Examples")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                    
-                    Text("Learn how to use AI tools for system integration")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                }
-                .padding(.bottom)
+                // Description
+                Text("Learn how to use AI tools for system integration")
+                    .font(.headline)
+                    .foregroundColor(.secondary)
+                    .padding(.bottom)
                 
                 // Tools Grid
                 LazyVGrid(columns: [
@@ -41,7 +28,7 @@ struct ToolsExamplesView: View {
                                 HStack {
                                     Image(systemName: tool.icon)
                                         .font(.title2)
-                                        .foregroundColor(.orange)
+                                        .foregroundColor(.main)
                                     Spacer()
                                 }
                                 
@@ -56,7 +43,7 @@ struct ToolsExamplesView: View {
                             }
                             .padding()
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color.orange.opacity(0.1))
+                            .background(Color.gray.opacity(0.1))
                             .cornerRadius(12)
                         }
                         .buttonStyle(.plain)
