@@ -22,12 +22,17 @@ struct BasicDynamicSchemaView: View {
             title: "Basic Object Schema",
             description: "Create simple object schemas at runtime using DynamicGenerationSchema",
             defaultPrompt: personInput,
-            currentPrompt: .constant(currentInput),
+            currentPrompt: bindingForSelectedExample,
             isRunning: executor.isRunning,
             errorMessage: executor.errorMessage,
             codeExample: exampleCode,
             onRun: { Task { await runExample() } },
-            onReset: { selectedExample = 0 }
+            onReset: { 
+                selectedExample = 0
+                personInput = "John Doe is 32 years old, works as a software engineer and loves hiking."
+                productInput = "The iPhone 15 Pro costs $999 and has a 6.1 inch display"
+                customInput = ""
+            }
         ) {
             VStack(alignment: .leading, spacing: Spacing.medium) {
                 // Example selector
@@ -38,19 +43,10 @@ struct BasicDynamicSchemaView: View {
                 }
                 .pickerStyle(.segmented)
                 .padding(.bottom)
-                
-                // Input based on selection
-                VStack(alignment: .leading, spacing: Spacing.small) {
-                    Text("Input Text")
-                        .font(.headline)
-                    
-                    TextEditor(text: bindingForSelectedExample)
-                        .font(.body)
-                        .frame(minHeight: 80)
-                        .padding(8)
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(8)
+                .onChange(of: selectedExample) { _ in
+                    // Update prompt automatically when example changes
                 }
+                
                 
                 // Schema preview
                 VStack(alignment: .leading, spacing: Spacing.small) {
@@ -376,7 +372,7 @@ struct BasicDynamicSchemaView: View {
         
         // Use the schema to extract structured data
         let response = try await session.respond(
-            to: "John is 25 years old",
+            to: prompt, // Uses the actual user input
             schema: schema
         )
         """
