@@ -8,7 +8,13 @@
 import Foundation
 
 enum TabSelection: String, CaseIterable, Hashable {
-  case examples = "Examples"
-  case chat = "Chat"
-  case settings = "Settings"
+  case examples
+  case schemas
+  case tools
+  case chat
+  case settings
+  
+  var displayName: String {
+    rawValue.capitalized
+  }
 }

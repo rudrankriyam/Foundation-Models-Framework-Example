@@ -34,19 +34,31 @@ struct AdaptiveNavigationView: View {
             get: { navigationCoordinator.tabSelection },
             set: { navigationCoordinator.tabSelection = $0 }
         )) {
-            Tab("Examples", systemImage: "sparkles", value: .examples) {
+            Tab(TabSelection.examples.displayName, systemImage: "sparkles", value: .examples) {
                 NavigationStack {
                     ExamplesView(viewModel: $contentViewModel)
                 }
             }
             
-            Tab("Chat", systemImage: "bubble.left.and.bubble.right", value: .chat) {
+            Tab(TabSelection.schemas.displayName, systemImage: "doc.text", value: .schemas) {
+                NavigationStack {
+                    SchemaExamplesView()
+                }
+            }
+            
+            Tab(TabSelection.tools.displayName, systemImage: "wrench.and.screwdriver", value: .tools) {
+                NavigationStack {
+                    ToolsExamplesView()
+                }
+            }
+            
+            Tab(TabSelection.chat.displayName, systemImage: "bubble.left.and.bubble.right", value: .chat) {
                 NavigationStack {
                     ChatView(viewModel: $chatViewModel)
                 }
             }
             
-            Tab("Settings", systemImage: "gear", value: .settings) {
+            Tab(TabSelection.settings.displayName, systemImage: "gear", value: .settings) {
                 NavigationStack {
                     SettingsView()
                 }
@@ -86,6 +98,14 @@ struct AdaptiveNavigationView: View {
         case .examples:
             NavigationStack {
                 ExamplesView(viewModel: $contentViewModel)
+            }
+        case .schemas:
+            NavigationStack {
+                SchemaExamplesView()
+            }
+        case .tools:
+            NavigationStack {
+                ToolsExamplesView()
             }
         case .chat:
             NavigationStack {

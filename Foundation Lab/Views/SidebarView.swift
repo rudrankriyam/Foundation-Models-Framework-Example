@@ -13,7 +13,7 @@ struct SidebarView: View {
     var body: some View {
         List(selection: $selection) {
             ForEach(TabSelection.allCases, id: \.self) { tab in
-                Label(tab.rawValue, systemImage: tab.systemImage)
+                Label(tab.displayName, systemImage: tab.systemImage)
                     .tag(tab)
 #if os(macOS)
                     .keyboardShortcut(tab.keyboardShortcut, modifiers: .command)
@@ -33,6 +33,10 @@ extension TabSelection {
         switch self {
         case .examples:
             return "sparkles"
+        case .schemas:
+            return "doc.text"
+        case .tools:
+            return "wrench.and.screwdriver"
         case .chat:
             return "bubble.left.and.bubble.right"
         case .settings:
@@ -43,12 +47,11 @@ extension TabSelection {
 #if os(macOS)
     var keyboardShortcut: KeyEquivalent {
         switch self {
-        case .examples:
-            return "1"
-        case .chat:
-            return "2"
-        case .settings:
-            return "3"
+        case .examples: return "1"
+        case .schemas: return "2"
+        case .tools: return "3"
+        case .chat: return "4"
+        case .settings: return "5"
         }
     }
 #endif
