@@ -8,6 +8,7 @@
 import CoreLocation
 import Foundation
 import FoundationModels
+import FoundationModelsTools
 import MapKit
 import Observation
 import SwiftUI
@@ -362,6 +363,8 @@ class ContentViewModel {
       return "Unsupported language/locale: \(context.debugDescription)"
     case .rateLimited(let context):
       return "Rate limited: \(context.debugDescription)"
+    case .concurrentRequests(_):
+        return "Concurrent requests limit exceeded"
     @unknown default:
       return "Unknown generation error"
     }

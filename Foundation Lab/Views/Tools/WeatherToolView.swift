@@ -6,6 +6,7 @@
 //
 
 import FoundationModels
+import FoundationModelsTools
 import SwiftUI
 
 struct WeatherToolView: View {
