@@ -24,7 +24,7 @@ enum ExampleType: String, CaseIterable, Identifiable {
   var title: String {
     switch self {
     case .basicChat:
-      return "Basic Chat"
+      return "One-shot"
     case .businessIdeas:
       return "Business Ideas"
     case .creativeWriting:
@@ -45,7 +45,7 @@ enum ExampleType: String, CaseIterable, Identifiable {
   var subtitle: String {
     switch self {
     case .basicChat:
-      return "Simple back-and-forth conversation"
+      return "Single prompt-response interaction"
     case .businessIdeas:
       return "Generate creative business concepts"
     case .creativeWriting:

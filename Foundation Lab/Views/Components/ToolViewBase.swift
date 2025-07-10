@@ -280,6 +280,43 @@ final class ToolExecutor {
 
     isRunning = false
   }
+  
+  /// Executes a tool operation using PromptBuilder
+  /// - Parameters:
+  ///   - tool: The tool to execute
+  ///   - successMessage: Optional success message to display
+  ///   - clearForm: Optional closure to clear form data on success
+  ///   - promptBuilder: A closure that builds the prompt using @PromptBuilder
+  func executeWithPromptBuilder<T: Tool>(
+    tool: T,
+    successMessage: String? = nil,
+    clearForm: (() -> Void)? = nil,
+    @PromptBuilder promptBuilder: () -> Prompt
+  ) async {
+    isRunning = true
+    errorMessage = nil
+    self.successMessage = nil
+    result = ""
+
+    do {
+      let session = LanguageModelSession(tools: [tool])
+      let response = try await session.respond(to: promptBuilder())
+      result = response.content
+
+      if let successMessage = successMessage {
+        self.successMessage = successMessage
+      }
+
+      clearForm?()
+
+    } catch {
+      errorMessage = handleError(error)
+      // Clear success message on error
+      self.successMessage = nil
+    }
+
+    isRunning = false
+  }
 
   /// Executes a tool operation with a custom session configuration
   /// - Parameters:
