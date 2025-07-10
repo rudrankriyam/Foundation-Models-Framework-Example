@@ -16,8 +16,8 @@ struct BasicChatView: View {
   
   var body: some View {
     ExampleViewBase(
-      title: "Basic Chat",
-      description: "Simple conversation with the AI assistant",
+      title: "One-shot",
+      description: "Single prompt-response interaction with the AI assistant",
       defaultPrompt: DefaultPrompts.basicChat,
       currentPrompt: $currentPrompt,
       isRunning: executor.isRunning,
