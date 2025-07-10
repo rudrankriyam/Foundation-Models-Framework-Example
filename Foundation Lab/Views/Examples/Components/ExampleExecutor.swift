@@ -10,7 +10,6 @@ import FoundationModels
 import SwiftUI
 
 /// A reusable helper class for executing example operations
-@MainActor
 @Observable
 final class ExampleExecutor {
   var isRunning = false
@@ -18,7 +17,7 @@ final class ExampleExecutor {
   var errorMessage: String?
   var successMessage: String?
   var promptHistory: [String] = []
-  
+
   /// Executes a basic language model operation
   func executeBasic(
     prompt: String,
@@ -29,15 +28,15 @@ final class ExampleExecutor {
       errorMessage = "Please enter a valid prompt"
       return
     }
-    
+
     isRunning = true
     errorMessage = nil
     self.successMessage = nil
     result = ""
-    
+
     // Add to history
     addToHistory(prompt)
-    
+
     do {
       let session: LanguageModelSession
       if let instructions = instructions {
@@ -45,22 +44,22 @@ final class ExampleExecutor {
       } else {
         session = LanguageModelSession()
       }
-      
+
       let response = try await session.respond(to: Prompt(prompt))
       result = response.content
-      
+
       if let successMessage = successMessage {
         self.successMessage = successMessage
       }
-      
+
     } catch {
       errorMessage = handleError(error)
       self.successMessage = nil
     }
-    
+
     isRunning = false
   }
-  
+
   /// Executes a structured data generation operation
   func executeStructured<T: Generable>(
     prompt: String,
@@ -71,31 +70,31 @@ final class ExampleExecutor {
       errorMessage = "Please enter a valid prompt"
       return
     }
-    
+
     isRunning = true
     errorMessage = nil
     successMessage = nil
     result = ""
-    
+
     // Add to history
     addToHistory(prompt)
-    
+
     do {
       let session = LanguageModelSession()
       let response = try await session.respond(
         to: Prompt(prompt),
         generating: type
       )
-      
+
       result = formatter(response.content)
-      
+
     } catch {
       errorMessage = handleError(error)
     }
-    
+
     isRunning = false
   }
-  
+
   /// Executes a streaming operation
   func executeStreaming(
     prompt: String,
@@ -106,15 +105,15 @@ final class ExampleExecutor {
       errorMessage = "Please enter a valid prompt"
       return
     }
-    
+
     isRunning = true
     errorMessage = nil
     successMessage = nil
     result = ""
-    
+
     // Add to history
     addToHistory(prompt)
-    
+
     do {
       let session: LanguageModelSession
       if let instructions = instructions {
@@ -122,21 +121,21 @@ final class ExampleExecutor {
       } else {
         session = LanguageModelSession()
       }
-      
+
       let stream = session.streamResponse(to: Prompt(prompt))
-      
+
       for try await partialResponse in stream {
         result = partialResponse
         onPartialResult(partialResponse)
       }
-      
+
     } catch {
       errorMessage = handleError(error)
     }
-    
+
     isRunning = false
   }
-  
+
   /// Clears all state
   func clear() {
     isRunning = false
@@ -144,7 +143,7 @@ final class ExampleExecutor {
     errorMessage = nil
     successMessage = nil
   }
-  
+
   /// Adds a prompt to history
   private func addToHistory(_ prompt: String) {
     // Remove if already exists
@@ -156,7 +155,7 @@ final class ExampleExecutor {
       promptHistory = Array(promptHistory.prefix(10))
     }
   }
-  
+
   /// Handles various error types and returns user-friendly messages
   func handleError(_ error: Error) -> String {
     if let generationError = error as? LanguageModelSession.GenerationError {
@@ -168,36 +167,5 @@ final class ExampleExecutor {
     } else {
       return "Unexpected error: \(error.localizedDescription)"
     }
-  }
-}
-
-// MARK: - Environment Key
-
-private struct ExampleExecutorKey: EnvironmentKey {
-  static let defaultValue = ExampleExecutor()
-}
-
-extension EnvironmentValues {
-  var exampleExecutor: ExampleExecutor {
-    get { self[ExampleExecutorKey.self] }
-    set { self[ExampleExecutorKey.self] = newValue }
-  }
-}
-
-// MARK: - View Modifier
-
-struct ExampleExecutorModifier: ViewModifier {
-  @State private var executor = ExampleExecutor()
-  
-  func body(content: Content) -> some View {
-    content
-      .environment(\.exampleExecutor, executor)
-  }
-}
-
-extension View {
-  /// Provides an ExampleExecutor instance to the view hierarchy
-  func withExampleExecutor() -> some View {
-    modifier(ExampleExecutorModifier())
   }
 }

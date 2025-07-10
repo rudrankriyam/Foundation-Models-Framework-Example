@@ -10,7 +10,7 @@ import FoundationModelsTools
 import SwiftUI
 
 struct HealthToolView: View {
-  @Environment(ToolExecutor.self) private var executor
+  @State private var executor = ToolExecutor()
   @State private var query: String = "How many steps have I taken today?"
 
   var body: some View {
@@ -83,6 +83,5 @@ struct HealthToolView: View {
 #Preview {
   NavigationStack {
     HealthToolView()
-      .withToolExecutor()
   }
 }

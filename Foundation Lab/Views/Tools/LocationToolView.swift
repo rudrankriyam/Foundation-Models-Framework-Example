@@ -10,7 +10,7 @@ import FoundationModelsTools
 import SwiftUI
 
 struct LocationToolView: View {
-  @Environment(ToolExecutor.self) private var executor
+  @State private var executor = ToolExecutor()
 
   var body: some View {
     ToolViewBase(
@@ -63,6 +63,5 @@ struct LocationToolView: View {
 #Preview {
   NavigationStack {
     LocationToolView()
-      .withToolExecutor()
   }
 }

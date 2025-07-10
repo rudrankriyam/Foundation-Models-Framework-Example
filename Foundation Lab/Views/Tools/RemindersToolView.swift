@@ -34,6 +34,7 @@ struct RemindersToolView: View {
   }()
 
   // MARK: - State Properties
+  @State private var executor = ToolExecutor()
   @State private var isRunning = false
   @State private var result: String = ""
   @State private var errorMessage: String?

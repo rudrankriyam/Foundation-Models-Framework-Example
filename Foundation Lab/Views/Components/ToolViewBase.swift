@@ -339,24 +339,6 @@ final class ToolExecutor {
   }
 }
 
-// MARK: - Tool Executor View Modifier
-
-/// View modifier that provides a ToolExecutor instance to views
-struct ToolExecutorModifier: ViewModifier {
-  @State private var executor = ToolExecutor()
-
-  func body(content: Content) -> some View {
-    content
-      .environment(executor)
-  }
-}
-
-extension View {
-  /// Provides a ToolExecutor instance to the view hierarchy
-  func withToolExecutor() -> some View {
-    modifier(ToolExecutorModifier())
-  }
-}
 
 // MARK: - Standard Tool Components
 

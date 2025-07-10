@@ -10,7 +10,7 @@ import FoundationModelsTools
 import SwiftUI
 
 struct CalendarToolView: View {
-  @Environment(ToolExecutor.self) private var executor
+  @State private var executor = ToolExecutor()
   @State private var query: String = "What events do I have today?"
 
   var body: some View {
@@ -79,6 +79,5 @@ struct CalendarToolView: View {
 #Preview {
   NavigationStack {
     CalendarToolView()
-      .withToolExecutor()
   }
 }

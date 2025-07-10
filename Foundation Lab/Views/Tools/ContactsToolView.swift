@@ -10,7 +10,7 @@ import FoundationModelsTools
 import SwiftUI
 
 struct ContactsToolView: View {
-  @Environment(ToolExecutor.self) private var executor
+  @State private var executor = ToolExecutor()
   @State private var searchQuery: String = ""
 
   var body: some View {
@@ -84,6 +84,5 @@ struct ContactsToolView: View {
 #Preview {
   NavigationStack {
     ContactsToolView()
-      .withToolExecutor()
   }
 }
