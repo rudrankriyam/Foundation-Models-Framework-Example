@@ -73,7 +73,7 @@ struct PokemonSearchTool: Tool {
             output += "=== POKEMON DATA START ===\n"
             output += "Pokemon Name: \(pokemonData.name)\n"
             output += "Pokedex Number: \(pokemonData.id)\n"
-            output += "\n⚠️ CRITICAL - DO NOT USE ANY OTHER NUMBER ⚠️\n"
+            output += "\nCRITICAL - DO NOT USE ANY OTHER NUMBER\n"
             output += "The ONLY correct values are:\n"
             output += "- pokemonName = \"\(pokemonData.name)\"\n"
             output += "- pokedexNumber = \(pokemonData.id) (NOT any other number!)\n"

@@ -57,7 +57,7 @@ struct SettingsView: View {
           }
           
           if !exaAPIKey.isEmpty {
-            Text("✓ API key configured")
+            Text("API key configured")
               .font(.caption)
               .foregroundColor(.secondary)
           }

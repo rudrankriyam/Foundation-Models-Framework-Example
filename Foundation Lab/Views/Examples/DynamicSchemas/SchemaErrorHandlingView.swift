@@ -114,14 +114,14 @@ struct SchemaErrorHandlingView: View {
             withPrompt: "Extract product information from: \(testInput)",
             schema: schema
         ) { result in
-            let status = executor.errorMessage != nil ? "❌ Error Occurred" : "✅ Success"
+            let status = executor.errorMessage != nil ? "Error Occurred" : "Success"
             
             return """
             \(status)
             
-            📋 Schema: \(scenarios[selectedScenario])
+            Schema: \(scenarios[selectedScenario])
             
-            📊 Result:
+            Result:
             \(result)
             
             💡 Error Handling Tips:

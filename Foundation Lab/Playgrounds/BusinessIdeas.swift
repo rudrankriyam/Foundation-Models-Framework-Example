@@ -4,7 +4,7 @@ import Playgrounds
 #Playground {
   let session = LanguageModelSession()
 
-  print("💡 Generating innovative business idea...")
+  print("Generating innovative business idea...")
 
   let businessIdea = try await session.respond(
     to:
@@ -14,23 +14,23 @@ import Playgrounds
 
   print(
     """
-    🚀 Business Idea: \(businessIdea.content.name)
+    Business Idea: \(businessIdea.content.name)
 
-    📝 Description:
+    Description:
     \(businessIdea.content.description)
 
-    🎯 Target Market: \(businessIdea.content.targetMarket)
-    💰 Revenue Model: \(businessIdea.content.revenueModel)
-    ⏰ Timeline: \(String(describing: businessIdea.content.timeline))
+    Target Market: \(businessIdea.content.targetMarket)
+    Revenue Model: \(businessIdea.content.revenueModel)
+    Timeline: \(String(describing: businessIdea.content.timeline))
 
-    ✨ Key Advantages:
-    \(businessIdea.content.advantages.map { "• \($0)" }.joined(separator: "\n"))
+    Key Advantages:
+    \(businessIdea.content.advantages.map { "- \($0)" }.joined(separator: "\n"))
 
-    💵 Estimated Startup Cost: \(businessIdea.content.estimatedStartupCost)
+    Estimated Startup Cost: \(businessIdea.content.estimatedStartupCost)
     """)
 
   // Generate additional market analysis
-  print("\n📊 Market Analysis:")
+  print("\nMarket Analysis:")
   let marketAnalysis = try await session.respond(
     to:
       "Provide a brief market analysis for '\(businessIdea.content.name)' including potential competitors and market size."

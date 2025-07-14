@@ -625,9 +625,9 @@ struct InvoiceProcessingSchemaView: View {
             if let reportedSubtotal = invoice["subtotal"] as? Double {
                 let difference = abs(calculatedSubtotal - reportedSubtotal)
                 if difference < 0.01 {
-                    validationResults.append("\n✓ Subtotal calculation is correct: $\(String(format: "%.2f", reportedSubtotal))")
+                    validationResults.append("\nSubtotal calculation is correct: $\(String(format: "%.2f", reportedSubtotal))")
                 } else {
-                    validationResults.append("\n✗ Subtotal mismatch: Calculated $\(String(format: "%.2f", calculatedSubtotal)) vs Reported $\(String(format: "%.2f", reportedSubtotal))")
+                    validationResults.append("\nSubtotal mismatch: Calculated $\(String(format: "%.2f", calculatedSubtotal)) vs Reported $\(String(format: "%.2f", reportedSubtotal))")
                 }
             }
         }
@@ -641,16 +641,16 @@ struct InvoiceProcessingSchemaView: View {
             let calculatedTax = subtotal * (taxRate / 100)
             let difference = abs(calculatedTax - taxAmount)
             if difference < 0.01 {
-                validationResults.append("\n✓ Tax calculation is correct: \(taxRate)% = $\(String(format: "%.2f", taxAmount))")
+                validationResults.append("\nTax calculation is correct: \(taxRate)% = $\(String(format: "%.2f", taxAmount))")
             } else {
-                validationResults.append("\n✗ Tax calculation mismatch: Expected $\(String(format: "%.2f", calculatedTax)), got $\(String(format: "%.2f", taxAmount))")
+                validationResults.append("\nTax calculation mismatch: Expected $\(String(format: "%.2f", calculatedTax)), got $\(String(format: "%.2f", taxAmount))")
             }
         }
         
         // Validate total
         if let total = invoice["totalAmount"] as? Double,
            let _ = invoice["subtotal"] as? Double {
-            validationResults.append("\n✓ Total amount extracted: $\(String(format: "%.2f", total))")
+            validationResults.append("\nTotal amount extracted: $\(String(format: "%.2f", total))")
         }
         
         return validationResults.joined()

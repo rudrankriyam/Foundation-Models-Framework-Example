@@ -13,7 +13,7 @@ import Playgrounds
         )
         print(response.content)
     } else {
-        print("❌ Foundation Models is not available on this device")
+        print("Foundation Models is not available on this device")
         print("This feature requires:")
         print("- macOS 15.0+ or iOS 18.0+")
         print("- Compatible Apple Silicon or Neural Engine")

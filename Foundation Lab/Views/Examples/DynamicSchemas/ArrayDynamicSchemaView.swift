@@ -167,14 +167,14 @@ struct ArrayDynamicSchemaView: View {
             📝 Input:
             \(currentInput)
             
-            📊 Extracted Items (Count: \(items.count)):
+            Extracted Items (Count: \(items.count)):
             \(formatItems(items))
             
-            ✅ Constraints:
-            • Minimum: \(minItems) items
-            • Maximum: \(maxItems) items
-            • Actual: \(items.count) items
-            • Valid: \(items.count >= minItems && items.count <= maxItems ? "Yes ✓" : "No ✗")
+            Constraints:
+            - Minimum: \(minItems) items
+            - Maximum: \(maxItems) items
+            - Actual: \(items.count) items
+            - Valid: \(items.count >= minItems && items.count <= maxItems ? "Yes" : "No")
             """
         }
     }

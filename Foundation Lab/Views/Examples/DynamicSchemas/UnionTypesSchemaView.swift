@@ -109,13 +109,13 @@ struct UnionTypesSchemaView: View {
             schema: schema
         ) { result in
             """
-            📊 Union Type Detection:
+            Union Type Detection:
             The model automatically determined which variant matches the input.
             
-            ✅ Extracted Data:
+            Extracted Data:
             \(result)
             
-            💡 Note: anyOf schemas allow flexible data extraction when the exact type isn't known in advance.
+            Note: anyOf schemas allow flexible data extraction when the exact type isn't known in advance.
             """
         }
     }

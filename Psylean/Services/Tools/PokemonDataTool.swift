@@ -70,7 +70,7 @@ final class PokemonDataTool: Tool {
         var output = "=== POKEMON DATA START ===\n"
         output += "Pokemon Name: \(pokemon.name)\n"
         output += "Pokedex Number: \(pokemon.id)\n"
-        output += "\n⚠️ CRITICAL - DO NOT USE ANY OTHER NUMBER ⚠️\n"
+        output += "\nCRITICAL - DO NOT USE ANY OTHER NUMBER\n"
         output += "The ONLY correct values are:\n"
         output += "- pokemonName = \"\(pokemon.name)\"\n"
         output += "- pokedexNumber = \(pokemon.id) (NOT any other number!)\n"

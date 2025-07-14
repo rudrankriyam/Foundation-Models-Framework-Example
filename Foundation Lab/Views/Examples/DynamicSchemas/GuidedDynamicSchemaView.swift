@@ -420,14 +420,14 @@ struct GuidedDynamicSchemaView: View {
         switch guideType {
         case 0: // Pattern validation
             if let entries = dict["entries"] as? [[String: Any]] {
-                validations.append("\n✓ Generated \(entries.count) phone entries")
+                validations.append("\nGenerated \(entries.count) phone entries")
                 let validPhones = entries.filter { entry in
                     if let phone = entry["phoneNumber"] as? String {
                         return phone.range(of: "\\(\\d{3}\\) \\d{3}-\\d{4}", options: .regularExpression) != nil
                     }
                     return false
                 }.count
-                validations.append("\n✓ All \(validPhones) phone numbers match pattern")
+                validations.append("\nAll \(validPhones) phone numbers match pattern")
             }
             
         case 1: // Range validation
@@ -438,31 +438,31 @@ struct GuidedDynamicSchemaView: View {
                     }
                     return false
                 }.count
-                validations.append("\n✓ All \(pricesInRange) prices within $10-$100 range")
+                validations.append("\nAll \(pricesInRange) prices within $10-$100 range")
             }
             
         case 2: // Array constraints
             if let items = dict["items"] as? [[String: Any]] {
-                validations.append("\n✓ Shopping list has \(items.count) items (constraint: 3-5)")
+                validations.append("\nShopping list has \(items.count) items (constraint: 3-5)")
                 let validAttributes = items.filter { item in
                     if let attrs = item["attributes"] as? [String] {
                         return attrs.count >= 2 && attrs.count <= 4
                     }
                     return false
                 }.count
-                validations.append("\n✓ All \(validAttributes) items have 2-4 attributes")
+                validations.append("\nAll \(validAttributes) items have 2-4 attributes")
             }
             
         case 3: // Complex validation
             if let employees = dict["employees"] as? [[String: Any]] {
-                validations.append("\n✓ Generated \(employees.count) employee records")
+                validations.append("\nGenerated \(employees.count) employee records")
                 let validEmails = employees.filter { emp in
                     if let email = emp["email"] as? String {
                         return email.hasSuffix("@techcorp.com")
                     }
                     return false
                 }.count
-                validations.append("\n✓ All \(validEmails) emails use @techcorp.com domain")
+                validations.append("\nAll \(validEmails) emails use @techcorp.com domain")
             }
             
         default:

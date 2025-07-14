@@ -167,12 +167,12 @@ class ContentViewModel {
 
     switch model.availability {
     case .available:
-      result += "✅ Default model is available and ready\n"
+      result += "Default model is available and ready\n"
       result += "Supported languages: \(model.supportedLanguages.count)\n"
-      result += "Content tagging model: \(contentTaggingModel.availability == .available ? "✅" : "❌")\n"
+      result += "Content tagging model: \(contentTaggingModel.availability == .available ? "Available" : "Unavailable")\n"
 
     case .unavailable(let reason):
-      result += "❌ Default model unavailable\n"
+      result += "Default model unavailable\n"
       switch reason {
       case .deviceNotEligible:
         result += "Reason: Device not eligible for Apple Intelligence\n"

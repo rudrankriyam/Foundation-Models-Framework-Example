@@ -373,7 +373,7 @@ struct OptionalFieldsSchemaView: View {
     private func formatExtractedFields(_ fields: [(String, String, Bool)]) -> String {
         fields.map { field in
             let icon = field.2 ? "○" : "●" // Optional vs Required
-            let status = field.1.contains("missing") ? "❌" : "✓"
+            let status = field.1.contains("missing") ? "Missing" : "Present"
             return "\(icon) \(field.0): \(field.1) \(status)"
         }.joined(separator: "\n")
     }

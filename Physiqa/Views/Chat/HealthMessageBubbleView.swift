@@ -34,7 +34,7 @@ struct HealthMessageBubbleView: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 10)
                     .background(
-                        .rect(cornerRadius: 20)
+                        RoundedRectangle(cornerRadius: 20)
                             .fill(isFromUser ? Color.primary.opacity(0.08) : Color.primary.opacity(0.05))
                     )
                     .overlay(
@@ -74,7 +74,7 @@ struct HealthMessageBubbleView: View {
         )
         
         HealthMessageBubbleView(
-            content: "Of course! Let me fetch your health data for today. You've been doing great with 8,432 steps so far! That's 84% of your daily goal. Your sleep last night was also good at 7.2 hours. Keep up the excellent work! 🎯",
+            content: "Of course! Let me fetch your health data for today. You've been doing great with 8,432 steps so far! That's 84% of your daily goal. Your sleep last night was also good at 7.2 hours. Keep up the excellent work!",
             isFromUser: false
         )
     }

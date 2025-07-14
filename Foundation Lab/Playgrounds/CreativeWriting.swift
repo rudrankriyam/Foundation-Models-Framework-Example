@@ -5,7 +5,7 @@ import Playgrounds
   // Create a basic language model session
   let session = LanguageModelSession()
 
-  print("📚 Creating a mystery story outline...")
+  print("Creating a mystery story outline...")
 
   // Generate structured story outline
   let storyOutline = try await session.respond(
@@ -16,17 +16,17 @@ import Playgrounds
 
   print(
     """
-    🏘️ Story Outline: \(storyOutline.content.title)
+    Story Outline: \(storyOutline.content.title)
 
-    📖 Genre: \(storyOutline.content.genre)
-    🏞️ Setting: \(storyOutline.content.setting)
-    👤 Protagonist: \(storyOutline.content.protagonist)
+    Genre: \(storyOutline.content.genre)
+    Setting: \(storyOutline.content.setting)
+    Protagonist: \(storyOutline.content.protagonist)
 
-    ⚡ Central Conflict:
+    Central Conflict:
     \(storyOutline.content.conflict)
 
-    🎭 Themes:
-    \(storyOutline.content.themes.map { "• \($0)" }.joined(separator: "\n"))
+    Themes:
+    \(storyOutline.content.themes.map { "- \($0)" }.joined(separator: "\n"))
     """)
 
   // Generate opening scene based on the outline
@@ -37,7 +37,7 @@ import Playgrounds
       "Write the opening paragraph for the story '\(storyOutline.content.title)' featuring \(storyOutline.content.protagonist) in \(storyOutline.content.setting)."
   )
 
-  print("📝 Opening Scene:")
+  print("Opening Scene:")
   print(openingScene.content)
 
   // Generate character development
@@ -48,7 +48,7 @@ import Playgrounds
       "Describe the backstory and motivation of \(storyOutline.content.protagonist) in 2-3 sentences."
   )
 
-  print("👤 Character Background:")
+  print("Character Background:")
   print(characterDevelopment.content)
 
   // Create another story outline with different genre
@@ -61,7 +61,7 @@ import Playgrounds
 
   print(
     """
-    🚀 Sci-Fi Story: \(sciFiOutline.content.title)
+    Sci-Fi Story: \(sciFiOutline.content.title)
 
     Genre: \(sciFiOutline.content.genre)
     Setting: \(sciFiOutline.content.setting)
