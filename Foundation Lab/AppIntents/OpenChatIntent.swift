@@ -8,11 +8,11 @@
 import AppIntents
 import SwiftUI
 
-struct OpenChatIntent: AppIntent {
-    static var title: LocalizedStringResource = "Open Chat"
-    static var description = IntentDescription("Opens the FoundationLab chat interface")
-    
-    static var supportedModes: IntentModes = .foreground
+nonisolated struct OpenChatIntent: AppIntent {
+    static let title: LocalizedStringResource = "Open Chat"
+    static let description = IntentDescription("Opens the FoundationLab chat interface")
+
+    static let supportedModes: IntentModes = .foreground
 
     @MainActor
     func perform() async throws -> some IntentResult {

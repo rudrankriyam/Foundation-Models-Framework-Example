@@ -9,7 +9,7 @@ import Foundation
 import FoundationModels
 
 /// Custom error types for Foundation Models operations
-enum FoundationModelsError: LocalizedError {
+nonisolated enum FoundationModelsError: LocalizedError, Sendable {
   case sessionCreationFailed
   case responseGenerationFailed(String)
   case toolCallFailed(String)
@@ -33,7 +33,7 @@ enum FoundationModelsError: LocalizedError {
 }
 
 /// Helper for handling LanguageModelSession errors
-struct FoundationModelsErrorHandler {
+struct FoundationModelsErrorHandler: Sendable {
   static func handleGenerationError(_ error: LanguageModelSession.GenerationError) -> String {
     switch error {
     case .exceededContextWindowSize(let context):
@@ -50,6 +50,8 @@ struct FoundationModelsErrorHandler {
       return "Unsupported language/locale: \(context.debugDescription)"
     case .rateLimited(let context):
       return "Rate limited: \(context.debugDescription)"
+    case .concurrentRequests(let context):
+      return "Too many concurrent requests: \(context.debugDescription)"
     @unknown default:
       return "Unknown generation error"
     }

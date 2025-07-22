@@ -178,7 +178,7 @@ struct ExaPerPagePrices: Codable {
 
 // MARK: - Error Types
 
-enum ExaWebServiceError: Error, LocalizedError {
+nonisolated enum ExaWebServiceError: Error, LocalizedError {
   case invalidURL
   case encodingError
   case invalidResponse

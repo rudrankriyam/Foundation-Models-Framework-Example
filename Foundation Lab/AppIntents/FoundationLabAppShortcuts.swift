@@ -7,7 +7,7 @@
 
 import AppIntents
 
-struct FoundationLabAppShortcuts: AppShortcutsProvider {
+nonisolated struct FoundationLabAppShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(
             intent: OpenChatIntent(),

@@ -138,14 +138,16 @@ class ContentViewModel {
       // Set initial request with empty response
       setRequestResponse(RequestResponsePair(request: requestText, response: ""))
 
+      var finalContent = ""
+      
       // Process streaming updates
       for try await partialResponse in stream {
+        finalContent = partialResponse
         setRequestResponse(RequestResponsePair(request: requestText, response: partialResponse))
       }
 
-      // Get final response
-      let finalResponse = try await stream.collect()
-      setRequestResponse(RequestResponsePair(request: requestText, response: finalResponse.content))
+      // Use the last received content as final response
+      setRequestResponse(RequestResponsePair(request: requestText, response: finalContent))
       setLoading(false)
     } catch {
       setRequestResponse(RequestResponsePair(request: requestText, response: handleFoundationModelsError(error), isError: true))
