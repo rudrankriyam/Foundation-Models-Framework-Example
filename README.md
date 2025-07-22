@@ -15,7 +15,7 @@ Love this project? Check out my books to explore more of AI and iOS development:
 ## Requirements
 
 - iOS 26.0+ or macOS 26.0+ (Xcode 26.0+) 
-- **Beta 2 version of the framework is required**
+- **Beta 4 version of the framework is required**
 - Apple Intelligence enabled
 - Compatible Apple device with Apple Silicon
 
