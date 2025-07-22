@@ -215,6 +215,36 @@ public struct GeneratedContent : Sendable, Equatable, Generable, CustomDebugStri
     /// must match the order properties in the types `schema`.
     public init(properties: KeyValuePairs<String, any ConvertibleToGeneratedContent>)
 
+    /// Creates new generated content from the key-value pairs in the given sequence,
+    /// using a combining closure to determine the value for any duplicate keys.
+    ///
+    /// The order of properties is important. For ``Generable`` types, the order
+    /// must match the order properties in the types `schema`.
+    ///
+    /// You use this initializer to create generated content when you have a sequence
+    /// of key-value tuples that might have duplicate keys. As the content is
+    /// built, the initializer calls the `combine` closure with the current and
+    /// new values for any duplicate keys. Pass a closure as `combine` that
+    /// returns the value to use in the resulting content: The closure can
+    /// choose between the two values, combine them to produce a new value, or
+    /// even throw an error.
+    ///
+    /// The following example shows how to choose the first and last values for
+    /// any duplicate keys:
+    ///
+    ///     let content = GeneratedContent(
+    ///       properties: [("name", "John"), ("name", "Jane"), ("married": true)],
+    ///       uniquingKeysWith: { (first, _ in first }
+    ///     )
+    ///     // GeneratedContent(["name": "John", "married": true])
+    ///
+    /// - Parameters:
+    ///   - keysAndValues: A sequence of key-value pairs to use for the new content.
+    ///   - combine: A closure that is called with the values for any duplicate
+    ///     keys that are encountered. The closure returns the desired value for
+    ///     the final content.
+    public init<S>(properties: S, uniquingKeysWith combine: (any ConvertibleToGeneratedContent, any ConvertibleToGeneratedContent) throws -> any ConvertibleToGeneratedContent) rethrows where S : Sequence, S.Element == (String, any ConvertibleToGeneratedContent)
+
     /// Creates an object with an array of elements you specify.
     ///
     public init<C>(elements: C) where C : Collection, C.Element == any ConvertibleToGeneratedContent
@@ -656,7 +686,7 @@ public struct GenerationOptions : Sendable, Equatable {
 @available(iOS 26.0, macOS 26.0, *)
 @available(tvOS, unavailable)
 @available(watchOS, unavailable)
-public struct GenerationSchema : Sendable, CustomDebugStringConvertible {
+public struct GenerationSchema : Sendable, Codable, CustomDebugStringConvertible {
 
     /// A property that belongs to a generation schema.
     ///
@@ -781,11 +811,30 @@ public struct GenerationSchema : Sendable, CustomDebugStringConvertible {
         case undefinedReferences(schema: String?, references: [String], context: GenerationSchema.SchemaError.Context)
 
         /// A string representation of the error description.
-        public var errorDescription: String { get }
+        public var errorDescription: String? { get }
 
         /// A suggestion that indicates how to handle the error.
         public var recoverySuggestion: String? { get }
     }
+
+    /// Creates a new instance by decoding from the given decoder.
+    ///
+    /// This initializer throws an error if reading from the decoder fails, or
+    /// if the data read is corrupted or otherwise invalid.
+    ///
+    /// - Parameter decoder: The decoder to read data from.
+    public init(from decoder: any Decoder) throws
+
+    /// Encodes this value into the given encoder.
+    ///
+    /// If the value fails to encode anything, `encoder` will encode an empty
+    /// keyed container in its place.
+    ///
+    /// This function throws an error if any values are invalid for the given
+    /// encoder's format.
+    ///
+    /// - Parameter encoder: The encoder to write data to.
+    public func encode(to encoder: any Encoder) throws
 }
 
 /// Allows for influencing the allowed values of properties of a generable type.
@@ -898,7 +947,7 @@ public struct LanguageModelFeedbackAttachment : Sendable, Encodable {
     ///   - sentiment: An optional sentiment about the model's output.
     ///   - issues: Issues regarding the model's response.
     ///   - desiredOutputExamples: Examples of desired outputs.
-    public init(input: [Transcript.Entry], output: [Transcript.Entry], sentiment: LanguageModelFeedbackAttachment.Sentiment?, issues: [LanguageModelFeedbackAttachment.Issue] = [], desiredOutputExamples: [[Transcript.Entry]] = [])
+    public init(input: [Transcript.Entry], output: [Transcript.Entry], sentiment: LanguageModelFeedbackAttachment.Sentiment?, issues: [LanguageModelFeedbackAttachment.Issue] = [], desiredOutput: Transcript.Entry? = nil)
 
     /// Creates feedback from a person that indicates their preference
     /// among several outputs generated for the same input.
@@ -1211,16 +1260,30 @@ final public class LanguageModelSession {
     ///   - tools: Tools to make available to the model for this session.
     public convenience init(model: SystemLanguageModel = .default, guardrails: LanguageModelSession.Guardrails = .default, tools: [any Tool] = [], transcript: Transcript)
 
-    /// Requests that the system eagerly load the resources required for this session into memory.
+    /// Requests that the system eagerly load the resources required for this session into memory and
+    /// optionally caches a prefix of your prompt.
     ///
-    /// Consider calling this method when you need to immediately use the session.
+    /// This method can be useful in cases where you have a strong signal that the user will interact with
+    /// session within a few seconds. For example, you might call prewarm when the user begins typing
+    /// into a text field.
+    ///
+    /// If you know a prefix for the future prompt, passing it to prewarm will allow the system to process the
+    /// prompt eagerly and reduce latency for the future request.
+    ///
+    /// - Important: You should only use prewarm when you have a window of at least 1s before the
+    /// call to `respond(to:)`.
     ///
     /// - Note: Calling this method does not guarantee that the system loads your assets immediately,
     /// particularly if your app is running in the background or the system is under load.
+    final public func prewarm(promptPrefix: Prompt? = nil)
+
+    @available(*, deprecated, renamed: "prewarm(promptPrefix:)")
     final public func prewarm()
 
+    @available(*, deprecated, renamed: "prewarm(promptPrefix:)")
     final public func prewarm<Content>(prompt: Prompt, generating: Content.Type) where Content : Generable
 
+    @available(*, deprecated, renamed: "prewarm(promptPrefix:)")
     final public func prewarm(prompt: Prompt, schema: GenerationSchema? = nil)
 
     /// A structure that stores the output of a response call.
@@ -1243,7 +1306,7 @@ final public class LanguageModelSession {
     ///   - options: GenerationOptions that control how tokens are sampled from the distribution the model produces.
     /// - Returns: A string composed of the tokens produced by sampling model output.
     @discardableResult
-    final public func respond(to prompt: Prompt, options: GenerationOptions = GenerationOptions(), isolation: isolated (any Actor)? = #isolation) async throws -> sending LanguageModelSession.Response<String>
+    nonisolated(nonsending) final public func respond(to prompt: Prompt, options: GenerationOptions = GenerationOptions()) async throws -> LanguageModelSession.Response<String>
 
     /// Produces a response to a prompt.
     ///
@@ -1252,7 +1315,7 @@ final public class LanguageModelSession {
     ///   - options: GenerationOptions that control how tokens are sampled from the distribution the model produces.
     /// - Returns: A string composed of the tokens produced by sampling model output.
     @discardableResult
-    final public func respond(to prompt: String, options: GenerationOptions = GenerationOptions(), isolation: isolated (any Actor)? = #isolation) async throws -> sending LanguageModelSession.Response<String>
+    nonisolated(nonsending) final public func respond(to prompt: String, options: GenerationOptions = GenerationOptions()) async throws -> LanguageModelSession.Response<String>
 
     /// Produces a response to a prompt.
     ///
@@ -1261,7 +1324,7 @@ final public class LanguageModelSession {
     ///   - prompt: A prompt for the model to respond to.
     /// - Returns: A string composed of the tokens produced by sampling model output.
     @discardableResult
-    final public func respond(options: GenerationOptions = GenerationOptions(), isolation: isolated (any Actor)? = #isolation, @PromptBuilder prompt: () throws -> Prompt) async throws -> sending LanguageModelSession.Response<String>
+    nonisolated(nonsending) final public func respond(options: GenerationOptions = GenerationOptions(), @PromptBuilder prompt: () throws -> Prompt) async throws -> LanguageModelSession.Response<String>
 
     /// Produces a generated content type as a response to a prompt and schema.
     ///
@@ -1276,7 +1339,7 @@ final public class LanguageModelSession {
     ///   - options: Options that control how tokens are sampled from the distribution the model produces.
     /// - Returns: ``GeneratedContent`` containing the fields and values defined in the schema.
     @discardableResult
-    final public func respond(to prompt: Prompt, schema: GenerationSchema, includeSchemaInPrompt: Bool = true, options: GenerationOptions = GenerationOptions(), isolation: isolated (any Actor)? = #isolation) async throws -> sending LanguageModelSession.Response<GeneratedContent>
+    nonisolated(nonsending) final public func respond(to prompt: Prompt, schema: GenerationSchema, includeSchemaInPrompt: Bool = true, options: GenerationOptions = GenerationOptions()) async throws -> LanguageModelSession.Response<GeneratedContent>
 
     /// Produces a generated content type as a response to a prompt and schema.
     ///
@@ -1291,7 +1354,7 @@ final public class LanguageModelSession {
     ///   - options: Options that control how tokens are sampled from the distribution the model produces.
     /// - Returns: ``GeneratedContent`` containing the fields and values defined in the schema.
     @discardableResult
-    final public func respond(to prompt: String, schema: GenerationSchema, includeSchemaInPrompt: Bool = true, options: GenerationOptions = GenerationOptions(), isolation: isolated (any Actor)? = #isolation) async throws -> LanguageModelSession.Response<GeneratedContent>
+    nonisolated(nonsending) final public func respond(to prompt: String, schema: GenerationSchema, includeSchemaInPrompt: Bool = true, options: GenerationOptions = GenerationOptions()) async throws -> LanguageModelSession.Response<GeneratedContent>
 
     /// Produces a generated content type as a response to a prompt and schema.
     ///
@@ -1306,7 +1369,7 @@ final public class LanguageModelSession {
     ///   - prompt: A prompt for the model to respond to.
     /// - Returns: ``GeneratedContent`` containing the fields and values defined in the schema.
     @discardableResult
-    final public func respond(options: GenerationOptions = GenerationOptions(), schema: GenerationSchema, includeSchemaInPrompt: Bool = true, isolation: isolated (any Actor)? = #isolation, @PromptBuilder prompt: () throws -> Prompt) async throws -> LanguageModelSession.Response<GeneratedContent>
+    final public func respond(options: GenerationOptions = GenerationOptions(), schema: GenerationSchema, includeSchemaInPrompt: Bool = true, @PromptBuilder prompt: () throws -> Prompt) async throws -> LanguageModelSession.Response<GeneratedContent>
 
     /// Produces a generable object as a response to a prompt.
     ///
@@ -1321,7 +1384,7 @@ final public class LanguageModelSession {
     ///   - options: Options that control how tokens are sampled from the distribution the model produces.
     /// - Returns: ``GeneratedContent`` containing the fields and values defined in the schema.
     @discardableResult
-    final public func respond<Content>(to prompt: Prompt, generating type: Content.Type = Content.self, includeSchemaInPrompt: Bool = true, options: GenerationOptions = GenerationOptions(), isolation: isolated (any Actor)? = #isolation) async throws -> sending LanguageModelSession.Response<Content> where Content : Generable
+    nonisolated(nonsending) final public func respond<Content>(to prompt: Prompt, generating type: Content.Type = Content.self, includeSchemaInPrompt: Bool = true, options: GenerationOptions = GenerationOptions()) async throws -> LanguageModelSession.Response<Content> where Content : Generable
 
     /// Produces a generable object as a response to a prompt.
     ///
@@ -1337,7 +1400,7 @@ final public class LanguageModelSession {
     /// - Returns: An instance of the `Generable` type.
     /// - Returns: ``GeneratedContent`` containing the fields and values defined in the schema.
     @discardableResult
-    final public func respond<Content>(to prompt: String, generating type: Content.Type = Content.self, includeSchemaInPrompt: Bool = true, options: GenerationOptions = GenerationOptions(), isolation: isolated (any Actor)? = #isolation) async throws -> sending LanguageModelSession.Response<Content> where Content : Generable
+    nonisolated(nonsending) final public func respond<Content>(to prompt: String, generating type: Content.Type = Content.self, includeSchemaInPrompt: Bool = true, options: GenerationOptions = GenerationOptions()) async throws -> LanguageModelSession.Response<Content> where Content : Generable
 
     /// Produces a generable object as a response to a prompt.
     ///
@@ -1353,7 +1416,7 @@ final public class LanguageModelSession {
     ///   - prompt: A prompt for the model to respond to.
     /// - Returns: ``GeneratedContent`` containing the fields and values defined in the schema.
     @discardableResult
-    final public func respond<Content>(generating type: Content.Type = Content.self, options: GenerationOptions = GenerationOptions(), includeSchemaInPrompt: Bool = true, isolation: isolated (any Actor)? = #isolation, @PromptBuilder prompt: () throws -> Prompt) async throws -> sending LanguageModelSession.Response<Content> where Content : Generable
+    nonisolated(nonsending) final public func respond<Content>(generating type: Content.Type = Content.self, options: GenerationOptions = GenerationOptions(), includeSchemaInPrompt: Bool = true, @PromptBuilder prompt: () throws -> Prompt) async throws -> LanguageModelSession.Response<Content> where Content : Generable
 
     /// Produces a response stream to a prompt and schema.
     ///
@@ -1455,7 +1518,7 @@ extension LanguageModelSession {
         case concurrentRequests(LanguageModelSession.GenerationError.Context)
 
         /// A string representation of the error description.
-        public var errorDescription: String { get }
+        public var errorDescription: String? { get }
 
         /// A string representation of the recovery suggestion.
         public var recoverySuggestion: String? { get }
@@ -1596,6 +1659,57 @@ extension LanguageModelSession {
     final public func streamResponse(options: GenerationOptions = GenerationOptions(), @PromptBuilder prompt: () throws -> Prompt) rethrows -> sending LanguageModelSession.ResponseStream<String>
 }
 
+extension LanguageModelSession {
+
+    /// Logs and serializes a feedback attachment that can be submitted to Apple.
+    ///
+    /// This method creates a structured feedback attachment containing the session's transcript
+    /// and any provided feedback information. The attachment can be saved to a file and submitted
+    /// to Apple using [Feedback Assistant](https://feedbackassistant.apple.com).
+    ///
+    /// If an error occurred during a previous response, any rejected entries that were rolled
+    /// back from the transcript are included in the feedback data.
+    ///
+    /// - Parameters:
+    ///   - sentiment: An optional sentiment rating about the model's output (positive, negative, or neutral).
+    ///   - issues: An array of specific issues identified with the model's response. Defaults to an empty array.
+    ///   - desiredOutput: An optional transcript entry showing what the desired output should have been.
+    /// - Returns: A `Data` object containing the JSON-encoded feedback attachment that can be submitted to Feedback Assistant.
+    ///
+    /// ## Usage Example
+    /// ```swift
+    /// let session = LanguageModelSession()
+    /// let response = try await session.respond(to: "What is the capital of France?")
+    /// 
+    /// // Create feedback for a helpful response
+    /// let feedbackData = session.logFeedbackAttachment(sentiment: .positive)
+    ///
+    /// // Or create feedback for a problematic response
+    /// let feedbackData = session.logFeedbackAttachment(
+    ///     sentiment: .negative,
+    ///     issues: [
+    ///         LanguageModelFeedbackAttachment.Issue(
+    ///             category: .incorrect,
+    ///             explanation: "The model provided outdated information"
+    ///         )
+    ///     ],
+    ///     desiredOutput: Transcript.Entry.response(...)
+    /// )
+    /// ```
+    @available(iOS 26.0, macOS 26.0, *)
+    @available(tvOS, unavailable)
+    @available(watchOS, unavailable)
+    @discardableResult
+    final public func logFeedbackAttachment(sentiment: LanguageModelFeedbackAttachment.Sentiment?, issues: [LanguageModelFeedbackAttachment.Issue] = [], desiredOutput: Transcript.Entry? = nil) -> Data
+
+    @available(iOS 26.0, macOS 26.0, *)
+    @available(*, deprecated, renamed: "logFeedbackAttachment(sentiment:issues:desiredOutput:)")
+    @available(tvOS, unavailable)
+    @available(watchOS, unavailable)
+    @discardableResult
+    final public func dumpFeedbackAttachment(sentiment: LanguageModelFeedbackAttachment.Sentiment?, issues: [LanguageModelFeedbackAttachment.Issue] = [], desiredOutput: Transcript.Entry? = nil) -> Data
+}
+
 @available(iOS 26.0, macOS 26.0, *)
 @available(tvOS, unavailable)
 @available(watchOS, unavailable)
@@ -1638,7 +1752,7 @@ extension LanguageModelSession.ResponseStream : AsyncSequence {
     ///
     /// If the streaming response was finished with an error before calling
     /// `collect()`, this method propagates that error.
-    public func collect(isolation actor: isolated (any Actor)? = #isolation) async throws -> sending LanguageModelSession.Response<Content>
+    nonisolated(nonsending) public func collect() async throws -> sending LanguageModelSession.Response<Content>
 }
 
 /// A structure that represents a prompt.
@@ -1902,6 +2016,10 @@ extension SystemLanguageModel.Adapter {
     ///   no compatible asset packs with this adapter name downloaded.
     public init(name: String) throws
 
+    /// Prepares an adapter before being used with a `LanguageModelSession`.
+    /// You should call this if your adapter has a draft model.
+    public func compile() async throws
+
     /// Get all compatible adapter identifiers compatible with current system models.
     ///
     /// - Parameters:
@@ -1962,7 +2080,7 @@ extension SystemLanguageModel.Adapter {
         case compatibleAdapterNotFound(SystemLanguageModel.Adapter.AssetError.Context)
 
         /// A string representation of the error description.
-        public var errorDescription: String { get }
+        public var errorDescription: String? { get }
 
         /// A localized message describing how one might recover from the failure.
         public var recoverySuggestion: String? { get }
@@ -2011,11 +2129,17 @@ extension SystemLanguageModel.Availability.UnavailableReason : Hashable {
 @available(iOS 26.0, macOS 26.0, *)
 @available(tvOS, unavailable)
 @available(watchOS, unavailable)
-public protocol Tool : Sendable {
+public protocol Tool<Arguments, Output> : Sendable {
+
+    /// The output that this tool produces for the language model to reason about in subsequent
+    /// interactions.
+    ///
+    /// Typically output is either a ``String`` or a ``Generable`` type.
+    associatedtype Output : PromptRepresentable
 
     /// The arguments that this tool should accept.
     ///
-    /// Typically arguments are either a ``Generable`` type or ``GeneratedContent.``
+    /// Typically arguments are either a ``Generable`` type or ``GeneratedContent``.
     associatedtype Arguments : ConvertibleFromGeneratedContent
 
     /// A unique name for the tool, such as "get_weather", "toggleDarkMode", or "search contacts".
@@ -2038,12 +2162,12 @@ public protocol Tool : Sendable {
 
     /// A language model will call this method when it wants to leverage this tool.
     ///
-    /// If errors are throw in the body of this method, they will be wrapped in a 
+    /// If errors are throw in the body of this method, they will be wrapped in a
     /// ``LanguageModelSession.ToolCallError`` and rethrown at the call site
     /// of ``LanguageModelSession.respond(to:)``.
     ///
     /// - Note: This method may be invoked concurrently with itself or with other tools.
-    func call(arguments: Self.Arguments) async throws -> ToolOutput
+    func call(arguments: Self.Arguments) async throws -> Self.Output
 }
 
 @available(iOS 26.0, macOS 26.0, *)
@@ -2077,13 +2201,25 @@ extension Tool where Self.Arguments : Generable {
 @available(iOS 26.0, macOS 26.0, *)
 @available(tvOS, unavailable)
 @available(watchOS, unavailable)
+@available(*, deprecated, message: "Use types that conform to 'PromptRepresentable' instead")
 public struct ToolOutput : Sendable {
 
     /// Creates a tool output with a string you specify.
+    @available(*, deprecated, message: "Use types that conform to 'PromptRepresentable' instead")
     public init(_ string: String)
 
     /// Creates a tool output with a generated encodable object.
+    @available(*, deprecated, message: "Use types that conform to 'PromptRepresentable' instead")
     public init(_ content: GeneratedContent)
+}
+
+@available(iOS 26.0, macOS 26.0, *)
+@available(tvOS, unavailable)
+@available(watchOS, unavailable)
+extension ToolOutput : PromptRepresentable {
+
+    /// An instance that represents a prompt.
+    public var promptRepresentation: Prompt { get }
 }
 
 /// A transcript that documents interactions with a language model.
@@ -2356,6 +2492,8 @@ public struct Transcript : Sendable, Equatable, RandomAccessCollection {
         public var description: String
 
         public init(name: String, description: String, parameters: GenerationSchema)
+
+        public init(tool: some Tool)
 
         /// Returns a Boolean value indicating whether two values are equal.
         ///
