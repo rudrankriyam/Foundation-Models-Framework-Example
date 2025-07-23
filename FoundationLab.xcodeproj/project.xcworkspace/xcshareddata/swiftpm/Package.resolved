@@ -7,13 +7,13 @@
       "location" : "https://github.com/rudrankriyam/FoundationModelsTools.git",
       "state" : {
         "branch" : "main",
-        "revision" : "2bec3c21a31775eb4e706fff2a782b845415ad0c"
+        "revision" : "3c5e7865767426e055cb89f21733ecdbac5fe7ce"
       }
     },
     {
       "identity" : "highlightswift",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/appstefan/HighlightSwift",
+      "location" : "https://github.com/appstefan/HighlightSwift.git",
       "state" : {
         "revision" : "784ca3ccfc8a2cf724fbb2f06cb6ec3329424da3",
         "version" : "1.1.0"

@@ -10,7 +10,7 @@ import Observation
 
 @Observable
 final class NavigationCoordinator {
-    static let shared = NavigationCoordinator()
+    @MainActor static let shared = NavigationCoordinator()
 
     var tabSelection: TabSelection = .examples
     var splitViewSelection: TabSelection? = .examples
