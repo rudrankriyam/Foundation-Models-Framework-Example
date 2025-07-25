@@ -4,6 +4,8 @@
 
 ![A computer window displaying a tool use interface with weather info for San Francisco: 16°C, clear skies, 70% humidity, 18.1 km/h wind speed, 1010.2 hPa pressure. Various tool options include web search, contacts, calendar, reminders, location, health, and music.](tool-use.png)
 
+Note:- For folks starring it, please do not judge the codebase. I have to do some refactoring that I vibe-coded to ship this, fast. Okay?
+
 A practical iOS app demonstrating Apple's Foundation Models framework with various examples of on-device AI capabilities.
 
 ## Exploring AI for iOS Development
