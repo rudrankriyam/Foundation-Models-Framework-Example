@@ -15,24 +15,24 @@ struct ReferencedSchemaView: View {
     It received 3 comments: Alice said "Great article!", Bob commented "Very informative", \
     and Carol wrote "Thanks for sharing". The post has tags: AI, Machine Learning, and Technology.
     """
-    
+
     @State private var projectInput = """
     The SwiftUI project is managed by Sarah Johnson and has 3 team members: \
     Mike Davis (iOS Developer), Emma Wilson (Designer), and Tom Brown (Backend Engineer). \
     Mike is working on the login feature, Emma is designing the dashboard, and Tom is building the API.
     """
-    
+
     @State private var libraryInput = """
     The library has 3 books: "1984" by George Orwell (borrowed by John on Jan 10), \
     "To Kill a Mockingbird" by Harper Lee (borrowed by Sarah on Jan 15), and \
     "The Great Gatsby" by F. Scott Fitzgerald (available). John also borrowed "Brave New World" on Jan 20.
     """
-    
+
     @State private var selectedExample = 0
     @State private var showReferences = true
-    
+
     private let examples = ["Blog System", "Project Team", "Library Catalog"]
-    
+
     var body: some View {
         ExampleViewBase(
             title: "Schema References",
@@ -53,19 +53,19 @@ struct ReferencedSchemaView: View {
                     }
                 }
                 .pickerStyle(.segmented)
-                
+
                 // Reference visualization
                 VStack(alignment: .leading, spacing: Spacing.small) {
                     HStack {
                         Text("Schema References")
                             .font(.headline)
-                        
+
                         Spacer()
-                        
+
                         Toggle("Show", isOn: $showReferences)
                             .font(.caption)
                     }
-                    
+
                     if showReferences {
                         Text(referenceVisualization)
                             .font(.system(.caption, design: .monospaced))
@@ -75,12 +75,12 @@ struct ReferencedSchemaView: View {
                             .cornerRadius(8)
                     }
                 }
-                
+
                 // Input text
                 VStack(alignment: .leading, spacing: Spacing.small) {
                     Text("Input Text")
                         .font(.headline)
-                    
+
                     TextEditor(text: bindingForSelectedExample)
                         .font(.body)
                         .frame(minHeight: 100)
@@ -88,7 +88,7 @@ struct ReferencedSchemaView: View {
                         .background(Color.gray.opacity(0.1))
                         .cornerRadius(8)
                 }
-                
+
                 HStack {
                     Button("Extract with References") {
                         Task {
@@ -97,19 +97,19 @@ struct ReferencedSchemaView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .disabled(executor.isRunning || currentInput.isEmpty)
-                    
+
                     if executor.isRunning {
                         ProgressView()
                             .scaleEffect(0.8)
                     }
                 }
-                
+
                 // Results section
                 if !executor.results.isEmpty {
                     VStack(alignment: .leading, spacing: Spacing.small) {
                         Text("Generated Data")
                             .font(.headline)
-                        
+
                         ScrollView {
                             Text(executor.results)
                                 .font(.system(.caption, design: .monospaced))
@@ -125,7 +125,7 @@ struct ReferencedSchemaView: View {
             .padding()
         }
     }
-    
+
     private var bindingForSelectedExample: Binding<String> {
         switch selectedExample {
         case 0: return $blogInput
@@ -133,7 +133,7 @@ struct ReferencedSchemaView: View {
         default: return $libraryInput
         }
     }
-    
+
     private var currentInput: String {
         switch selectedExample {
         case 0: return blogInput
@@ -141,7 +141,7 @@ struct ReferencedSchemaView: View {
         default: return libraryInput
         }
     }
-    
+
     private var referenceVisualization: String {
         switch selectedExample {
         case 0:
@@ -183,24 +183,24 @@ struct ReferencedSchemaView: View {
             """
         }
     }
-    
+
     private func runExample() async {
         await executor.execute {
             let (schema, referencedSchemas) = try createSchema(for: selectedExample)
             let session = LanguageModelSession()
-            
+
             let prompt = """
             Extract the structured information from this text:
             
             \(currentInput)
             """
-            
+
             let response = try await session.respond(
                 to: Prompt(prompt),
                 schema: schema,
                 options: .init(temperature: 0.1)
             )
-            
+
             return """
             📝 Input:
             \(currentInput)
@@ -219,7 +219,7 @@ struct ReferencedSchemaView: View {
             """
         }
     }
-    
+
     private func createSchema(for index: Int) throws -> (GenerationSchema, [String]) {
         switch index {
         case 0:
@@ -235,7 +235,7 @@ struct ReferencedSchemaView: View {
                     )
                 ]
             )
-            
+
             let commentSchema = DynamicGenerationSchema(
                 name: "Comment",
                 description: "A comment on a blog post",
@@ -252,7 +252,7 @@ struct ReferencedSchemaView: View {
                     )
                 ]
             )
-            
+
             let blogPostSchema = DynamicGenerationSchema(
                 name: "BlogPost",
                 description: "A blog post with author and comments",
@@ -285,14 +285,14 @@ struct ReferencedSchemaView: View {
                     )
                 ]
             )
-            
+
             let schema = try GenerationSchema(
                 root: blogPostSchema,
                 dependencies: [personSchema, commentSchema]
             )
-            
+
             return (schema, ["Person", "Comment"])
-            
+
         case 1:
             // Project team with role-specific person schemas
             let personSchema = DynamicGenerationSchema(
@@ -312,7 +312,7 @@ struct ReferencedSchemaView: View {
                     )
                 ]
             )
-            
+
             let taskSchema = DynamicGenerationSchema(
                 name: "Task",
                 description: "A project task",
@@ -330,7 +330,7 @@ struct ReferencedSchemaView: View {
                     )
                 ]
             )
-            
+
             let projectSchema = DynamicGenerationSchema(
                 name: "Project",
                 description: "Project with team and tasks",
@@ -358,14 +358,14 @@ struct ReferencedSchemaView: View {
                     )
                 ]
             )
-            
+
             let schema = try GenerationSchema(
                 root: projectSchema,
                 dependencies: [personSchema, taskSchema]
             )
-            
+
             return (schema, ["Person", "Task"])
-            
+
         default:
             // Library system with circular references
             let personSchema = DynamicGenerationSchema(
@@ -379,7 +379,7 @@ struct ReferencedSchemaView: View {
                     )
                 ]
             )
-            
+
             let bookSchema = DynamicGenerationSchema(
                 name: "Book",
                 description: "Library book",
@@ -408,7 +408,7 @@ struct ReferencedSchemaView: View {
                     )
                 ]
             )
-            
+
             let librarySchema = DynamicGenerationSchema(
                 name: "Library",
                 description: "Library catalog",
@@ -426,58 +426,82 @@ struct ReferencedSchemaView: View {
                     )
                 ]
             )
-            
+
             let schema = try GenerationSchema(
                 root: librarySchema,
                 dependencies: [personSchema, bookSchema]
             )
-            
+
             return (schema, ["Person", "Book"])
         }
     }
-    
+
     private func formatReferencedContent(_ content: GeneratedContent) -> String {
         var result = ""
         var processedRefs = Set<String>()
-        
+
         func formatValue(_ value: GeneratedContent, indent: Int = 0) -> String {
             let indentStr = String(repeating: "  ", count: indent)
             var output = ""
-            
-            if let properties = try? value.properties() {
-                for (key, val) in properties {
-                    output += "\n\(indentStr)\(key): "
-                    
-                    if let _ = try? val.properties() {
-                        // This is a referenced object
-                        if !processedRefs.contains(key) {
-                            processedRefs.insert(key)
-                            output += "(ref)"
+
+            switch value.kind {
+            case .structure(let properties, let orderedKeys):
+                for key in orderedKeys {
+                    if let val = properties[key] {
+                        output += "\n\(indentStr)\(key): "
+
+                        switch val.kind {
+                        case .structure(_, _):
+                            // This is a referenced object
+                            if !processedRefs.contains(key) {
+                                processedRefs.insert(key)
+                                output += "(ref)"
+                            }
+                            output += formatValue(val, indent: indent + 1)
+                        case .array(let elements):
+                            output += "["
+                            for element in elements {
+                                output += formatValue(element, indent: indent + 1)
+                            }
+                            output += "\n\(indentStr)]"
+                        case .string(let str):
+                            output += "\"\(str)\""
+                        case .number(let num):
+                            output += String(num)
+                        case .bool(let bool):
+                            output += String(bool)
+                        case .null:
+                            output += "null"
+                        @unknown default:
+                            output += "unknown"
                         }
-                        output += formatValue(val, indent: indent + 1)
-                    } else if let elements = try? val.elements() {
-                        output += "["
-                        for element in elements {
-                            output += formatValue(element, indent: indent + 1)
-                        }
-                        output += "\n\(indentStr)]"
-                    } else if let str = try? val.value(String.self) {
-                        output += "\"\(str)\""
-                    } else if let num = try? val.value(Int.self) {
-                        output += String(num)
                     }
                 }
-            } else if let str = try? value.value(String.self) {
+            case .string(let str):
                 output += "\"\(str)\""
+            case .number(let num):
+                output += String(num)
+            case .bool(let bool):
+                output += String(bool)
+            case .array(let elements):
+                output += "["
+                for element in elements {
+                    output += formatValue(element, indent: indent + 1)
+                }
+                output += "\n\(indentStr)]"
+            case .null:
+                output += "null"
+            @unknown default:
+                output += "unknown"
             }
-            
+
             return output
         }
-        
+
         result = formatValue(content)
         return result.isEmpty ? "No data" : result
     }
-    
+
     private var exampleCode: String {
         """
         // Creating schemas with references

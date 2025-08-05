@@ -518,33 +518,58 @@ struct NestedDynamicSchemaView: View {
         let indentString = String(repeating: "  ", count: indent)
         var result = ""
         
-        if let properties = try? content.properties() {
-            for (key, value) in properties {
-                result += "\n\(indentString)\(key): "
-                
-                if let _ = try? value.properties() {
-                    // Nested object
-                    result += formatNestedContent(value, indent: indent + 1)
-                } else if let elements = try? value.elements() {
-                    // Array
-                    result += "["
-                    for (i, element) in elements.enumerated() {
-                        result += formatNestedContent(element, indent: indent + 1)
-                        if i < elements.count - 1 {
-                            result += ","
+        switch content.kind {
+        case .structure(let properties, let orderedKeys):
+            for key in orderedKeys {
+                if let value = properties[key] {
+                    result += "\n\(indentString)\(key): "
+                    
+                    switch value.kind {
+                    case .structure(_, _):
+                        // Nested object
+                        result += formatNestedContent(value, indent: indent + 1)
+                    case .array(let elements):
+                        // Array
+                        result += "["
+                        for (i, element) in elements.enumerated() {
+                            result += formatNestedContent(element, indent: indent + 1)
+                            if i < elements.count - 1 {
+                                result += ","
+                            }
                         }
+                        result += "\n\(indentString)]"
+                    case .string(let stringValue):
+                        result += "\"\(stringValue)\""
+                    case .number(let numberValue):
+                        result += String(numberValue)
+                    case .bool(let boolValue):
+                        result += String(boolValue)
+                    case .null:
+                        result += "null"
+                    @unknown default:
+                        result += "unknown"
                     }
-                    result += "\n\(indentString)]"
-                } else if let stringValue = try? value.value(String.self) {
-                    result += "\"\(stringValue)\""
-                } else if let intValue = try? value.value(Int.self) {
-                    result += String(intValue)
-                } else if let floatValue = try? value.value(Float.self) {
-                    result += String(format: "%.2f", floatValue)
                 }
             }
-        } else if let stringValue = try? content.value(String.self) {
+        case .array(let elements):
+            result += "["
+            for (i, element) in elements.enumerated() {
+                result += formatNestedContent(element, indent: indent + 1)
+                if i < elements.count - 1 {
+                    result += ","
+                }
+            }
+            result += "\n\(indentString)]"
+        case .string(let stringValue):
             result += "\"\(stringValue)\""
+        case .number(let numberValue):
+            result += String(numberValue)
+        case .bool(let boolValue):
+            result += String(boolValue)
+        case .null:
+            result += "null"
+        @unknown default:
+            result += "unknown"
         }
         
         return result
@@ -553,16 +578,30 @@ struct NestedDynamicSchemaView: View {
     private func countNestingLevels(_ content: GeneratedContent, currentLevel: Int = 0) -> Int {
         var maxLevel = currentLevel
         
-        if let properties = try? content.properties() {
+        switch content.kind {
+        case .structure(let properties, _):
             for (_, value) in properties {
-                if let _ = try? value.properties() {
+                switch value.kind {
+                case .structure(_, _):
                     maxLevel = max(maxLevel, countNestingLevels(value, currentLevel: currentLevel + 1))
-                } else if let elements = try? value.elements() {
+                case .array(let elements):
                     for element in elements {
                         maxLevel = max(maxLevel, countNestingLevels(element, currentLevel: currentLevel + 1))
                     }
+                case .string(_), .number(_), .bool(_), .null:
+                    break
+                @unknown default:
+                    break
                 }
             }
+        case .array(let elements):
+            for element in elements {
+                maxLevel = max(maxLevel, countNestingLevels(element, currentLevel: currentLevel + 1))
+            }
+        case .string(_), .number(_), .bool(_), .null:
+            break
+        @unknown default:
+            break
         }
         
         return maxLevel

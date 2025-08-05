@@ -142,8 +142,8 @@ class ContentViewModel {
       
       // Process streaming updates
       for try await partialResponse in stream {
-        finalContent = partialResponse
-        setRequestResponse(RequestResponsePair(request: requestText, response: partialResponse))
+          finalContent = partialResponse.content
+          setRequestResponse(RequestResponsePair(request: requestText, response: partialResponse.content))
       }
 
       // Use the last received content as final response
@@ -365,8 +365,11 @@ class ContentViewModel {
       return "Unsupported language/locale: \(context.debugDescription)"
     case .rateLimited(let context):
       return "Rate limited: \(context.debugDescription)"
-    case .concurrentRequests(_):
-        return "Concurrent requests limit exceeded"
+    case .concurrentRequests(let context):
+        return "Concurrent requests limit exceeded: \(context.debugDescription)"
+        // Refusal is async throws
+    case .refusal(_, let context):
+        return "Model refused to respond: \(context.debugDescription)"
     @unknown default:
       return "Unknown generation error"
     }

@@ -154,10 +154,52 @@ struct EnumDynamicSchemaView: View {
                 options: .init(temperature: 0.1)
             )
             
-            let properties = try response.content.properties()
-            let classification = try properties[fieldName]?.value(String.self) ?? "unknown"
-            let confidence = try properties["confidence"]?.value(Float.self)
-            let reasoning = try properties["reasoning"]?.value(String.self)
+            let classification: String
+            let confidence: Float?
+            let reasoning: String?
+            
+            switch response.content.kind {
+            case .structure(let properties, _):
+                classification = {
+                    if let value = properties[fieldName] {
+                        switch value.kind {
+                        case .string(let str):
+                            return str
+                        default:
+                            return "unknown"
+                        }
+                    }
+                    return "unknown"
+                }()
+                
+                confidence = {
+                    if let value = properties["confidence"] {
+                        switch value.kind {
+                        case .number(let num):
+                            return Float(num)
+                        default:
+                            return nil
+                        }
+                    }
+                    return nil
+                }()
+                
+                reasoning = {
+                    if let value = properties["reasoning"] {
+                        switch value.kind {
+                        case .string(let str):
+                            return str
+                        default:
+                            return nil
+                        }
+                    }
+                    return nil
+                }()
+            default:
+                classification = "unknown"
+                confidence = nil
+                reasoning = nil
+            }
             
             return """
             📝 Input:

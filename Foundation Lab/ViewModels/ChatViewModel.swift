@@ -27,7 +27,7 @@ final class ChatViewModel {
     
     // MARK: - Feedback State
     
-    private(set) var feedbackState: [Transcript.Entry.ID: LanguageModelFeedbackAttachment.Sentiment] = [:]
+    private(set) var feedbackState: [Transcript.Entry.ID: LanguageModelFeedback.Sentiment] = [:]
 
     // MARK: - Initialization
 
@@ -67,48 +67,25 @@ final class ChatViewModel {
     }
 
     @MainActor
-    func submitFeedback(for entryID: Transcript.Entry.ID, sentiment: LanguageModelFeedbackAttachment.Sentiment) {
-        guard let entryIndex = session.transcript.firstIndex(where: { $0.id == entryID }) else {
-            // Log error in debug mode only
-            #if DEBUG
-            print("Error: Could not find transcript entry for feedback.")
-            #endif
-            return
-        }
-
+    func submitFeedback(for entryID: Transcript.Entry.ID, sentiment: LanguageModelFeedback.Sentiment) {
         // Store the feedback state
         feedbackState[entryID] = sentiment
 
-        let outputEntry = session.transcript[entryIndex]
-        let inputEntries = session.transcript[..<entryIndex]
-
-        let feedback = LanguageModelFeedbackAttachment(
-            input: Array(inputEntries),
-            output: [outputEntry],
-            sentiment: sentiment
-        )
-
-        // In a real app, you would serialize this and attach it to a Feedback Assistant report.
-        // For this example, we'll print the JSON representation to the console.
-        do {
-            let encoder = JSONEncoder()
-            encoder.outputFormatting = .prettyPrinted
-            let data = try encoder.encode(feedback)
-            let jsonString = String(data: data, encoding: .utf8) ?? ""
-            #if DEBUG
-            print("\n--- Feedback Submitted ---")
+        // Use the new session method to log feedback attachment
+        let feedbackData = session.logFeedbackAttachment(sentiment: sentiment)
+        
+        #if DEBUG
+        print("\n--- Feedback Submitted ---")
+        print("Feedback data size: \(feedbackData.count) bytes")
+        if let jsonString = String(data: feedbackData, encoding: .utf8) {
             print(jsonString)
-            print("------------------------\n")
-            #endif
-        } catch {
-            #if DEBUG
-            print("Error encoding feedback: \(error)")
-            #endif
         }
+        print("------------------------\n")
+        #endif
     }
     
     @MainActor
-    func getFeedback(for entryID: Transcript.Entry.ID) -> LanguageModelFeedbackAttachment.Sentiment? {
+    func getFeedback(for entryID: Transcript.Entry.ID) -> LanguageModelFeedback.Sentiment? {
         return feedbackState[entryID]
     }
 

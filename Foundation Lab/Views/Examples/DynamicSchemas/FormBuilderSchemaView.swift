@@ -382,12 +382,69 @@ struct FormBuilderSchemaView: View {
     }
     
     private func formatGeneratedContent(_ content: GeneratedContent) -> String {
+        var result: [String: Any] = [:]
+        
+        switch content.kind {
+        case .structure(let properties, let orderedKeys):
+            for key in orderedKeys {
+                if let value = properties[key] {
+                    result[key] = convertToJSONValue(value)
+                }
+            }
+        case .array(let elements):
+            let arrayValues = elements.map { convertToJSONValue($0) }
+            return formatJSONArray(arrayValues)
+        case .string(let str):
+            return "\"\(str)\""
+        case .number(let num):
+            return String(num)
+        case .bool(let bool):
+            return String(bool)
+        case .null:
+            return "null"
+        @unknown default:
+            return "unknown"
+        }
+        
         do {
-            let properties = try content.properties()
-            let data = try JSONSerialization.data(withJSONObject: properties, options: [.prettyPrinted, .sortedKeys])
+            let data = try JSONSerialization.data(withJSONObject: result, options: [.prettyPrinted, .sortedKeys])
             return String(data: data, encoding: .utf8) ?? "Unable to format"
         } catch let error {
             return "Error formatting content: \(error.localizedDescription)"
+        }
+    }
+    
+    private func convertToJSONValue(_ content: GeneratedContent) -> Any {
+        switch content.kind {
+        case .structure(let properties, let orderedKeys):
+            var result: [String: Any] = [:]
+            for key in orderedKeys {
+                if let value = properties[key] {
+                    result[key] = convertToJSONValue(value)
+                }
+            }
+            return result
+        case .array(let elements):
+            return elements.map { convertToJSONValue($0) }
+        case .string(let str):
+            return str
+        case .number(let num):
+            return num
+        case .bool(let bool):
+            return bool
+        case .null:
+            return NSNull()
+        @unknown default:
+            return "unknown"
+        }
+    }
+    
+    private func formatJSONArray(_ array: [Any]) -> String {
+        do {
+            let data = try JSONSerialization.data(withJSONObject: array, options: [.prettyPrinted])
+            return String(data: data, encoding: .utf8) ?? "Unable to format array"
+        } catch {
+            return "Error formatting array: \(error.localizedDescription)"
         }
     }
     
