@@ -365,8 +365,10 @@ class ContentViewModel {
       return "Unsupported language/locale: \(context.debugDescription)"
     case .rateLimited(let context):
       return "Rate limited: \(context.debugDescription)"
-    case .concurrentRequests(_):
-        return "Concurrent requests limit exceeded"
+    case .concurrentRequests(let context):
+        return "Concurrent requests limit exceeded: \(context.debugDescription)"
+    case .refusal(let refusal, let context):
+        return "Model refused to respond: \(context.debugDescription)"
     @unknown default:
       return "Unknown generation error"
     }
