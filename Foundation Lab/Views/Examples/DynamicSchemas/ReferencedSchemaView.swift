@@ -444,31 +444,55 @@ struct ReferencedSchemaView: View {
             let indentStr = String(repeating: "  ", count: indent)
             var output = ""
             
-            if let properties = try? value.properties() {
-                for (key, val) in properties {
-                    output += "\n\(indentStr)\(key): "
-                    
-                    if let _ = try? val.properties() {
-                        // This is a referenced object
-                        if !processedRefs.contains(key) {
-                            processedRefs.insert(key)
-                            output += "(ref)"
+            switch value.kind {
+            case .structure(let properties, let orderedKeys):
+                for key in orderedKeys {
+                    if let val = properties[key] {
+                        output += "\n\(indentStr)\(key): "
+                        
+                        switch val.kind {
+                        case .structure(_, _):
+                            // This is a referenced object
+                            if !processedRefs.contains(key) {
+                                processedRefs.insert(key)
+                                output += "(ref)"
+                            }
+                            output += formatValue(val, indent: indent + 1)
+                        case .array(let elements):
+                            output += "["
+                            for element in elements {
+                                output += formatValue(element, indent: indent + 1)
+                            }
+                            output += "\n\(indentStr)]"
+                        case .string(let str):
+                            output += "\"\(str)\""
+                        case .number(let num):
+                            output += String(num)
+                        case .bool(let bool):
+                            output += String(bool)
+                        case .null:
+                            output += "null"
+                        @unknown default:
+                            output += "unknown"
                         }
-                        output += formatValue(val, indent: indent + 1)
-                    } else if let elements = try? val.elements() {
-                        output += "["
-                        for element in elements {
-                            output += formatValue(element, indent: indent + 1)
-                        }
-                        output += "\n\(indentStr)]"
-                    } else if let str = try? val.value(String.self) {
-                        output += "\"\(str)\""
-                    } else if let num = try? val.value(Int.self) {
-                        output += String(num)
                     }
                 }
-            } else if let str = try? value.value(String.self) {
+            case .string(let str):
                 output += "\"\(str)\""
+            case .number(let num):
+                output += String(num)
+            case .bool(let bool):
+                output += String(bool)
+            case .array(let elements):
+                output += "["
+                for element in elements {
+                    output += formatValue(element, indent: indent + 1)
+                }
+                output += "\n\(indentStr)]"
+            case .null:
+                output += "null"
+            @unknown default:
+                output += "unknown"
             }
             
             return output

@@ -185,7 +185,14 @@ struct OptionalFieldsSchemaView: View {
                 options: .init(temperature: 0.1)
             )
 
-            let properties = try response.content.properties()
+            let properties: [String: GeneratedContent]
+            switch response.content.kind {
+            case .structure(let props, _):
+                properties = props
+            default:
+                properties = [:]
+            }
+            
             var extractedFields: [(String, String, Bool)] = []
 
             // Check which fields were extracted
@@ -355,19 +362,30 @@ struct OptionalFieldsSchemaView: View {
     }
 
     private func formatFieldValue(_ content: GeneratedContent) -> String {
-        if let str = try? content.value(String.self) {
+        switch content.kind {
+        case .string(let str):
             return "\"\(str)\""
-        } else if let num = try? content.value(Int.self) {
+        case .number(let num):
             return String(num)
-        } else if let float = try? content.value(Float.self) {
-            return String(format: "%.2f", float)
-        } else if let bool = try? content.value(Bool.self) {
+        case .bool(let bool):
             return bool ? "true" : "false"
-        } else if let array = try? content.elements() {
-            let items = array.compactMap { try? $0.value(String.self) }
+        case .array(let elements):
+            let items = elements.compactMap { element in
+                switch element.kind {
+                case .string(let str):
+                    return str
+                default:
+                    return nil
+                }
+            }
             return "[\(items.joined(separator: ", "))]"
+        case .null:
+            return "null"
+        case .structure(_, _):
+            return "<object>"
+        @unknown default:
+            return "<unknown>"
         }
-        return "<unknown>"
     }
 
     private func formatExtractedFields(_ fields: [(String, String, Bool)]) -> String {
