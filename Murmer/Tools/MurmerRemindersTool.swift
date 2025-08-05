@@ -5,7 +5,7 @@
 //  Created by Rudrank Riyam on 6/26/25.
 //
 
-import EventKit
+@preconcurrency import EventKit
 import Foundation
 import FoundationModels
 
@@ -29,7 +29,7 @@ struct MurmerRemindersTool: Tool {
 
   private let eventStore = EKEventStore()
 
-  func call(arguments: Arguments) async throws -> ToolOutput {
+  func call(arguments: Arguments) async throws -> some PromptRepresentable {
     print("[MurmerRemindersTool] ===== TOOL CALL START =====")
     print("[MurmerRemindersTool] Arguments received:")
     print("[MurmerRemindersTool]   - text: '\(arguments.text)'")
@@ -147,7 +147,7 @@ struct MurmerRemindersTool: Tool {
     print("[MurmerRemindersTool]   - listName: \(output.listName)")
     print("[MurmerRemindersTool] ===== TOOL CALL END =====")
 
-    return ToolOutput(output.generatedContent)
+      return await output.generatedContent
   }
 
   private func requestAccess() async -> Bool {
