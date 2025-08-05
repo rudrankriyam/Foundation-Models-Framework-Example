@@ -109,24 +109,23 @@ public struct DynamicGenerationSchema : Sendable {
     }
 }
 
-/// Conforming types represent data types a system language model generates.
+/// A type that the model uses when responding to prompts.
 ///
-/// Annotate your model types with the `@Generable` macro to allow the model to respond
-/// to prompts by generating an instance of your type. Use the `@Guide` macro to provide
-/// natural language descriptions of your properties, and programmatically control
-/// the values that the model can generate.
+/// Annotate your Swift structure or enumeration with the `@Generable` macro to allow the model to
+/// respond to prompts by generating an instance of your type. Use the `@Guide` macro to provide natural
+/// language descriptions of your properties, and programmatically control the values that the model can
+/// generate.
 ///
 /// ```swift
 /// @Generable
 /// struct SearchSuggestions {
-///
 ///     @Guide(description: "A list of suggested search terms", .count(4))
 ///     var searchTerms: [SearchTerm]
 ///
 ///     @Generable
 ///     struct SearchTerm {
-///         @Guide(description: "A unique id", .pattern(/search-term-\d/))
-///         var id: String
+///         // Use a generation identifier for data structures the framework generates.
+///         var id: GenerationID
 ///
 ///         @Guide(description: "A 2 or 3 word search term, like 'Beautiful sunsets'")
 ///         var searchTerm: String
@@ -191,29 +190,40 @@ extension Generable {
 @available(watchOS, unavailable)
 @attached(extension, conformances: Generable, names: named(init(_:)), named(generatedContent)) @attached(member, names: arbitrary) public macro Generable(description: String? = nil) = #externalMacro(module: "FoundationModelsMacros", type: "GenerableMacro")
 
-/// A type that represents generated content.
+/// A type that represents structured, generated content.
+///
+/// Generated content may contain a single value, an array, or key-value pairs with unique keys.
 @available(iOS 26.0, macOS 26.0, *)
 @available(tvOS, unavailable)
 @available(watchOS, unavailable)
-public struct GeneratedContent : Sendable, Equatable, Generable, CustomDebugStringConvertible, ConvertibleToGeneratedContent {
+public struct GeneratedContent : Sendable, Equatable, Generable, CustomDebugStringConvertible {
 
     /// An instance of the generation schema.
     public static var generationSchema: GenerationSchema { get }
 
-    /// A unique id that is stable for duration of a generated response.
+    /// A unique id that is stable for the duration of a generated response.
+    ///
+    /// A ``LanguageModelSession`` produces instances of `GeneratedContent` that have a
+    /// non-nil `id`. When you stream a response, the `id` is the same for all partial generations in the
+    /// response stream.
+    ///
+    /// Instances of `GeneratedContent` that you produce manually with initializers have a nil `id`
+    /// because the framework didn't create them as part of a generation.
     public var id: GenerationID?
 
-    /// Creates an object with the content you specify.
+    /// Creates generated content from another value.
+    ///
+    /// This is used to satisfy `Generable.init(_:)`.
     public init(_ content: GeneratedContent) throws
 
     /// A representation of this instance.
     public var generatedContent: GeneratedContent { get }
 
-    /// Creates an object with the properties you specify.
+    /// Creates generated content representing a structure with the properties you specify.
     ///
     /// The order of properties is important. For ``Generable`` types, the order
     /// must match the order properties in the types `schema`.
-    public init(properties: KeyValuePairs<String, any ConvertibleToGeneratedContent>)
+    public init(properties: KeyValuePairs<String, any ConvertibleToGeneratedContent>, id: GenerationID? = nil)
 
     /// Creates new generated content from the key-value pairs in the given sequence,
     /// using a combining closure to determine the value for any duplicate keys.
@@ -232,26 +242,37 @@ public struct GeneratedContent : Sendable, Equatable, Generable, CustomDebugStri
     /// The following example shows how to choose the first and last values for
     /// any duplicate keys:
     ///
+    /// ```swift
     ///     let content = GeneratedContent(
     ///       properties: [("name", "John"), ("name", "Jane"), ("married": true)],
     ///       uniquingKeysWith: { (first, _ in first }
     ///     )
     ///     // GeneratedContent(["name": "John", "married": true])
+    /// ```
     ///
     /// - Parameters:
-    ///   - keysAndValues: A sequence of key-value pairs to use for the new content.
-    ///   - combine: A closure that is called with the values for any duplicate
+    ///   - properties: A sequence of key-value pairs to use for the new content.
+    ///   - id: A unique id associated with GeneratedContent.
+    ///   - uniquingKeysWith: A closure that is called with the values for any duplicate
     ///     keys that are encountered. The closure returns the desired value for
     ///     the final content.
-    public init<S>(properties: S, uniquingKeysWith combine: (any ConvertibleToGeneratedContent, any ConvertibleToGeneratedContent) throws -> any ConvertibleToGeneratedContent) rethrows where S : Sequence, S.Element == (String, any ConvertibleToGeneratedContent)
+    public init<S>(properties: S, id: GenerationID? = nil, uniquingKeysWith combine: (GeneratedContent, GeneratedContent) throws -> some ConvertibleToGeneratedContent) rethrows where S : Sequence, S.Element == (String, any ConvertibleToGeneratedContent)
 
-    /// Creates an object with an array of elements you specify.
-    ///
-    public init<C>(elements: C) where C : Collection, C.Element == any ConvertibleToGeneratedContent
+    /// Creates content representing an array of elements you specify.
+    public init<S>(elements: S, id: GenerationID? = nil) where S : Sequence, S.Element == any ConvertibleToGeneratedContent
 
-    /// Creates an object that contains a single value.
+    /// Creates content that contains a single value.
     ///
-    public init(_ content: some ConvertibleToGeneratedContent)
+    /// - Parameters:
+    ///   - value: The underlying value.
+    public init(_ value: some ConvertibleToGeneratedContent)
+
+    /// Creates content that contains a single value with a custom generation ID.
+    ///
+    /// - Parameters:
+    ///   - value: The underlying value.
+    ///   - id: The generation ID for this content.
+    public init(_ value: some ConvertibleToGeneratedContent, id: GenerationID)
 
     /// Creates equivalent content from a JSON string.
     ///
@@ -269,14 +290,23 @@ public struct GeneratedContent : Sendable, Equatable, Generable, CustomDebugStri
     /// ```
     public init(json: String) throws
 
+    /// Returns a JSON string representation of the generated content.
+    ///
+    /// ## Examples
+    ///
+    /// ```swift
+    /// // Object with properties
+    /// let content = GeneratedContent(properties: [
+    ///     "name": "Johnny Appleseed",
+    ///     "age": 30,
+    /// ])
+    /// print(content.jsonString)
+    /// // Output: {"name": "Johnny Appleseed", "age": 30}
+    /// ```
+    public var jsonString: String { get }
+
     /// Reads a top level, concrete partially generable type.
     public func value<Value>(_ type: Value.Type = Value.self) throws -> Value where Value : ConvertibleFromGeneratedContent
-
-    /// Reads a top level array of content.
-    public func elements() throws -> [GeneratedContent]
-
-    /// Reads the properties of a top level object
-    public func properties() throws -> [String : GeneratedContent]
 
     /// Reads a concrete generable type from named property.
     public func value<Value>(_ type: Value.Type = Value.self, forProperty property: String) throws -> Value where Value : ConvertibleFromGeneratedContent
@@ -286,6 +316,9 @@ public struct GeneratedContent : Sendable, Equatable, Generable, CustomDebugStri
 
     /// A string representation for the debug description.
     public var debugDescription: String { get }
+
+    /// A Boolean that indicates whether the generated content is completed.
+    public var isComplete: Bool { get }
 
     /// Returns a Boolean value indicating whether two values are equal.
     ///
@@ -298,11 +331,74 @@ public struct GeneratedContent : Sendable, Equatable, Generable, CustomDebugStri
     public static func == (a: GeneratedContent, b: GeneratedContent) -> Bool
 }
 
+@available(iOS 26.0, macOS 26.0, *)
+@available(tvOS, unavailable)
+@available(watchOS, unavailable)
+extension GeneratedContent {
+
+    /// A representation of the different types of content that can be stored in `GeneratedContent`.
+    ///
+    /// `Kind` represents the various types of JSON-compatible data that can be held within 
+    /// a `GeneratedContent` instance, including primitive types, arrays, and structured objects.
+    public enum Kind : Equatable, Sendable {
+
+        /// Represents a null value.
+        case null
+
+        /// Represents a boolean value.
+        /// - Parameter value: The boolean value.
+        case bool(Bool)
+
+        /// Represents a numeric value.
+        /// - Parameter value: The numeric value as a Double.
+        case number(Double)
+
+        /// Represents a string value.
+        /// - Parameter value: The string value.
+        case string(String)
+
+        /// Represents an array of `GeneratedContent` elements.
+        /// - Parameter elements: An array of `GeneratedContent` instances.
+        case array([GeneratedContent])
+
+        /// Represents a structured object with key-value pairs.
+        /// - Parameters:
+        ///   - properties: A dictionary mapping string keys to `GeneratedContent` values.
+        ///   - orderedKeys: An array of keys that specifies the order of properties.
+        case structure(properties: [String : GeneratedContent], orderedKeys: [String])
+
+        /// Returns a Boolean value indicating whether two values are equal.
+        ///
+        /// Equality is the inverse of inequality. For any values `a` and `b`,
+        /// `a == b` implies that `a != b` is `false`.
+        ///
+        /// - Parameters:
+        ///   - lhs: A value to compare.
+        ///   - rhs: Another value to compare.
+        public static func == (a: GeneratedContent.Kind, b: GeneratedContent.Kind) -> Bool
+    }
+
+    /// Creates a new `GeneratedContent` instance with the specified kind and generation ID.
+    ///
+    /// This initializer provides a convenient way to create content from its kind representation.
+    ///
+    /// - Parameters:
+    ///   - kind: The kind of content to create.
+    ///   - id: An optional generation ID to associate with this content.
+    public init(kind: GeneratedContent.Kind, id: GenerationID? = nil)
+
+    /// The kind representation of this generated content.
+    ///
+    /// This property provides access to the content in a strongly-typed enum representation,
+    /// preserving the hierarchical structure of the data and the generation IDs.
+    public var kind: GeneratedContent.Kind { get }
+}
+
 /// Guides that control how values are generated.
 @available(iOS 26.0, macOS 26.0, *)
 @available(tvOS, unavailable)
 @available(watchOS, unavailable)
-public struct GenerationGuide<Value> : Sendable {
+public struct GenerationGuide<Value> {
 }
 
 @available(iOS 26.0, macOS 26.0, *)
@@ -327,15 +423,56 @@ extension GenerationGuide where Value == Int {
 
     /// Enforces a minimum value.
     ///
-    /// The bounds are inclusive.
+    /// Use a `minimum` generation guide --- whose bounds are inclusive --- to ensure the model produces
+    /// a value greater than or equal to some minimum value. For example, you can specify that all characters
+    /// in your game start at level 1:
+    ///
+    /// ```swift
+    /// @Generable
+    /// struct struct GameCharacter {
+    ///     @Guide(description: "A creative name appropriate for a fantasy RPG character")
+    ///     var name: String
+    ///
+    ///     @Guide(description: "A level for the character", .minimum(1))
+    ///     var level: Int
+    /// }
+    /// ```
     public static func minimum(_ value: Int) -> GenerationGuide<Int>
 
     /// Enforces a maximum value.
     ///
-    /// The bounds are inclusive.
+    /// Use a `maximum` generation guide --- whose bounds are inclusive --- to ensure the model produces
+    /// a value less than or equal to some maximum value. For example, you can specify that the highest level
+    /// a character in your game can achieve is 100:
+    ///
+    /// ```swift
+    /// @Generable
+    /// struct struct GameCharacter {
+    ///     @Guide(description: "A creative name appropriate for a fantasy RPG character")
+    ///     var name: String
+    ///
+    ///     @Guide(description: "A level for the character", .maximum(100))
+    ///     var level: Int
+    /// }
+    /// ```
     public static func maximum(_ value: Int) -> GenerationGuide<Int>
 
     /// Enforces values fall within a range.
+    ///
+    /// Use a `range` generation guide --- whose bounds are inclusive --- to ensure the model produces a
+    /// value that falls within a range. For example, you can specify that the level of characters in your game
+    /// are between 1 and 100:
+    ///
+    /// ```swift
+    /// @Generable
+    /// struct struct GameCharacter {
+    ///     @Guide(description: "A creative name appropriate for a fantasy RPG character")
+    ///     var name: String
+    ///
+    ///     @Guide(description: "A level for the character", .range(1...100))
+    ///     var level: Int
+    /// }
+    /// ```
     public static func range(_ range: ClosedRange<Int>) -> GenerationGuide<Int>
 }
 
@@ -449,42 +586,47 @@ extension GenerationGuide where Value == [Never] {
     public static func count(_ count: Int) -> GenerationGuide<Value>
 }
 
-/// A unique identifier that is stable for the duration of a response,
-/// but not across responses.
+/// A unique identifier that is stable for the duration of a response, but not across responses.
 ///
-///     @Generable struct Person: Equatable {
-///         var id: GenerationID
-///         var name: String
-///     }
+/// The framework guarentees a `GenerationID` to be both present and stable when you
+/// receive it from a `LanguageModelSession`. When you create an instance of
+/// `GenerationID` there is no guarantee an identifier is present or stable.
 ///
-///     struct PeopleView: View {
-///         @State private var session = LanguageModelSession()
-///         @State private var people = [Person.PartiallyGenerated]()
+/// ```swift
+/// @Generable struct Person: Equatable {
+///     var id: GenerationID
+///     var name: String
+/// }
 ///
-///         var body: some View {
-///             // A person's name changes as the response is generated,
-///             // and two people can have the same name, so it is not suitable
-///             // for use as an id.
-///             //
-///             // `GenerationID` receives special treatment and is guaranteed
-///             // to be both present and stable.
-///             List {
-///                 ForEach(people) { person in
-///                     Text("Name: \(person.name)")
-///                 }
+/// struct PeopleView: View {
+///     @State private var session = LanguageModelSession()
+///     @State private var people = [Person.PartiallyGenerated]()
+///
+///     var body: some View {
+///         // A person's name changes as the response is generated,
+///         // and two people can have the same name, so it is not suitable
+///         // for use as an id.
+///         //
+///         // `GenerationID` receives special treatment and is guaranteed
+///         // to be both present and stable.
+///         List {
+///             ForEach(people) { person in
+///                 Text("Name: \(person.name)")
 ///             }
-///             .task {
-///                 for try! await people in stream.streamResponse(
-///                     to: "Who were the first 3 presidents of the US?",
-///                     generating: [Person].self
-///                 ) {
-///                     withAnimation {
-///                         self.people = people
-///                     }
+///         }
+///         .task {
+///             for try! await people in stream.streamResponse(
+///                 to: "Who were the first 3 presidents of the US?",
+///                 generating: [Person].self
+///             ) {
+///                 withAnimation {
+///                     self.people = people
 ///                 }
 ///             }
 ///         }
 ///     }
+/// }
+/// ```
 @available(iOS 26.0, macOS 26.0, *)
 @available(tvOS, unavailable)
 @available(watchOS, unavailable)
@@ -630,13 +772,12 @@ public struct GenerationOptions : Sendable, Equatable {
 
     /// Temperature influences the confidence of the models response.
     ///
-    /// The value of this property must be a number between `0` and `2` inclusive.
+    /// The value of this property must be a number between `0` and `1` inclusive.
     ///
-    /// Temperature is an adjustment applied  to the probability distribution
+    /// Temperature is an adjustment applied to the probability distribution
     /// prior to sampling. A value of `1` results in no adjustment. Values less
     /// than `1` will make the probability distribution sharper, with already
-    /// likely tokens becoming even more likely. Values greather than `1` will
-    /// flatten the distribution, making less probable tokens more likely.
+    /// likely tokens becoming even more likely.
     ///
     /// The net effect is that low temperatures manifest as more stable and
     /// predictable responses, while high temperatures give the model more
@@ -662,7 +803,7 @@ public struct GenerationOptions : Sendable, Equatable {
     /// - Parameters:
     ///   - sampling: A strategy to use for sampling from a distribution.
     ///   - temperature: Increasing temperature makes it possible for the model to produce less likely
-    ///     responses. Must be between 0 and 2, inclusive.
+    ///     responses. Must be between `0` and `1`, inclusive.
     ///   - maximumResponseTokens: The maximum number of tokens the model is allowed
     ///     to produce before being artificially halted. Must be positive.
     public init(sampling: GenerationOptions.SamplingMode? = nil, temperature: Double? = nil, maximumResponseTokens: Int? = nil)
@@ -792,6 +933,8 @@ public struct GenerationSchema : Sendable, Codable, CustomDebugStringConvertible
             ///
             /// This string is not localized and is not appropriate for display to end users.
             public let debugDescription: String
+
+            public init(debugDescription: String)
         }
 
         /// An error that represents an attempt to construct a schema from dynamic schemas,
@@ -855,7 +998,26 @@ public struct GenerationSchema : Sendable, Codable, CustomDebugStringConvertible
 @available(watchOS, unavailable)
 @attached(peer) public macro Guide(description: String) = #externalMacro(module: "FoundationModelsMacros", type: "GuideMacro")
 
-/// A structure that represents instructions.
+/// Instructions define the model's intended behavior on prompts.
+///
+/// Instructions are typically provided by you to define the role and behavior of the model. In the code below,
+/// the instructions specify that the model replies with topics rather than, for example, a recipe:
+///
+/// ```swift
+/// let instructions = """
+///     Suggest related topics. Keep them concise (three to seven words) and \
+///     make sure they build naturally from the person's topic.
+///     """
+///
+/// let session = LanguageModelSession(instructions: instructions)
+///
+/// let prompt = "Making homemade bread"
+/// let response = try await session.respond(to: prompt)
+/// ```
+///
+/// Apple trains the model to obey instructions over any commands it receives in prompts, so don't include
+/// untrusted content in instructions. For more on how instructions impact generation quality and safety,
+/// see <doc:improving-safety-from-generative-model-output>.
 @available(iOS 26.0, macOS 26.0, *)
 @available(tvOS, unavailable)
 @available(watchOS, unavailable)
@@ -923,46 +1085,10 @@ public protocol InstructionsRepresentable {
     @InstructionsBuilder var instructionsRepresentation: Instructions { get }
 }
 
-/// Feedback appropriate for attaching to Feedback Assistant.
-///
-/// Use this type to build out user feedback experiences
-/// in your app. After collecting feedback, serialize
-/// them into a JSONL file and submit it to Apple using Feedback
-/// Assistant.
 @available(iOS 26.0, macOS 26.0, *)
 @available(tvOS, unavailable)
 @available(watchOS, unavailable)
-public struct LanguageModelFeedbackAttachment : Sendable, Encodable {
-
-    /// Creates feedback from a person regarding a single transcript.
-    ///
-    /// Typically each output will contain a single transcript entry
-    /// representing the model's response. The exception is for tool
-    /// calling, where one example will contain three or more entries
-    /// representing tool calls, tool outputs, and the final response.
-    ///
-    /// - Parameters:
-    ///   - input: Transcript entries containing previous prompts and responses.
-    ///   - output: Transcript entries containing model output.
-    ///   - sentiment: An optional sentiment about the model's output.
-    ///   - issues: Issues regarding the model's response.
-    ///   - desiredOutputExamples: Examples of desired outputs.
-    public init(input: [Transcript.Entry], output: [Transcript.Entry], sentiment: LanguageModelFeedbackAttachment.Sentiment?, issues: [LanguageModelFeedbackAttachment.Issue] = [], desiredOutput: Transcript.Entry? = nil)
-
-    /// Creates feedback from a person that indicates their preference
-    /// among several outputs generated for the same input.
-    ///
-    /// Typically each output will contain a single transcript entry
-    /// representing the model's response. The exception is for tool
-    /// calling, where one example will contain three or more entries
-    /// representing tool calls, tool outputs, and the final response.
-    ///
-    /// - Parameters:
-    ///   - input: Transcript entries containing previous prompts and responses.
-    ///   - outputs: Transcript entries for several candidate outputs.
-    ///   - preferredOutputInex: The index of the output the user indicated preference for.
-    ///   - explanation: An optional explanation from the user about their choice.
-    public init(input: [Transcript.Entry], outputs: [[Transcript.Entry]], preferredOutputIndex: Array<[Transcript.Entry]>.Index, explanation: String? = nil)
+public struct LanguageModelFeedback {
 
     /// A sentiment regarding the model's response.
     @available(iOS 26.0, macOS 26.0, *)
@@ -987,16 +1113,16 @@ public struct LanguageModelFeedbackAttachment : Sendable, Encodable {
         /// - Parameters:
         ///   - lhs: A value to compare.
         ///   - rhs: Another value to compare.
-        public static func == (a: LanguageModelFeedbackAttachment.Sentiment, b: LanguageModelFeedbackAttachment.Sentiment) -> Bool
+        public static func == (a: LanguageModelFeedback.Sentiment, b: LanguageModelFeedback.Sentiment) -> Bool
 
         /// A type that can represent a collection of all values of this type.
         @available(iOS 26.0, macOS 26.0, *)
         @available(tvOS, unavailable)
         @available(watchOS, unavailable)
-        public typealias AllCases = [LanguageModelFeedbackAttachment.Sentiment]
+        public typealias AllCases = [LanguageModelFeedback.Sentiment]
 
         /// A collection of all values of this type.
-        nonisolated public static var allCases: [LanguageModelFeedbackAttachment.Sentiment] { get }
+        nonisolated public static var allCases: [LanguageModelFeedback.Sentiment] { get }
 
         /// Hashes the essential components of this value by feeding them into the
         /// given hasher.
@@ -1093,16 +1219,16 @@ public struct LanguageModelFeedbackAttachment : Sendable, Encodable {
             /// - Parameters:
             ///   - lhs: A value to compare.
             ///   - rhs: Another value to compare.
-            public static func == (a: LanguageModelFeedbackAttachment.Issue.Category, b: LanguageModelFeedbackAttachment.Issue.Category) -> Bool
+            public static func == (a: LanguageModelFeedback.Issue.Category, b: LanguageModelFeedback.Issue.Category) -> Bool
 
             /// A type that can represent a collection of all values of this type.
             @available(iOS 26.0, macOS 26.0, *)
             @available(tvOS, unavailable)
             @available(watchOS, unavailable)
-            public typealias AllCases = [LanguageModelFeedbackAttachment.Issue.Category]
+            public typealias AllCases = [LanguageModelFeedback.Issue.Category]
 
             /// A collection of all values of this type.
-            nonisolated public static var allCases: [LanguageModelFeedbackAttachment.Issue.Category] { get }
+            nonisolated public static var allCases: [LanguageModelFeedback.Issue.Category] { get }
 
             /// Hashes the essential components of this value by feeding them into the
             /// given hasher.
@@ -1137,83 +1263,58 @@ public struct LanguageModelFeedbackAttachment : Sendable, Encodable {
         /// - Parameters:
         ///   - category: A category for this issue.
         ///   - explanation: An optional explanation of this issue.
-        public init(category: LanguageModelFeedbackAttachment.Issue.Category, explanation: String? = nil)
+        public init(category: LanguageModelFeedback.Issue.Category, explanation: String? = nil)
     }
-
-    /// Encodes this value into the given encoder.
-    ///
-    /// If the value fails to encode anything, `encoder` will encode an empty
-    /// keyed container in its place.
-    ///
-    /// This function throws an error if any values are invalid for the given
-    /// encoder's format.
-    ///
-    /// - Parameter encoder: The encoder to write data to.
-    public func encode(to encoder: any Encoder) throws
 }
 
 @available(iOS 26.0, macOS 26.0, *)
 @available(tvOS, unavailable)
 @available(watchOS, unavailable)
-extension LanguageModelFeedbackAttachment.Sentiment : Equatable {
+extension LanguageModelFeedback.Sentiment : Equatable {
 }
 
 @available(iOS 26.0, macOS 26.0, *)
 @available(tvOS, unavailable)
 @available(watchOS, unavailable)
-extension LanguageModelFeedbackAttachment.Sentiment : Hashable {
+extension LanguageModelFeedback.Sentiment : Hashable {
 }
 
 @available(iOS 26.0, macOS 26.0, *)
 @available(tvOS, unavailable)
 @available(watchOS, unavailable)
-extension LanguageModelFeedbackAttachment.Issue.Category : Equatable {
+extension LanguageModelFeedback.Issue.Category : Equatable {
 }
 
 @available(iOS 26.0, macOS 26.0, *)
 @available(tvOS, unavailable)
 @available(watchOS, unavailable)
-extension LanguageModelFeedbackAttachment.Issue.Category : Hashable {
+extension LanguageModelFeedback.Issue.Category : Hashable {
 }
 
 /// An object that represents a session that interacts with a language model.
 ///
-/// A session is a single context that you use to generate content with, and maintains
-/// state between requests. You can reuse the existing instance or create a new one
-/// each time you call the model. When you create a session you can provide instructions
-/// that tells the model what its role is and provides guidance on how to respond.
+/// A session is a single context that you use to generate content with, and maintains state between
+/// requests. You can reuse the existing instance or create a new one each time you call the model. When
+/// you create a session you can provide instructions that tells the model what its role is and provides
+/// guidance on how to respond.
 ///
 /// ```swift
-/// let instructions = """
-///     You are a motivational workout coach that provides quotes to inspire
+/// let session = LanguageModelSession(instructions: """
+///     You are a motivational workout coach that provides quotes to inspire \
 ///     and motivate athletes.
 ///     """
-///
-/// let session = LanguageModelSession(instructions: instructions)
+/// )
 /// let prompt = "Generate a motivational quote for my next workout."
 /// let response = try await session.respond(to: prompt)
 /// ```
 ///
-/// The framework records each call to the model in a ``Transcript`` that includes
-/// all prompts and responses. If your session exceeds the available context size, it
-/// throws an ``LanguageModelSession/GenerationError/exceededContextWindowSize(_:)``
+/// The framework records each call to the model in a ``Transcript`` that includes all prompts and
+/// responses. If your session exceeds the available context size, it throws
+/// ``LanguageModelSession/GenerationError/exceededContextWindowSize(_:)``.
 @available(iOS 26.0, macOS 26.0, *)
 @available(tvOS, unavailable)
 @available(watchOS, unavailable)
 final public class LanguageModelSession {
-
-    /// Controls the safety guardrails for prompt and response filtering.
-    ///
-    /// The default is the `system` level, which enables Apple guardrails that
-    /// filter unsafe prompts and responses.
-    @available(iOS 26.0, macOS 26.0, *)
-    @available(tvOS, unavailable)
-    @available(watchOS, unavailable)
-    public struct Guardrails : Sendable {
-
-        /// A type that indicates the system provides the guardrails.
-        public static let `default`: LanguageModelSession.Guardrails
-    }
 
     /// A full history of interactions, including user inputs and model responses.
     final public var transcript: Transcript { get }
@@ -1228,37 +1329,33 @@ final public class LanguageModelSession {
     ///
     /// - Parameters
     ///   - model: The language model to use for this session.
-    ///   - guardrails: Controls the guardrails setting for prompt and response filtering. System guardrails is enabled if not specified.
     ///   - tools: Tools to make available to the model for this session.
     ///   - instructions: Instructions that control the model's behavior.
-    public convenience init(model: SystemLanguageModel = .default, guardrails: LanguageModelSession.Guardrails = .default, tools: [any Tool] = [], instructions: String? = nil)
+    public convenience init(model: SystemLanguageModel = .default, tools: [any Tool] = [], instructions: String? = nil)
 
     /// Start a new session in blank slate state with instructions builder.
     ///
     /// - Parameters
     ///   - model: The language model to use for this session.
-    ///   - guardrails: Controls the guardrails setting for prompt and response filtering. System guardrails is enabled if not specified.
     ///   - tools: Tools to make available to the model for this session.
     ///   - instructions: Instructions that control the model's behavior.
-    public convenience init(model: SystemLanguageModel = .default, guardrails: LanguageModelSession.Guardrails = .default, tools: [any Tool] = [], @InstructionsBuilder instructions: () throws -> Instructions) rethrows
+    public convenience init(model: SystemLanguageModel = .default, tools: [any Tool] = [], @InstructionsBuilder instructions: () throws -> Instructions) rethrows
 
     /// Start a new session in blank slate state with instructions.
     ///
     /// - Parameters
     ///   - model: The language model to use for this session.
-    ///   - guardrails: Controls the guardrails setting for prompt and response filtering. System guardrails is enabled if not specified.
     ///   - tools: Tools to make available to the model for this session.
     ///   - instructions: Instructions that control the model's behavior.
-    public convenience init(model: SystemLanguageModel = .default, guardrails: LanguageModelSession.Guardrails = .default, tools: [any Tool] = [], instructions: Instructions? = nil)
+    public convenience init(model: SystemLanguageModel = .default, tools: [any Tool] = [], instructions: Instructions? = nil)
 
     /// Start a session by rehydrating from a transcript.
     ///
     /// - Parameters
     ///   - model: The language model to use for this session.
-    ///   - guardrails: Controls the guardrails setting for prompt and response filtering. System guardrails is enabled if not specified.
     ///   - transcript: A transcript to resume from.
     ///   - tools: Tools to make available to the model for this session.
-    public convenience init(model: SystemLanguageModel = .default, guardrails: LanguageModelSession.Guardrails = .default, tools: [any Tool] = [], transcript: Transcript)
+    public convenience init(model: SystemLanguageModel = .default, tools: [any Tool] = [], transcript: Transcript)
 
     /// Requests that the system eagerly load the resources required for this session into memory and
     /// optionally caches a prefix of your prompt.
@@ -1277,23 +1374,19 @@ final public class LanguageModelSession {
     /// particularly if your app is running in the background or the system is under load.
     final public func prewarm(promptPrefix: Prompt? = nil)
 
-    @available(*, deprecated, renamed: "prewarm(promptPrefix:)")
-    final public func prewarm()
-
-    @available(*, deprecated, renamed: "prewarm(promptPrefix:)")
-    final public func prewarm<Content>(prompt: Prompt, generating: Content.Type) where Content : Generable
-
-    @available(*, deprecated, renamed: "prewarm(promptPrefix:)")
-    final public func prewarm(prompt: Prompt, schema: GenerationSchema? = nil)
-
     /// A structure that stores the output of a response call.
     @available(iOS 26.0, macOS 26.0, *)
     @available(tvOS, unavailable)
     @available(watchOS, unavailable)
-    public struct Response<Content> {
+    public struct Response<Content> where Content : Generable {
 
         /// The response content.
         public let content: Content
+
+        /// The raw response content.
+        ///
+        /// When `Content` is `GeneratedContent`, this is the same as `content`.
+        public let rawContent: GeneratedContent
 
         /// The list of transcript entries.
         public let transcriptEntries: ArraySlice<Transcript.Entry>
@@ -1369,7 +1462,7 @@ final public class LanguageModelSession {
     ///   - prompt: A prompt for the model to respond to.
     /// - Returns: ``GeneratedContent`` containing the fields and values defined in the schema.
     @discardableResult
-    final public func respond(options: GenerationOptions = GenerationOptions(), schema: GenerationSchema, includeSchemaInPrompt: Bool = true, @PromptBuilder prompt: () throws -> Prompt) async throws -> LanguageModelSession.Response<GeneratedContent>
+    nonisolated(nonsending) final public func respond(schema: GenerationSchema, includeSchemaInPrompt: Bool = true, options: GenerationOptions = GenerationOptions(), @PromptBuilder prompt: () throws -> Prompt) async throws -> LanguageModelSession.Response<GeneratedContent>
 
     /// Produces a generable object as a response to a prompt.
     ///
@@ -1416,7 +1509,7 @@ final public class LanguageModelSession {
     ///   - prompt: A prompt for the model to respond to.
     /// - Returns: ``GeneratedContent`` containing the fields and values defined in the schema.
     @discardableResult
-    nonisolated(nonsending) final public func respond<Content>(generating type: Content.Type = Content.self, options: GenerationOptions = GenerationOptions(), includeSchemaInPrompt: Bool = true, @PromptBuilder prompt: () throws -> Prompt) async throws -> LanguageModelSession.Response<Content> where Content : Generable
+    nonisolated(nonsending) final public func respond<Content>(generating type: Content.Type = Content.self, includeSchemaInPrompt: Bool = true, options: GenerationOptions = GenerationOptions(), @PromptBuilder prompt: () throws -> Prompt) async throws -> LanguageModelSession.Response<Content> where Content : Generable
 
     /// Produces a response stream to a prompt and schema.
     ///
@@ -1476,9 +1569,28 @@ extension LanguageModelSession {
             public init(debugDescription: String)
         }
 
-        /// An error that indicates the transcript or a prompt exceeded the model's context window size.
+        /// The context in which the refusal error occurred.
+        @available(iOS 26.0, macOS 26.0, *)
+        @available(tvOS, unavailable)
+        @available(watchOS, unavailable)
+        public struct Refusal : Sendable {
+
+            public init(transcriptEntries: [Transcript.Entry])
+
+            public var explanation: LanguageModelSession.Response<String> { get async throws }
+
+            public var explanationStream: LanguageModelSession.ResponseStream<String> { get }
+        }
+
+        /// An error that signals the session reached its context window size limit.
         ///
-        /// Start a new session or try again with a shorter prompt.
+        /// This error occurs when you use the available tokens for the context window of  4,096 tokens. The
+        /// token count includes instructions, prompts, and outputs for a session instance. A single token
+        /// corresponds to approximately three to four characters in languages like English, Spanish, or
+        /// German, and one token per character in languages like Japanese, Chinese, and Korean.
+        ///
+        /// Start a new session when you exceed the content window size, and try again using a shorter
+        /// prompt or shorter output length.
         case exceededContextWindowSize(LanguageModelSession.GenerationError.Context)
 
         /// An error that indicates the assets required for the session are unavailable.
@@ -1517,6 +1629,8 @@ extension LanguageModelSession {
         /// second prompt while it's still responding to the first one.
         case concurrentRequests(LanguageModelSession.GenerationError.Context)
 
+        case refusal(LanguageModelSession.GenerationError.Refusal, LanguageModelSession.GenerationError.Context)
+
         /// A string representation of the error description.
         public var errorDescription: String? { get }
 
@@ -1552,11 +1666,23 @@ extension LanguageModelSession {
 
 extension LanguageModelSession {
 
-    /// A structure that  stores the output of a response stream.
+    /// An async sequence of snapshots of partially generated content.
     @available(iOS 26.0, macOS 26.0, *)
     @available(tvOS, unavailable)
     @available(watchOS, unavailable)
     public struct ResponseStream<Content> where Content : Generable {
+
+        /// A snapshot of partially generated content.
+        public struct Snapshot {
+
+            /// The content of the response.
+            public var content: Content.PartiallyGenerated
+
+            /// The raw content of the response.
+            ///
+            /// When `Content` is `GeneratedContent`, this is the same as `content`.
+            public var rawContent: GeneratedContent
+        }
     }
 }
 
@@ -1586,12 +1712,12 @@ extension LanguageModelSession {
     /// because it has been trained on it, or because it has seen exhaustive examples during this session.
     ///
     /// - Parameters:
-    ///   - options: Options that control how tokens are sampled from the distribution the model produces.
     ///   - schema: A schema to guide the output with.
     ///   - includeSchemaInPrompt: Inject the schema into the prompt to bias the model.
+    ///   - options: Options that control how tokens are sampled from the distribution the model produces.
     ///   - prompt: A prompt for the model to respond to.
     /// - Returns: A response stream that produces ``GeneratedContent`` containing the fields and values defined in the schema.
-    final public func streamResponse(options: GenerationOptions = GenerationOptions(), schema: GenerationSchema, includeSchemaInPrompt: Bool = true, @PromptBuilder prompt: () throws -> Prompt) rethrows -> sending LanguageModelSession.ResponseStream<GeneratedContent>
+    final public func streamResponse(schema: GenerationSchema, includeSchemaInPrompt: Bool = true, options: GenerationOptions = GenerationOptions(), @PromptBuilder prompt: () throws -> Prompt) rethrows -> sending LanguageModelSession.ResponseStream<GeneratedContent>
 
     /// Produces a response stream to a prompt and schema.
     ///
@@ -1629,10 +1755,10 @@ extension LanguageModelSession {
     ///
     /// - Parameters:
     ///   - type: A type to produce as the response.
+    ///   - includeSchemaInPrompt: Inject the schema into the prompt to bias the model.   
     ///   - options: Options that control how tokens are sampled from the distribution the model produces.
-    ///   - includeSchemaInPrompt: Inject the schema into the prompt to bias the model.
     /// - Returns: A response stream.
-    final public func streamResponse<Content>(generating type: Content.Type = Content.self, options: GenerationOptions = GenerationOptions(), includeSchemaInPrompt: Bool = true, @PromptBuilder prompt: () throws -> Prompt) rethrows -> sending LanguageModelSession.ResponseStream<Content> where Content : Generable
+    final public func streamResponse<Content>(generating type: Content.Type = Content.self, includeSchemaInPrompt: Bool = true, options: GenerationOptions = GenerationOptions(), @PromptBuilder prompt: () throws -> Prompt) rethrows -> sending LanguageModelSession.ResponseStream<Content> where Content : Generable
 
     /// Produces a response stream to a prompt.
     ///
@@ -1688,7 +1814,7 @@ extension LanguageModelSession {
     /// let feedbackData = session.logFeedbackAttachment(
     ///     sentiment: .negative,
     ///     issues: [
-    ///         LanguageModelFeedbackAttachment.Issue(
+    ///         LanguageModelFeedback.Issue(
     ///             category: .incorrect,
     ///             explanation: "The model provided outdated information"
     ///         )
@@ -1700,14 +1826,7 @@ extension LanguageModelSession {
     @available(tvOS, unavailable)
     @available(watchOS, unavailable)
     @discardableResult
-    final public func logFeedbackAttachment(sentiment: LanguageModelFeedbackAttachment.Sentiment?, issues: [LanguageModelFeedbackAttachment.Issue] = [], desiredOutput: Transcript.Entry? = nil) -> Data
-
-    @available(iOS 26.0, macOS 26.0, *)
-    @available(*, deprecated, renamed: "logFeedbackAttachment(sentiment:issues:desiredOutput:)")
-    @available(tvOS, unavailable)
-    @available(watchOS, unavailable)
-    @discardableResult
-    final public func dumpFeedbackAttachment(sentiment: LanguageModelFeedbackAttachment.Sentiment?, issues: [LanguageModelFeedbackAttachment.Issue] = [], desiredOutput: Transcript.Entry? = nil) -> Data
+    final public func logFeedbackAttachment(sentiment: LanguageModelFeedback.Sentiment?, issues: [LanguageModelFeedback.Issue] = [], desiredOutput: Transcript.Entry? = nil) -> Data
 }
 
 @available(iOS 26.0, macOS 26.0, *)
@@ -1716,7 +1835,7 @@ extension LanguageModelSession {
 extension LanguageModelSession.ResponseStream : AsyncSequence {
 
     /// The type of element produced by this asynchronous sequence.
-    public typealias Element = Content.PartiallyGenerated
+    public typealias Element = LanguageModelSession.ResponseStream<Content>.Snapshot
 
     /// The type of asynchronous iterator that produces elements of this
     /// asynchronous sequence.
@@ -1730,12 +1849,12 @@ extension LanguageModelSession.ResponseStream : AsyncSequence {
         ///
         /// - Returns: The next element, if it exists, or `nil` to signal the end of
         ///   the sequence.
-        public mutating func next(isolation actor: isolated (any Actor)? = #isolation) async throws -> LanguageModelSession.ResponseStream<Content>.Element?
+        public mutating func next(isolation actor: isolated (any Actor)? = #isolation) async throws -> LanguageModelSession.ResponseStream<Content>.Snapshot?
 
         @available(iOS 26.0, macOS 26.0, *)
         @available(tvOS, unavailable)
         @available(watchOS, unavailable)
-        public typealias Element = LanguageModelSession.ResponseStream<Content>.Element
+        public typealias Element = LanguageModelSession.ResponseStream<Content>.Snapshot
     }
 
     /// Creates the asynchronous iterator that produces elements of this
@@ -1755,7 +1874,31 @@ extension LanguageModelSession.ResponseStream : AsyncSequence {
     nonisolated(nonsending) public func collect() async throws -> sending LanguageModelSession.Response<Content>
 }
 
-/// A structure that represents a prompt.
+/// A prompt from a person to the model.
+///
+/// Prompts can contain content written by you, an outside source, or input directly from people using
+/// your app. You can initialize a `Prompt` from a string literal:
+///
+/// ```swift
+/// let prompt = Prompt("What are miniature schnauzers known for?")
+/// ```
+///
+/// Use ``PromptBuilder`` to dynamically control the prompt's content based on your app's state. The
+/// code below shows if the Boolean is `true`, the prompt includes a second line of text:
+///
+/// ```swift
+/// let responseShouldRhyme = true
+/// let prompt = Prompt {
+///     "Answer the following question from the user: \(userInput)"
+///     if responseShouldRhyme {
+///         "Your response MUST rhyme!"
+///     }
+/// }
+/// ```
+///
+/// If your prompt includes input from people, consider wrapping the input in a string template with your
+/// own prompt to better steer the model's response. For more information on handling inputs in your
+/// prompts, see <doc:improving-safety-from-generative-model-output>.
 @available(iOS 26.0, macOS 26.0, *)
 @available(tvOS, unavailable)
 @available(watchOS, unavailable)
@@ -1823,7 +1966,42 @@ public protocol PromptRepresentable {
     @PromptBuilder var promptRepresentation: Prompt { get }
 }
 
-/// A probabilistic language model that is capable of completing prompts, following instructions, and using tools.
+/// An on-device large language model capable of text generation tasks.
+///
+/// The `SystemLanguageModel` refers to the on-device text foundation model that powers Apple
+/// Intelligence. Use ``default`` to access the base version of the model and perform general-purpose
+/// text generation tasks. To access a specialized version of the model, initialize the model
+/// with ``UseCase`` to perform tasks like ``UseCase/contentTagging``.
+///
+/// Verify the model availability before you use the model. Model availability depends on device factors like:
+///
+/// * The device must support Apple Intelligence.
+/// * Apple Intelligence must be turned on in Settings.
+///
+/// Use ``Availability`` to change what your app shows to people based on the availability condition:
+///
+/// ```swift
+/// struct GenerativeView: View {
+///     // Create a reference to the system language model.
+///     private var model = SystemLanguageModel.default
+///
+///     var body: some View {
+///         switch model.availability {
+///         case .available:
+///             // Show your intelligence UI.
+///         case .unavailable(.deviceNotEligible):
+///             // Show an alternative UI.
+///         case .unavailable(.appleIntelligenceNotEnabled):
+///             // Ask the person to turn on Apple Intelligence.
+///         case .unavailable(.modelNotReady):
+///             // The model isn't ready because it's downloading or because
+///             // of other system reasons.
+///         case .unavailable(let other):
+///             // The model is unavailable for an unknown reason.
+///         }
+///     }
+/// }
+/// ```
 @available(iOS 26.0, macOS 26.0, *)
 @available(tvOS, unavailable)
 @available(watchOS, unavailable)
@@ -1865,6 +2043,36 @@ final public class SystemLanguageModel : Sendable {
     }
 
     @objc deinit
+}
+
+@available(iOS 26.0, macOS 26.0, *)
+@available(tvOS, unavailable)
+@available(watchOS, unavailable)
+extension SystemLanguageModel {
+
+    /// Controls the built-in safety guardrails for prompt and response filtering.
+    @available(iOS 26.0, macOS 26.0, *)
+    @available(tvOS, unavailable)
+    @available(watchOS, unavailable)
+    public struct Guardrails : Sendable {
+
+        /// Default guardrails. This mode ensures that unsafe content in prompts and responses will be
+        /// blocked with a `LanguageModelSession.GenerationError.guardrailViolation`
+        /// error.
+        public static let `default`: SystemLanguageModel.Guardrails
+
+        /// Guardrails that allow for permissively transforming text input, including
+        /// potentially unsafe content, to text responses, such as summarizing an article.
+        ///
+        /// In this mode, requests you make to the model that generate a `String` will not throw
+        /// `LanguageModelSession.GenerationError.guardrailViolation` errors.
+        /// However, when the purpose of your instructions and prompts is not transforming user input,
+        /// the model may still refuse to respond to potentially unsafe prompts by generating an
+        /// explanation.
+        ///
+        /// When you generate responses other than `String`, this mode behaves the same way as `.default`.
+        public static let permissiveContentTransformations: SystemLanguageModel.Guardrails
+    }
 }
 
 @available(iOS 26.0, macOS 26.0, *)
@@ -1965,13 +2173,13 @@ extension SystemLanguageModel {
     @available(iOS 26.0, macOS 26.0, *)
     @available(tvOS, unavailable)
     @available(watchOS, unavailable)
-    public convenience init(useCase: SystemLanguageModel.UseCase)
+    public convenience init(useCase: SystemLanguageModel.UseCase = .general, guardrails: SystemLanguageModel.Guardrails = Guardrails.default)
 
     /// Creates the base version of the model with an adapter.
     @available(iOS 26.0, macOS 26.0, *)
     @available(tvOS, unavailable)
     @available(watchOS, unavailable)
-    public convenience init(adapter: SystemLanguageModel.Adapter)
+    public convenience init(adapter: SystemLanguageModel.Adapter, guardrails: SystemLanguageModel.Guardrails = .default)
 
     /// Languages supported by the model.
     final public var supportedLanguages: Set<Locale.Language> { get }
@@ -1999,6 +2207,17 @@ extension SystemLanguageModel {
     }
 }
 
+/// Specializes the system language model for custom use cases.
+///
+/// Use the base system model for most prompt engineering, guided generation, and tools. If you need to
+/// specialize the model, train a custom `Adapter` to alter the system model weights and optimize it for
+/// your custom task. Use custom adapters only if you're comfortable training foundation models in Python.
+///
+/// > Important: You need to re-train an adapter for every new version of the base system model that
+/// Apple releases. Adapters consume a large amount of storage space and isn't recommended for
+/// most apps.
+///
+/// For more on custom adapters, see [Get started with Foundation Models adapter training](https://developer.apple.com/apple-intelligence/foundation-models-adapter/).
 @available(iOS 26.0, macOS 26.0, *)
 @available(tvOS, unavailable)
 @available(watchOS, unavailable)
@@ -2036,13 +2255,18 @@ extension SystemLanguageModel.Adapter {
     public static func compatibleAdapterIdentifiers(name: String) -> [String]
 
     /// Remove all obsolete adapters that are no longer compatible with current system models.
-    public static func removeObsoleteAdapters()
+    public static func removeObsoleteAdapters() throws
 
-    /// Returns true when an asset pack is an Foundation Models Adapter and compatible with current system base model.
+    /// Returns a Boolean value that indicates whether an asset pack is an on-device foundation model
+    /// adapter and is compatible with the system base model version on the runtime device.
     ///
-    /// This compatibility check is designed to run before downloading the asset pack. It only performs
-    /// validation on the asset pack name and metadata. ``SystemLanguageModel/init(adapterName:)``
-    /// might still throw errors even if the corresponding asset pack is compatible.
+    /// Use this check when choosing an adapter asset pack to download. This check only validates the
+    /// asset pack name and metadata, so initializing the adapter with ``Adapter/init(name:)`` --- or
+    /// loading the adapter onto the base model with ``SystemLanguageModel/init(adapter:)`` ---
+    /// may throw errors if the adapter has a compatibility issue despite having correct metadata.
+    ///
+    /// > Note: Run this check before you download an adapter asset pack to confirm if it's usable on the
+    /// runtime device.
     public static func isCompatible(_ assetPack: AssetPack) -> Bool
 }
 
@@ -2195,31 +2419,6 @@ extension Tool where Self.Arguments : Generable {
 
     /// A schema for the parameters this tool accepts.
     public var parameters: GenerationSchema { get }
-}
-
-/// A structure that contains the output a tool generates.
-@available(iOS 26.0, macOS 26.0, *)
-@available(tvOS, unavailable)
-@available(watchOS, unavailable)
-@available(*, deprecated, message: "Use types that conform to 'PromptRepresentable' instead")
-public struct ToolOutput : Sendable {
-
-    /// Creates a tool output with a string you specify.
-    @available(*, deprecated, message: "Use types that conform to 'PromptRepresentable' instead")
-    public init(_ string: String)
-
-    /// Creates a tool output with a generated encodable object.
-    @available(*, deprecated, message: "Use types that conform to 'PromptRepresentable' instead")
-    public init(_ content: GeneratedContent)
-}
-
-@available(iOS 26.0, macOS 26.0, *)
-@available(tvOS, unavailable)
-@available(watchOS, unavailable)
-extension ToolOutput : PromptRepresentable {
-
-    /// An instance that represents a prompt.
-    public var promptRepresentation: Prompt { get }
 }
 
 /// A transcript that documents interactions with a language model.
@@ -2405,7 +2604,7 @@ public struct Transcript : Sendable, Equatable, RandomAccessCollection {
         public var source: String
 
         /// The content of the segment.
-        public let content: GeneratedContent
+        public var content: GeneratedContent
 
         public init(id: String = UUID().uuidString, source: String, content: GeneratedContent)
 
@@ -2427,14 +2626,11 @@ public struct Transcript : Sendable, Equatable, RandomAccessCollection {
         public typealias ID = String
     }
 
-    /// Instructions provided to the model that define its behavior.
+    /// Instructions you provide to the model that define its behavior.
     ///
-    /// Instructions are typically provided by you the developer to define
-    /// the desired role and behavior of the model.
-    ///
-    /// The model is trained to obey instructions over any commands it
-    /// receives in prompts. This is a security mechanism to mitigate prompt
-    /// injection attacks, but it is not bullet proof by any means.
+    /// Instructions are typically provided to define the role and behavior of the model. Apple trains the model
+    /// to obey instructions over any commands it receives in prompts. This is a security mechanism to help
+    /// mitigate prompt injection attacks.
     @available(iOS 26.0, macOS 26.0, *)
     @available(tvOS, unavailable)
     @available(watchOS, unavailable)
@@ -3402,3 +3598,4 @@ extension Array : PromptRepresentable where Element : PromptRepresentable {
     /// An instance that represents a prompt.
     public var promptRepresentation: Prompt { get }
 }
+
