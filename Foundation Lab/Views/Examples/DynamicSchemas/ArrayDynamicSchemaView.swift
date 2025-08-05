@@ -161,7 +161,13 @@ struct ArrayDynamicSchemaView: View {
                 options: .init(temperature: 0.1)
             )
             
-            let items = try response.content.elements()
+            let items: [GeneratedContent]
+            switch response.content.kind {
+            case .array(let elements):
+                items = elements
+            default:
+                items = []
+            }
             
             return """
             📝 Input:
@@ -256,18 +262,26 @@ struct ArrayDynamicSchemaView: View {
             result += "\n\(index + 1). "
             
             // Try to format as object with properties
-            if let properties = try? item.properties() {
+            switch item.kind {
+            case .structure(let properties, _):
                 var parts: [String] = []
                 for (key, value) in properties {
-                    if let stringValue = try? value.value(String.self) {
+                    switch value.kind {
+                    case .string(let stringValue):
                         parts.append("\(key): \(stringValue)")
+                    case .number(let numValue):
+                        parts.append("\(key): \(numValue)")
+                    case .bool(let boolValue):
+                        parts.append("\(key): \(boolValue)")
+                    default:
+                        break
                     }
                 }
                 result += parts.joined(separator: ", ")
-            } else if let stringValue = try? item.value(String.self) {
+            case .string(let stringValue):
                 // Format as simple string
                 result += stringValue
-            } else {
+            default:
                 result += "Unknown item"
             }
         }

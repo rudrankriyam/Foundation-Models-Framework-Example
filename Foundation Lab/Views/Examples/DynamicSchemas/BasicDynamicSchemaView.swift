@@ -294,53 +294,48 @@ struct BasicDynamicSchemaView: View {
     
     private func formatContent(_ content: GeneratedContent) -> String {
         // Format the generated content for display
-        do {
-            let properties = try content.properties()
+        switch content.kind {
+        case .structure(let properties, let orderedKeys):
             var result = "{\n"
-            for (key, value) in properties {
-                result += "  \"\(key)\": \(formatValue(value)),\n"
+            for key in orderedKeys {
+                if let value = properties[key] {
+                    result += "  \"\(key)\": \(formatValue(value)),\n"
+                }
             }
             result = String(result.dropLast(2)) // Remove last comma and newline
             result += "\n}"
             return result
-        } catch let error {
-            return "Error formatting content: \(error.localizedDescription)"
+        default:
+            return "Error: Expected object structure"
         }
     }
     
     private func formatValue(_ content: GeneratedContent) -> String {
-        // Try to get as string first
-        if let stringValue = try? content.value(String.self) {
+        switch content.kind {
+        case .string(let stringValue):
             return "\"\(stringValue)\""
-        }
-        
-        // Try as number
-        if let intValue = try? content.value(Int.self) {
-            return String(intValue)
-        }
-        
-        if let floatValue = try? content.value(Float.self) {
-            return String(floatValue)
-        }
-        
-        // Try as array
-        if let elements = try? content.elements() {
+        case .number(let numValue):
+            return String(numValue)
+        case .bool(let boolValue):
+            return String(boolValue)
+        case .array(let elements):
             let formatted = elements.map { formatValue($0) }.joined(separator: ", ")
             return "[\(formatted)]"
-        }
-        
-        // Try as object
-        if let properties = try? content.properties() {
+        case .structure(let properties, let orderedKeys):
             var result = "{ "
-            for (key, value) in properties {
-                result += "\"\(key)\": \(formatValue(value)), "
+            for key in orderedKeys {
+                if let value = properties[key] {
+                    result += "\"\(key)\": \(formatValue(value)), "
+                }
             }
             result = String(result.dropLast(2)) // Remove last comma and space
             result += " }"
             return result
+        case .null:
+            return "null"
+        @unknown default:
+            return "unknown"
         }
-        
-        return "unknown"
     }
     
     private var exampleCode: String {
