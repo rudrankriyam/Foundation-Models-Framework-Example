@@ -19,7 +19,7 @@ struct PokemonSearchTool: Tool {
         let query: String
     }
     
-    func call(arguments: Arguments) async throws -> ToolOutput {
+    func call(arguments: Arguments) async throws -> some PromptRepresentable {
         let query = arguments.query.lowercased()
         
         
@@ -84,7 +84,7 @@ struct PokemonSearchTool: Tool {
             // Add Pokemon details
             output += formatPokemonData(pokemonData)
             
-            return ToolOutput(output)
+            return output
         } catch {
             throw error
         }
