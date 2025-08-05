@@ -80,7 +80,7 @@ struct FeedbackRowView: View {
         }.joined(separator: " ")
     }
 
-    private var existingFeedback: LanguageModelFeedbackAttachment.Sentiment? {
+    private var existingFeedback: LanguageModelFeedback.Sentiment? {
         viewModel.getFeedback(for: entry.id)
     }
 
