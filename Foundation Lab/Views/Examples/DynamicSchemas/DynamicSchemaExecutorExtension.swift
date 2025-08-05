@@ -83,42 +83,27 @@ extension ExampleExecutor {
     
     /// Recursively build a JSON-compatible object from GeneratedContent
     private func buildJSONObject(from content: GeneratedContent) throws -> Any {
-        // Try to get as primitive types first
-        if let stringValue = try? content.value(String.self) {
+        switch content.kind {
+        case .string(let stringValue):
             return stringValue
-        }
-        
-        if let intValue = try? content.value(Int.self) {
-            return intValue
-        }
-        
-        if let doubleValue = try? content.value(Double.self) {
-            return doubleValue
-        }
-        
-        if let floatValue = try? content.value(Float.self) {
-            return floatValue
-        }
-        
-        if let boolValue = try? content.value(Bool.self) {
+        case .number(let numValue):
+            return numValue
+        case .bool(let boolValue):
             return boolValue
-        }
-        
-        // Try as array
-        if let elements = try? content.elements() {
+        case .null:
+            return NSNull()
+        case .array(let elements):
             return try elements.map { try buildJSONObject(from: $0) }
-        }
-        
-        // Try as object with properties
-        if let properties = try? content.properties() {
+        case .structure(let properties, let orderedKeys):
             var jsonDict = [String: Any]()
-            for (key, value) in properties {
-                jsonDict[key] = try buildJSONObject(from: value)
+            for key in orderedKeys {
+                if let value = properties[key] {
+                    jsonDict[key] = try buildJSONObject(from: value)
+                }
             }
             return jsonDict
+        @unknown default:
+            return String(describing: content)
         }
-        
-        // If all else fails, return a string representation
-        return String(describing: content)
     }
 }

@@ -68,14 +68,6 @@ final class ChatViewModel {
 
     @MainActor
     func submitFeedback(for entryID: Transcript.Entry.ID, sentiment: LanguageModelFeedback.Sentiment) {
-        guard let entryIndex = session.transcript.firstIndex(where: { $0.id == entryID }) else {
-            // Log error in debug mode only
-            #if DEBUG
-            print("Error: Could not find transcript entry for feedback.")
-            #endif
-            return
-        }
-
         // Store the feedback state
         feedbackState[entryID] = sentiment
 
