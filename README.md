@@ -1,9 +1,5 @@
 # Foundation Models Framework Example
 
-![AI interface screenshot with "Foundation Models" title, showcasing on-device AI examples including Basic Chat, Structured Data, Generation Guides, and more; user requests a haiku about destiny, receiving response: "Paths weave through the mist, Stars whisper tales of tomorrow— Destiny unfolds.](main-examples.png)
-
-![A computer window displaying a tool use interface with weather info for San Francisco: 16°C, clear skies, 70% humidity, 18.1 km/h wind speed, 1010.2 hPa pressure. Various tool options include web search, contacts, calendar, reminders, location, health, and music.](tool-use.png)
-
 > Note:- For folks starring it, please do not judge the codebase. I have to do some refactoring that I vibe-coded to ship this, fast. Okay?
 
 A practical iOS app demonstrating Apple's Foundation Models framework with various examples of on-device AI capabilities.
@@ -17,7 +13,7 @@ Love this project? Check out my books to explore more of AI and iOS development:
 ## Requirements
 
 - iOS 26.0+ or macOS 26.0+ (Xcode 26.0+) 
-- **Beta 4 version of the framework is required**
+- **Beta 5 version of the framework is required**
 - Apple Intelligence enabled
 - Compatible Apple device with Apple Silicon
 
