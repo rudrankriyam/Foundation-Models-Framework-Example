@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import LiquidGlasKit
 
 struct SettingsView: View {
     @AppStorage("exaAPIKey") private var exaAPIKey: String = ""

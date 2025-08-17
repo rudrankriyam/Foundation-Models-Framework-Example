@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0A21D7F12E518858004E8806 /* LiquidGlasKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0A21D7F02E518858004E8806 /* LiquidGlasKit */; };
 		0A5454AB2E1148A8002C2152 /* Foundation Lab.icon in Resources */ = {isa = PBXBuildFile; fileRef = 0A5454A72E1148A8002C2152 /* Foundation Lab.icon */; };
 		0A6316F32E1291E900E13A6D /* Murmer.icon in Resources */ = {isa = PBXBuildFile; fileRef = 0A6316F22E1291E900E13A6D /* Murmer.icon */; };
 		0A979E842E1E5921008CFA37 /* FoundationModelsTools in Frameworks */ = {isa = PBXBuildFile; productRef = 0A979E832E1E5921008CFA37 /* FoundationModelsTools */; };
@@ -66,6 +67,7 @@
 			files = (
 				FA43F9412E13A16E00F24BCC /* HighlightSwift in Frameworks */,
 				0A979E842E1E5921008CFA37 /* FoundationModelsTools in Frameworks */,
+				0A21D7F12E518858004E8806 /* LiquidGlasKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -146,6 +148,7 @@
 			packageProductDependencies = (
 				FA43F9402E13A16E00F24BCC /* HighlightSwift */,
 				0A979E832E1E5921008CFA37 /* FoundationModelsTools */,
+				0A21D7F02E518858004E8806 /* LiquidGlasKit */,
 			);
 			productName = FoundationLab;
 			productReference = 0AAE4FFF2DF76E6600838F13 /* Foundation Lab.app */;
@@ -253,6 +256,7 @@
 			packageReferences = (
 				0AC6037E2E1D5288002106F9 /* XCRemoteSwiftPackageReference "HighlightSwift" */,
 				0A979E822E1E5921008CFA37 /* XCRemoteSwiftPackageReference "FoundationModelsTools" */,
+				0A21D7EF2E518858004E8806 /* XCRemoteSwiftPackageReference "LiquidGlasKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0AAE50002DF76E6600838F13 /* Products */;
@@ -969,6 +973,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		0A21D7EF2E518858004E8806 /* XCRemoteSwiftPackageReference "LiquidGlasKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/rryam/LiquidGlasKit.git";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
 		0A979E822E1E5921008CFA37 /* XCRemoteSwiftPackageReference "FoundationModelsTools" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/rudrankriyam/FoundationModelsTools.git";
@@ -996,6 +1008,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		0A21D7F02E518858004E8806 /* LiquidGlasKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0A21D7EF2E518858004E8806 /* XCRemoteSwiftPackageReference "LiquidGlasKit" */;
+			productName = LiquidGlasKit;
+		};
 		0A979E832E1E5921008CFA37 /* FoundationModelsTools */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 0A979E822E1E5921008CFA37 /* XCRemoteSwiftPackageReference "FoundationModelsTools" */;

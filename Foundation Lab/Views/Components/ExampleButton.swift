@@ -5,8 +5,8 @@
 //  Created by Rudrank Riyam on 6/9/25.
 //
 
-import FoundationModels
 import SwiftUI
+import LiquidGlasKit
 
 /// Reusable button component for example actions with Liquid Glass effects
 struct ExampleButton: View {
