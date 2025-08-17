@@ -51,19 +51,6 @@ struct GenericCardView: View {
     let icon: String
     let title: String
     let subtitle: String
-    @Environment(\.colorScheme) var scheme
-    
-    var fill: Color {
-        switch scheme {
-        case .dark:
-            return Color.clear.opacity(0.1)
-        case .light:
-            return Color.secondary.opacity(0.1)
-        @unknown default:
-            return Color.clear
-        }
-    }
-    
     
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.small) {
@@ -90,10 +77,6 @@ struct GenericCardView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Spacing.medium)
-        .background {
-            RoundedRectangle(cornerRadius: CornerRadius.medium, style: .continuous)
-                .fill(fill)
-                .glassEffect(.clear.interactive(), in: .rect(cornerRadius: CornerRadius.medium))
-        }
+        .glassCard()
     }
 }
