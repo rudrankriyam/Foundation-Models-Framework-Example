@@ -44,24 +44,28 @@ struct AdaptiveNavigationView: View {
             Tab(TabSelection.schemas.displayName, systemImage: "doc.text", value: .schemas) {
                 NavigationStack {
                     SchemaExamplesView()
+                        .background(TopGradientView())
                 }
             }
             
             Tab(TabSelection.tools.displayName, systemImage: "wrench.and.screwdriver", value: .tools) {
                 NavigationStack {
                     ToolsExamplesView()
+                        .background(TopGradientView())
                 }
             }
             
             Tab(TabSelection.chat.displayName, systemImage: "bubble.left.and.bubble.right", value: .chat) {
                 NavigationStack {
                     ChatView(viewModel: $chatViewModel)
+                        .background(TopGradientView())
                 }
             }
             
             Tab(TabSelection.settings.displayName, systemImage: "gear", value: .settings) {
                 NavigationStack {
                     SettingsView()
+                        .background(TopGradientView())
                 }
             }
         }

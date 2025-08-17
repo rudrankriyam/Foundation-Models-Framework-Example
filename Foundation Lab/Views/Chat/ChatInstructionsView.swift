@@ -1,81 +1,71 @@
 //
-//  InstructionsView.swift
+//  ChatInstructionsView.swift
 //  FoundationLab
 //
-//  Created by Assistant on 7/1/25.
+//  Created by Assistant on 12/17/24.
 //
 
 import SwiftUI
 
 struct ChatInstructionsView: View {
-    @Binding var showInstructions: Bool
     @Binding var instructions: String
     let onApply: () -> Void
+    @Environment(\.dismiss) private var dismiss
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Button(action: { showInstructions.toggle() }) {
-                HStack(spacing: Spacing.small) {
-                    Image(systemName: showInstructions ? "chevron.down" : "chevron.right")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                    
-                    Text("Instructions")
-                        .font(.callout)
-                        .fontWeight(.medium)
-                        .foregroundColor(.primary)
-                    
-                    Spacer()
-                    
-                    if !showInstructions {
-                        Text("Customize AI behavior")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                .padding(.horizontal, Spacing.medium)
-                .padding(.vertical, Spacing.small)
-            }
-            .buttonStyle(.plain)
-            
-            if showInstructions {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: Spacing.medium) {
                 VStack(alignment: .leading, spacing: Spacing.small) {
-                    TextEditor(text: $instructions)
-                        .font(.body)
-                        .scrollContentBackground(.hidden)
-                        .padding(Spacing.medium)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(12)
+                    Text("Customize AI Behavior")
+                        .font(.title2)
+                        .fontWeight(.semibold)
                     
-                    HStack {
-                        Text("Changes will apply to new conversations")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        
-                        Spacer()
-                        
-                        Button("Apply Now") {
-                            onApply()
-                            showInstructions = false
-                        }
-                        .font(.caption)
-                        .fontWeight(.medium)
-                        #if os(iOS) || os(macOS)
-                        .buttonStyle(.glassProminent)
-                        #else
-                        .buttonStyle(.bordered)
-                        #endif
+                    Text("Provide specific instructions to guide how the AI should respond. These instructions will apply to all new conversations.")
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                }
+                
+                TextEditor(text: $instructions)
+                    .font(.body)
+                    .scrollContentBackground(.hidden)
+                    .padding(Spacing.medium)
+                    .background(Color.gray.opacity(0.1))
+                    .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                    )
+                
+                Spacer()
+            }
+            .padding(Spacing.medium)
+            .background(TopGradientView())
+            .navigationTitle("Instructions")
+#if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+#endif
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
                     }
                 }
-                .padding(.horizontal, Spacing.medium)
-                .padding(.bottom, Spacing.small)
-                .transition(.opacity.combined(with: .move(edge: .top)))
+                
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Apply") {
+                        onApply()
+                        dismiss()
+                    }
+                    .fontWeight(.semibold)
+                }
             }
         }
-        .background(.regularMaterial)
-        .cornerRadius(12)
-        .padding(.horizontal, Spacing.medium)
-        .padding(.vertical, Spacing.small)
     }
+}
+
+#Preview {
+    ChatInstructionsView(
+        instructions: .constant("You are a helpful AI assistant. Please be concise and accurate in your responses."),
+        onApply: { }
+    )
 }

@@ -12,7 +12,7 @@ struct ChatView: View {
     @Binding var viewModel: ChatViewModel
     @State private var scrollID: String?
     @State private var messageText = ""
-    @State private var showInstructions = false
+    @State private var showInstructionsSheet = false
     @State private var showFeedbackSheet = false
     @State private var selectedEntryForFeedback: Transcript.Entry?
     @FocusState private var isTextFieldFocused: Bool
@@ -30,9 +30,6 @@ struct ChatView: View {
                 isTextFieldFocused: $isTextFieldFocused
             )
         }
-        .safeAreaInset(edge: .top) {
-            instructionsView
-        }
         .environment(viewModel)
         .navigationTitle("Chat")
 #if os(iOS)
@@ -40,6 +37,11 @@ struct ChatView: View {
 #endif
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
+                Button(action: { showInstructionsSheet = true }) {
+                    Label("Instructions", systemImage: "doc.text")
+                }
+                .help("Customize AI behavior")
+                
                 Button(action: { showFeedbackSheet = true }) {
                     Label("Feedback", systemImage: "bubble.left.and.exclamationmark.bubble.right")
                 }
@@ -75,21 +77,21 @@ struct ChatView: View {
             .frame(minWidth: 600, minHeight: 400)
 #endif
         }
+        .sheet(isPresented: $showInstructionsSheet) {
+            ChatInstructionsView(
+                instructions: $viewModel.instructions,
+                onApply: {
+                    viewModel.updateInstructions(viewModel.instructions)
+                    viewModel.clearChat()
+                }
+            )
+#if os(macOS)
+            .frame(minWidth: 500, minHeight: 400)
+#endif
+        }
     }
-
 
     // MARK: - View Components
-
-    private var instructionsView: some View {
-        ChatInstructionsView(
-            showInstructions: $showInstructions,
-            instructions: $viewModel.instructions,
-            onApply: {
-                viewModel.updateInstructions(viewModel.instructions)
-                viewModel.clearChat()
-            }
-        )
-    }
 
     private var messagesView: some View {
         ScrollViewReader { proxy in
@@ -145,5 +147,7 @@ struct ChatView: View {
 }
 
 #Preview {
-    ChatView(viewModel: .constant(ChatViewModel()))
+    NavigationStack {
+        ChatView(viewModel: .constant(ChatViewModel()))
+    }
 }
