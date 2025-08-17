@@ -37,6 +37,7 @@ struct AdaptiveNavigationView: View {
             Tab(TabSelection.examples.displayName, systemImage: "sparkles", value: .examples) {
                 NavigationStack {
                     ExamplesView(viewModel: $contentViewModel)
+                        .background(TopGradientView())
                 }
             }
             

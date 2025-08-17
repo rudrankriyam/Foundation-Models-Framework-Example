@@ -61,7 +61,6 @@ struct ExamplesView: View {
                     )
                     .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
             }
         }
         .padding(.horizontal, Spacing.medium)

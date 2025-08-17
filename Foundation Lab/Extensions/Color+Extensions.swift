@@ -10,7 +10,7 @@ import SwiftUI
 extension Color {
     /// The main accent color used throughout the app
     static var main: Color {
-        Color.purple
+        Color.indigo
     }
     
     /// Secondary background color that adapts to the platform
