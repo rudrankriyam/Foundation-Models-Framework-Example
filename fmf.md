@@ -1569,7 +1569,22 @@ extension LanguageModelSession {
             public init(debugDescription: String)
         }
 
-        /// The context in which the refusal error occurred.
+        /// A refusal produced by a language model.
+        ///
+        /// Refusal errors indicate that the model chose not to respond to a prompt. To make the model
+        /// explain why it refused, catch the refusal error and access one of its explanation properties.
+        ///
+        /// ```swift
+        /// do {
+        ///     let session = LanguageModelSession()
+        ///     let response = try session.respond(to: "...")
+        /// } catch error as LanguageModelSession.GenerationError.refusal(let refusal, _) {
+        ///     let message = try await refusal.explanation
+        ///     print(message)
+        /// } catch {
+        ///     print("Something went wrong: \(error)")
+        /// }
+        /// ```
         @available(iOS 26.0, macOS 26.0, *)
         @available(tvOS, unavailable)
         @available(watchOS, unavailable)
@@ -1577,8 +1592,10 @@ extension LanguageModelSession {
 
             public init(transcriptEntries: [Transcript.Entry])
 
+            /// An explanation for why the model refused to respond.
             public var explanation: LanguageModelSession.Response<String> { get async throws }
 
+            /// A stream containing an explanation about why the model refused to respond.
             public var explanationStream: LanguageModelSession.ResponseStream<String> { get }
         }
 
@@ -1629,6 +1646,12 @@ extension LanguageModelSession {
         /// second prompt while it's still responding to the first one.
         case concurrentRequests(LanguageModelSession.GenerationError.Context)
 
+        /// An error indicating that the model refused to answer.
+        ///
+        /// This error can happen for prompts that do not violate any guardrail policy, but
+        /// the model isn't able to provide the kind of response you requested. You can
+        /// choose to handle this error by showing a predetermined message of your choice,
+        /// or you can use the `Refusal` to generate an explanation from the model itself.
         case refusal(LanguageModelSession.GenerationError.Refusal, LanguageModelSession.GenerationError.Context)
 
         /// A string representation of the error description.
@@ -2020,15 +2043,17 @@ final public class SystemLanguageModel : Sendable {
     public struct UseCase : Sendable, Equatable {
 
         /// A use case for general prompting.
+        ///
+        /// This is the default use case for the base version of the model, so if you use
+        /// `SystemLanguageModel.default`, you don't need to specify a use case.
         public static let general: SystemLanguageModel.UseCase
 
         /// A use case for content tagging.
         ///
-        /// Content tagging produces a list of categorizing tags based on the input text. It can analyze input
-        /// to detect topics, emotions, actions, and objects. For example, the input "I rode my bike to the store"
-        /// might output an action tag "ride."
-        ///
-        /// - Note: Content tagging only supports English and can't be used with tool calling.
+        /// Content tagging produces a list of categorizing tags based on the input prompt. When specializing
+        /// the model for the `contentTagging` use case, it always responds with tags. The tagging
+        /// capabilities of the model include detecting topics, emotions, actions, and objects. For more
+        /// information about content tagging, see <doc:categorizing-and-organizing-data-with-content-tags>.
         public static let contentTagging: SystemLanguageModel.UseCase
 
         /// Returns a Boolean value indicating whether two values are equal.
@@ -2181,8 +2206,15 @@ extension SystemLanguageModel {
     @available(watchOS, unavailable)
     public convenience init(adapter: SystemLanguageModel.Adapter, guardrails: SystemLanguageModel.Guardrails = .default)
 
-    /// Languages supported by the model.
+    /// Languages that the model supports.
+    ///
+    /// To check if a given locale is considered supported by the model, use `supportsLocale(_:)`, which will also take into consideration language fallbacks.
     final public var supportedLanguages: Set<Locale.Language> { get }
+
+    /// Returns a Boolean indicating whether the given locale is supported by the model.
+    ///
+    /// Use this method over `supportedLanguages` to check whether the given locale qualifies a user for using this model, as this method will take into consideration language fallbacks.
+    final public func supportsLocale(_ locale: Locale = Locale.current) -> Bool
 }
 
 @available(iOS 26.0, macOS 26.0, *)
@@ -2324,6 +2356,11 @@ extension SystemLanguageModel.Availability.UnavailableReason : Hashable {
 /// includes a name and a description that the framework puts in the prompt to let
 /// the model decide when and how often to call your tool.
 ///
+/// A `Tool` defines a ``call(arguments:)`` method that takes arguments that conforms to
+/// ``ConvertibleFromGeneratedContent``, and returns an output of any type that conforms to
+/// ``PromptRepresentable``, allowing the model to understand and reason about in subsequent
+/// interactions. Typically, ``Output`` is a `String` or any ``Generable`` types.
+///
 /// ```swift
 /// struct FindContacts: Tool {
 ///     let name = "findContacts"
@@ -2335,10 +2372,13 @@ extension SystemLanguageModel.Availability.UnavailableReason : Hashable {
 ///         let count: Int
 ///     }
 ///
-///     func call(arguments: Arguments) async throws -> ToolOutput {
+///     func call(arguments: Arguments) async throws -> [String] {
 ///         var contacts: [CNContact] = []
 ///         // Fetch a number of contacts using the arguments.
-///         return ToolOutput(contacts)
+///         let formattedContacts = contacts.map {
+///             "\($0.givenName) \($0.familyName)"
+///         }
+///         return formattedContacts
 ///     }
 /// }
 /// ```
