@@ -58,7 +58,7 @@ struct StructuredDataView: View {
             Label("Generated Book Recommendation", systemImage: "book")
               .font(.headline)
             
-            ExampleResultDisplay(
+            ResultDisplay(
               result: executor.result,
               isSuccess: executor.errorMessage == nil
             )

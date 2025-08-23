@@ -60,7 +60,7 @@ struct CreativeWritingView: View {
             Label("Story Outline", systemImage: "book.closed")
               .font(.headline)
             
-            ExampleResultDisplay(
+            ResultDisplay(
               result: executor.result,
               isSuccess: executor.errorMessage == nil
             )

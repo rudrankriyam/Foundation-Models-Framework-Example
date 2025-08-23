@@ -179,7 +179,7 @@ struct ResultDisplay: View {
         Spacer()
         
         Button(action: copyToClipboard) {
-          Text(isCopied ? "Copied" : "Copy")
+          Image(systemName: isCopied ? "checkmark" : "doc.on.doc")
             .font(.callout)
             .padding(.horizontal, Spacing.small)
             .padding(.vertical, 4)

@@ -166,3 +166,23 @@ struct PromptSuggestions: View {
     }
   }
 }
+
+#Preview {
+  NavigationStack {
+    ExampleViewBase(
+      title: "Sample Example",
+      description: "This is a sample example for demonstration",
+      defaultPrompt: "Tell me a joke",
+      currentPrompt: .constant("Tell me a joke"),
+      isRunning: false,
+      errorMessage: nil,
+      onRun: {},
+      onReset: {}
+    ) {
+      ResultDisplay(
+        result: "Why don't scientists trust atoms? Because they make up everything!",
+        isSuccess: true
+      )
+    }
+  }
+}

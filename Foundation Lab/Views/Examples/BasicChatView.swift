@@ -106,7 +106,7 @@ struct BasicChatView: View {
                 
                 // Result Display
                 if !executor.result.isEmpty {
-                    ExampleResultDisplay(
+                    ResultDisplay(
                         result: executor.result,
                         isSuccess: executor.errorMessage == nil
                     )

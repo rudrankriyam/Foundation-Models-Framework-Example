@@ -58,7 +58,7 @@ struct BusinessIdeasView: View {
             Label("Generated Business Concept", systemImage: "briefcase")
               .font(.headline)
             
-            ExampleResultDisplay(
+            ResultDisplay(
               result: executor.result,
               isSuccess: executor.errorMessage == nil
             )

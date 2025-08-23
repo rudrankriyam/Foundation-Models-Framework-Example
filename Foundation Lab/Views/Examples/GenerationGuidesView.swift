@@ -58,7 +58,7 @@ struct GenerationGuidesView: View {
             Label("Generated Product Review", systemImage: "star.leadinghalf.filled")
               .font(.headline)
             
-            ExampleResultDisplay(
+            ResultDisplay(
               result: executor.result,
               isSuccess: executor.errorMessage == nil
             )
