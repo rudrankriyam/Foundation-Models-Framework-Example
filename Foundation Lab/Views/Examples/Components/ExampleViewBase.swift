@@ -154,88 +154,15 @@ struct PromptSuggestions: View {
                 .background(Color.gray.opacity(0.1))
                 .foregroundColor(.primary)
                 .overlay(
-                  RoundedRectangle(cornerRadius: 20)
+                  RoundedRectangle(cornerRadius: 12)
                     .strokeBorder(Color.gray.opacity(0.2), lineWidth: 1)
                 )
-                .cornerRadius(20)
+                .cornerRadius(12)
             }
             .buttonStyle(.plain)
           }
         }
       }
-    }
-  }
-}
-
-/// Result display with copy functionality
-struct ExampleResultDisplay: View {
-  let result: String
-  let isSuccess: Bool
-  @State private var isCopied = false
-  
-  var body: some View {
-    VStack(alignment: .leading, spacing: Spacing.small) {
-      HStack {
-        Text("RESULT")
-          .font(.footnote)
-          .fontWeight(.medium)
-          .foregroundColor(.secondary)
-        
-        Spacer()
-        
-        Button(action: copyToClipboard) {
-          Text(isCopied ? "Copied" : "Copy")
-            .font(.callout)
-            .padding(.horizontal, Spacing.small)
-            .padding(.vertical, 4)
-        }
-        .buttonStyle(.glassProminent)
-      }
-      
-      ScrollView {
-        Text(LocalizedStringKey(result))
-          .font(.body)
-          .textSelection(.enabled)
-          .padding(Spacing.medium)
-          .frame(maxWidth: .infinity, alignment: .leading)
-          .background(Color.gray.opacity(0.1))
-          .cornerRadius(12)
-      }
-      .frame(maxHeight: 300)
-    }
-  }
-  
-  private func copyToClipboard() {
-    #if os(iOS)
-    UIPasteboard.general.string = result
-    #elseif os(macOS)
-    NSPasteboard.general.clearContents()
-    NSPasteboard.general.setString(result, forType: .string)
-    #endif
-    
-    isCopied = true
-    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-      isCopied = false
-    }
-  }
-}
-
-#Preview {
-  NavigationStack {
-    ExampleViewBase(
-      title: "Sample Example",
-      description: "This is a sample example for demonstration",
-      defaultPrompt: "Tell me a joke",
-      currentPrompt: .constant("Tell me a joke"),
-      isRunning: false,
-      errorMessage: nil,
-      onRun: {},
-      onReset: {}
-    ) {
-      ExampleResultDisplay(
-        result: "Why don't scientists trust atoms? Because they make up everything!",
-        isSuccess: true
-      )
     }
   }
 }

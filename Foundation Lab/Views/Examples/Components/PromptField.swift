@@ -124,7 +124,7 @@ struct PromptHistory: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(Spacing.small)
                 .background(Color.gray.opacity(0.1))
-                .cornerRadius(CornerRadius.small)
+                .cornerRadius(8)
             }
             .buttonStyle(.plain)
             .foregroundColor(.primary)

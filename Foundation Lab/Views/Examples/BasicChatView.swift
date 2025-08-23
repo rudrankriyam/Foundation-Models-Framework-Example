@@ -9,101 +9,127 @@ import FoundationModels
 import SwiftUI
 
 struct BasicChatView: View {
-  @State private var currentPrompt = DefaultPrompts.basicChat
-  @State private var instructions = DefaultPrompts.basicChatInstructions
-  @State private var executor = ExampleExecutor()
-  @State private var showInstructions = false
-  
-  var body: some View {
-    ExampleViewBase(
-      title: "One-shot",
-      description: "Single prompt-response interaction with the AI assistant",
-      defaultPrompt: DefaultPrompts.basicChat,
-      currentPrompt: $currentPrompt,
-      isRunning: executor.isRunning,
-      errorMessage: executor.errorMessage,
-      codeExample: DefaultPrompts.basicChatCode(
-        prompt: currentPrompt,
-        instructions: showInstructions && !instructions.isEmpty ? instructions : nil
-      ),
-      onRun: executeChat,
-      onReset: resetToDefaults
-    ) {
-      VStack(spacing: Spacing.large) {
-        // Instructions Section
-        VStack(alignment: .leading, spacing: 0) {
-          Button(action: { showInstructions.toggle() }) {
-            HStack(spacing: Spacing.small) {
-              Image(systemName: showInstructions ? "chevron.down" : "chevron.right")
-                .font(.caption2)
-                .foregroundColor(.secondary)
-              
-              Text("Instructions")
-                .font(.callout)
-                .foregroundColor(.primary)
-              
-              Spacer()
-            }
-          }
-          .buttonStyle(.plain)
-          
-          if showInstructions {
-            VStack(alignment: .leading, spacing: Spacing.small) {
-              TextEditor(text: $instructions)
-                .font(.body)
-                .scrollContentBackground(.hidden)
-                .padding(Spacing.medium)
-                .frame(maxWidth: .infinity, alignment: .leading)
+    @State private var currentPrompt = DefaultPrompts.basicChat
+    @State private var instructions = DefaultPrompts.basicChatInstructions
+    @State private var executor = ExampleExecutor()
+    @State private var showInstructions = false
+    @State private var usePermissiveGuardrails = false
+    
+    var body: some View {
+        ExampleViewBase(
+            title: "One-shot",
+            description: "Single prompt-response interaction with the AI assistant",
+            defaultPrompt: DefaultPrompts.basicChat,
+            currentPrompt: $currentPrompt,
+            isRunning: executor.isRunning,
+            errorMessage: executor.errorMessage,
+            codeExample: DefaultPrompts.basicChatCode(
+                prompt: currentPrompt,
+                instructions: showInstructions && !instructions.isEmpty ? instructions : nil
+            ),
+            onRun: executeChat,
+            onReset: resetToDefaults
+        ) {
+            VStack(spacing: Spacing.large) {
+                // Instructions Section
+                VStack(alignment: .leading, spacing: 0) {
+                    Button(action: { showInstructions.toggle() }) {
+                        HStack(spacing: Spacing.small) {
+                            Image(systemName: showInstructions ? "chevron.down" : "chevron.right")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                            
+                            Text("Instructions")
+                                .font(.callout)
+                                .foregroundColor(.primary)
+                            
+                            Spacer()
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, Spacing.medium)
+                    .padding(.vertical, Spacing.small)
+                    
+                    if showInstructions {
+                        VStack(alignment: .leading, spacing: Spacing.small) {
+                            TextEditor(text: $instructions)
+                                .font(.body)
+                                .scrollContentBackground(.hidden)
+                                .padding(Spacing.medium)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(Color.gray.opacity(0.05))
+                                .cornerRadius(8)
+                        }
+                        .padding(.horizontal, Spacing.medium)
+                        .padding(.bottom, Spacing.small)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
+                }
                 .background(Color.gray.opacity(0.1))
                 .cornerRadius(12)
+                
+                // Guardrails Toggle
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Permissive Content Transformations")
+                            .font(.callout)
+                            .foregroundColor(.primary)
+                        
+                        Text("Allow potentially unsafe content for text transformations")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Spacer()
+                    
+                    Toggle("", isOn: $usePermissiveGuardrails)
+                        .labelsHidden()
+                }
+                .padding(.horizontal, Spacing.medium)
+                .padding(.vertical, Spacing.small)
+                .background(Color.gray.opacity(0.1))
+                .cornerRadius(12)
+                
+                // Prompt Suggestions
+                PromptSuggestions(
+                    suggestions: DefaultPrompts.basicChatSuggestions,
+                    onSelect: { currentPrompt = $0 }
+                )
+                
+                // Prompt History
+                if !executor.promptHistory.isEmpty {
+                    PromptHistory(
+                        history: executor.promptHistory,
+                        onSelect: { currentPrompt = $0 }
+                    )
+                }
+                
+                // Result Display
+                if !executor.result.isEmpty {
+                    ExampleResultDisplay(
+                        result: executor.result,
+                        isSuccess: executor.errorMessage == nil
+                    )
+                }
             }
-            .padding(.top, Spacing.small)
-            .transition(.opacity.combined(with: .move(edge: .top)))
-          }
         }
-        
-        // Prompt Suggestions
-        PromptSuggestions(
-          suggestions: DefaultPrompts.basicChatSuggestions,
-          onSelect: { currentPrompt = $0 }
-        )
-        
-        // Prompt History
-        if !executor.promptHistory.isEmpty {
-          PromptHistory(
-            history: executor.promptHistory,
-            onSelect: { currentPrompt = $0 }
-          )
-        }
-        
-        // Result Display
-        if !executor.result.isEmpty {
-          ExampleResultDisplay(
-            result: executor.result,
-            isSuccess: executor.errorMessage == nil
-          )
-        }
-      }
     }
-  }
-  
-  private func executeChat() {
-    Task {
-      await executor.executeBasic(
-        prompt: currentPrompt,
-        instructions: instructions.isEmpty ? nil : instructions
-      )
+    
+    private func executeChat() {
+        Task {
+            let guardrails: SystemLanguageModel.Guardrails = usePermissiveGuardrails ? .permissiveContentTransformations : .default
+            
+            await executor.executeBasic(
+                prompt: currentPrompt,
+                instructions: instructions.isEmpty ? nil : instructions,
+                guardrails: guardrails
+            )
+        }
     }
-  }
-  
-  private func resetToDefaults() {
-    currentPrompt = DefaultPrompts.basicChat
-    instructions = DefaultPrompts.basicChatInstructions
-  }
-}
-
-#Preview {
-  NavigationStack {
-    BasicChatView()
-  }
+    
+    private func resetToDefaults() {
+        currentPrompt = DefaultPrompts.basicChat
+        instructions = DefaultPrompts.basicChatInstructions
+        usePermissiveGuardrails = false
+    }
 }

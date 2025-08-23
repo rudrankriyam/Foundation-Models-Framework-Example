@@ -22,7 +22,8 @@ final class ExampleExecutor {
     func executeBasic(
         prompt: String,
         instructions: String? = nil,
-        successMessage: String? = nil
+        successMessage: String? = nil,
+        guardrails: SystemLanguageModel.Guardrails = .default
     ) async {
         guard !prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             errorMessage = "Please enter a valid prompt"
@@ -39,10 +40,12 @@ final class ExampleExecutor {
 
         do {
             let session: LanguageModelSession
+            let model = SystemLanguageModel(useCase: .general, guardrails: guardrails)
+            
             if let instructions = instructions {
-                session = LanguageModelSession(instructions: Instructions(instructions))
+                session = LanguageModelSession(model: model, instructions: Instructions(instructions))
             } else {
-                session = LanguageModelSession()
+                session = LanguageModelSession(model: model)
             }
 
             let response = try await session.respond(to: Prompt(prompt))
