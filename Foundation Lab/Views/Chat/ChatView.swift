@@ -31,7 +31,7 @@ struct ChatView: View {
             )
         }
         .environment(viewModel)
-        .navigationTitle("Chat")
+        .navigationTitle("Chat (\(viewModel.session.transcript.estimatedTokenCount) tokens)")
 #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
 #endif
