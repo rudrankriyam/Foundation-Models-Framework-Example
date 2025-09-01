@@ -16,6 +16,7 @@ final class ChatViewModel {
 
     var isLoading: Bool = false
     var isSummarizing: Bool = false
+    var isApplyingWindow: Bool = false
     var sessionCount: Int = 1
     var instructions: String = "You are a helpful, friendly AI assistant. Engage in natural conversation and provide thoughtful, detailed responses."
     var errorMessage: String?
@@ -28,6 +29,11 @@ final class ChatViewModel {
     // MARK: - Feedback State
     
     private(set) var feedbackState: [Transcript.Entry.ID: LanguageModelFeedback.Sentiment] = [:]
+
+    // MARK: - Sliding Window Configuration
+    private let maxTokens = 4096
+    private let windowThreshold = 0.75 // Start windowing at 75%
+    private let targetWindowSize = 2000 // Keep ~2000 tokens after windowing
 
     // MARK: - Initialization
 
@@ -46,6 +52,11 @@ final class ChatViewModel {
         isLoading = session.isResponding
 
         do {
+            // Check if we need to apply sliding window BEFORE sending
+            if shouldApplyWindow() {
+                await applySlidingWindow()
+            }
+
             // Stream response from current session
             let responseStream = session.streamResponse(to: Prompt(content))
 
@@ -54,7 +65,7 @@ final class ChatViewModel {
             }
 
         } catch LanguageModelSession.GenerationError.exceededContextWindowSize {
-            // Handle context window exceeded by summarizing and creating new session
+            // Fallback: Handle context window exceeded by summarizing and creating new session
             await handleContextWindowExceeded(userMessage: content)
 
         } catch {
@@ -108,7 +119,46 @@ final class ChatViewModel {
         )
     }
 
-    // MARK: - Private Methods
+    // MARK: - Sliding Window Implementation
+
+    private func shouldApplyWindow() -> Bool {
+        return session.transcript.isApproachingLimit(threshold: windowThreshold, maxTokens: maxTokens)
+    }
+
+    @MainActor
+    private func applySlidingWindow() async {
+        isApplyingWindow = true
+        
+        print("🪟 Applying sliding window - Current tokens: \(session.transcript.estimatedTokenCount)")
+        
+        // Get entries that fit within our target window size
+        let windowEntries = session.transcript.entriesWithinTokenBudget(targetWindowSize)
+        
+        // Always preserve instructions at the beginning
+        var finalEntries = windowEntries
+        if let instructions = session.transcript.first(where: { 
+            if case .instructions(_) = $0 { return true }
+            return false 
+        }) {
+            if !finalEntries.contains(where: { $0.id == instructions.id }) {
+                finalEntries.insert(instructions, at: 0)
+            }
+        }
+        
+        // Create new session with windowed transcript
+        let windowedTranscript = Transcript(entries: finalEntries)
+        let newTokenCount = windowedTranscript.estimatedTokenCount
+        
+        session = LanguageModelSession(transcript: windowedTranscript)
+        
+        sessionCount += 1
+        
+        print("🪟 Sliding window applied - Reduced to: \(newTokenCount) tokens (\(finalEntries.count) entries)")
+        
+        isApplyingWindow = false
+    }
+
+    // MARK: - Private Methods (Existing)
 
     private func handleFoundationModelsError(_ error: Error) -> String {
         if let generationError = error as? LanguageModelSession.GenerationError {

@@ -115,6 +115,19 @@ struct ChatView: View {
                         .id("summarizing")
                     }
 
+                    if viewModel.isApplyingWindow {
+                        HStack {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                            Text("Optimizing conversation history...")
+                                .font(.caption)
+                                .foregroundStyle(.blue)
+                            Spacer()
+                        }
+                        .padding(.horizontal)
+                        .id("windowing")
+                    }
+
                     // Empty spacer for bottom padding
                     Rectangle()
                         .fill(.clear)
@@ -138,6 +151,13 @@ struct ChatView: View {
                 if isSummarizing {
                     withAnimation(.easeOut(duration: 0.3)) {
                         proxy.scrollTo("summarizing", anchor: .bottom)
+                    }
+                }
+            }
+            .onChange(of: viewModel.isApplyingWindow) { _, isApplyingWindow in
+                if isApplyingWindow {
+                    withAnimation(.easeOut(duration: 0.3)) {
+                        proxy.scrollTo("windowing", anchor: .bottom)
                     }
                 }
             }
