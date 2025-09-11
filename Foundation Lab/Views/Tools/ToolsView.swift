@@ -13,10 +13,6 @@ import SwiftUI
 #endif
 
 struct ToolsView: View {
-  @State private var isRunning = false
-  @State private var result: String = ""
-  @State private var errorMessage: String?
-  @State private var selectedTool: ToolExample?
   @Namespace private var glassNamespace
 
   var body: some View {
@@ -95,46 +91,7 @@ struct ToolsView: View {
     #endif
   }
 
-  @ViewBuilder
-  private var resultView: some View {
-    VStack(alignment: .leading, spacing: 12) {
-      HStack {
-        Text("Result")
-          .font(.headline)
-        Spacer()
-        Button("Clear") {
-          result = ""
-          errorMessage = nil
-          selectedTool = nil
-        }
-        .font(.caption)
-      }
-
-      if let error = errorMessage {
-        Text("Error: \(error)")
-          .foregroundColor(.red)
-          .font(.caption)
-          .padding()
-          .frame(maxWidth: .infinity, alignment: .leading)
-          .background(Color.red.opacity(0.1))
-          .cornerRadius(8)
-      }
-
-      if !result.isEmpty {
-        ScrollView {
-          Text(result)
-            .font(.system(.body, design: .monospaced))
-            .textSelection(.enabled)
-            .padding()
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.secondaryBackgroundColor)
-            .cornerRadius(8)
-        }
-        .frame(maxHeight: 300)
-      }
-    }
-    .padding(.horizontal)
-  }
+  // Removed unused resultView and related state
 }
 
 // MARK: - Tool Button Component

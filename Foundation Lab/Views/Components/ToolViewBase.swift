@@ -45,7 +45,7 @@ struct ToolViewBase<Content: View>: View {
             .background(Color.gray.opacity(0.1))
             .cornerRadius(12)
         }
-        
+
         content
       }
       .padding(.horizontal, Spacing.medium)
@@ -59,6 +59,7 @@ struct ToolViewBase<Content: View>: View {
     .navigationBarTitleDisplayMode(.large)
     .navigationSubtitle(description)
     #endif
+    .background(TopGradientView())
   }
 }
 
@@ -184,7 +185,7 @@ struct ResultDisplay: View {
             .padding(.horizontal, Spacing.small)
             .padding(.vertical, 4)
         }
-        .buttonStyle(.glassProminent)
+        .buttonStyle(.glass)
       }
 
       ScrollView {
@@ -432,11 +433,12 @@ struct ToolInputField: View {
         .font(.footnote)
         .fontWeight(.medium)
         .foregroundColor(.secondary)
-      
+
       TextEditor(text: $text)
         .font(.body)
         .scrollContentBackground(.hidden)
         .padding(Spacing.medium)
+        .frame(minHeight: 60, maxHeight: 120)
         .background(Color.gray.opacity(0.1))
         .cornerRadius(12)
     }

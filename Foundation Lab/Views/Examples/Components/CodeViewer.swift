@@ -38,7 +38,7 @@ struct CodeViewer: View {
             .padding(.horizontal, Spacing.small)
             .padding(.vertical, Spacing.xSmall)
         }
-        .buttonStyle(.glassProminent)
+        .buttonStyle(.glass)
       }
       
       ScrollView {

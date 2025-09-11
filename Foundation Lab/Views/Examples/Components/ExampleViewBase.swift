@@ -50,7 +50,7 @@ struct ExampleViewBase<Content: View>: View {
       VStack(alignment: .leading, spacing: Spacing.large) {
         promptSection
         actionButtons
-        
+
         if let error = errorMessage {
           Text(error)
             .font(.callout)
@@ -60,9 +60,9 @@ struct ExampleViewBase<Content: View>: View {
             .background(Color.gray.opacity(0.1))
             .cornerRadius(12)
         }
-        
+
         content
-        
+
         if let code = codeExample {
           CodeDisclosure(code: code)
         }
@@ -78,6 +78,7 @@ struct ExampleViewBase<Content: View>: View {
     .navigationBarTitleDisplayMode(.large)
     .navigationSubtitle(description)
     #endif
+    .background(TopGradientView())
   }
   
   private var promptSection: some View {
@@ -86,11 +87,12 @@ struct ExampleViewBase<Content: View>: View {
         .font(.footnote)
         .fontWeight(.medium)
         .foregroundColor(.secondary)
-      
+
       TextEditor(text: $currentPrompt)
         .font(.body)
         .scrollContentBackground(.hidden)
         .padding(Spacing.medium)
+        .frame(minHeight: 120)
         .background(Color.gray.opacity(0.1))
         .cornerRadius(12)
     }
