@@ -138,10 +138,6 @@ let response = try await session.respond(
 )
 let book = response.content
 
-print("Title: \\(book.title)")
-print("Author: \\(book.author)")
-print("Genre: \\(book.genre)")
-print("Description: \\(book.description)")
 """
   }
   
@@ -157,11 +153,6 @@ let response = try await session.respond(
 )
 let review = response.content
 
-print("Product: \\(review.productName)")
-print("Rating: \\(review.rating)/5")
-print("Recommendation: \\(review.recommendation)")
-print("Pros: \\(review.pros.joined(separator: ", "))")
-print("Cons: \\(review.cons.joined(separator: ", "))")
 """
   }
   
@@ -174,7 +165,6 @@ let session = LanguageModelSession()
 // Stream the response token by token
 let stream = session.streamResponse(to: "\(prompt)")
 for try await partialResponse in stream {
-    print(partialResponse, terminator: "")
 }
 """
   }
@@ -191,9 +181,6 @@ let response = try await session.respond(
 )
 let idea = response.content
 
-print("Business: \\(idea.name)")
-print("Revenue Model: \\(idea.revenueModel)")
-print("Startup Cost: \\(idea.estimatedStartupCost)")
 """
   }
   
@@ -230,11 +217,8 @@ let availability = SystemLanguageModel.default.availability
 
 switch availability {
 case .available:
-    print("Apple Intelligence is available!")
 case .notAvailable(let reason):
-    print("Not available: \\(reason)")
 @unknown default:
-    print("Unknown availability status")
 }
 """
 }

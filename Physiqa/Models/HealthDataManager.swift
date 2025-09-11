@@ -99,7 +99,7 @@ class HealthDataManager {
                 await saveMetric(type: .steps, value: todaySteps)
             }
         } catch {
-            print("Error fetching steps: \(error)")
+            // Handle steps fetch error silently
         }
     }
     
@@ -122,7 +122,7 @@ class HealthDataManager {
                 await saveMetric(type: .activeEnergy, value: todayActiveEnergy)
             }
         } catch {
-            print("Error fetching active energy: \(error)")
+            // Handle active energy fetch error silently
         }
     }
     
@@ -146,7 +146,7 @@ class HealthDataManager {
                 await saveMetric(type: .distance, value: todayDistance)
             }
         } catch {
-            print("Error fetching distance: \(error)")
+            // Handle distance fetch error silently
         }
     }
     
@@ -167,7 +167,7 @@ class HealthDataManager {
                 await saveMetric(type: .heartRate, value: currentHeartRate)
             }
         } catch {
-            print("Error fetching heart rate: \(error)")
+            // Handle heart rate fetch error silently
         }
     }
     
@@ -201,7 +201,7 @@ class HealthDataManager {
                 await saveMetric(type: .sleep, value: lastNightSleep)
             }
         } catch {
-            print("Error fetching sleep: \(error)")
+            // Handle sleep fetch error silently
         }
     }
     
@@ -265,7 +265,7 @@ class HealthDataManager {
                 return sum.doubleValue(for: HKUnit.count())
             }
         } catch {
-            print("Error fetching steps value: \(error)")
+            // Handle steps value fetch error silently
         }
         
         return 0
@@ -288,7 +288,7 @@ class HealthDataManager {
                 return sum.doubleValue(for: .kilocalorie())
             }
         } catch {
-            print("Error fetching energy value: \(error)")
+            // Handle energy value fetch error silently
         }
         
         return 0
@@ -320,7 +320,7 @@ class HealthDataManager {
             
             return totalSleepTime / 3600 // Convert to hours
         } catch {
-            print("Error fetching sleep value: \(error)")
+            // Handle sleep value fetch error silently
         }
         
         return 0
@@ -343,7 +343,7 @@ class HealthDataManager {
         do {
             try modelContext.save()
         } catch {
-            print("Error saving metric: \(error)")
+            // Handle metric save error silently
         }
     }
 }

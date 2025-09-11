@@ -15,18 +15,9 @@ import Playgrounds
     generating: ProductReview.self
   )
 
-  print("📱 Product Review:")
-  print("Product: \(review.content.productName)")
-  print("Rating: \(review.content.rating)/5")
-  print("\nReview: \(review.content.reviewText)")
-  print("\nRecommendation: \(review.content.recommendation)")
-  print("\nPros:")
   for pro in review.content.pros {
-    print("• \(pro)")
   }
-  print("\nCons:")
   for con in review.content.cons {
-    print("• \(con)")
   }
 
   // Generate a summary with specific word count constraint
@@ -34,11 +25,8 @@ import Playgrounds
     to: "Summarize the above review in exactly 50 words or less."
   )
 
-  print("\n📝 Summary (50 words or less):")
-  print(shortSummary.content)
 
   // Example with different product
-  print("\n--- Another Product Review ---")
 
   let laptopReview = try await session.respond(
     to: """
@@ -48,8 +36,4 @@ import Playgrounds
     generating: ProductReview.self
   )
 
-  print("\n💻 Gaming Laptop Review:")
-  print("Product: \(laptopReview.content.productName)")
-  print("Rating: \(laptopReview.content.rating)/5")
-  print("Review: \(laptopReview.content.reviewText)")
 }

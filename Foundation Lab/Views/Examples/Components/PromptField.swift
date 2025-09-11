@@ -176,7 +176,7 @@ struct PromptHistory: View {
       "What is machine learning?",
       "Create a recipe for chocolate cake"
     ],
-    onSelect: { print("Selected: \($0)") }
+    onSelect: { _ in }
   )
   .padding()
 }

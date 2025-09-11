@@ -155,7 +155,7 @@ final class PhysiqaChatViewModel {
             
             try modelContext.save()
         } catch {
-            print("Error saving message to session: \(error)")
+            // Handle save error silently
         }
     }
     
@@ -182,7 +182,7 @@ final class PhysiqaChatViewModel {
         do {
             try modelContext.save()
         } catch {
-            print("Error saving health insight: \(error)")
+            // Handle save error silently
         }
     }
     

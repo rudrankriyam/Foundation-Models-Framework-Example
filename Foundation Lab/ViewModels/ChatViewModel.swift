@@ -84,15 +84,6 @@ final class ChatViewModel {
 
         // Use the new session method to log feedback attachment
         let feedbackData = session.logFeedbackAttachment(sentiment: sentiment)
-        
-        #if DEBUG
-        print("\n--- Feedback Submitted ---")
-        print("Feedback data size: \(feedbackData.count) bytes")
-        if let jsonString = String(data: feedbackData, encoding: .utf8) {
-            print(jsonString)
-        }
-        print("------------------------\n")
-        #endif
     }
     
     @MainActor
@@ -128,9 +119,7 @@ final class ChatViewModel {
     @MainActor
     private func applySlidingWindow() async {
         isApplyingWindow = true
-        
-        print("🪟 Applying sliding window - Current tokens: \(session.transcript.estimatedTokenCount)")
-        
+
         // Get entries that fit within our target window size
         let windowEntries = session.transcript.entriesWithinTokenBudget(targetWindowSize)
         
@@ -148,13 +137,11 @@ final class ChatViewModel {
         // Create new session with windowed transcript
         let windowedTranscript = Transcript(entries: finalEntries)
         let newTokenCount = windowedTranscript.estimatedTokenCount
-        
+
         session = LanguageModelSession(transcript: windowedTranscript)
-        
+
         sessionCount += 1
-        
-        print("🪟 Sliding window applied - Reduced to: \(newTokenCount) tokens (\(finalEntries.count) entries)")
-        
+
         isApplyingWindow = false
     }
 

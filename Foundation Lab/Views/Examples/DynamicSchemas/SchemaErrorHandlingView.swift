@@ -341,7 +341,6 @@ struct SchemaErrorHandlingView: View {
             )
         } catch {
             // Log error and try with more lenient schema
-            print("Schema validation failed: \\(error)")
         }
         """
     }

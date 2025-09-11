@@ -4,7 +4,6 @@ import Playgrounds
 #Playground {
   let session = LanguageModelSession()
 
-  print("Generating innovative business idea...")
 
   let businessIdea = try await session.respond(
     to:
@@ -12,7 +11,6 @@ import Playgrounds
     generating: BusinessIdea.self, includeSchemaInPrompt: true
   )
 
-  print(
     """
     Business Idea: \(businessIdea.content.name)
 
@@ -30,11 +28,9 @@ import Playgrounds
     """)
 
   // Generate additional market analysis
-  print("\nMarket Analysis:")
   let marketAnalysis = try await session.respond(
     to:
       "Provide a brief market analysis for '\(businessIdea.content.name)' including potential competitors and market size."
   )
 
-  print(marketAnalysis)
 }

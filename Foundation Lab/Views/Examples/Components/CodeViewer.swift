@@ -133,7 +133,6 @@ let response = try await session.generate(
     with: "Tell me a joke",
     using: .conversational
 )
-print(response)
 """)
       
       CodeViewer(code: """

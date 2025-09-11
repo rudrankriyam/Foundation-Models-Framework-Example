@@ -34,106 +34,79 @@ class AudioManager: ObservableObject {
     private var updateTimer: Timer?
 
     init() {
-        print("[AudioManager] Initializing AudioManager")
         setupAudioSession()
         setupFFT()
-        print("[AudioManager] Initialization complete")
     }
 
     deinit {
-        print("[AudioManager] Deinitializing AudioManager")
         stopAudioSession()
         if let fftSetup = fftSetup {
             vDSP_destroy_fftsetup(fftSetup)
-            print("[AudioManager] FFT setup destroyed")
         }
     }
 
     private func setupAudioSession() {
-        print("[AudioManager] Setting up audio session")
 
 #if os(iOS)
         let audioSession = AVAudioSession.sharedInstance()
 
         do {
-            print("[AudioManager] Setting audio category to playAndRecord")
             try audioSession.setCategory(
                 .playAndRecord, mode: .default, options: [.defaultToSpeaker, .mixWithOthers])
-            print("[AudioManager] Activating audio session")
             try audioSession.setActive(true)
-            print("[AudioManager] Audio session activated successfully")
 
             // Request microphone permission
-            print("[AudioManager] Requesting microphone permission")
             audioSession.requestRecordPermission { [weak self] granted in
                 if granted {
-                    print("[AudioManager] Microphone permission granted")
                     self?.setupAudioEngine()
                 } else {
-                    print("[AudioManager] ERROR: Microphone permission denied")
                 }
             }
         } catch {
-            print("[AudioManager] ERROR: Failed to setup audio session: \(error)")
         }
 #elseif os(macOS)
         // On macOS, we don't have AVAudioSession, just set up the engine directly
-        print("[AudioManager] macOS detected, setting up audio engine directly")
         setupAudioEngine()
 #endif
     }
 
     private func setupFFT() {
-        print("[AudioManager] Setting up FFT with length: \(fftLength)")
         let log2n = vDSP_Length(log2f(Float(fftLength)))
         fftSetup = vDSP_create_fftsetup(log2n, Int32(kFFTRadix2))
 
         if fftSetup != nil {
-            print("[AudioManager] FFT setup created successfully")
         } else {
-            print("[AudioManager] ERROR: Failed to create FFT setup")
         }
 
         // Create Hanning window for better frequency resolution
         window = [Float](repeating: 0, count: fftLength)
         vDSP_hann_window(&window, vDSP_Length(fftLength), Int32(vDSP_HANN_NORM))
-        print("[AudioManager] Hanning window created")
     }
 
     private func setupAudioEngine() {
-        print("[AudioManager] Setting up audio engine")
         audioEngine = AVAudioEngine()
         guard let audioEngine = audioEngine else {
-            print("[AudioManager] ERROR: Failed to create audio engine")
             return
         }
-        print("[AudioManager] Audio engine created")
 
         inputNode = audioEngine.inputNode
         audioFormat = inputNode?.inputFormat(forBus: 0)
 
         guard let audioFormat = audioFormat else {
-            print("[AudioManager] ERROR: Failed to get audio format")
             return
         }
 
-        print("[AudioManager] Audio format: \(audioFormat)")
-        print("[AudioManager] Sample rate: \(audioFormat.sampleRate) Hz")
-        print("[AudioManager] Channels: \(audioFormat.channelCount)")
 
         // Install tap on input node to capture audio
         let bufferSize = AVAudioFrameCount(fftLength)
-        print("[AudioManager] Installing audio tap with buffer size: \(bufferSize)")
         inputNode?.installTap(onBus: 0, bufferSize: bufferSize, format: audioFormat) {
             [weak self] buffer, _ in
             self?.processAudioBuffer(buffer)
         }
-        print("[AudioManager] Audio tap installed successfully")
     }
 
     private func processAudioBuffer(_ buffer: AVAudioPCMBuffer) {
         guard let channelData = buffer.floatChannelData?[0] else {
-            print("[AudioManager] ERROR: No channel data in buffer")
             return
         }
         let frameLength = Int(buffer.frameLength)
@@ -148,7 +121,6 @@ class AudioManager: ObservableObject {
 
         // Log audio levels periodically (every 50th buffer to avoid spam)
         if Int.random(in: 0..<50) == 0 {
-            print(
                 "[AudioManager] Audio level - RMS: \(rms), Normalized: \(normalizedAmplitude), Smoothed: \(smoothedAmplitude)"
             )
         }
@@ -176,7 +148,6 @@ class AudioManager: ObservableObject {
 
         // Log significant amplitude changes
         if abs(smoothed - (amplitudeHistory.last ?? 0)) > 0.1 {
-            print("[AudioManager] Significant amplitude change detected: \(smoothed)")
         }
 
         return smoothed
@@ -185,10 +156,8 @@ class AudioManager: ObservableObject {
     private func performFFT(_ data: UnsafeMutablePointer<Float>, frameLength: Int) {
         guard let fftSetup = fftSetup, frameLength >= fftLength else {
             if fftSetup == nil {
-                print("[AudioManager] ERROR: FFT setup is nil")
             }
             if frameLength < fftLength {
-                print(
                     "[AudioManager] ERROR: Frame length (\(frameLength)) is less than FFT length (\(fftLength))"
                 )
             }
@@ -233,44 +202,32 @@ class AudioManager: ObservableObject {
     }
 
     func startAudioSession() {
-        print("[AudioManager] Starting audio session")
         guard let audioEngine = audioEngine else {
-            print("[AudioManager] Audio engine not initialized, setting up now")
             setupAudioEngine()
             return
         }
 
         do {
-            print("[AudioManager] Starting audio engine")
             try audioEngine.start()
             isRecording = true
-            print("[AudioManager] Audio engine started successfully, isRecording = \(isRecording)")
         } catch {
-            print("[AudioManager] ERROR: Failed to start audio engine: \(error)")
-            print("[AudioManager] Error details: \(error.localizedDescription)")
         }
     }
 
     func stopAudioSession() {
-        print("[AudioManager] Stopping audio session")
 
         if let audioEngine = audioEngine {
             audioEngine.stop()
-            print("[AudioManager] Audio engine stopped")
         } else {
-            print("[AudioManager] Audio engine was nil")
         }
 
         if let inputNode = inputNode {
             inputNode.removeTap(onBus: 0)
-            print("[AudioManager] Audio tap removed")
         } else {
-            print("[AudioManager] Input node was nil")
         }
 
         isRecording = false
         currentAmplitude = 0
         frequencyData = []
-        print("[AudioManager] Audio session stopped, isRecording = \(isRecording)")
     }
 }

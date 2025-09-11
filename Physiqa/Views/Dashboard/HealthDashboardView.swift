@@ -263,7 +263,7 @@ struct HealthDashboardView: View {
             do {
                 try await healthDataManager.requestAuthorization()
             } catch {
-                print("Failed to request HealthKit authorization: \(error)")
+                // Handle authorization error silently
                 isLoading = false
                 return
             }
