@@ -5,11 +5,9 @@
 //  Created by Rudrank Riyam on 6/9/25.
 //
 
-import CoreLocation
 import Foundation
 import FoundationModels
 import FoundationModelsTools
-import MapKit
 import Observation
 import SwiftUI
 

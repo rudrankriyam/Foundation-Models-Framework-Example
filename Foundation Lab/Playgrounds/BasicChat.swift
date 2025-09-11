@@ -15,6 +15,7 @@ import Playgrounds
     let response = try await session.respond(
       to: "What's a good name for a trip to \(landmark)? Reply only with a title."
     )
+    debugPrint("Trip name for \(landmark): \(response.content)")
   }
 
   // Example of basic chat with instructions
@@ -26,4 +27,5 @@ import Playgrounds
   let creativeName = try await instructedSession.respond(
     to: "Suggest a catchy name for a new coffee shop."
   )
+  debugPrint("Creative coffee shop name: \(creativeName.content)")
 }

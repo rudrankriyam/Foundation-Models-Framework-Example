@@ -10,7 +10,6 @@ import FoundationModelsTools
 import SwiftUI
 
 struct WeatherToolView: View {
-  @State private var executor = ToolExecutor()
   @State private var isRunning = false
   @State private var result: String = ""
   @State private var errorMessage: String?

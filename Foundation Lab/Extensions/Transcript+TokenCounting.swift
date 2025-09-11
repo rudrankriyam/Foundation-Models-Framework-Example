@@ -7,7 +7,7 @@
 
 import Foundation
 import FoundationModels
-import NaturalLanguage
+// import NaturalLanguage // Unused; removed
 
 // MARK: - Token Counting Extensions
 
@@ -32,6 +32,8 @@ extension Transcript.Entry {
             
         case .toolOutput(let output):
             return output.segments.reduce(0) { $0 + $1.estimatedTokenCount } + 3 // Output overhead
+        @unknown default:
+            fatalError()
         }
     }
 }
@@ -44,6 +46,8 @@ extension Transcript.Segment {
             
         case .structure(let structuredSegment):
             return estimateTokensForStructuredContent(structuredSegment.content)
+        @unknown default:
+            fatalError()
         }
     }
 }
@@ -80,40 +84,11 @@ func estimateTokensForStructuredContent(_ content: GeneratedContent) -> Int {
 }
 
 /// Uses character-based counting: 4 characters per token
-func estimateTokensLinguistic(_ text: String) -> Int {
-    guard !text.isEmpty else { return 0 }
-    
-    let characterCount = text.count
-    let tokensPerChar = 1.0 / 4.0
-    
-    return max(1, Int(ceil(Double(characterCount) * tokensPerChar)))
-}
+// Removed unused alternative token estimator
 
 // MARK: - Helper Functions
 
-private func countWords(_ text: String) -> Int {
-    return text.components(separatedBy: .whitespacesAndNewlines)
-        .filter { !$0.isEmpty }
-        .count
-}
-
-private func containsMedicalTerms(_ text: String) -> Bool {
-    let medicalKeywords = [
-        "diagnosis", "symptoms", "medication", "prescription", "treatment",
-        "blood pressure", "heart rate", "cholesterol", "diabetes", "therapy"
-    ]
-    let lowercased = text.lowercased()
-    return medicalKeywords.contains { lowercased.contains($0) }
-}
-
-private func containsHealthKeywords(_ text: String) -> Bool {
-    let healthKeywords = [
-        "steps", "calories", "exercise", "workout", "sleep", "weight",
-        "bpm", "kg", "lbs", "miles", "km", "hours", "minutes"
-    ]
-    let lowercased = text.lowercased()
-    return healthKeywords.contains { lowercased.contains($0) }
-}
+// Removed unused helper functions
 
 // MARK: - Context Window Management Utilities
 

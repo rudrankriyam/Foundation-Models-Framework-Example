@@ -13,7 +13,7 @@ import Foundation
     generating: BookRecommendation.self
   )
 
-    """
+  debugPrint("""
     📚 Book Recommendation:
     Title: \(bookInfo.content.title)
     Author: \(bookInfo.content.author)

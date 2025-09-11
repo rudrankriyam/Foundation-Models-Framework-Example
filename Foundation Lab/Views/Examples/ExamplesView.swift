@@ -85,13 +85,7 @@ struct ExamplesView: View {
 #endif
     }
 
-    private var gridSpacing: CGFloat {
-#if os(iOS)
-        16
-#else
-        12
-#endif
-    }
+    // Removed unused gridSpacing computed property
 
 
     @ViewBuilder

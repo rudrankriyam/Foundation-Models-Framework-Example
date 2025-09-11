@@ -16,14 +16,18 @@ import Playgrounds
   )
 
   for pro in review.content.pros {
+    debugPrint("Pro: \(pro)")
   }
   for con in review.content.cons {
+    debugPrint("Con: \(con)")
   }
 
   // Generate a summary with specific word count constraint
   let shortSummary = try await session.respond(
     to: "Summarize the above review in exactly 50 words or less."
   )
+
+  debugPrint("Short Summary: \(shortSummary.content)")
 
 
   // Example with different product
@@ -35,5 +39,8 @@ import Playgrounds
       """,
     generating: ProductReview.self
   )
+
+  debugPrint("Laptop Review Rating: \(laptopReview.content.rating)/5")
+  debugPrint("Laptop Review: \(laptopReview.content.reviewText)")
 
 }

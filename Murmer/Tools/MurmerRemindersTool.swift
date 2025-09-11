@@ -123,16 +123,12 @@ struct MurmerRemindersTool: Tool {
 
       // Extract time if specified
       if let time = extractTime(from: lowercased) {
-          "[MurmerRemindersTool.parseTimeExpression] Extracted time: \(time.hour):\(time.minute)")
         components.hour = time.hour
         components.minute = time.minute
-      } else {
       }
 
       let startOfDay = calendar.startOfDay(for: now)
       let result = calendar.date(byAdding: components, to: startOfDay)
-        "[MurmerRemindersTool.parseTimeExpression] Tomorrow date calculated: \(result?.description ?? "nil")"
-      )
       return result
     }
 
@@ -141,12 +137,10 @@ struct MurmerRemindersTool: Tool {
 
       // Extract time if specified
       if let time = extractTime(from: lowercased) {
-          "[MurmerRemindersTool.parseTimeExpression] Extracted time: \(time.hour):\(time.minute)")
         var components = calendar.dateComponents([.year, .month, .day], from: now)
         components.hour = time.hour
         components.minute = time.minute
         date = calendar.date(from: components) ?? now
-      } else {
       }
 
       return date

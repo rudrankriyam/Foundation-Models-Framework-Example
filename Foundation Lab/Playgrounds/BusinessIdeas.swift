@@ -11,7 +11,7 @@ import Playgrounds
     generating: BusinessIdea.self, includeSchemaInPrompt: true
   )
 
-    """
+  debugPrint("""
     Business Idea: \(businessIdea.content.name)
 
     Description:
@@ -32,5 +32,7 @@ import Playgrounds
     to:
       "Provide a brief market analysis for '\(businessIdea.content.name)' including potential competitors and market size."
   )
+
+  debugPrint("Market Analysis: \(marketAnalysis.content)")
 
 }

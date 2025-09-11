@@ -13,7 +13,7 @@ import Playgrounds
     generating: StoryOutline.self
   )
 
-    """
+  debugPrint("""
     Story Outline: \(storyOutline.content.title)
 
     Genre: \(storyOutline.content.genre)
@@ -34,6 +34,8 @@ import Playgrounds
       "Write the opening paragraph for the story '\(storyOutline.content.title)' featuring \(storyOutline.content.protagonist) in \(storyOutline.content.setting)."
   )
 
+  debugPrint("Opening Scene: \(openingScene.content)")
+
 
   // Generate character development
 
@@ -41,6 +43,8 @@ import Playgrounds
     to:
       "Describe the backstory and motivation of \(storyOutline.content.protagonist) in 2-3 sentences."
   )
+
+  debugPrint("Character Development: \(characterDevelopment.content)")
 
 
   // Create another story outline with different genre
@@ -50,7 +54,7 @@ import Playgrounds
     generating: StoryOutline.self
   )
 
-    """
+  debugPrint("""
     Sci-Fi Story: \(sciFiOutline.content.title)
 
     Genre: \(sciFiOutline.content.genre)
