@@ -17,20 +17,20 @@ public struct TopGradientView: View {
         self.opacity = opacity
         self.endPoint = endPoint
     }
-
+    
     // Computed properties for dynamic shader parameters
     private var noiseIntensity: Float {
         scheme == .dark ? 0.4 : 0.2
     }
-
+    
     private var noiseScale: Float {
         scheme == .dark ? 0.5 : 0.5
     }
-
+    
     private var noiseFrequency: Float {
         scheme == .dark ? 0.5 : 0.5
     }
-
+    
     public var body: some View {
         LinearGradient(colors: [
             Color.indigo.opacity(opacity), .antiPrimary
@@ -46,7 +46,7 @@ public struct TopGradientView: View {
 
 extension Color {
     static var antiPrimary: Color {
-        #if os(iOS) || os(tvOS) || os(macCatalyst) || os(visionOS)
+#if os(iOS) || os(tvOS) || os(macCatalyst) || os(visionOS)
         return Color(UIColor { traitCollection in
             if traitCollection.userInterfaceStyle == .dark {
                 return UIColor.black
@@ -54,8 +54,8 @@ extension Color {
                 return UIColor.white
             }
         })
-        #else
+#else
         return .white
-        #endif
+#endif
     }
 }
