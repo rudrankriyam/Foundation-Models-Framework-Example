@@ -101,7 +101,7 @@ struct ExampleViewBase<Content: View>: View {
   private var actionButtons: some View {
     HStack(spacing: Spacing.small) {
       Button(action: onReset) {
-        Text("Reset")
+        Text("Clear")
           .font(.callout)
           .fontWeight(.medium)
           .frame(maxWidth: .infinity)
@@ -109,7 +109,7 @@ struct ExampleViewBase<Content: View>: View {
       }
       .buttonStyle(.glassProminent)
       .tint(.secondary)
-      .disabled(currentPrompt == defaultPrompt)
+      .disabled(currentPrompt == defaultPrompt || currentPrompt.isEmpty)
       
       Button(action: onRun) {
         HStack(spacing: Spacing.small) {

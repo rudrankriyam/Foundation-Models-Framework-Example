@@ -128,8 +128,9 @@ struct BasicChatView: View {
     }
     
     private func resetToDefaults() {
-        currentPrompt = DefaultPrompts.basicChat
+        currentPrompt = "" // Clear the prompt completely
         instructions = DefaultPrompts.basicChatInstructions
         usePermissiveGuardrails = false
+        executor.clearAll() // Clear all results, errors, and history
     }
 }

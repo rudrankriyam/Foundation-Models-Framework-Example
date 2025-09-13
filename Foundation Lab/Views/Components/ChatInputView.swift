@@ -32,17 +32,17 @@ struct ChatInputView: View {
 #endif
                 
                 Button(action: sendMessage) {
-                    Image(systemName: "arrow.up.circle.fill")
-                        .font(.title2)
+                    Image(systemName: "arrow.up")
+                        .font(.headline)
                         .foregroundStyle(
-                            messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .gray : .main
+                            messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .gray : .white
                         )
                 }
                 .padding(Spacing.small)
                 .glassEffect(
                     .regular
                         .tint(messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .clear : .main)
-                        .interactive(true)
+                        .interactive(true), in: .circle
                 )
                 .glassEffectID("sendButton", in: glassNamespace)
                 .disabled(
@@ -84,17 +84,6 @@ struct ChatInputView: View {
         }
         .padding()
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: messageText.isEmpty)
-#if os(iOS)
-        .background(
-            Color(UIColor.systemBackground)
-                .shadow(color: .black.opacity(0.05), radius: Spacing.small, x: 0, y: -2)
-        )
-#elseif os(macOS)
-        .background(
-            Color(NSColor.windowBackgroundColor)
-                .shadow(color: .black.opacity(0.05), radius: Spacing.small, x: 0, y: -2)
-        )
-#endif
 #endif
     }
     

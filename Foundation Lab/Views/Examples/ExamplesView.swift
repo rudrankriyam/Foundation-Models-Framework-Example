@@ -51,7 +51,7 @@ struct ExamplesView: View {
     
     
     private var exampleButtonsView: some View {
-        LazyVGrid(columns: adaptiveGridColumns, spacing: Spacing.medium) {
+        LazyVGrid(columns: adaptiveGridColumns, spacing: Spacing.large) {
             ForEach(ExampleType.allCases) { exampleType in
                 NavigationLink(value: exampleType) {
                     GenericCardView(
@@ -71,17 +71,17 @@ struct ExamplesView: View {
 #if os(iOS)
         // iPhone: 2 columns with flexible sizing and better spacing
         return [
-            GridItem(.flexible(minimum: 140), spacing: 12),
-            GridItem(.flexible(minimum: 140), spacing: 12)
+            GridItem(.flexible(minimum: 140), spacing: Spacing.large),
+            GridItem(.flexible(minimum: 140), spacing: Spacing.large)
         ]
 #elseif os(macOS)
         // Mac: Adaptive columns based on available width
-        return Array(repeating: GridItem(.adaptive(minimum: 280), spacing: 12), count: 1)
+        return Array(repeating: GridItem(.adaptive(minimum: 280), spacing: Spacing.large), count: 1)
 #else
         // Default fallback for other platforms
         return [
-            GridItem(.flexible(minimum: 140), spacing: 12),
-            GridItem(.flexible(minimum: 140), spacing: 12)
+            GridItem(.flexible(minimum: 140), spacing: Spacing.large),
+            GridItem(.flexible(minimum: 140), spacing: Spacing.large)
         ]
 #endif
     }

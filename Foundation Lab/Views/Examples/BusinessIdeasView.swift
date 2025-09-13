@@ -100,7 +100,8 @@ struct BusinessIdeasView: View {
   }
   
   private func resetToDefaults() {
-    currentPrompt = DefaultPrompts.businessIdeas
+    currentPrompt = "" // Clear the prompt completely
+    executor.clearAll() // Clear all results, errors, and history
   }
 }
 

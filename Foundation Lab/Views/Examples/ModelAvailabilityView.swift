@@ -96,6 +96,7 @@ struct ModelAvailabilityView: View {
   private func resetStatus() {
     availabilityStatus = "Tap 'Check Availability' to verify Apple Intelligence status"
     isAvailable = nil
+    isChecking = false // Also reset the checking state
   }
 }
 

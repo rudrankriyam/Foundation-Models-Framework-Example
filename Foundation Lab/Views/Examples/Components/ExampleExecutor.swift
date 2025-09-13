@@ -147,6 +147,12 @@ final class ExampleExecutor {
         successMessage = nil
     }
 
+    /// Clears all state including prompt history
+    func clearAll() {
+        clear()
+        promptHistory = []
+    }
+
     /// Adds a prompt to history
     private func addToHistory(_ prompt: String) {
         // Remove if already exists

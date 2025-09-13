@@ -112,8 +112,9 @@ struct StreamingResponseView: View {
     }
 
     private func resetToDefaults() {
-        currentPrompt = DefaultPrompts.streaming
+        currentPrompt = "" // Clear the prompt completely
         streamingText = ""
+        executor.clearAll() // Clear all results, errors, and history
     }
 }
 
