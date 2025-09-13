@@ -77,8 +77,8 @@ struct ExampleViewBase<Content: View>: View {
     #if os(iOS)
     .navigationBarTitleDisplayMode(.large)
     .navigationSubtitle(description)
-    #endif
     .background(TopGradientView())
+    #endif
   }
   
   private var promptSection: some View {

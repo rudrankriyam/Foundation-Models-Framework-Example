@@ -37,9 +37,11 @@ struct GenericCardView: View {
             
             Spacer(minLength: 0)
         }
+        .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(Spacing.medium)
-        .glassCard()
+#if os(iOS) || os(macOS)
+        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
+#endif
     }
 }
 

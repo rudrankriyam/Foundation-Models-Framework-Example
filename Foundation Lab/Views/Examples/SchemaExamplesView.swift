@@ -21,13 +21,14 @@ struct SchemaExamplesView: View {
                             title: example.title,
                             subtitle: example.subtitle
                         )
+                        .contentShape(.rect)
                     }
                     .buttonStyle(.plain)
                 }
             }
             .padding(.top)
         }
-        .padding(.horizontal)
+        .padding(.horizontal, Spacing.medium)
         .navigationTitle("Schema Examples")
 #if os(iOS) || os(visionOS)
         .navigationBarTitleDisplayMode(.large)

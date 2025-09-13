@@ -21,6 +21,7 @@ struct ToolsExamplesView: View {
                             title: tool.displayName,
                             subtitle: tool.shortDescription
                         )
+                        .contentShape(.rect)
                     }
                     .buttonStyle(.plain)
                 }
