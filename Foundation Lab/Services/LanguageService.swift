@@ -57,8 +57,7 @@ class LanguageService {
         let languageName = Locale.current.localizedString(forLanguageCode: code) ?? code
         
         if !region.isEmpty {
-            let regionName = Locale.current.localizedString(forRegionCode: region) ?? region
-            return "\(languageName) (\(regionName))"
+            return "\(languageName) (\(code)-\(region))"
         } else {
             return languageName
         }

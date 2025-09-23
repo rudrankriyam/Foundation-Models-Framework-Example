@@ -112,31 +112,14 @@ struct LanguageCard: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.small) {
-            HStack {
-                Text("🌐")
-                    .font(.title2)
-                
-                Spacer()
-                
-                Text(languageCode)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .fontDesign(.monospaced)
-            }
-            
             Text(displayName)
                 .font(.body)
                 .fontWeight(.medium)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding()
         .background(Color.gray.opacity(0.1))
         .cornerRadius(12)
-    }
-    
-    private var languageCode: String {
-        let lang = language.languageCode?.identifier ?? "unknown"
-        let region = language.region?.identifier ?? ""
-        return region.isEmpty ? lang : "\(lang)-\(region)"
     }
     
     private var displayName: String {
