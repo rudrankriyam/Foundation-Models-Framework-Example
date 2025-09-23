@@ -10,7 +10,7 @@ import FoundationModels
 
 struct ProductionLanguageExampleView: View {
     @State private var detectedLanguage = ""
-    @State private var selectedLanguage = "English"
+    @State private var selectedLanguage = "English (en-US)"
     @State private var foodDescription = "I had 2 scrambled eggs with toast for breakfast"
     @State private var nutritionResult: NutritionResult?
     @State private var isRunning = false
@@ -18,6 +18,20 @@ struct ProductionLanguageExampleView: View {
     
     private let languageService = LanguageService.shared
     
+    private let supportedLanguages = [
+        "English (en-US)",
+        "Spanish (es)",
+        "French (fr)",
+        "German (de)",
+        "Italian (it)",
+        "Portuguese (pt)",
+        "Dutch (nl)",
+        "Russian (ru)",
+        "Japanese (ja)",
+        "Korean (ko)",
+        "Chinese Simplified (zh-CN)"
+    ]
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.large) {
@@ -89,7 +103,20 @@ struct ProductionLanguageExampleView: View {
                     }
                 } else {
                     Picker("Response Language", selection: $selectedLanguage) {
-                        ForEach(languageService.getSupportedLanguageNames(), id: \.self) { language in
+                        // Always include the detected language first
+                        if !detectedLanguage.isEmpty {
+                            Text(detectedLanguage).tag(detectedLanguage)
+                        }
+                        
+                        // Add English (en-US) if it's not the detected language
+                        if detectedLanguage != "English (en-US)" {
+                            Text("English (en-US)").tag("English (en-US)")
+                        }
+                        
+                        // Add other supported languages, excluding duplicates
+                        ForEach(languageService.getSupportedLanguageNames().filter { 
+                            $0 != detectedLanguage && $0 != "English (en-US)" 
+                        }, id: \.self) { language in
                             Text(language).tag(language)
                         }
                     }
@@ -233,8 +260,9 @@ struct NutritionAnalysisService {
     }
     
     private func detectUserLanguage() {
-        detectedLanguage = languageService.getCurrentUserLanguageDisplayName()
-        selectedLanguage = detectedLanguage
+        let detected = languageService.getCurrentUserLanguageDisplayName()
+        detectedLanguage = detected
+        selectedLanguage = detected // Set the detected language as the default selection
     }
     
     @MainActor

@@ -224,12 +224,16 @@ enum LanguageExample: String, CaseIterable, Identifiable {
         switch self {
         case .languageDetection:
             LanguageDetectionView()
+                .background(TopGradientView())
         case .multilingualResponses:
             MultilingualResponsesView()
+                .background(TopGradientView())
         case .sessionManagement:
             SessionManagementView()
+                .background(TopGradientView())
         case .productionExample:
             ProductionLanguageExampleView()
+                .background(TopGradientView())
         }
     }
 }

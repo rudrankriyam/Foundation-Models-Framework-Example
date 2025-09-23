@@ -88,7 +88,12 @@ class LanguageService {
             }
         }
         
-        // Fallback to first supported language or "English"
-        return supportedLanguages.first.map { getDisplayName(for: $0) } ?? "English"
+        // Fallback to first supported language
+        if let firstLanguage = supportedLanguages.first {
+            return getDisplayName(for: firstLanguage)
+        }
+        
+        // Fallback to "English"
+        return "English"
     }
 }
