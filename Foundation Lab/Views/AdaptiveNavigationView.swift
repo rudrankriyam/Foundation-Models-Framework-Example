@@ -11,6 +11,7 @@ import FoundationModels
 struct AdaptiveNavigationView: View {
     @State private var contentViewModel = ContentViewModel()
     @State private var chatViewModel = ChatViewModel()
+    @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     private let navigationCoordinator = NavigationCoordinator.shared
     
@@ -80,7 +81,7 @@ struct AdaptiveNavigationView: View {
     
     private var splitViewNavigation: some View {
         NavigationSplitView(
-            columnVisibility: .constant(.automatic)
+            columnVisibility: $columnVisibility
         ) {
             SidebarView(selection: .init(
                 get: { navigationCoordinator.splitViewSelection },

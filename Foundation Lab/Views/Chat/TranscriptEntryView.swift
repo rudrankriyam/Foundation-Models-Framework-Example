@@ -23,8 +23,6 @@ struct TranscriptEntryView: View {
             if let text = extractText(from: response.segments), !text.isEmpty {
                 MessageBubbleView(message: ChatMessage(entryID: entry.id, content: text, isFromUser: false))
                     .id(entry.id)
-                    .drawingGroup()
-                    .animation(.easeOut(duration: 0.5), value: text)
             }
             
         case .toolCalls(let toolCalls):
@@ -45,8 +43,6 @@ struct TranscriptEntryView: View {
                     isFromUser: false
                 ))
                 .id(entry.id)
-                .drawingGroup()
-                .animation(.easeInOut(duration: 0.2), value: text)
             }
             
         case .instructions:
