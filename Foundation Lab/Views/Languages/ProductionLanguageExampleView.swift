@@ -177,8 +177,11 @@ struct ProductionLanguageExampleView: View {
                         Text(result.insights)
                             .font(.body)
                             .padding()
-                            .background(Color.blue.opacity(0.1))
-                            .cornerRadius(12)
+#if os(iOS) || os(macOS)
+                            .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
+#else
+                            .background(.regularMaterial, in: .rect(cornerRadius: 12))
+#endif
                     }
                 }
             }
@@ -352,12 +355,15 @@ struct NutritionCard: View {
             Text(value)
                 .font(.title2)
                 .fontWeight(.bold)
-                .foregroundColor(color)
+                .foregroundStyle(.primary)
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .background(color.opacity(0.1))
-        .cornerRadius(12)
+#if os(iOS) || os(macOS)
+        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
+#else
+        .background(.regularMaterial, in: .rect(cornerRadius: 12))
+#endif
     }
 }
 
