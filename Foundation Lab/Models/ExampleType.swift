@@ -183,11 +183,11 @@ enum LanguageExample: String, CaseIterable, Identifiable {
         case .languageDetection:
             return "Language Detection"
         case .multilingualResponses:
-            return "Multilingual Responses"
+            return "Multilingual Play"
         case .sessionManagement:
-            return "Session Management"
+            return "Multiple Sessions"
         case .productionExample:
-            return "Production Example"
+            return "Insights Example"
         }
     }
 
