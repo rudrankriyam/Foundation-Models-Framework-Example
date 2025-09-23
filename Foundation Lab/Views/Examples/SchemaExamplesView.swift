@@ -15,7 +15,7 @@ struct SchemaExamplesView: View {
                 GridItem(.flexible(minimum: 150), spacing: 16)
             ], spacing: 16) {
                 ForEach(DynamicSchemaExampleType.allCases, id: \.self) { example in
-                    NavigationLink(destination: destinationView(for: example)) {
+                    NavigationLink(value: example) {
                         GenericCardView(
                             icon: example.icon,
                             title: example.title,
@@ -33,36 +33,6 @@ struct SchemaExamplesView: View {
 #if os(iOS) || os(visionOS)
         .navigationBarTitleDisplayMode(.large)
 #endif
-    }
-
-    @ViewBuilder
-    private func destinationView(for example: DynamicSchemaExampleType) -> some View {
-        switch example {
-        case .basicObject:
-            BasicDynamicSchemaView()
-        case .arraySchema:
-            ArrayDynamicSchemaView()
-        case .enumSchema:
-            EnumDynamicSchemaView()
-        case .nestedObjects:
-            NestedDynamicSchemaView()
-        case .schemaReferences:
-            ReferencedSchemaView()
-        case .optionalFields:
-            OptionalFieldsSchemaView()
-        case .generationGuides:
-            GuidedDynamicSchemaView()
-        case .generablePattern:
-            GenerablePatternView()
-        case .unionTypes:
-            UnionTypesSchemaView()
-        case .formBuilder:
-            FormBuilderSchemaView()
-        case .errorHandling:
-            SchemaErrorHandlingView()
-        case .invoiceProcessing:
-            InvoiceProcessingSchemaView()
-        }
     }
 }
 

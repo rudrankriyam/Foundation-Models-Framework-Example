@@ -21,7 +21,6 @@ struct ProductionLanguageExampleView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.large) {
-                descriptionSection
                 languageSelectionSection
                 inputSection
                 
@@ -60,25 +59,13 @@ struct ProductionLanguageExampleView: View {
             }
             .padding(.vertical)
         }
-        .navigationTitle("Production Example")
+        .navigationTitle("Insights Example")
 #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarTitleDisplayMode(.large)
 #endif
         .onAppear {
             detectUserLanguage()
         }
-    }
-    
-    private var descriptionSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.medium) {
-            Text("Real-World Implementation")
-                .font(.headline)
-            
-            Text("This example demonstrates a production-ready nutrition analysis service that automatically detects the user's language and provides responses in their preferred language, similar to the Physiqa app.")
-                .font(.body)
-                .foregroundStyle(.secondary)
-        }
-        .padding(.horizontal)
     }
     
     private var languageSelectionSection: some View {

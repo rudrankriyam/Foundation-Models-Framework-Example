@@ -51,21 +51,14 @@ struct SessionManagementView: View {
             }
             .padding(.vertical)
         }
-        .navigationTitle("Session Management")
+        .navigationTitle("Multiple Sessions")
 #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarTitleDisplayMode(.large)
 #endif
     }
     
     private var descriptionSection: some View {
         VStack(alignment: .leading, spacing: Spacing.medium) {
-            Text("Persistent Multilingual Sessions")
-                .font(.headline)
-            
-            Text("This example shows how a single session can maintain context across language switches, remember conversational history, and handle natural language transitions.")
-                .font(.body)
-                .foregroundStyle(.secondary)
-            
             CodeViewer(
                 code: """
 let session = LanguageModelSession(model: SystemLanguageModel.default)
@@ -121,39 +114,34 @@ let memory = try await session.respond(to: "What language did I first speak to y
             ("🤝 Mixed", "Can you parler both English and French in your response?")
         ]
         
-        do {
-            // Create single persistent session
-            let session = LanguageModelSession(
-                model: SystemLanguageModel.default,
-                instructions: "You are a multilingual assistant who can naturally switch between languages and maintain conversational context."
-            )
-            
-            for (language, prompt) in conversationSteps {
-                do {
-                    let response = try await session.respond(to: prompt)
-                    
-                    let step = ConversationStep(
-                        language: language,
-                        prompt: prompt,
-                        response: response.content,
-                        isError: false
-                    )
-                    
-                    conversationResults.append(step)
-                } catch {
-                    let errorStep = ConversationStep(
-                        language: language,
-                        prompt: prompt,
-                        response: "Error: \(error.localizedDescription)",
-                        isError: true
-                    )
-                    
-                    conversationResults.append(errorStep)
-                }
+        // Create single persistent session
+        let session = LanguageModelSession(
+            model: SystemLanguageModel.default,
+            instructions: "You are a multilingual assistant who can naturally switch between languages and maintain conversational context."
+        )
+        
+        for (language, prompt) in conversationSteps {
+            do {
+                let response = try await session.respond(to: prompt)
+                
+                let step = ConversationStep(
+                    language: language,
+                    prompt: prompt,
+                    response: response.content,
+                    isError: false
+                )
+                
+                conversationResults.append(step)
+            } catch {
+                let errorStep = ConversationStep(
+                    language: language,
+                    prompt: prompt,
+                    response: "Error: \(error.localizedDescription)",
+                    isError: true
+                )
+                
+                conversationResults.append(errorStep)
             }
-            
-        } catch {
-            errorMessage = "Failed to start conversation: \(error.localizedDescription)"
         }
         
         isRunning = false

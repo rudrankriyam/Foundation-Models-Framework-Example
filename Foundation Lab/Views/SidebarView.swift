@@ -33,9 +33,7 @@ extension TabSelection {
         switch self {
         case .examples:
             return "sparkles"
-        case .schemas:
-            return "doc.text"
-        case .tools:
+        case .integrations:
             return "wrench.and.screwdriver"
         case .languages:
             return "globe"
@@ -50,11 +48,10 @@ extension TabSelection {
     var keyboardShortcut: KeyEquivalent {
         switch self {
         case .examples: return "1"
-        case .schemas: return "2"
-        case .tools: return "3"
-        case .languages: return "4"
-        case .chat: return "5"
-        case .settings: return "6"
+        case .integrations: return "2"
+        case .languages: return "3"
+        case .chat: return "4"
+        case .settings: return "5"
         }
     }
 #endif

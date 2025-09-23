@@ -28,24 +28,19 @@ class LanguageService {
         isLoading = true
         errorMessage = nil
         
-        do {
-            let model = SystemLanguageModel.default
-            supportedLanguages = Array(model.supportedLanguages)
-            
-            // Create dynamic language mapping
-            var mapping: [String: String] = [:]
-            for language in supportedLanguages {
-                let code = language.languageCode?.identifier ?? ""
-                if !code.isEmpty {
-                    let displayName = getDisplayName(for: language)
-                    mapping[code] = displayName
-                }
+        let model = SystemLanguageModel.default
+        supportedLanguages = Array(model.supportedLanguages)
+        
+        // Create dynamic language mapping
+        var mapping: [String: String] = [:]
+        for language in supportedLanguages {
+            let code = language.languageCode?.identifier ?? ""
+            if !code.isEmpty {
+                let displayName = getDisplayName(for: language)
+                mapping[code] = displayName
             }
-            languageMapping = mapping
-            
-        } catch {
-            errorMessage = "Failed to load languages: \(error.localizedDescription)"
         }
+        languageMapping = mapping
         
         isLoading = false
     }

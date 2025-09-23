@@ -52,19 +52,12 @@ struct LanguageDetectionView: View {
         }
         .navigationTitle("Language Detection")
 #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarTitleDisplayMode(.large)
 #endif
     }
     
     private var descriptionSection: some View {
         VStack(alignment: .leading, spacing: Spacing.medium) {
-            Text("Runtime Language Discovery")
-                .font(.headline)
-            
-            Text("Always query supported languages at runtime rather than hardcoding the list. Apple Intelligence adds more languages over time, and availability can vary by device and region.")
-                .font(.body)
-                .foregroundStyle(.secondary)
-            
             CodeViewer(
                 code: """
 let model = SystemLanguageModel.default

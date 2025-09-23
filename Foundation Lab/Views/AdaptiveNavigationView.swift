@@ -41,16 +41,9 @@ struct AdaptiveNavigationView: View {
                 }
             }
             
-            Tab(TabSelection.schemas.displayName, systemImage: "doc.text", value: .schemas) {
+            Tab(TabSelection.integrations.displayName, systemImage: "wrench.and.screwdriver", value: .integrations) {
                 NavigationStack {
-                    SchemaExamplesView()
-                        .background(TopGradientView())
-                }
-            }
-            
-            Tab(TabSelection.tools.displayName, systemImage: "wrench.and.screwdriver", value: .tools) {
-                NavigationStack {
-                    ToolsExamplesView()
+                    IntegrationsView()
                         .background(TopGradientView())
                 }
             }
@@ -111,13 +104,9 @@ struct AdaptiveNavigationView: View {
             NavigationStack {
                 ExamplesView(viewModel: $contentViewModel)
             }
-        case .schemas:
+        case .integrations:
             NavigationStack {
-                SchemaExamplesView()
-            }
-        case .tools:
-            NavigationStack {
-                ToolsExamplesView()
+                IntegrationsView()
             }
         case .languages:
             NavigationStack {

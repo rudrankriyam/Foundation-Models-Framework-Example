@@ -53,20 +53,14 @@ struct MultilingualResponsesView: View {
             }
             .padding(.vertical)
         }
-        .navigationTitle("Multilingual Responses")
+        .navigationTitle("Multilingual Play")
 #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarTitleDisplayMode(.large)
 #endif
     }
     
     private var descriptionSection: some View {
         VStack(alignment: .leading, spacing: Spacing.medium) {
-            Text("Language-Specific Generation")
-                .font(.headline)
-            
-            Text("When you prompt in a specific language, the model responds in that language. This example demonstrates how to generate consistent responses across multiple languages using a single session.")
-                .font(.body)
-                .foregroundStyle(.secondary)
             
             CodeViewer(
                 code: """
@@ -146,37 +140,32 @@ for prompt in prompts {
             ]
         }
         
-        do {
-            let session = LanguageModelSession(model: SystemLanguageModel.default)
-            
-            for prompt in prompts {
-                do {
-                    let response = try await session.respond(to: prompt.text)
-                    
-                    let result = LanguagePromptResult(
-                        language: prompt.language,
-                        flag: prompt.flag,
-                        prompt: prompt.text,
-                        response: response.content,
-                        isError: false
-                    )
-                    
-                    results.append(result)
-                } catch {
-                    let errorResult = LanguagePromptResult(
-                        language: prompt.language,
-                        flag: prompt.flag,
-                        prompt: prompt.text,
-                        response: "Error: \(error.localizedDescription)",
-                        isError: true
-                    )
-                    
-                    results.append(errorResult)
-                }
+        let session = LanguageModelSession(model: SystemLanguageModel.default)
+        
+        for prompt in prompts {
+            do {
+                let response = try await session.respond(to: prompt.text)
+                
+                let result = LanguagePromptResult(
+                    language: prompt.language,
+                    flag: prompt.flag,
+                    prompt: prompt.text,
+                    response: response.content,
+                    isError: false
+                )
+                
+                results.append(result)
+            } catch {
+                let errorResult = LanguagePromptResult(
+                    language: prompt.language,
+                    flag: prompt.flag,
+                    prompt: prompt.text,
+                    response: "Error: \(error.localizedDescription)",
+                    isError: true
+                )
+                
+                results.append(errorResult)
             }
-            
-        } catch {
-            errorMessage = "Failed to create session: \(error.localizedDescription)"
         }
         
         isRunning = false

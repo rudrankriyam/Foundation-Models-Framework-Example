@@ -14,50 +14,30 @@ struct LanguagesView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.large) {
-                headerSection
-                exampleButtonsView
+                LazyVGrid(columns: adaptiveGridColumns, spacing: Spacing.large) {
+                    ForEach(LanguageExample.allCases) { languageExample in
+                        NavigationLink(value: languageExample) {
+                            GenericCardView(
+                                icon: languageExample.icon,
+                                title: languageExample.title,
+                                subtitle: languageExample.subtitle
+                            )
+                            .contentShape(.rect)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, Spacing.medium)
             }
             .padding(.vertical)
         }
-        .navigationTitle("Languages & Localization")
+        .navigationTitle("Supported Languages")
 #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
 #endif
         .navigationDestination(for: LanguageExample.self) { languageExample in
             languageExample.createView()
         }
-    }
-    
-    // MARK: - View Components
-    
-    private var headerSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.small) {
-            Text("Foundation Models Languages")
-                .font(.title2)
-                .fontWeight(.bold)
-            
-            Text("Explore how Foundation Models supports many languages and locales.")
-                .font(.body)
-                .foregroundStyle(.secondary)
-        }
-        .padding(.horizontal, Spacing.medium)
-    }
-    
-    private var exampleButtonsView: some View {
-        LazyVGrid(columns: adaptiveGridColumns, spacing: Spacing.large) {
-            ForEach(LanguageExample.allCases) { languageExample in
-                NavigationLink(value: languageExample) {
-                    GenericCardView(
-                        icon: languageExample.icon,
-                        title: languageExample.title,
-                        subtitle: languageExample.subtitle
-                    )
-                    .contentShape(.rect)
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(.horizontal, Spacing.medium)
     }
     
     private var adaptiveGridColumns: [GridItem] {
