@@ -37,6 +37,8 @@ extension TabSelection {
             return "doc.text"
         case .tools:
             return "wrench.and.screwdriver"
+        case .languages:
+            return "globe"
         case .chat:
             return "bubble.left.and.bubble.right"
         case .settings:
@@ -50,8 +52,9 @@ extension TabSelection {
         case .examples: return "1"
         case .schemas: return "2"
         case .tools: return "3"
-        case .chat: return "4"
-        case .settings: return "5"
+        case .languages: return "4"
+        case .chat: return "5"
+        case .settings: return "6"
         }
     }
 #endif

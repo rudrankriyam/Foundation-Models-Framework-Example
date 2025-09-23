@@ -55,6 +55,13 @@ struct AdaptiveNavigationView: View {
                 }
             }
             
+            Tab(TabSelection.languages.displayName, systemImage: "globe", value: .languages) {
+                NavigationStack {
+                    LanguagesView()
+                        .background(TopGradientView())
+                }
+            }
+            
             Tab(TabSelection.chat.displayName, systemImage: "bubble.left.and.bubble.right", value: .chat) {
                 NavigationStack {
                     ChatView(viewModel: $chatViewModel)
@@ -111,6 +118,10 @@ struct AdaptiveNavigationView: View {
         case .tools:
             NavigationStack {
                 ToolsExamplesView()
+            }
+        case .languages:
+            NavigationStack {
+                LanguagesView()
             }
         case .chat:
             NavigationStack {

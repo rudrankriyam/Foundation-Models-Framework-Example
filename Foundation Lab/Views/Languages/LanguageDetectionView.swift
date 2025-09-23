@@ -1,0 +1,152 @@
+//
+//  LanguageDetectionView.swift
+//  FoundationLab
+//
+//  Created by Assistant on 12/30/25.
+//
+
+import SwiftUI
+import FoundationModels
+
+struct LanguageDetectionView: View {
+    private let languageService = LanguageService.shared
+    @State private var errorMessage: String?
+    
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: Spacing.large) {
+                descriptionSection
+                
+                Button("Refresh Supported Languages") {
+                    Task {
+                        await languageService.loadSupportedLanguages()
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .disabled(languageService.isLoading)
+                .padding(.horizontal)
+                
+                if languageService.isLoading {
+                    HStack {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                        Text("Loading languages...")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.horizontal)
+                }
+                
+                if let errorMessage = languageService.errorMessage {
+                    Text(errorMessage)
+                        .foregroundColor(.red)
+                        .padding(.horizontal)
+                }
+                
+                if !languageService.supportedLanguages.isEmpty {
+                    languageListSection
+                }
+            }
+            .padding(.vertical)
+        }
+        .navigationTitle("Language Detection")
+#if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+#endif
+    }
+    
+    private var descriptionSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.medium) {
+            Text("Runtime Language Discovery")
+                .font(.headline)
+            
+            Text("Always query supported languages at runtime rather than hardcoding the list. Apple Intelligence adds more languages over time, and availability can vary by device and region.")
+                .font(.body)
+                .foregroundStyle(.secondary)
+            
+            CodeViewer(
+                code: """
+let model = SystemLanguageModel.default
+let supported = model.supportedLanguages // [Locale.Language]
+
+for language in supported {
+    let code = language.languageCode?.identifier ?? ""
+    let region = language.region?.identifier ?? ""
+    
+    let name = Locale.current.localizedString(forLanguageCode: code) ?? code
+    let regionName = region.isEmpty ? nil : 
+        (Locale.current.localizedString(forRegionCode: region) ?? region)
+    
+    print(regionName != nil ? "\\(name) (\\(regionName!))" : "\\(name)")
+}
+"""
+            )
+        }
+        .padding(.horizontal)
+    }
+    
+    private var languageListSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.medium) {
+            Text("Supported Languages (\(languageService.supportedLanguages.count))")
+                .font(.headline)
+                .padding(.horizontal)
+            
+            LazyVGrid(columns: [
+                GridItem(.flexible()),
+                GridItem(.flexible())
+            ], spacing: Spacing.small) {
+                ForEach(languageService.supportedLanguages.indices, id: \.self) { index in
+                    let language = languageService.supportedLanguages[index]
+                    LanguageCard(language: language, languageService: languageService)
+                }
+            }
+            .padding(.horizontal)
+        }
+    }
+}
+
+struct LanguageCard: View {
+    let language: Locale.Language
+    let languageService: LanguageService
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: Spacing.small) {
+            HStack {
+                Text("🌐")
+                    .font(.title2)
+                
+                Spacer()
+                
+                Text(languageCode)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fontDesign(.monospaced)
+            }
+            
+            Text(displayName)
+                .font(.body)
+                .fontWeight(.medium)
+        }
+        .padding()
+        .background(Color.gray.opacity(0.1))
+        .cornerRadius(12)
+    }
+    
+    private var languageCode: String {
+        let lang = language.languageCode?.identifier ?? "unknown"
+        let region = language.region?.identifier ?? ""
+        return region.isEmpty ? lang : "\(lang)-\(region)"
+    }
+    
+    private var displayName: String {
+        return languageService.getDisplayName(for: language)
+    }
+}
+
+#Preview {
+    NavigationStack {
+        LanguageDetectionView()
+            .background(TopGradientView())
+    }
+}

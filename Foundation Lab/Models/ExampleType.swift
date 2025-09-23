@@ -167,3 +167,69 @@ enum ToolExample: String, CaseIterable, Hashable {
         }
     }
 }
+
+// MARK: - Language Example Enum
+
+enum LanguageExample: String, CaseIterable, Identifiable {
+    case languageDetection = "language_detection"
+    case multilingualResponses = "multilingual_responses"
+    case sessionManagement = "session_management"
+    case productionExample = "production_example"
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .languageDetection:
+            return "Language Detection"
+        case .multilingualResponses:
+            return "Multilingual Responses"
+        case .sessionManagement:
+            return "Session Management"
+        case .productionExample:
+            return "Production Example"
+        }
+    }
+
+    var subtitle: String {
+        switch self {
+        case .languageDetection:
+            return "Query and display supported languages"
+        case .multilingualResponses:
+            return "Generate responses in different languages"
+        case .sessionManagement:
+            return "Persistent session patterns across languages"
+        case .productionExample:
+            return "Real-world multilingual implementation"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .languageDetection:
+            return "globe.badge.chevron.backward"
+        case .multilingualResponses:
+            return "text.bubble"
+        case .sessionManagement:
+            return "arrow.triangle.2.circlepath"
+        case .productionExample:
+            return "app.badge"
+        }
+    }
+
+    /// Creates the appropriate view for this language example
+    /// - Returns: A SwiftUI view for the language example
+    @MainActor @ViewBuilder
+    func createView() -> some View {
+        switch self {
+        case .languageDetection:
+            LanguageDetectionView()
+        case .multilingualResponses:
+            MultilingualResponsesView()
+        case .sessionManagement:
+            SessionManagementView()
+        case .productionExample:
+            ProductionLanguageExampleView()
+        }
+    }
+}

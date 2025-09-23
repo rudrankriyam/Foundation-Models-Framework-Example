@@ -108,7 +108,7 @@ struct MessageBubbleView: View {
   }
   
   private var messageText: some View {
-    Text(LocalizedStringKey(String(message.content.characters)))
+    Text(message.content)
       .padding(.horizontal, Spacing.large)
       .padding(.vertical, Spacing.small + 2)
       .textSelection(.enabled)

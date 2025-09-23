@@ -11,6 +11,7 @@ enum TabSelection: String, CaseIterable, Hashable {
   case examples
   case schemas
   case tools
+  case languages
   case chat
   case settings
   
