@@ -4,24 +4,24 @@
   <table>
     <tr>
       <td align="center" style="padding: 15px;">
-        <img src="fmf_1.png" alt="One-shot prompt interface showing a haiku generation example with prompt input, reset/run buttons, suggestions, and resulting haiku about destiny" width="500" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
+        <img src="images/fmf1.png" alt="One-shot prompt interface showing a haiku generation example with prompt input, reset/run buttons, suggestions, and resulting haiku about destiny" width="500" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
         <br/>
         <strong>One-shot Prompting</strong>
       </td>
       <td align="center" style="padding: 15px;">
-        <img src="fmf_2.png" alt="Foundation Models examples page displaying six categories: One-shot, Business Ideas, Creative Writing, Structured Data, Streaming Response, Generation Guides, Model Availability, and Generation Options" width="500" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
+        <img src="images/fmf2.png" alt="Foundation Models examples page displaying six categories: One-shot, Business Ideas, Creative Writing, Structured Data, Streaming Response, Generation Guides, Model Availability, and Generation Options" width="500" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
         <br/>
         <strong>Foundation Models</strong>
       </td>
     </tr>
     <tr>
       <td align="center" style="padding: 15px;">
-        <img src="fmf_3.png" alt="Tools page showing various utility options including Weather, Web Search, Contacts, Calendar, Reminders, Location, Health, Music, and Web Metadata tools" width="500" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
+        <img src="images/fmf3.png" alt="Tools page showing various utility options including Weather, Web Search, Contacts, Calendar, Reminders, Location, Health, Music, and Web Metadata tools" width="500" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
         <br/>
         <strong>Tools</strong>
       </td>
       <td align="center" style="padding: 15px;">
-        <img src="fmf_4.png" alt="Chat interface displaying a conversation about the meaning of life, with user messages on the right and AI responses on the left, including a detailed philosophical answer" width="500" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
+        <img src="images/fmf4.png" alt="Chat interface displaying a conversation about the meaning of life, with user messages on the right and AI responses on the left, including a detailed philosophical answer" width="500" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
         <br/>
         <strong>Chat Interface</strong>
       </td>
