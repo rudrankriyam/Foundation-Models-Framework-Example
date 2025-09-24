@@ -25,9 +25,9 @@ class MurmerViewModel: ObservableObject {
   let audioManager = AudioManager()
   let speechRecognizer = SpeechRecognizer()
   let permissionManager = PermissionManager()
-
+  
+  private let inferenceService = InferenceService()
   private let eventStore = EKEventStore()
-  private let reminderTool = MurmerRemindersTool()
 
   private var cancellables = Set<AnyCancellable>()
 
@@ -102,23 +102,11 @@ class MurmerViewModel: ObservableObject {
       stopListening()
 
       do {
-        // Extract time expression
-        let timeExpression = extractTimeExpression(from: text)
-
-        // Create reminder using the tool
-        let listName = selectedList == "Default" ? nil : selectedList
-
-        let arguments = MurmerRemindersTool.Arguments(
-          text: text,
-          timeExpression: timeExpression,
-          listName: listName
-        )
-
-        _ = try await reminderTool.call(arguments: arguments)
-
-        // The tool returns properties directly in the GeneratedContent
-        // We can access the success status and title from the output
-        lastCreatedReminder = recognizedText  // Use the original text as the reminder title
+        // Use the inference service to process the text
+        let response = try await inferenceService.processText(text)
+        
+        // Store the response for display
+        lastCreatedReminder = response
 
         showSuccessAnimation()
         provideHapticFeedback("success")
@@ -134,47 +122,6 @@ class MurmerViewModel: ObservableObject {
     }
   }
 
-  private func extractTimeExpression(from text: String) -> String? {
-    // Common time patterns
-    let timePatterns = [
-      "tomorrow", "today", "tonight",
-      "next week", "next month",
-      "in \\d+ (hour|minute|day|week)",
-      "at \\d+(:\\d+)? ?(am|pm)?",
-      "(monday|tuesday|wednesday|thursday|friday|saturday|sunday)",
-    ]
-
-    let lowercased = text.lowercased()
-
-    for pattern in timePatterns {
-      if let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) {
-        let matches = regex.matches(
-          in: lowercased, range: NSRange(lowercased.startIndex..., in: lowercased))
-
-        if let match = matches.first,
-          let range = Range(match.range, in: lowercased)
-        {
-          _ = String(lowercased[range])
-
-          // Extract the time expression and any surrounding context with safe bounds checking
-          let safeStartIndex = max(
-            lowercased.startIndex,
-            lowercased.index(range.lowerBound, offsetBy: -10, limitedBy: lowercased.startIndex)
-              ?? lowercased.startIndex)
-          let safeEndIndex = min(
-            lowercased.endIndex,
-            lowercased.index(range.upperBound, offsetBy: 10, limitedBy: lowercased.endIndex)
-              ?? lowercased.endIndex)
-
-          let extracted = String(lowercased[safeStartIndex..<safeEndIndex]).trimmingCharacters(
-            in: .whitespaces)
-          return extracted
-        }
-      }
-    }
-
-    return nil
-  }
 
   func loadReminderLists() {
     Task {
