@@ -46,6 +46,7 @@ struct MurmerRemindersTool: Tool {
     // Set due date if provided by the AI
     if let dueDateString = arguments.dueDate {
       let formatter = ISO8601DateFormatter()
+      formatter.formatOptions = [.withInternetDateTime, .withTimeZone]
       if let dueDate = formatter.date(from: dueDateString) {
         let components = Calendar.current.dateComponents(
           [.year, .month, .day, .hour, .minute],

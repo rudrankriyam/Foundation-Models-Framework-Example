@@ -22,6 +22,12 @@ struct ExampleTabView: View {
                     Text("Speech-to-Text")
                 }
 
+            InferenceDemoView()
+                .tabItem {
+                    Image(systemName: "brain.head.profile")
+                    Text("AI Inference")
+                }
+
             ContentView()
                 .tabItem {
                     Image(systemName: "bubble.left.and.bubble.right.fill")
