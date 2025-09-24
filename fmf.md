@@ -2432,6 +2432,19 @@ public protocol Tool<Arguments, Output> : Sendable {
     ///
     /// - Note: This method may be invoked concurrently with itself or with other tools.
     func call(arguments: Self.Arguments) async throws -> Self.Output
+
+    @available(iOS 26.1, macOS 26.1, *)
+    @available(tvOS, unavailable)
+    @available(watchOS, unavailable)
+    func call(arguments: Self.Arguments, context: ToolCallContext) async throws -> Self.Output
+}
+
+extension Tool {
+
+    @available(iOS 26.1, macOS 26.1, *)
+    @available(tvOS, unavailable)
+    @available(watchOS, unavailable)
+    public func call(arguments: Self.Arguments, context: ToolCallContext) async throws -> Self.Output
 }
 
 @available(iOS 26.0, macOS 26.0, *)
@@ -2459,6 +2472,16 @@ extension Tool where Self.Arguments : Generable {
 
     /// A schema for the parameters this tool accepts.
     public var parameters: GenerationSchema { get }
+}
+
+/// The context made available to tools during tool calls.
+@available(iOS 26.1, macOS 26.1, *)
+@available(tvOS, unavailable)
+@available(watchOS, unavailable)
+public struct ToolCallContext : Sendable {
+
+    /// The current state of the parent session's transcript.
+    public var transcript: Transcript
 }
 
 /// A transcript that documents interactions with a language model.
@@ -3638,4 +3661,3 @@ extension Array : PromptRepresentable where Element : PromptRepresentable {
     /// An instance that represents a prompt.
     public var promptRepresentation: Prompt { get }
 }
-
