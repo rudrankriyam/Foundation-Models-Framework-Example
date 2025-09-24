@@ -12,18 +12,6 @@ struct ContentView: View {
     
     var body: some View {
         ZStack {
-            // Background gradient
-            LinearGradient(
-                colors: [
-                    Color(.systemIndigo).opacity(0.15),
-                    Color(.systemPurple).opacity(0.1),
-                    Color(.systemBlue).opacity(0.05)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
-            
             if viewModel.permissionManager.allPermissionsGranted {
                 MurmerMainView(viewModel: viewModel)
             } else {
@@ -50,13 +38,7 @@ struct MurmerMainView: View {
                 Text("Murmer")
                     .font(.largeTitle)
                     .fontWeight(.bold)
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.purple, .indigo],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
+                    .foregroundColor(.primary)
                 
                 GlassDropdown(
                     selectedValue: $viewModel.selectedList,

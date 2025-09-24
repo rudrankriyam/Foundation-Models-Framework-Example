@@ -28,16 +28,7 @@ struct AudioReactiveBlobView: View {
         ZStack {
             // Single clean blob
             Circle()
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            Color.blue.opacity(0.6),
-                            Color.purple.opacity(0.8)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
+                .fill(Color.blue)
                 .frame(width: baseSize * pulseScale, height: baseSize * pulseScale)
                 .shadow(color: Color.purple.opacity(0.3), radius: 10, x: 0, y: 5)
 

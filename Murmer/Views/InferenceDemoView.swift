@@ -23,13 +23,7 @@ struct InferenceDemoView: View {
                     Text("AI Inference Demo")
                         .font(.largeTitle)
                         .fontWeight(.bold)
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [.purple, .indigo],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
+                        .foregroundColor(.primary)
 
                     Text("See how the AI processes your requests and creates reminders")
                         .font(.subheadline)
@@ -102,13 +96,7 @@ struct InferenceDemoView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(
-                        LinearGradient(
-                            colors: [.purple, .indigo],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
+                    .background(Color.blue)
                     .foregroundColor(.white)
                     .cornerRadius(12)
                     .shadow(color: .purple.opacity(0.3), radius: 8, x: 0, y: 4)
@@ -147,18 +135,6 @@ struct InferenceDemoView: View {
             }
             .padding(.vertical)
         }
-        .background(
-            LinearGradient(
-                colors: [
-                    Color(.systemIndigo).opacity(0.15),
-                    Color(.systemPurple).opacity(0.1),
-                    Color(.systemBlue).opacity(0.05)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
-        )
         .alert("Error", isPresented: $showError) {
             Button("OK", role: .cancel) {}
         } message: {

@@ -43,7 +43,6 @@ struct SpeechSynthesizerExampleView: View {
                 Spacer()
             }
             .padding()
-            .background(backgroundGradient)
             .navigationTitle("Speech Synthesizer Demo")
             .toolbar {
                 ToolbarItem(placement: .automatic) {
@@ -70,13 +69,7 @@ struct SpeechSynthesizerExampleView: View {
         VStack(spacing: 16) {
             Image(systemName: "speaker.wave.3.fill")
                 .font(.system(size: 50))
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [.blue, .purple],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
+                .foregroundColor(.primary)
 
             Text("Speech Synthesis Demo")
                 .font(.title2)
@@ -227,11 +220,7 @@ struct SpeechSynthesizerExampleView: View {
                 .background {
                     RoundedRectangle(cornerRadius: 12)
                         .fill(
-                            LinearGradient(
-                                colors: speechSynthesizer.isSpeaking ? [.orange, .red] : [.blue, .purple],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
+                            speechSynthesizer.isSpeaking ? Color.orange : Color.blue
                         )
                 }
             }
@@ -263,17 +252,6 @@ struct SpeechSynthesizerExampleView: View {
         }
     }
 
-    private var backgroundGradient: some View {
-        LinearGradient(
-            colors: [
-                Color.clear,
-                Color.gray.opacity(0.1)
-            ],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-        .ignoresSafeArea()
-    }
 
     // MARK: - Actions
 

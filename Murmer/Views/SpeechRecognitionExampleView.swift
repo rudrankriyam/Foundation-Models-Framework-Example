@@ -33,7 +33,6 @@ struct SpeechRecognitionExampleView: View {
                 }
             }
             .padding()
-            .background(backgroundGradient)
             .navigationTitle("Speech Recognition Demo")
             .toolbar {
                 ToolbarItem(placement: .automatic) {
@@ -65,13 +64,7 @@ struct SpeechRecognitionExampleView: View {
         VStack(spacing: 16) {
             Image(systemName: "waveform.badge.mic")
                 .font(.system(size: 50))
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [.green, .mint],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
+                .foregroundColor(.primary)
 
             Text("Speech Recognition Demo")
                 .font(.title2)
@@ -201,12 +194,8 @@ struct SpeechRecognitionExampleView: View {
                 .background {
                     RoundedRectangle(cornerRadius: 16)
                         .fill(
-                            LinearGradient(
-                                colors: speechRecognizer.state.isListening ?
-                                    [.red, .orange] : [.green, .mint],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
+                            speechRecognizer.state.isListening ?
+                                Color.red : Color.green
                         )
                 }
                 .scaleEffect(speechRecognizer.state.isListening ? 1.05 : 1.0)
@@ -313,17 +302,6 @@ struct SpeechRecognitionExampleView: View {
         .padding()
     }
 
-    private var backgroundGradient: some View {
-        LinearGradient(
-            colors: [
-                Color.clear,
-                Color.gray.opacity(0.1)
-            ],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-        .ignoresSafeArea()
-    }
 
     // MARK: - Helper Views
 

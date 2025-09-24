@@ -19,13 +19,7 @@ struct PermissionRequestView: View {
             // App icon placeholder
             ZStack {
                 Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [Color.purple, Color.indigo],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
+                    .fill(Color.purple)
                     .frame(width: 120, height: 120)
                 
                 Image(systemName: "waveform.circle.fill")
@@ -91,13 +85,7 @@ struct PermissionRequestView: View {
                 .frame(height: 50)
                 .background(
                     RoundedRectangle(cornerRadius: 15)
-                        .fill(
-                            LinearGradient(
-                                colors: [Color.purple, Color.indigo],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
+                        .fill(Color.purple)
                 )
                 .foregroundColor(.white)
             }
