@@ -22,6 +22,9 @@ class MurmerViewModel: ObservableObject {
   @Published var errorMessage = ""
   @Published var lastCreatedReminder: String = ""
 
+  // Track if recognition was cancelled intentionally
+  private var wasCancelled = false
+
   let audioManager = AudioManager()
   let speechRecognizer = SpeechRecognizer()
   let permissionManager = PermissionManager()
@@ -77,6 +80,9 @@ class MurmerViewModel: ObservableObject {
     }
 
     do {
+      // Reset cancellation flag when starting new recognition
+      wasCancelled = false
+
       try speechRecognizer.startRecognition()
       audioManager.startAudioSession()
 
@@ -91,20 +97,40 @@ class MurmerViewModel: ObservableObject {
   }
 
   func stopListening() {
+    wasCancelled = true
     speechRecognizer.stopRecognition()
     audioManager.stopAudioSession()
 
     isListening = false
+
+    // Clear any partial text when cancelled
+    recognizedText = ""
   }
 
   private func processRecognizedText(_ text: String) {
+    // Don't process if it was cancelled
+    if wasCancelled {
+      print("Skipping processing - recognition was cancelled")
+      wasCancelled = false  // Reset flag
+      return
+    }
+
+    // Don't process empty, whitespace-only, or very short text
+    let cleanText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !cleanText.isEmpty && cleanText.count >= 3 else {
+      print("Skipping processing of short/empty text: '\(text)'")
+      return
+    }
+
     Task {
       // Stop listening while processing
       stopListening()
 
       do {
+        print("Processing text: '\(cleanText)'")
+
         // Use the inference service to process the text
-        let response = try await inferenceService.processText(text)
+        let response = try await inferenceService.processText(cleanText)
 
         // Store the response for display
         lastCreatedReminder = response

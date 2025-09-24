@@ -72,31 +72,18 @@ struct MurmerMainView: View {
             
             // Main content
             VStack(spacing: 40) {
-                // Audio reactive blob
+                // Minimalist audio reactive blob
                 ZStack {
-                    // Glow effect when listening
+                    // Subtle glow when listening
                     if viewModel.isListening {
                         Circle()
-                            .fill(
-                                RadialGradient(
-                                    gradient: Gradient(colors: [
-                                        Color.purple.opacity(0.3),
-                                        Color.indigo.opacity(0.2),
-                                        Color.clear
-                                    ]),
-                                    center: .center,
-                                    startRadius: 0,
-                                    endRadius: 200
-                                )
-                            )
-                            .frame(width: 400, height: 400)
-                            .blur(radius: 30)
-                            .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: viewModel.isListening)
+                            .fill(Color.blue.opacity(0.1))
+                            .frame(width: 140, height: 140)
+                            .blur(radius: 8)
                     }
-                    
-                    AudioReactiveBlobView(audioManager: viewModel.audioManager)
-                        .frame(width: 250, height: 250)
-                        .scaleEffect(blobScale)
+
+                    AudioReactiveBlobView(audioManager: viewModel.audioManager, listeningState: $viewModel.isListening)
+                        .frame(width: 120, height: 120)
                         .onTapGesture {
                             toggleListening()
                         }

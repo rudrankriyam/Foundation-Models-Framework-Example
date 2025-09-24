@@ -210,7 +210,17 @@ class SpeechRecognizer: NSObject, ObservableObject {
 
             Task { @MainActor in
                 if let error = error {
-                    self.state = .error(.recognitionFailed(error.localizedDescription))
+                    // Check if this is a cancellation error (user tapped to stop)
+                    if error.localizedDescription.contains("cancelled") ||
+                       error.localizedDescription.contains("Cancelled") ||
+                       error.localizedDescription.contains("canceled") ||
+                       error.localizedDescription.contains("Canceled") {
+                        print("Speech recognition cancelled by user")
+                        self.state = .idle  // Don't treat cancellation as error
+                    } else {
+                        print("Speech recognition error: \(error.localizedDescription)")
+                        self.state = .error(.recognitionFailed(error.localizedDescription))
+                    }
                     self.stopRecognition()
                     return
                 }
