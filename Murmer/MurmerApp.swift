@@ -11,7 +11,7 @@ import SwiftUI
 struct MurmerApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            SpeechSynthesizerExampleView()
         }
     }
 }
