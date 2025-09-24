@@ -22,7 +22,7 @@ import AVFoundation
 class PermissionService: ObservableObject, PermissionServiceProtocol {
     
 #if os(iOS)
-    @Published var microphonePermissionStatus: AVAudioSession.RecordPermission = .undetermined {
+    @Published var microphonePermissionStatus: AVAudioApplication.recordPermission = .undetermined {
         didSet { updateAllPermissionsStatus() }
     }
 #else
@@ -88,7 +88,7 @@ class PermissionService: ObservableObject, PermissionServiceProtocol {
     
 #if os(iOS)
     private func checkMicrophonePermission() {
-        let status = AVAudioSession.sharedInstance().recordPermission
+        let status = AVAudioApplication.shared.recordPermission
         microphonePermissionStatus = status
     }
 
@@ -96,16 +96,8 @@ class PermissionService: ObservableObject, PermissionServiceProtocol {
         if microphonePermissionStatus == .granted {
             return true
         }
-
-        return await withCheckedContinuation { continuation in
-            AVAudioSession.sharedInstance().requestRecordPermission { granted in
-                // Update on main thread synchronously to avoid concurrency issues
-                DispatchQueue.main.async {
-                    self.microphonePermissionStatus = granted ? .granted : .denied
-                    continuation.resume(returning: granted)
-                }
-            }
-        }
+        
+        return await AVAudioApplication.requestRecordPermission()
     }
 #else
     // macOS implementations for microphone permission

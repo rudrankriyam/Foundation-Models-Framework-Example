@@ -118,7 +118,7 @@ protocol PermissionServiceProtocol: AnyObject, ObservableObject {
 // MARK: - Type Aliases for Platform Compatibility
 
 #if os(iOS)
-typealias MicrophonePermissionStatus = AVAudioSession.RecordPermission
+typealias MicrophonePermissionStatus = AVAudioApplication.recordPermission
 #else
 enum MicrophonePermissionStatus {
     case undetermined

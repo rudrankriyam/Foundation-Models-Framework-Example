@@ -31,6 +31,7 @@ struct SettingsView: View {
                 .padding()
             }
             .navigationTitle("Voice Settings")
+            .background(SimpleTopGradientView())
             .toolbar {
                 ToolbarItem(placement: .automatic) {
                     Button("Done") {
@@ -54,7 +55,7 @@ struct SettingsView: View {
             HStack(spacing: 12) {
                 Image(systemName: "speaker.wave.3.fill")
                     .font(.title2)
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(.indigo)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Voice Configuration")
@@ -130,7 +131,7 @@ struct SettingsView: View {
 
             Text(languageDisplayName(selectedLanguage))
                 .font(.subheadline)
-                .foregroundStyle(.blue)
+                .foregroundStyle(.indigo)
                 .fontWeight(.medium)
 
             if let voicesForLanguage = speechSynthesizer.voicesByLanguage[selectedLanguage] {
@@ -183,11 +184,11 @@ struct SettingsView: View {
             .frame(height: 80)
             .frame(maxWidth: .infinity)
             .padding(.horizontal, 8)
-            .background(selectedLanguage == language ? Color.blue.opacity(0.1) : Color.gray.opacity(0.1))
+            .background(selectedLanguage == language ? Color.indigo.opacity(0.1) : Color.gray.opacity(0.1))
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .overlay {
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(selectedLanguage == language ? .blue : .clear, lineWidth: 2)
+                    .stroke(selectedLanguage == language ? .indigo : .clear, lineWidth: 2)
             }
         }
         .buttonStyle(PlainButtonStyle())
@@ -213,19 +214,19 @@ struct SettingsView: View {
 
                 if speechSynthesizer.selectedVoice?.identifier == voice.identifier {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(.indigo)
                         .font(.title3)
                 }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
             .background(speechSynthesizer.selectedVoice?.identifier == voice.identifier ?
-                       Color.blue.opacity(0.1) : Color.gray.opacity(0.1))
+                       Color.indigo.opacity(0.1) : Color.gray.opacity(0.1))
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .overlay {
                 RoundedRectangle(cornerRadius: 12)
                     .stroke(speechSynthesizer.selectedVoice?.identifier == voice.identifier ?
-                           Color.blue : Color.gray.opacity(0.3), lineWidth: 1)
+                           Color.indigo : Color.gray.opacity(0.3), lineWidth: 1)
             }
         }
         .buttonStyle(PlainButtonStyle())

@@ -30,108 +30,118 @@ struct ContentView: View {
 struct MurmerMainView: View {
     @ObservedObject var viewModel: MurmerViewModel
     @State private var blobScale: CGFloat = 1.0
-
+    @State private var showingSettings = false
+    
     var body: some View {
-        VStack(spacing: 30) {
-            // Header with list selector
-            VStack(alignment: .leading, spacing: 16) {
-                Text("Murmer")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .foregroundColor(.primary)
-                
-                GlassDropdown(
-                    selectedValue: $viewModel.selectedList,
-                    options: viewModel.availableLists,
-                    title: "Reminder List"
-                )
-                .frame(maxWidth: 300)
-            }
-            .padding(.horizontal)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            
-            Spacer()
-            
-            // Main content
-            VStack(spacing: 40) {
-                // Minimalist audio reactive blob
-                ZStack {
-                    // Subtle glow when listening
-                    if viewModel.isListening {
-                        Circle()
-                            .fill(Color.indigo.opacity(0.2))
-                            .frame(width: 140, height: 140)
-                            .blur(radius: 8)
-                    }
-
-                    AudioReactiveBlobView(speechRecognizer: viewModel.speechRecognizer, listeningState: $viewModel.isListening)
-                        .frame(width: 120, height: 120)
-                        .onTapGesture {
-                            toggleListening()
-                        }
+        NavigationStack {
+            VStack(spacing: 30) {
+                // Header with list selector
+                VStack(alignment: .leading, spacing: 16) {
+                    GlassDropdown(
+                        selectedValue: $viewModel.selectedList,
+                        options: viewModel.availableLists,
+                        title: "Reminder List"
+                    )
+                    .frame(maxWidth: 300)
                 }
+                .padding(.horizontal)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 
-                // Transcription display
-                if !viewModel.recognizedText.isEmpty || viewModel.isListening || !viewModel.speechRecognizer.state.partialText.isEmpty {
-                    VStack(spacing: 8) {
-                        if viewModel.speechRecognizer.state.partialText.isEmpty && (viewModel.isListening || viewModel.speechRecognizer.isRecording) {
-                            HStack(spacing: 4) {
-                                ForEach(0..<3) { index in
-                                    Circle()
-                                        .fill(Color.primary.opacity(0.5))
-                                        .frame(width: 8, height: 8)
-                                        .scaleEffect(viewModel.isListening ? 1.2 : 0.8)
-                                        .animation(
-                                            .easeInOut(duration: 0.6)
+                Spacer()
+                
+                // Main content
+                VStack(spacing: 40) {
+                    // Minimalist audio reactive blob
+                    ZStack {
+                        // Subtle glow when listening
+                        if viewModel.isListening {
+                            Circle()
+                                .fill(Color.indigo.opacity(0.2))
+                                .frame(width: 140, height: 140)
+                                .blur(radius: 8)
+                        }
+                        
+                        AudioReactiveBlobView(speechRecognizer: viewModel.speechRecognizer, listeningState: $viewModel.isListening)
+                            .frame(width: 120, height: 120)
+                            .onTapGesture {
+                                toggleListening()
+                            }
+                    }
+                    
+                    // Transcription display
+                    if !viewModel.recognizedText.isEmpty || viewModel.isListening || !viewModel.speechRecognizer.state.partialText.isEmpty {
+                        VStack(spacing: 8) {
+                            if viewModel.speechRecognizer.state.partialText.isEmpty && (viewModel.isListening || viewModel.speechRecognizer.isRecording) {
+                                HStack(spacing: 4) {
+                                    ForEach(0..<3) { index in
+                                        Circle()
+                                            .fill(Color.primary.opacity(0.5))
+                                            .frame(width: 8, height: 8)
+                                            .scaleEffect(viewModel.isListening ? 1.2 : 0.8)
+                                            .animation(
+                                                .easeInOut(duration: 0.6)
                                                 .repeatForever()
                                                 .delay(Double(index) * 0.2),
-                                            value: viewModel.isListening
-                                        )
+                                                value: viewModel.isListening
+                                            )
+                                    }
                                 }
-                            }
-                            .padding()
-                        } else {
-                            let displayText = viewModel.speechRecognizer.state.partialText.isEmpty ? viewModel.recognizedText : viewModel.speechRecognizer.state.partialText
-                            Text(displayText)
-                                .font(.title3)
-                                .foregroundStyle(.primary)
-                                .multilineTextAlignment(.center)
                                 .padding()
-                                .frame(maxWidth: 300)
-                                .onChange(of: viewModel.speechRecognizer.state.partialText) { _, newValue in
-                                    print("🔄 UI PARTIAL TEXT CHANGED: '\(newValue)'")
-                                }
+                            } else {
+                                let displayText = viewModel.speechRecognizer.state.partialText.isEmpty ? viewModel.recognizedText : viewModel.speechRecognizer.state.partialText
+                                Text(displayText)
+                                    .font(.title3)
+                                    .foregroundStyle(.primary)
+                                    .multilineTextAlignment(.center)
+                                    .padding()
+                                    .frame(maxWidth: 300)
+                                    .onChange(of: viewModel.speechRecognizer.state.partialText) { _, newValue in
+                                        print("🔄 UI PARTIAL TEXT CHANGED: '\(newValue)'")
+                                    }
+                            }
                         }
+                        .background {
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(.regularMaterial)
+#if os(iOS) || os(macOS)
+                                .glassEffect(.regular, in: .rect(cornerRadius: 16))
+#endif
+                        }
+                        .transition(.asymmetric(
+                            insertion: .scale(scale: 0.8).combined(with: .opacity),
+                            removal: .scale(scale: 0.8).combined(with: .opacity)
+                        ))
                     }
-                    .background {
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(.regularMaterial)
-                            #if os(iOS) || os(macOS)
-                            .glassEffect(.regular, in: .rect(cornerRadius: 16))
-                            #endif
-                    }
-                    .transition(.asymmetric(
-                        insertion: .scale(scale: 0.8).combined(with: .opacity),
-                        removal: .scale(scale: 0.8).combined(with: .opacity)
-                    ))
+                    
                 }
                 
-                // Instructions
-                if !viewModel.isListening && viewModel.recognizedText.isEmpty {
-                    Text("Tap the blob to start")
-                        .font(.headline)
-                        .foregroundStyle(.secondary)
+                Spacer()
+            }
+            .padding()
+            .background(SimpleTopGradientView())
+            .navigationTitle("Murmer")
+            .toolbar {
+                ToolbarItem(placement: .automatic) {
+                    Button(action: { showingSettings = true }) {
+                        Image(systemName: "gearshape.fill")
+                            .font(.title3)
+                    }
                 }
             }
-            
-            Spacer()
-        }
-        .padding()
-        .background(SimpleTopGradientView())
-        .alert("Error", isPresented: $viewModel.showError) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(viewModel.errorMessage)
+            .alert("Error", isPresented: $viewModel.showError) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(viewModel.errorMessage)
+            }
+#if os(iOS)
+            .fullScreenCover(isPresented: $showingSettings) {
+                SettingsView(speechSynthesizer: viewModel.speechSynthesizer)
+            }
+#else
+            .sheet(isPresented: $showingSettings) {
+                SettingsView(speechSynthesizer: viewModel.speechSynthesizer)
+            }
+#endif
         }
     }
     
@@ -151,10 +161,10 @@ struct MurmerMainView: View {
         }
         
         // Haptic feedback
-        #if os(iOS)
+#if os(iOS)
         let impact = UIImpactFeedbackGenerator(style: .medium)
         impact.impactOccurred()
-        #endif
+#endif
     }
 }
 
@@ -162,7 +172,7 @@ struct MurmerMainView: View {
 
 struct SimpleTopGradientView: View {
     @Environment(\.colorScheme) var scheme
-
+    
     var body: some View {
         LinearGradient(colors: [
             Color.indigo.opacity(0.4), .antiPrimary
