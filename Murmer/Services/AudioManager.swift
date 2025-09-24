@@ -75,13 +75,8 @@ class AudioManager: ObservableObject {
             return
         }
 
-
-        // Install tap on input node to capture audio
-        let bufferSize = AVAudioFrameCount(1024) // Reasonable buffer size for amplitude analysis
-        inputNode?.installTap(onBus: 0, bufferSize: bufferSize, format: audioFormat) {
-            [weak self] buffer, _ in
-            self?.processAudioBuffer(buffer)
-        }
+        // Don't install tap here - will be installed when needed to avoid conflicts
+        print("🎤 AudioEngine setup completed, tap will be installed when needed")
     }
 
     private func processAudioBuffer(_ buffer: AVAudioPCMBuffer) {
@@ -129,31 +124,66 @@ class AudioManager: ObservableObject {
 
 
     func startAudioSession() {
+        print("🎤 AudioManager startAudioSession called")
         guard let audioEngine = audioEngine else {
             setupAudioEngine()
             return
         }
 
+        guard let inputNode = inputNode, let audioFormat = audioFormat else {
+            print("🎤 AudioManager: Missing inputNode or audioFormat")
+            return
+        }
+
+        // Only start if not already running and not conflicting with speech recognition
+        guard !audioEngine.isRunning else {
+            print("🎤 AudioManager: Audio engine already running")
+            isRecording = true
+            return
+        }
+
         do {
+            // Install tap for amplitude monitoring
+            let bufferSize = AVAudioFrameCount(1024)
+            inputNode.installTap(onBus: 0, bufferSize: bufferSize, format: audioFormat) {
+                [weak self] buffer, _ in
+                self?.processAudioBuffer(buffer)
+            }
+            
             try audioEngine.start()
             isRecording = true
+            print("🎤 AudioManager: Audio session started successfully")
         } catch {
+            print("🎤 AudioManager: Failed to start audio session: \(error.localizedDescription)")
         }
     }
 
     func stopAudioSession() {
+        print("🎤 AudioManager stopAudioSession called")
 
-        if let audioEngine = audioEngine {
+        if let audioEngine = audioEngine, audioEngine.isRunning {
             audioEngine.stop()
+            print("🎤 AudioManager: Audio engine stopped")
         } else {
+            print("🎤 AudioManager: Audio engine was not running")
         }
 
         if let inputNode = inputNode {
-            inputNode.removeTap(onBus: 0)
+            // Safely remove tap if it exists
+            if inputNode.numberOfInputs > 0 {
+                do {
+                    inputNode.removeTap(onBus: 0)
+                    print("🎤 AudioManager: Audio tap removed successfully")
+                } catch {
+                    print("🎤 AudioManager: Error removing audio tap: \(error.localizedDescription)")
+                }
+            }
         } else {
+            print("🎤 AudioManager: No input node to remove tap from")
         }
 
         isRecording = false
         currentAmplitude = 0
+        print("🎤 AudioManager: Stop audio session completed")
     }
 }

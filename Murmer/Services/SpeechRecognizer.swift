@@ -90,12 +90,15 @@ enum SpeechRecognitionError: LocalizedError, Equatable {
 class SpeechRecognizer: NSObject, ObservableObject {
     @Published var state: SpeechRecognitionState = .idle
     @Published var hasPermission = false
-    
+
     private let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognitionTask: SFSpeechRecognitionTask?
     private let audioEngine = AVAudioEngine()
     private var audioBufferCount = 0
+
+    // Simple flag to prevent double processing
+    private var hasProcessedFinalResult = false
     
     override init() {
         super.init()
@@ -142,39 +145,49 @@ class SpeechRecognizer: NSObject, ObservableObject {
     }
     
     func startRecognition() throws {
+        print("🚀 START RECOGNITION CALLED")
 
         // Check current authorization status instead of cached value
         let authStatus = SFSpeechRecognizer.authorizationStatus()
+        print("🚀 Authorization status: \(authStatus.rawValue)")
 
         guard authStatus == .authorized else {
             hasPermission = false
             let error = SpeechRecognitionError.notAuthorized
             state = .error(error)
+            print("🚀 Authorization failed")
             throw error
         }
 
         hasPermission = true
 
         let isAvailable = speechRecognizer?.isAvailable ?? false
+        print("🚀 Speech recognizer available: \(isAvailable)")
 
         guard isAvailable else {
             let error = SpeechRecognitionError.recognizerNotAvailable
             state = .error(error)
+            print("🚀 Speech recognizer not available")
             throw error
         }
-        
-        // Cancel any ongoing recognition
+
+        // Cancel any ongoing recognition first
+        print("🚀 Calling stopRecognition() to clean up")
         stopRecognition()
+        
+        // Wait a brief moment for cleanup to complete
+        Thread.sleep(forTimeInterval: 0.1)
         
 #if os(iOS)
         // Configure audio session - available only on iOS
         let audioSession = AVAudioSession.sharedInstance()
 
         do {
-            // Use voice recognition mode for better speech recognition performance
-            try audioSession.setCategory(.record, mode: .measurement, options: .duckOthers)
+            // Use a more compatible audio session configuration
+            try audioSession.setCategory(.record, mode: .spokenAudio, options: [.duckOthers, .allowBluetooth])
             try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
         } catch {
+            print("Audio session configuration failed: \(error.localizedDescription)")
             let recognitionError = SpeechRecognitionError.audioSessionFailed
             state = .error(recognitionError)
             throw recognitionError
@@ -194,7 +207,7 @@ class SpeechRecognizer: NSObject, ObservableObject {
             throw error
         }
         
-        // Configure request
+        // Configure request with better settings
         recognitionRequest.shouldReportPartialResults = true
         recognitionRequest.requiresOnDeviceRecognition = false
         
@@ -202,52 +215,62 @@ class SpeechRecognizer: NSObject, ObservableObject {
             recognitionRequest.addsPunctuation = true
         }
         
+        // Add timeout to prevent indefinite listening
+        if #available(iOS 13.0, *) {
+            recognitionRequest.taskHint = .dictation
+        }
+        
+        // Reset flag when starting new recognition
+        hasProcessedFinalResult = false
+
         // Start recognition task
+        print("🚀 Starting recognition task...")
         recognitionTask = speechRecognizer?.recognitionTask(with: recognitionRequest) { [weak self] result, error in
             guard let self = self else {
                 return
             }
 
             Task { @MainActor in
+                // Simple guard - if we already processed a final result, ignore everything else
+                guard !self.hasProcessedFinalResult else {
+                    print("🎤 CALLBACK IGNORED: Already processed final result")
+                    return
+                }
+
                 if let error = error {
-                    // Check if this is a cancellation error (user tapped to stop)
-                    if error.localizedDescription.contains("cancelled") ||
-                       error.localizedDescription.contains("Cancelled") ||
-                       error.localizedDescription.contains("canceled") ||
-                       error.localizedDescription.contains("Canceled") {
-                        print("Speech recognition cancelled by user")
-                        self.state = .idle  // Don't treat cancellation as error
-                    } else {
-                        print("Speech recognition error: \(error.localizedDescription)")
-                        self.state = .error(.recognitionFailed(error.localizedDescription))
-                    }
-                    self.stopRecognition()
+                    print("🔴 SPEECH ERROR: \(error.localizedDescription)")
+                    self.hasProcessedFinalResult = true
+                    self.state = .error(.recognitionFailed(error.localizedDescription))
                     return
                 }
 
                 if let result = result {
                     let transcription = result.bestTranscription.formattedString
-
+                    
                     if result.isFinal {
+                        print("🎯 FINAL RESULT: '\(transcription)'")
+                        self.hasProcessedFinalResult = true
                         self.state = .completed(finalText: transcription)
-                        self.stopRecognition()
                     } else {
-                        self.state = .listening(partialText: transcription)
+                        print("📝 PARTIAL RESULT: '\(transcription)'")
+                        // Only update state if we haven't processed final result yet
+                        if !self.hasProcessedFinalResult {
+                            self.state = .listening(partialText: transcription)
+                        }
                     }
                 }
             }
         }
         
-        
         // Configure audio input with proper format
         let inputFormat = inputNode.outputFormat(forBus: 0)
 
-        // Create a proper recording format if input format is invalid
+        // Create a proper recording format
         let recordingFormat: AVAudioFormat
         if inputFormat.sampleRate > 0 && inputFormat.channelCount > 0 {
             recordingFormat = inputFormat
         } else {
-            // Fallback to a standard format
+            // Fallback to a standard format optimized for speech
             guard let fallbackFormat = AVAudioFormat(standardFormatWithSampleRate: 16000, channels: 1) else {
                 let error = SpeechRecognitionError.audioSessionFailed
                 state = .error(error)
@@ -256,16 +279,20 @@ class SpeechRecognizer: NSObject, ObservableObject {
             recordingFormat = fallbackFormat
         }
 
+        // Remove any existing tap before installing new one
+        if inputNode.numberOfInputs > 0 {
+            inputNode.removeTap(onBus: 0)
+        }
 
         audioBufferCount = 0
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { [weak self] buffer, _ in
-            self?.recognitionRequest?.append(buffer)
+            guard let self = self, !self.hasProcessedFinalResult else { return }
+            self.recognitionRequest?.append(buffer)
 
             // Log every 50th buffer to avoid spam
-            if let self = self {
-                self.audioBufferCount += 1
-                if self.audioBufferCount % 50 == 0 {
-                }
+            self.audioBufferCount += 1
+            if self.audioBufferCount % 50 == 0 {
+                print("🎤 Buffer \(self.audioBufferCount): frameLength=\(buffer.frameLength)")
             }
         }
         
@@ -273,37 +300,79 @@ class SpeechRecognizer: NSObject, ObservableObject {
 
         do {
             try audioEngine.start()
+            print("🚀 Audio engine started successfully")
         } catch {
+            print("Audio engine start failed: \(error.localizedDescription)")
             let recognitionError = SpeechRecognitionError.audioSessionFailed
             state = .error(recognitionError)
             throw recognitionError
         }
 
         // Update state to listening
+        print("🚀 Setting state to .listening()")
         state = .listening()
-        
+        print("🚀 START RECOGNITION COMPLETED SUCCESSFULLY")
         
     }
     
     func stopRecognition() {
-        audioEngine.stop()
-        audioEngine.inputNode.removeTap(onBus: 0)
-
-        if recognitionRequest != nil {
-            recognitionRequest?.endAudio()
-        }
-
-        if recognitionTask != nil {
-            recognitionTask?.cancel()
-        }
-
-        recognitionTask = nil
-        recognitionRequest = nil
-
-        // Only set to idle if we're not already showing a completed state or error
-        if case .listening = state {
+        print("🛑 STOP RECOGNITION CALLED")
+        
+        // If we're listening and have partial text, complete with that text
+        if case .listening(let partialText) = state, !partialText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            print("🛑 Completing with partial text: '\(partialText)'")
+            hasProcessedFinalResult = true
+            state = .completed(finalText: partialText)
+        } else {
+            print("🛑 No partial text to use, setting to idle")
             state = .idle
         }
+        
+        // Clean up resources
+        cleanupRecognition()
+    }
+    
+    private func cleanupRecognition() {
+        print("🧹 CLEANUP RECOGNITION")
+        
+        // Cancel any ongoing recognition task
+        if let task = recognitionTask {
+            task.cancel()
+            recognitionTask = nil
+        }
+
+        // End the recognition request
+        if let request = recognitionRequest {
+            request.endAudio()
+            recognitionRequest = nil
+        }
+
+        // Stop audio engine safely
+        if audioEngine.isRunning {
+            audioEngine.stop()
+        }
+        
+        // Remove tap safely
+        let inputNode = audioEngine.inputNode
+        if inputNode.numberOfInputs > 0 {
+            do {
+                inputNode.removeTap(onBus: 0)
+            } catch {
+                print("🧹 Error removing audio tap: \(error.localizedDescription)")
+            }
+        }
+
+#if os(iOS)
+        // Deactivate audio session
+        do {
+            let audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setActive(false, options: .notifyOthersOnDeactivation)
+        } catch {
+            print("🧹 Error deactivating audio session: \(error.localizedDescription)")
+        }
+#endif
+        
+        print("🧹 CLEANUP COMPLETED")
     }
 }
 

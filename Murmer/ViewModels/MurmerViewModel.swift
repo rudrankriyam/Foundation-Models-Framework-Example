@@ -25,6 +25,9 @@ class MurmerViewModel: ObservableObject {
   // Track if recognition was cancelled intentionally
   private var wasCancelled = false
 
+  // Track if we're currently processing text to prevent interference
+  private var isProcessingText = false
+
   let audioManager = AudioManager()
   let speechRecognizer = SpeechRecognizer()
   let permissionManager = PermissionManager()
@@ -47,20 +50,30 @@ class MurmerViewModel: ObservableObject {
       .sink { [weak self] state in
         guard let self = self else { return }
 
+        print("🔄 STATE CHANGED: \(state)")
+
         switch state {
         case .idle:
+          print("🔄 Processing .idle state")
           self.isListening = false
+          // Clear any partial text when idle
+          self.recognizedText = ""
 
         case .listening(let partialText):
+          print("🔄 Processing .listening state: '\(partialText)'")
           self.isListening = true
           self.recognizedText = partialText
 
         case .completed(let finalText):
+          print("🔄 Processing .completed state: '\(finalText)'")
           self.isListening = false
           self.recognizedText = finalText
+          // Process the text - the processRecognizedText will handle stopping listening
+          print("🔄 Calling processRecognizedText")
           self.processRecognizedText(finalText)
 
         case .error(let error):
+          print("🔄 Processing .error state: \(error.localizedDescription)")
           self.isListening = false
           self.showError(error.localizedDescription)
         }
@@ -69,6 +82,15 @@ class MurmerViewModel: ObservableObject {
   }
 
   func startListening() async {
+    print("📱 START LISTENING CALLED")
+    print("📱 Current flags: wasCancelled=\(wasCancelled), isProcessingText=\(isProcessingText)")
+    
+    // Don't start if we're currently processing text
+    guard !isProcessingText else {
+      print("📱 SKIPPING: Currently processing text")
+      return
+    }
+    
     guard permissionManager.allPermissionsGranted else {
       let granted = await permissionManager.requestAllPermissions()
 
@@ -81,74 +103,105 @@ class MurmerViewModel: ObservableObject {
 
     do {
       // Reset cancellation flag when starting new recognition
+      print("📱 Resetting flags: wasCancelled=false, isProcessingText=false")
       wasCancelled = false
+      isProcessingText = false
 
+      // Stop audio manager first to prevent conflicts
+      print("📱 Stopping AudioManager to prevent conflicts")
+      audioManager.stopAudioSession()
+
+      print("📱 Calling speechRecognizer.startRecognition()")
       try speechRecognizer.startRecognition()
-      audioManager.startAudioSession()
 
       isListening = true
       recognizedText = ""
       showSuccess = false
       showError = false
 
+      print("📱 START LISTENING COMPLETED SUCCESSFULLY")
+
     } catch {
+      print("📱 START LISTENING FAILED: \(error.localizedDescription)")
       showError(error.localizedDescription)
     }
   }
 
   func stopListening() {
+    print("📱 STOP LISTENING CALLED")
+    print("📱 Current flags: wasCancelled=\(wasCancelled), isProcessingText=\(isProcessingText)")
+    
+    print("📱 Setting wasCancelled = true")
     wasCancelled = true
+    print("📱 Calling speechRecognizer.stopRecognition()")
     speechRecognizer.stopRecognition()
-    audioManager.stopAudioSession()
 
     isListening = false
-
-    // Clear any partial text when cancelled
-    recognizedText = ""
+    print("📱 STOP LISTENING COMPLETED")
   }
 
   private func processRecognizedText(_ text: String) {
-    // Don't process if it was cancelled
-    if wasCancelled {
-      print("Skipping processing - recognition was cancelled")
-      wasCancelled = false  // Reset flag
-      return
-    }
-
+    print("🧠 PROCESS RECOGNIZED TEXT CALLED: '\(text)'")
+    print("🧠 Current flags: wasCancelled=\(wasCancelled), isProcessingText=\(isProcessingText)")
+    
     // Don't process empty, whitespace-only, or very short text
     let cleanText = text.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !cleanText.isEmpty && cleanText.count >= 3 else {
-      print("Skipping processing of short/empty text: '\(text)'")
+      print("🧠 SKIPPING: Text too short or empty")
       return
     }
 
+    // Prevent multiple processing attempts
+    guard !isProcessingText else {
+      print("🧠 SKIPPING: Already processing text")
+      return
+    }
+
+    print("🧠 STARTING TEXT PROCESSING")
+
     Task {
-      // Stop listening while processing
-      stopListening()
+      print("🧠 Setting isProcessingText = true")
+      isProcessingText = true
+
+      // Ensure we're not listening while processing
+      if speechRecognizer.state.isListening {
+        print("🧠 Stopping recognition since we're processing")
+        speechRecognizer.stopRecognition()
+      }
 
       do {
-        print("Processing text: '\(cleanText)'")
-
+        print("🧠 Calling inferenceService.processText()")
         // Use the inference service to process the text
         let response = try await inferenceService.processText(cleanText)
+        print("🧠 Inference completed: '\(response)'")
 
         // Store the response for display
         lastCreatedReminder = response
 
+        print("🧠 Starting speech synthesis")
         // Speak the AI response
         try await speechSynthesizer.synthesizeAndSpeak(text: response)
+        print("🧠 Speech synthesis completed")
 
         showSuccessAnimation()
         provideHapticFeedback("success")
 
         // Clear the recognized text after a delay
+        print("🧠 Waiting 2 seconds before clearing text")
         try? await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
         recognizedText = ""
 
+        print("🧠 TEXT PROCESSING COMPLETED SUCCESSFULLY")
+
       } catch {
+        print("🧠 TEXT PROCESSING FAILED: \(error.localizedDescription)")
         showError("Failed to create reminder: \(error.localizedDescription)")
         provideHapticFeedback("error")
       }
+
+      print("🧠 Resetting flags: isProcessingText=false, wasCancelled=false")
+      isProcessingText = false
+      wasCancelled = false // Reset cancellation flag after processing
     }
   }
 
