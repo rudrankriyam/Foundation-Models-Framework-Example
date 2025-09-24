@@ -16,6 +16,7 @@ struct SpeechSynthesizerExampleView: View {
     @StateObject private var speechSynthesizer = SpeechSynthesizer()
     @State private var showError = false
     @State private var errorMessage = ""
+    @State private var showSettings = false
 
     private let sampleTexts = [
         "Hello! Welcome to Murmer, your intelligent voice assistant. This is a demonstration of our speech synthesis capabilities.",
@@ -33,7 +34,7 @@ struct SpeechSynthesizerExampleView: View {
 
                 textSelectionSection
 
-                voiceSelectionSection
+                currentVoiceSection
 
                 audioControlSection
 
@@ -44,6 +45,17 @@ struct SpeechSynthesizerExampleView: View {
             .padding()
             .background(backgroundGradient)
             .navigationTitle("Speech Synthesizer Demo")
+            .toolbar {
+                ToolbarItem(placement: .automatic) {
+                    Button(action: { showSettings = true }) {
+                        Image(systemName: "gearshape.fill")
+                            .font(.title3)
+                    }
+                }
+            }
+            .sheet(isPresented: $showSettings) {
+                SettingsView(speechSynthesizer: speechSynthesizer)
+            }
             .alert("Error", isPresented: $showError) {
                 Button("OK") { }
             } message: {
@@ -106,27 +118,42 @@ struct SpeechSynthesizerExampleView: View {
         }
     }
 
-    private var voiceSelectionSection: some View {
+    private var currentVoiceSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Voice Selection")
-                .font(.headline)
-                .foregroundStyle(.primary)
+            HStack {
+                Text("Current Voice")
+                    .font(.headline)
+                    .foregroundStyle(.primary)
 
-            if !speechSynthesizer.availableVoices.isEmpty {
-                Picker("Voice", selection: $speechSynthesizer.selectedVoice) {
-                    ForEach(speechSynthesizer.availableVoices, id: \.identifier) { voice in
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(voice.name)
-                                .font(.body)
-                            Text(voice.language)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        .tag(voice as AVSpeechSynthesisVoice?)
+                Spacer()
+
+                Button(action: { showSettings = true }) {
+                    HStack(spacing: 6) {
+                        Text("Change")
+                            .font(.caption)
+                        Image(systemName: "chevron.right")
+                            .font(.caption2)
                     }
+                    .foregroundStyle(.blue)
                 }
-                .pickerStyle(MenuPickerStyle())
-                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+            if let voice = speechSynthesizer.selectedVoice {
+                HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(voice.name)
+                            .font(.body)
+                            .fontWeight(.medium)
+
+                        Text(voice.language)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer()
+
+                    voiceQualityBadge(voice.quality)
+                }
                 .padding()
                 .background {
                     RoundedRectangle(cornerRadius: 12)
@@ -146,6 +173,43 @@ struct SpeechSynthesizerExampleView: View {
                 }
                 .padding()
             }
+        }
+    }
+
+    private func voiceQualityBadge(_ quality: AVSpeechSynthesisVoiceQuality) -> some View {
+        Text(voiceQualityString(quality))
+            .font(.caption2)
+            .fontWeight(.medium)
+            .foregroundStyle(.white)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(voiceQualityColor(quality))
+            .clipShape(Capsule())
+    }
+
+    private func voiceQualityString(_ quality: AVSpeechSynthesisVoiceQuality) -> String {
+        switch quality {
+        case .default:
+            return "Standard"
+        case .enhanced:
+            return "Enhanced"
+        case .premium:
+            return "Premium"
+        @unknown default:
+            return "Unknown"
+        }
+    }
+
+    private func voiceQualityColor(_ quality: AVSpeechSynthesisVoiceQuality) -> Color {
+        switch quality {
+        case .default:
+            return .gray
+        case .enhanced:
+            return .orange
+        case .premium:
+            return .green
+        @unknown default:
+            return .gray
         }
     }
 

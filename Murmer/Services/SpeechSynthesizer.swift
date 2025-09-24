@@ -36,6 +36,8 @@ final class SpeechSynthesizer: NSObject, ObservableObject {
 
     @Published var selectedVoice: AVSpeechSynthesisVoice?
     @Published var availableVoices: [AVSpeechSynthesisVoice] = []
+    @Published var voicesByLanguage: [String: [AVSpeechSynthesisVoice]] = [:]
+    @Published var availableLanguages: [String] = []
     private let rate: Float
     private let pitch: Float
     private let volume: Float
@@ -103,32 +105,53 @@ final class SpeechSynthesizer: NSObject, ObservableObject {
         Task { @MainActor in
             let allVoices = AVSpeechSynthesisVoice.speechVoices()
 
-            // Filter to English premium voices first for best quality
-            var selectedVoices = allVoices.filter { voice in
-                voice.language.hasPrefix("en") && voice.quality == .premium
+            // Organize all voices by language
+            var voicesGroupedByLanguage: [String: [AVSpeechSynthesisVoice]] = [:]
+
+            for voice in allVoices {
+                let languageCode = voice.language
+                if voicesGroupedByLanguage[languageCode] == nil {
+                    voicesGroupedByLanguage[languageCode] = []
+                }
+                voicesGroupedByLanguage[languageCode]?.append(voice)
             }
 
-            // Fallback to enhanced voices if no premium voices available
-            if selectedVoices.isEmpty {
-                selectedVoices = allVoices.filter { voice in
-                    voice.language.hasPrefix("en") && voice.quality == .enhanced
+            // Sort voices within each language by quality and name
+            for (language, voices) in voicesGroupedByLanguage {
+                voicesGroupedByLanguage[language] = voices.sorted { voice1, voice2 in
+                    // Sort by quality first (Premium > Enhanced > Default), then by name
+                    if voice1.quality != voice2.quality {
+                        return voice1.quality.rawValue > voice2.quality.rawValue
+                    }
+                    return voice1.name < voice2.name
                 }
             }
 
-            // Fallback to any English voices if still empty
-            if selectedVoices.isEmpty {
-                selectedVoices = allVoices.filter { voice in
-                    voice.language.hasPrefix("en")
+            voicesByLanguage = voicesGroupedByLanguage
+
+            // Get sorted list of languages, prioritizing English
+            availableLanguages = voicesGroupedByLanguage.keys.sorted { lang1, lang2 in
+                if lang1.hasPrefix("en") && !lang2.hasPrefix("en") {
+                    return true
+                } else if !lang1.hasPrefix("en") && lang2.hasPrefix("en") {
+                    return false
                 }
+                return lang1 < lang2
             }
 
-            // Sort alphabetically
-            availableVoices = selectedVoices.sorted { voice1, voice2 in
-                return voice1.name < voice2.name
-            }
+            // Set up English voices for backward compatibility
+            let englishVoices = allVoices.filter { $0.language.hasPrefix("en") }
+                .sorted { voice1, voice2 in
+                    if voice1.quality != voice2.quality {
+                        return voice1.quality.rawValue > voice2.quality.rawValue
+                    }
+                    return voice1.name < voice2.name
+                }
 
-            // Set default voice
-            selectedVoice = availableVoices.first ?? AVSpeechSynthesisVoice(language: "en-US")
+            availableVoices = englishVoices
+
+            // Set default voice to best English voice
+            selectedVoice = englishVoices.first ?? AVSpeechSynthesisVoice(language: "en-US")
         }
     }
 
