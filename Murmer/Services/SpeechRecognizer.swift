@@ -233,7 +233,13 @@ class SpeechRecognizer: NSObject, ObservableObject {
             Task { @MainActor in
                 // Simple guard - if we already processed a final result, ignore everything else
                 guard !self.hasProcessedFinalResult else {
-                    print("🎤 CALLBACK IGNORED: Already processed final result")
+                    if let error = error {
+                        print("🎤 CALLBACK IGNORED: Error - \(error.localizedDescription)")
+                    } else if let result = result {
+                        print("🎤 CALLBACK IGNORED: Result - isFinal=\(result.isFinal), text='\(result.bestTranscription.formattedString)'")
+                    } else {
+                        print("🎤 CALLBACK IGNORED: Unknown callback")
+                    }
                     return
                 }
 

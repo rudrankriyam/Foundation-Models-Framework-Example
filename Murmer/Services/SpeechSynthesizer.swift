@@ -181,8 +181,17 @@ final class SpeechSynthesizer: NSObject, ObservableObject {
 
             availableVoices = englishVoices
 
-            // Set default voice to best English voice
-            selectedVoice = englishVoices.first ?? AVSpeechSynthesisVoice(language: "en-US")
+            // Hardcode to use Rishi voice
+            let rishiVoice = englishVoices.first { voice in
+                voice.name == "Rishi"
+            }
+            
+            selectedVoice = rishiVoice ?? englishVoices.first ?? AVSpeechSynthesisVoice(language: "en-US")
+            
+            if let voice = selectedVoice {
+                print("🎙️ Selected voice: \(voice.name) (\(voice.language)) - Quality: \(voice.quality.rawValue)")
+                print("🎙️ Available voices: \(englishVoices.map { "\($0.name) (Q:\($0.quality.rawValue))" }.joined(separator: ", "))")
+            }
         }
     }
 
