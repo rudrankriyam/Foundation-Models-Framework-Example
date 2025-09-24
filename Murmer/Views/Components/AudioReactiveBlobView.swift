@@ -28,9 +28,9 @@ struct AudioReactiveBlobView: View {
         ZStack {
             // Single clean blob
             Circle()
-                .fill(Color.blue)
+                .fill(Color.indigo)
                 .frame(width: baseSize * pulseScale, height: baseSize * pulseScale)
-                .shadow(color: Color.purple.opacity(0.3), radius: 10, x: 0, y: 5)
+                .shadow(color: Color.indigo.opacity(0.4), radius: 10, x: 0, y: 5)
 
             // Subtle inner highlight
             Circle()

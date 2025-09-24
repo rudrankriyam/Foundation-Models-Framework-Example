@@ -31,6 +31,7 @@ final class SpeechSynthesizer: NSObject, ObservableObject, SpeechSynthesisServic
     private var currentUtterance: AVSpeechUtterance?
     private var currentAudioURL: URL?
     private var completion: ((Result<Void, SpeechSynthesizerError>) -> Void)?
+    private var audioSessionConfigured = false
 
     // MARK: - Configuration
 
@@ -58,6 +59,7 @@ final class SpeechSynthesizer: NSObject, ObservableObject, SpeechSynthesisServic
         synthesizer.delegate = self
         setupAudioSession()
         loadAvailableVoices()
+        preWarmSynthesizer()
     }
 
     // MARK: - Public API
@@ -82,8 +84,7 @@ final class SpeechSynthesizer: NSObject, ObservableObject, SpeechSynthesisServic
                 }
             }
 
-            // Configure audio session for playback before synthesis
-            self.configurePlaybackSession()
+            // Audio session should already be configured from init
 
             let utterance = self.createUtterance(from: text)
             self.startSynthesis(utterance: utterance)
@@ -125,7 +126,38 @@ final class SpeechSynthesizer: NSObject, ObservableObject, SpeechSynthesisServic
     // MARK: - Private Methods
 
     private func setupAudioSession() {
-        // Initial setup - audio session will be configured dynamically before synthesis
+        // Configure audio session immediately to avoid delays later
+        configurePlaybackSession()
+    }
+
+    private func preWarmSynthesizer() {
+        // Pre-warm the synthesizer to reduce first-utterance delay
+        Task { @MainActor in
+            // Wait for voices to load and audio session to be ready
+            try? await Task.sleep(nanoseconds: 500_000_000) // 500ms
+
+            // Create a minimal utterance to initialize the speech engine
+            if let voice = self.selectedVoice ?? AVSpeechSynthesisVoice(language: "en-US") {
+                let warmUpUtterance = AVSpeechUtterance(string: ".")
+                warmUpUtterance.voice = voice
+                warmUpUtterance.volume = 0.01 // Nearly silent but not zero
+                warmUpUtterance.rate = 0.1 // Very fast to minimize duration
+                warmUpUtterance.pitchMultiplier = 1.0
+
+                // Store current completion handler
+                let originalCompletion = self.completion
+
+                // Set temporary completion handler for warm-up
+                self.completion = { _ in
+                    // Restore original completion handler
+                    self.completion = originalCompletion
+                }
+
+                // Speak the warm-up utterance to initialize the engine
+                self.synthesizer.speak(warmUpUtterance)
+                print("🔊 Pre-warmed speech synthesizer with \(voice.name)")
+            }
+        }
     }
 
     private func configurePlaybackSession() {
@@ -136,6 +168,7 @@ final class SpeechSynthesizer: NSObject, ObservableObject, SpeechSynthesisServic
             // Configure for playback with proper options for speech synthesis
             try audioSession.setCategory(.playback, mode: .default, options: [.duckOthers])
             try audioSession.setActive(true, options: [])
+            audioSessionConfigured = true
 
             print("🔊 Configured audio session for speech synthesis playback")
         } catch {
@@ -193,12 +226,12 @@ final class SpeechSynthesizer: NSObject, ObservableObject, SpeechSynthesisServic
 
             availableVoices = englishVoices
 
-            // Hardcode to use Rishi voice
-            let rishiVoice = englishVoices.first { voice in
-                voice.name == "Rishi"
+            // Hardcode to use Ava voice
+            let avaVoice = englishVoices.first { voice in
+                voice.name == "Ava"
             }
-            
-            selectedVoice = rishiVoice ?? englishVoices.first ?? AVSpeechSynthesisVoice(language: "en-US")
+
+            selectedVoice = avaVoice ?? englishVoices.first ?? AVSpeechSynthesisVoice(language: "en-US")
             
             if let voice = selectedVoice {
                 print("🎙️ Selected voice: \(voice.name) (\(voice.language)) - Quality: \(voice.quality.rawValue)")
@@ -244,12 +277,45 @@ final class SpeechSynthesizer: NSObject, ObservableObject, SpeechSynthesisServic
 
     private func handleSuccess() {
         print("🔊 Speech synthesis completed successfully")
+
+        // Deactivate audio session to allow other audio components to take over
+        #if os(iOS)
+        DispatchQueue.global(qos: .background).async {
+            // Add small delay to ensure synthesis is fully complete
+            Thread.sleep(forTimeInterval: 0.1)
+            do {
+                let audioSession = AVAudioSession.sharedInstance()
+                try audioSession.setActive(false, options: .notifyOthersOnDeactivation)
+                print("🔊 Deactivated audio session after speech synthesis")
+            } catch {
+                print("🔊 Failed to deactivate audio session: \(error.localizedDescription)")
+                // Don't treat this as fatal - just log and continue
+            }
+        }
+        #endif
+
         completion?(.success(()))
         resetState()
     }
 
     private func handleError(_ synthError: SpeechSynthesizerError) {
         error = synthError
+
+        // Deactivate audio session on error as well
+        #if os(iOS)
+        DispatchQueue.global(qos: .background).async {
+            Thread.sleep(forTimeInterval: 0.1)
+            do {
+                let audioSession = AVAudioSession.sharedInstance()
+                try audioSession.setActive(false, options: .notifyOthersOnDeactivation)
+                print("🔊 Deactivated audio session after speech synthesis error")
+            } catch {
+                print("🔊 Failed to deactivate audio session: \(error.localizedDescription)")
+                // Don't treat this as fatal - just log and continue
+            }
+        }
+        #endif
+
         completion?(.failure(synthError))
         resetState()
     }

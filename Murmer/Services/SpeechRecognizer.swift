@@ -187,13 +187,43 @@ class SpeechRecognizer: NSObject, ObservableObject, SpeechRecognitionService {
             print("🚀 Not currently listening, skipping cleanup")
         }
 
-        print("🚀 Starting speech recognition without manual audio session configuration")
-        
+        print("🚀 Configuring audio session for speech recognition")
+
+        // Configure audio session first with retry logic
+        #if os(iOS)
+        var attempts = 0
+        let maxAttempts = 3
+
+        while attempts < maxAttempts {
+            do {
+                // Small delay on retry to allow previous session to fully deactivate
+                if attempts > 0 {
+                    Thread.sleep(forTimeInterval: 0.2) // 200ms
+                    print("🚀 Retrying audio session configuration (attempt \(attempts + 1))")
+                }
+
+                let audioSession = AVAudioSession.sharedInstance()
+                try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.duckOthers, .defaultToSpeaker])
+                try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+                print("🚀 Audio session configured successfully")
+                break // Success, exit the retry loop
+
+            } catch {
+                attempts += 1
+                print("🚀 Audio session configuration failed (attempt \(attempts)): \(error.localizedDescription)")
+
+                if attempts >= maxAttempts {
+                    let recognitionError = SpeechRecognitionError.audioSessionFailed
+                    state = .error(recognitionError)
+                    throw recognitionError
+                }
+            }
+        }
+        #endif
+
         // Create and configure recognition request
         recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
-        
-        let inputNode = audioEngine.inputNode
-        
+
         guard let recognitionRequest = recognitionRequest else {
             let error = SpeechRecognitionError.audioSessionFailed
             state = .error(error)
@@ -269,19 +299,46 @@ class SpeechRecognizer: NSObject, ObservableObject, SpeechRecognitionService {
                 }
             }
         }
-        
+
+        // Reset audio engine to ensure it picks up the new audio session configuration
+        if audioEngine.isRunning {
+            audioEngine.stop()
+        }
+        audioEngine.reset()
+
         // Configure audio input with proper format
+        let inputNode = audioEngine.inputNode
         let recordingFormat = inputNode.outputFormat(forBus: 0)
+        print("🎤 Hardware format after session config: sampleRate=\(recordingFormat.sampleRate), channels=\(recordingFormat.channelCount)")
 
         // Remove any existing tap before installing new one
         if inputNode.numberOfInputs > 0 {
             inputNode.removeTap(onBus: 0)
         }
 
+        // Use nil format to let AVAudioEngine handle format conversion automatically
+        let validFormat: AVAudioFormat? = nil
+        print("🎤 Using automatic format conversion (nil format)")
+
+        // If we still need a specific format, use the recording format or fallback
+        let tapFormat: AVAudioFormat
+        if recordingFormat.sampleRate > 0 && recordingFormat.channelCount > 0 {
+            tapFormat = recordingFormat
+            print("🎤 Installing tap with hardware format")
+        } else {
+            guard let fallbackFormat = AVAudioFormat(standardFormatWithSampleRate: 16000, channels: 1) else {
+                let error = SpeechRecognitionError.audioSessionFailed
+                state = .error(error)
+                throw error
+            }
+            tapFormat = fallbackFormat
+            print("🎤 Installing tap with fallback format: sampleRate=16000, channels=1")
+        }
+
         audioBufferCount = 0
-        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { [weak self] buffer, _ in
+        inputNode.installTap(onBus: 0, bufferSize: 1024, format: tapFormat) { [weak self] (buffer: AVAudioPCMBuffer, when: AVAudioTime) in
             guard let self = self, !self.hasProcessedFinalResult else { return }
-            
+
             // Send buffer to speech recognition
             self.recognitionRequest?.append(buffer)
 
@@ -296,7 +353,7 @@ class SpeechRecognizer: NSObject, ObservableObject, SpeechRecognitionService {
                 print("🎤 Buffer \(self.audioBufferCount): frameLength=\(buffer.frameLength)")
             }
         }
-        
+
         audioEngine.prepare()
 
         do {
