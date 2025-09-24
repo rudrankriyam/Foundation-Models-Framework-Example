@@ -34,7 +34,8 @@ final class SpeechSynthesizer: NSObject, ObservableObject {
 
     // MARK: - Configuration
 
-    private let voice: AVSpeechSynthesisVoice?
+    @Published var selectedVoice: AVSpeechSynthesisVoice?
+    @Published var availableVoices: [AVSpeechSynthesisVoice] = []
     private let rate: Float
     private let pitch: Float
     private let volume: Float
@@ -42,12 +43,10 @@ final class SpeechSynthesizer: NSObject, ObservableObject {
     // MARK: - Initialization
 
     init(
-        voice: AVSpeechSynthesisVoice? = nil,
         rate: Float = 0.5,
         pitch: Float = 1.0,
         volume: Float = 1.0
     ) {
-        self.voice = voice ?? AVSpeechSynthesisVoice(language: "en-US")
         self.rate = max(0.0, min(1.0, rate))
         self.pitch = max(0.5, min(2.0, pitch))
         self.volume = max(0.0, min(1.0, volume))
@@ -56,6 +55,7 @@ final class SpeechSynthesizer: NSObject, ObservableObject {
 
         synthesizer.delegate = self
         setupAudioSession()
+        loadAvailableVoices()
     }
 
     // MARK: - Public API
@@ -99,9 +99,42 @@ final class SpeechSynthesizer: NSObject, ObservableObject {
         #endif
     }
 
+    func loadAvailableVoices() {
+        Task { @MainActor in
+            let allVoices = AVSpeechSynthesisVoice.speechVoices()
+
+            // Filter to English premium voices first for best quality
+            var selectedVoices = allVoices.filter { voice in
+                voice.language.hasPrefix("en") && voice.quality == .premium
+            }
+
+            // Fallback to enhanced voices if no premium voices available
+            if selectedVoices.isEmpty {
+                selectedVoices = allVoices.filter { voice in
+                    voice.language.hasPrefix("en") && voice.quality == .enhanced
+                }
+            }
+
+            // Fallback to any English voices if still empty
+            if selectedVoices.isEmpty {
+                selectedVoices = allVoices.filter { voice in
+                    voice.language.hasPrefix("en")
+                }
+            }
+
+            // Sort alphabetically
+            availableVoices = selectedVoices.sorted { voice1, voice2 in
+                return voice1.name < voice2.name
+            }
+
+            // Set default voice
+            selectedVoice = availableVoices.first ?? AVSpeechSynthesisVoice(language: "en-US")
+        }
+    }
+
     private func createUtterance(from text: String) -> AVSpeechUtterance {
         let utterance = AVSpeechUtterance(string: text)
-        utterance.voice = voice
+        utterance.voice = selectedVoice ?? AVSpeechSynthesisVoice(language: "en-US")
         utterance.rate = rate
         utterance.pitchMultiplier = pitch
         utterance.volume = volume

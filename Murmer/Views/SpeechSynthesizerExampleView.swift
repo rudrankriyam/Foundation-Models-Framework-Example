@@ -33,6 +33,8 @@ struct SpeechSynthesizerExampleView: View {
 
                 textSelectionSection
 
+                voiceSelectionSection
+
                 audioControlSection
 
                 statusSection
@@ -101,6 +103,49 @@ struct SpeechSynthesizerExampleView: View {
                     RoundedRectangle(cornerRadius: 12)
                         .stroke(.tertiary, lineWidth: 1)
                 }
+        }
+    }
+
+    private var voiceSelectionSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Voice Selection")
+                .font(.headline)
+                .foregroundStyle(.primary)
+
+            if !speechSynthesizer.availableVoices.isEmpty {
+                Picker("Voice", selection: $speechSynthesizer.selectedVoice) {
+                    ForEach(speechSynthesizer.availableVoices, id: \.identifier) { voice in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(voice.name)
+                                .font(.body)
+                            Text(voice.language)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .tag(voice as AVSpeechSynthesisVoice?)
+                    }
+                }
+                .pickerStyle(MenuPickerStyle())
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding()
+                .background {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(.regularMaterial)
+                }
+                .overlay {
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(.tertiary, lineWidth: 1)
+                }
+            } else {
+                HStack(spacing: 8) {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                    Text("Loading voices...")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .padding()
+            }
         }
     }
 
