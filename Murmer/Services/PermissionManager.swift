@@ -21,15 +21,15 @@ import AppKit
 class PermissionManager: ObservableObject {
     
     #if os(iOS)
-    @Published var microphonePermissionStatus: AVAudioSession.RecordPermission = .undetermined
+    @Published var microphonePermissionStatus: AVAudioApplication.RecordPermission = .undetermined
     #else
     /// Custom microphone permission enum for macOS placeholder
     enum MicrophonePermissionStatus {
-        case notDetermined
+        case undetermined
         case denied
         case granted
     }
-    @Published var microphonePermissionStatus: MicrophonePermissionStatus = .notDetermined
+    @Published var microphonePermissionStatus: MicrophonePermissionStatus = .undetermined
     #endif
     
     @Published var speechPermissionStatus: SFSpeechRecognizerAuthorizationStatus = .notDetermined
@@ -72,22 +72,19 @@ class PermissionManager: ObservableObject {
     
     #if os(iOS)
     private func checkMicrophonePermission() {
-        microphonePermissionStatus = AVAudioSession.sharedInstance().recordPermission
+        microphonePermissionStatus = AVAudioApplication.recordPermission
     }
-    
+
     private func requestMicrophonePermission() async -> Bool {
         if microphonePermissionStatus == .granted {
             return true
         }
-        
-        return await withCheckedContinuation { continuation in
-            AVAudioSession.sharedInstance().requestRecordPermission { granted in
-                Task { @MainActor in
-                    self.microphonePermissionStatus = granted ? .granted : .denied
-                    continuation.resume(returning: granted)
-                }
-            }
+
+        let granted = await AVAudioApplication.requestRecordPermission()
+        await MainActor.run {
+            self.microphonePermissionStatus = granted ? .granted : .denied
         }
+        return granted
     }
     #else
     // macOS stub implementations for microphone permission

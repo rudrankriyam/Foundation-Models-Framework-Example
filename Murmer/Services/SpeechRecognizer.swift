@@ -78,14 +78,12 @@ class SpeechRecognizer: NSObject, ObservableObject {
         
         // Check current authorization status instead of cached value
         let authStatus = SFSpeechRecognizer.authorizationStatus()
-        
+
         guard authStatus == .authorized else {
-            let previousPermission = hasPermission
             hasPermission = false
             throw SpeechRecognizerError.notAuthorized
         }
-        
-        let previousPermission = hasPermission
+
         hasPermission = true
         
         let isAvailable = speechRecognizer?.isAvailable ?? false
@@ -143,21 +141,16 @@ class SpeechRecognizer: NSObject, ObservableObject {
             var isFinal = false
             
             if let result = result {
-                
+
                 Task { @MainActor in
-                    let previousPartialText = self.partialText
                     self.partialText = result.bestTranscription.formattedString
-                    
+
                     isFinal = result.isFinal
-                    
+
                     if isFinal {
-                        let previousRecognizedText = self.recognizedText
                         self.recognizedText = result.bestTranscription.formattedString
                     }
                 }
-            }
-            
-            if let error = error {
             }
             
             if error != nil || isFinal {
@@ -205,11 +198,6 @@ class SpeechRecognizer: NSObject, ObservableObject {
         }
         
         // Update state
-        let previousIsRecognizing = isRecognizing
-        let previousPartialText = partialText
-        let previousRecognizedText = recognizedText
-        let previousError = error
-        
         isRecognizing = true
         partialText = ""
         recognizedText = ""
@@ -232,11 +220,10 @@ class SpeechRecognizer: NSObject, ObservableObject {
         if recognitionTask != nil {
             recognitionTask?.cancel()
         }
-        
+
         recognitionTask = nil
         recognitionRequest = nil
-        
-        let previousIsRecognizing = isRecognizing
+
         isRecognizing = false
         
     }

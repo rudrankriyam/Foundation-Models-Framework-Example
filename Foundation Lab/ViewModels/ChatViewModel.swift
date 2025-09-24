@@ -83,7 +83,7 @@ final class ChatViewModel {
         feedbackState[entryID] = sentiment
 
         // Use the new session method to log feedback attachment
-        let feedbackData = session.logFeedbackAttachment(sentiment: sentiment)
+        _ = session.logFeedbackAttachment(sentiment: sentiment)
     }
     
     @MainActor
@@ -136,7 +136,7 @@ final class ChatViewModel {
         
         // Create new session with windowed transcript
         let windowedTranscript = Transcript(entries: finalEntries)
-        let newTokenCount = windowedTranscript.estimatedTokenCount
+        _ = windowedTranscript.estimatedTokenCount
 
         session = LanguageModelSession(transcript: windowedTranscript)
 

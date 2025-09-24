@@ -108,7 +108,7 @@ class MurmerViewModel: ObservableObject {
           listName: listName
         )
 
-        let output = try await reminderTool.call(arguments: arguments)
+        _ = try await reminderTool.call(arguments: arguments)
 
         // The tool returns properties directly in the GeneratedContent
         // We can access the success status and title from the output
@@ -148,7 +148,7 @@ class MurmerViewModel: ObservableObject {
         if let match = matches.first,
           let range = Range(match.range, in: lowercased)
         {
-          let matchedText = String(lowercased[range])
+          _ = String(lowercased[range])
 
           // Extract the time expression and any surrounding context with safe bounds checking
           let safeStartIndex = max(

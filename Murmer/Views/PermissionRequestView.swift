@@ -124,7 +124,7 @@ struct PermissionRequestView: View {
         isRequestingPermissions = true
         
         Task {
-            await permissionManager.requestAllPermissions()
+            _ = await permissionManager.requestAllPermissions()
             isRequestingPermissions = false
             
             if !permissionManager.allPermissionsGranted {
