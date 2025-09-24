@@ -78,12 +78,12 @@ class SpeechRecognizer: NSObject, ObservableObject {
         
         // Check current authorization status instead of cached value
         let authStatus = SFSpeechRecognizer.authorizationStatus()
-
+        
         guard authStatus == .authorized else {
             hasPermission = false
             throw SpeechRecognizerError.notAuthorized
         }
-
+        
         hasPermission = true
         
         let isAvailable = speechRecognizer?.isAvailable ?? false
@@ -95,7 +95,7 @@ class SpeechRecognizer: NSObject, ObservableObject {
         // Cancel any ongoing recognition
         stopRecognition()
         
-        #if os(iOS)
+#if os(iOS)
         // Configure audio session - available only on iOS
         let audioSession = AVAudioSession.sharedInstance()
         
@@ -110,9 +110,9 @@ class SpeechRecognizer: NSObject, ObservableObject {
         } catch {
             throw error
         }
-        #else
+#else
         // AVAudioSession is not available on macOS, skipping audio session configuration
-        #endif
+#endif
         
         // Create and configure recognition request
         recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
@@ -141,12 +141,12 @@ class SpeechRecognizer: NSObject, ObservableObject {
             var isFinal = false
             
             if let result = result {
-
+                
                 Task { @MainActor in
                     self.partialText = result.bestTranscription.formattedString
-
+                    
                     isFinal = result.isFinal
-
+                    
                     if isFinal {
                         self.recognizedText = result.bestTranscription.formattedString
                     }
@@ -220,10 +220,10 @@ class SpeechRecognizer: NSObject, ObservableObject {
         if recognitionTask != nil {
             recognitionTask?.cancel()
         }
-
+        
         recognitionTask = nil
         recognitionRequest = nil
-
+        
         isRecognizing = false
         
     }

@@ -21,7 +21,7 @@ import AppKit
 class PermissionManager: ObservableObject {
     
     #if os(iOS)
-    @Published var microphonePermissionStatus: AVAudioApplication.RecordPermission = .undetermined
+    @Published var microphonePermissionStatus: AVAudioApplication.recordPermission = .undetermined
     #else
     /// Custom microphone permission enum for macOS placeholder
     enum MicrophonePermissionStatus {
@@ -72,7 +72,7 @@ class PermissionManager: ObservableObject {
     
     #if os(iOS)
     private func checkMicrophonePermission() {
-        microphonePermissionStatus = AVAudioApplication.recordPermission
+        microphonePermissionStatus = AVAudioApplication.shared.recordPermission
     }
 
     private func requestMicrophonePermission() async -> Bool {
