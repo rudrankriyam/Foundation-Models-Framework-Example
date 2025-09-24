@@ -189,35 +189,34 @@ class SpeechRecognizer: NSObject, ObservableObject, SpeechRecognitionService {
 
         print("🚀 Configuring audio session for speech recognition")
 
-        // Configure audio session first with retry logic
+        // Configure audio session - simpler approach with single retry
         #if os(iOS)
-        var attempts = 0
-        let maxAttempts = 3
+        var lastError: Error?
 
-        while attempts < maxAttempts {
+        for attempt in 1...2 {
             do {
-                // Small delay on retry to allow previous session to fully deactivate
-                if attempts > 0 {
-                    Thread.sleep(forTimeInterval: 0.2) // 200ms
-                    print("🚀 Retrying audio session configuration (attempt \(attempts + 1))")
-                }
-
                 let audioSession = AVAudioSession.sharedInstance()
                 try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.duckOthers, .defaultToSpeaker])
                 try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
                 print("🚀 Audio session configured successfully")
-                break // Success, exit the retry loop
+                break
 
             } catch {
-                attempts += 1
-                print("🚀 Audio session configuration failed (attempt \(attempts)): \(error.localizedDescription)")
+                lastError = error
+                print("🚀 Audio session configuration failed (attempt \(attempt)): \(error.localizedDescription)")
 
-                if attempts >= maxAttempts {
-                    let recognitionError = SpeechRecognitionError.audioSessionFailed
-                    state = .error(recognitionError)
-                    throw recognitionError
+                if attempt == 1 {
+                    // Brief delay before retry - this is acceptable for a short operation
+                    usleep(100_000) // 100ms
                 }
             }
+        }
+
+        if let error = lastError {
+            print("🚀 Audio session configuration failed after all attempts")
+            let recognitionError = SpeechRecognitionError.audioSessionFailed
+            state = .error(recognitionError)
+            throw recognitionError
         }
         #endif
 

@@ -50,7 +50,7 @@ struct CodeViewer: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
       }
-      .frame(maxHeight: 400)  // TODO: Make this configurable or remove constraint
+      .frame(maxHeight: 400)  // Fixed height to ensure consistent display across code examples
       .background(Color.gray.opacity(0.1))
       .cornerRadius(CornerRadius.medium)
       .task {

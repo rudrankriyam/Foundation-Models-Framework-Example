@@ -349,7 +349,6 @@ extension SpeechSynthesizer: AVSpeechSynthesizerDelegate {
 enum SpeechSynthesizerError: LocalizedError {
     case invalidInput
     case alreadySpeaking
-    case fileCreationFailed
     case audioFileCreationFailed
     case cancelled
 
@@ -361,8 +360,6 @@ enum SpeechSynthesizerError: LocalizedError {
             return "Failed to create audio file"
         case .alreadySpeaking:
             return "Speech synthesis already in progress"
-        case .fileCreationFailed:
-            return "Failed to create audio file"
         case .cancelled:
             return "Speech synthesis was cancelled"
         }

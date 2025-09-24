@@ -60,6 +60,7 @@ class PermissionService: ObservableObject, PermissionServiceProtocol {
             // Just access the shared instance to ensure it's initialized
             _ = audioSession
         } catch {
+            print("⚠️ Failed to initialize AVAudioSession: \(error.localizedDescription)")
         }
         #endif
     }
@@ -176,11 +177,7 @@ class PermissionService: ObservableObject, PermissionServiceProtocol {
             return true
         }
 
-        let granted = await testMicrophoneAccess()
-        if granted {
-        } else {
-        }
-        return granted
+        return await testMicrophoneAccess()
     }
     #endif
     
@@ -230,6 +227,7 @@ class PermissionService: ObservableObject, PermissionServiceProtocol {
                     }
                 } catch {
                     // Fall back to the legacy API if full access is unavailable (e.g. missing entitlement)
+                    print("⚠️ Full reminders access unavailable, falling back to standard access: \(error.localizedDescription)")
                 }
             }
 
