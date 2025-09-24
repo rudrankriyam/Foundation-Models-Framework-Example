@@ -115,23 +115,6 @@ protocol PermissionServiceProtocol: AnyObject, ObservableObject {
     func openSettings()
 }
 
-// MARK: - Service Factory Protocol
-
-/// Protocol for creating service instances
-protocol ServiceFactoryProtocol {
-    /// Create speech recognition service
-    func makeSpeechRecognitionService() -> SpeechRecognitionService
-
-    /// Create speech synthesis service
-    func makeSpeechSynthesisService() -> SpeechSynthesisService
-
-    /// Create AI inference service
-    func makeInferenceService() -> InferenceServiceProtocol
-
-    /// Create permission service
-    func makePermissionService() -> PermissionServiceProtocol
-}
-
 // MARK: - Type Aliases for Platform Compatibility
 
 #if os(iOS)

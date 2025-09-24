@@ -183,8 +183,6 @@ class SpeechRecognizer: NSObject, ObservableObject, SpeechRecognitionService {
         if case .listening = state {
             print("🚀 Currently listening, calling stopRecognition() to clean up")
             stopRecognition()
-            // Wait a brief moment for cleanup to complete
-            Thread.sleep(forTimeInterval: 0.1)
         } else {
             print("🚀 Not currently listening, skipping cleanup")
         }
@@ -240,8 +238,17 @@ class SpeechRecognizer: NSObject, ObservableObject, SpeechRecognitionService {
 
                 if let error = error {
                     print("🔴 SPEECH ERROR: \(error.localizedDescription)")
-                    self.hasProcessedFinalResult = true
-                    self.state = .error(.recognitionFailed(error.localizedDescription))
+
+                    // If we have partial text already captured, don't treat this as an error
+                    // This can happen when recognition is cancelled but we already got speech
+                    if case .listening(let partialText) = self.state, !partialText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        print("🔄 Ignoring error since we have partial text: '\(partialText)'")
+                        self.hasProcessedFinalResult = true
+                        self.state = .completed(finalText: partialText)
+                    } else {
+                        self.hasProcessedFinalResult = true
+                        self.state = .error(.recognitionFailed(error.localizedDescription))
+                    }
                     return
                 }
 
@@ -316,7 +323,6 @@ class SpeechRecognizer: NSObject, ObservableObject, SpeechRecognitionService {
         // If we're listening and have partial text, complete with that text
         if case .listening(let partialText) = state, !partialText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             print("🛑 Completing with partial text: '\(partialText)'")
-            hasProcessedFinalResult = true
             state = .completed(finalText: partialText)
         } else {
             print("🛑 No partial text to use, setting to idle")
@@ -374,7 +380,10 @@ class SpeechRecognizer: NSObject, ObservableObject, SpeechRecognitionService {
         }
 
         // Let the system handle audio session cleanup automatically
-        
+
+        // Prevent further callback processing after cleanup
+        hasProcessedFinalResult = true
+
         print("🧹 CLEANUP COMPLETED")
     }
     

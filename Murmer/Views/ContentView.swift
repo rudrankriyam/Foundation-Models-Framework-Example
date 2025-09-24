@@ -30,7 +30,7 @@ struct ContentView: View {
 struct MurmerMainView: View {
     @ObservedObject var viewModel: MurmerViewModel
     @State private var blobScale: CGFloat = 1.0
-    
+
     var body: some View {
         VStack(spacing: 30) {
             // Header with list selector
@@ -59,7 +59,7 @@ struct MurmerMainView: View {
                     // Subtle glow when listening
                     if viewModel.isListening {
                         Circle()
-                            .fill(Color.blue.opacity(0.1))
+                            .fill(Color.indigo.opacity(0.2))
                             .frame(width: 140, height: 140)
                             .blur(radius: 8)
                     }
@@ -72,9 +72,9 @@ struct MurmerMainView: View {
                 }
                 
                 // Transcription display
-                if !viewModel.recognizedText.isEmpty || viewModel.isListening {
+                if !viewModel.recognizedText.isEmpty || viewModel.isListening || !viewModel.speechRecognizer.state.partialText.isEmpty {
                     VStack(spacing: 8) {
-                        if viewModel.isListening && viewModel.speechRecognizer.state.partialText.isEmpty {
+                        if viewModel.speechRecognizer.state.partialText.isEmpty && (viewModel.isListening || viewModel.speechRecognizer.isRecording) {
                             HStack(spacing: 4) {
                                 ForEach(0..<3) { index in
                                     Circle()
@@ -91,12 +91,16 @@ struct MurmerMainView: View {
                             }
                             .padding()
                         } else {
-                            Text(viewModel.speechRecognizer.state.partialText.isEmpty ? viewModel.recognizedText : viewModel.speechRecognizer.state.partialText)
+                            let displayText = viewModel.speechRecognizer.state.partialText.isEmpty ? viewModel.recognizedText : viewModel.speechRecognizer.state.partialText
+                            Text(displayText)
                                 .font(.title3)
                                 .foregroundStyle(.primary)
                                 .multilineTextAlignment(.center)
                                 .padding()
                                 .frame(maxWidth: 300)
+                                .onChange(of: viewModel.speechRecognizer.state.partialText) { _, newValue in
+                                    print("🔄 UI PARTIAL TEXT CHANGED: '\(newValue)'")
+                                }
                         }
                     }
                     .background {
@@ -123,10 +127,7 @@ struct MurmerMainView: View {
             Spacer()
         }
         .padding()
-        .successFeedback(
-            isShowing: $viewModel.showSuccess,
-            message: "Reminder created: \"\(viewModel.lastCreatedReminder)\""
-        )
+        .background(SimpleTopGradientView())
         .alert("Error", isPresented: $viewModel.showError) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -154,6 +155,35 @@ struct MurmerMainView: View {
         let impact = UIImpactFeedbackGenerator(style: .medium)
         impact.impactOccurred()
         #endif
+    }
+}
+
+// MARK: - Supporting Views
+
+struct SimpleTopGradientView: View {
+    @Environment(\.colorScheme) var scheme
+
+    var body: some View {
+        LinearGradient(colors: [
+            Color.indigo.opacity(0.4), .antiPrimary
+        ], startPoint: .top, endPoint: .center)
+        .ignoresSafeArea()
+    }
+}
+
+extension Color {
+    static var antiPrimary: Color {
+#if os(iOS) || os(tvOS) || os(macCatalyst) || os(visionOS)
+        return Color(UIColor { traitCollection in
+            if traitCollection.userInterfaceStyle == .dark {
+                return UIColor.black
+            } else {
+                return UIColor.white
+            }
+        })
+#else
+        return .white
+#endif
     }
 }
 

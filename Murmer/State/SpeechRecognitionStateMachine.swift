@@ -83,22 +83,21 @@ final class SpeechRecognitionStateMachine: ObservableObject {
 
     // MARK: - Private Properties
 
-    private let speechRecognitionService: SpeechRecognitionService
-    private let speechSynthesisService: SpeechSynthesisService
-    private let inferenceService: InferenceServiceProtocol
-    private let permissionService: PermissionServiceProtocol
+    private let speechRecognitionService: SpeechRecognizer
+    private let speechSynthesisService: SpeechSynthesizer
+    private let inferenceService: InferenceService
+    private let permissionService: PermissionService
 
     private var cancellables = Set<AnyCancellable>()
     private var currentSpeechTask: Task<Void, Never>?
-    private var stateCheckTimer: Timer?
 
     // MARK: - Initialization
 
     init(
-        speechRecognitionService: SpeechRecognitionService,
-        speechSynthesisService: SpeechSynthesisService,
-        inferenceService: InferenceServiceProtocol,
-        permissionService: PermissionServiceProtocol
+        speechRecognitionService: SpeechRecognizer,
+        speechSynthesisService: SpeechSynthesizer,
+        inferenceService: InferenceService,
+        permissionService: PermissionService
     ) {
         self.speechRecognitionService = speechRecognitionService
         self.speechSynthesisService = speechSynthesisService
@@ -144,22 +143,16 @@ final class SpeechRecognitionStateMachine: ObservableObject {
     // MARK: - Private Methods
 
     private func setupBindings() {
-        // Set up periodic state checking for service state changes
-        stateCheckTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-            Task { @MainActor in
-                self?.checkServiceStates()
+        // Bind to speech recognition state changes
+        speechRecognitionService.$state
+            .sink { [weak self] newState in
+                Task { @MainActor in
+                    self?.handleSpeechRecognitionStateChange(from: newState)
+                }
             }
-        }
+            .store(in: &cancellables)
     }
 
-    private func checkServiceStates() {
-        // Check speech recognition state changes
-        handleSpeechRecognitionStateChange(from: speechRecognitionService.state)
-
-        // Check speech synthesis state changes by monitoring isSpeaking and error
-        // This is a simpler approach than trying to bind to published properties
-        handleSpeechSynthesisStateChange()
-    }
 
     private func handleSpeechRecognitionStateChange(from recognitionState: SpeechRecognitionState) {
         switch recognitionState {
@@ -175,7 +168,7 @@ final class SpeechRecognitionStateMachine: ObservableObject {
             }
 
         case .completed(let finalText):
-            if case .listening = state, !finalText.isEmpty {
+            if !finalText.isEmpty {
                 state = .processingSpeech(finalText)
                 processRecognizedText(finalText)
             } else {
@@ -194,7 +187,6 @@ final class SpeechRecognitionStateMachine: ObservableObject {
                 state = .completed
                 // Auto-transition to idle after a delay
                 Task { [weak self] in
-                    try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
                     self?.state = .idle
                 }
             }
@@ -207,12 +199,15 @@ final class SpeechRecognitionStateMachine: ObservableObject {
     }
 
     private func requestPermissionsIfNeeded() async {
-        guard permissionService.allPermissionsGranted else {
-            state = .requestingPermission
+        if permissionService.allPermissionsGranted {
+            state = .permissionGranted
             return
         }
+
+        state = .requestingPermission
+
         let granted = await permissionService.requestAllPermissions()
-        
+
         if granted {
             state = .permissionGranted
         } else {
@@ -255,6 +250,5 @@ final class SpeechRecognitionStateMachine: ObservableObject {
     deinit {
         cancellables.forEach { $0.cancel() }
         currentSpeechTask?.cancel()
-        stateCheckTimer?.invalidate()
     }
 }

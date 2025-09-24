@@ -40,6 +40,10 @@ class PermissionService: ObservableObject, PermissionServiceProtocol {
     @Published var allPermissionsGranted = false
     @Published var showPermissionAlert = false
     @Published var permissionAlertMessage = ""
+
+    var hasRemindersAccess: Bool {
+        isRemindersPermissionGranted(remindersPermissionStatus)
+    }
     
     private let eventStore = EKEventStore()
     

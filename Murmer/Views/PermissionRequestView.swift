@@ -58,7 +58,7 @@ struct PermissionRequestView: View {
                     icon: "checklist",
                     title: "Reminders",
                     description: "To save your reminders",
-                    status: permissionService.remindersPermissionStatus == .fullAccess ? .granted : .pending
+                    status: permissionService.hasRemindersAccess ? .granted : .pending
                 )
             }
             .padding()

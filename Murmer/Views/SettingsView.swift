@@ -278,5 +278,5 @@ struct SettingsView: View {
 }
 
 #Preview {
-    SettingsView(speechSynthesizer: DependencyContainer.shared.speechSynthesisService as! SpeechSynthesizer)
+    SettingsView(speechSynthesizer: SpeechSynthesizer())
 }
