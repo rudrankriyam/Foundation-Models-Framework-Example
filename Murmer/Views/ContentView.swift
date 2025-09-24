@@ -105,7 +105,7 @@ struct MurmerMainView: View {
                 // Transcription display
                 if !viewModel.recognizedText.isEmpty || viewModel.isListening {
                     VStack(spacing: 8) {
-                        if viewModel.isListening && viewModel.speechRecognizer.partialText.isEmpty {
+                        if viewModel.isListening && viewModel.speechRecognizer.state.partialText.isEmpty {
                             HStack(spacing: 4) {
                                 ForEach(0..<3) { index in
                                     Circle()
@@ -122,7 +122,7 @@ struct MurmerMainView: View {
                             }
                             .padding()
                         } else {
-                            Text(viewModel.speechRecognizer.partialText.isEmpty ? viewModel.recognizedText : viewModel.speechRecognizer.partialText)
+                            Text(viewModel.speechRecognizer.state.partialText.isEmpty ? viewModel.recognizedText : viewModel.speechRecognizer.state.partialText)
                                 .font(.title3)
                                 .foregroundStyle(.primary)
                                 .multilineTextAlignment(.center)

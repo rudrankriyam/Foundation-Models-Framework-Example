@@ -12,13 +12,84 @@ import AVFoundation
 #endif
 import Combine
 
+// MARK: - Recognition State
+
+enum SpeechRecognitionState {
+    case idle
+    case listening(partialText: String = "")
+    case completed(finalText: String)
+    case error(SpeechRecognitionError)
+
+    var isListening: Bool {
+        if case .listening = self {
+            return true
+        }
+        return false
+    }
+
+    var partialText: String {
+        if case .listening(let text) = self {
+            return text
+        }
+        return ""
+    }
+
+    var finalText: String {
+        if case .completed(let text) = self {
+            return text
+        }
+        return ""
+    }
+
+    var error: SpeechRecognitionError? {
+        if case .error(let error) = self {
+            return error
+        }
+        return nil
+    }
+}
+
+// MARK: - Recognition Errors
+
+enum SpeechRecognitionError: LocalizedError, Equatable {
+    case notAuthorized
+    case recognizerNotAvailable
+    case audioSessionFailed
+    case recognitionFailed(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .notAuthorized:
+            return "Speech recognition is not authorized. Please enable it in Settings."
+        case .recognizerNotAvailable:
+            return "Speech recognition is not available on this device."
+        case .audioSessionFailed:
+            return "Failed to configure audio session for speech recognition."
+        case .recognitionFailed(let message):
+            return "Speech recognition failed: \(message)"
+        }
+    }
+
+    static func == (lhs: SpeechRecognitionError, rhs: SpeechRecognitionError) -> Bool {
+        switch (lhs, rhs) {
+        case (.notAuthorized, .notAuthorized):
+            return true
+        case (.recognizerNotAvailable, .recognizerNotAvailable):
+            return true
+        case (.audioSessionFailed, .audioSessionFailed):
+            return true
+        case (.recognitionFailed(let lhsMessage), .recognitionFailed(let rhsMessage)):
+            return lhsMessage == rhsMessage
+        default:
+            return false
+        }
+    }
+}
+
 @MainActor
 class SpeechRecognizer: NSObject, ObservableObject {
-    @Published var recognizedText = ""
-    @Published var partialText = ""
-    @Published var isRecognizing = false
+    @Published var state: SpeechRecognitionState = .idle
     @Published var hasPermission = false
-    @Published var error: Error?
     
     private let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
@@ -41,25 +112,16 @@ class SpeechRecognizer: NSObject, ObservableObject {
     }
     
     func requestPermission() async -> Bool {
-        
         return await withCheckedContinuation { continuation in
-            
             SFSpeechRecognizer.requestAuthorization { authStatus in
-                
                 Task { @MainActor in
-                    let previousPermission = self.hasPermission
-                    
                     switch authStatus {
                     case .authorized:
                         self.hasPermission = true
                         continuation.resume(returning: true)
-                    case .denied:
+                    case .denied, .restricted:
                         self.hasPermission = false
-                        self.error = SpeechRecognizerError.notAuthorized
-                        continuation.resume(returning: false)
-                    case .restricted:
-                        self.hasPermission = false
-                        self.error = SpeechRecognizerError.notAuthorized
+                        self.state = .error(.notAuthorized)
                         continuation.resume(returning: false)
                     case .notDetermined:
                         self.hasPermission = false
@@ -68,28 +130,30 @@ class SpeechRecognizer: NSObject, ObservableObject {
                         self.hasPermission = false
                         continuation.resume(returning: false)
                     }
-                    
                 }
             }
         }
     }
     
     func startRecognition() throws {
-        
         // Check current authorization status instead of cached value
         let authStatus = SFSpeechRecognizer.authorizationStatus()
-        
+
         guard authStatus == .authorized else {
             hasPermission = false
-            throw SpeechRecognizerError.notAuthorized
+            let error = SpeechRecognitionError.notAuthorized
+            state = .error(error)
+            throw error
         }
-        
+
         hasPermission = true
-        
+
         let isAvailable = speechRecognizer?.isAvailable ?? false
-        
+
         guard isAvailable else {
-            throw SpeechRecognizerError.recognizerNotAvailable
+            let error = SpeechRecognitionError.recognizerNotAvailable
+            state = .error(error)
+            throw error
         }
         
         // Cancel any ongoing recognition
@@ -101,14 +165,11 @@ class SpeechRecognizer: NSObject, ObservableObject {
         
         do {
             try audioSession.setCategory(.record, mode: .measurement, options: .duckOthers)
-        } catch {
-            throw error
-        }
-        
-        do {
             try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
         } catch {
-            throw error
+            let recognitionError = SpeechRecognitionError.audioSessionFailed
+            state = .error(recognitionError)
+            throw recognitionError
         }
 #else
         // AVAudioSession is not available on macOS, skipping audio session configuration
@@ -120,7 +181,9 @@ class SpeechRecognizer: NSObject, ObservableObject {
         let inputNode = audioEngine.inputNode
         
         guard let recognitionRequest = recognitionRequest else {
-            throw SpeechRecognizerError.nilRecognitionRequest
+            let error = SpeechRecognitionError.audioSessionFailed
+            state = .error(error)
+            throw error
         }
         
         // Configure request
@@ -136,38 +199,22 @@ class SpeechRecognizer: NSObject, ObservableObject {
             guard let self = self else {
                 return
             }
-            
-            
-            var isFinal = false
-            
-            if let result = result {
-                
-                Task { @MainActor in
-                    self.partialText = result.bestTranscription.formattedString
-                    
-                    isFinal = result.isFinal
-                    
-                    if isFinal {
-                        self.recognizedText = result.bestTranscription.formattedString
-                    }
+
+            Task { @MainActor in
+                if let error = error {
+                    self.state = .error(.recognitionFailed(error.localizedDescription))
+                    self.stopRecognition()
+                    return
                 }
-            }
-            
-            if error != nil || isFinal {
-                
-                self.audioEngine.stop()
-                
-                inputNode.removeTap(onBus: 0)
-                
-                self.recognitionRequest = nil
-                self.recognitionTask = nil
-                
-                Task { @MainActor in
-                    let previousIsRecognizing = self.isRecognizing
-                    self.isRecognizing = false
-                    
-                    if let error = error {
-                        self.error = error
+
+                if let result = result {
+                    let transcription = result.bestTranscription.formattedString
+
+                    if result.isFinal {
+                        self.state = .completed(finalText: transcription)
+                        self.stopRecognition()
+                    } else {
+                        self.state = .listening(partialText: transcription)
                     }
                 }
             }
@@ -194,70 +241,47 @@ class SpeechRecognizer: NSObject, ObservableObject {
         do {
             try audioEngine.start()
         } catch {
-            throw error
+            let recognitionError = SpeechRecognitionError.audioSessionFailed
+            state = .error(recognitionError)
+            throw recognitionError
         }
-        
-        // Update state
-        isRecognizing = true
-        partialText = ""
-        recognizedText = ""
-        error = nil
+
+        // Update state to listening
+        state = .listening()
         
         
     }
     
     func stopRecognition() {
-        
-        
         audioEngine.stop()
-        
         audioEngine.inputNode.removeTap(onBus: 0)
-        
+
         if recognitionRequest != nil {
             recognitionRequest?.endAudio()
         }
-        
+
         if recognitionTask != nil {
             recognitionTask?.cancel()
         }
-        
+
         recognitionTask = nil
         recognitionRequest = nil
-        
-        isRecognizing = false
-        
+
+        // Only set to idle if we're not already showing a completed state or error
+        if case .listening = state {
+            state = .idle
+        }
     }
 }
 
 // MARK: - SFSpeechRecognizerDelegate
 extension SpeechRecognizer: SFSpeechRecognizerDelegate {
     nonisolated func speechRecognizer(_ speechRecognizer: SFSpeechRecognizer, availabilityDidChange available: Bool) {
-        
         Task { @MainActor in
-            
             if !available {
-                self.error = SpeechRecognizerError.recognizerNotAvailable
+                self.state = .error(.recognizerNotAvailable)
                 self.stopRecognition()
-            } else {
             }
-        }
-    }
-}
-
-// MARK: - Error Types
-enum SpeechRecognizerError: LocalizedError {
-    case notAuthorized
-    case recognizerNotAvailable
-    case nilRecognitionRequest
-    
-    var errorDescription: String? {
-        switch self {
-        case .notAuthorized:
-            return "Speech recognition is not authorized. Please enable it in Settings."
-        case .recognizerNotAvailable:
-            return "Speech recognition is not available on this device."
-        case .nilRecognitionRequest:
-            return "Failed to create recognition request."
         }
     }
 }

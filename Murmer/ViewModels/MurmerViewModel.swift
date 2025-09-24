@@ -37,23 +37,29 @@ class MurmerViewModel: ObservableObject {
   }
 
   private func setupBindings() {
-    // Bind speech recognition text
-    speechRecognizer.$recognizedText
+    // Bind to speech recognition state
+    speechRecognizer.$state
       .receive(on: DispatchQueue.main)
-      .sink { [weak self] text in
-        if !text.isEmpty {
-          self?.recognizedText = text
-          self?.processRecognizedText(text)
-        }
-      }
-      .store(in: &cancellables)
+      .sink { [weak self] state in
+        guard let self = self else { return }
 
-    // Handle errors
-    speechRecognizer.$error
-      .compactMap { $0 }
-      .receive(on: DispatchQueue.main)
-      .sink { [weak self] error in
-        self?.showError(error.localizedDescription)
+        switch state {
+        case .idle:
+          self.isListening = false
+
+        case .listening(let partialText):
+          self.isListening = true
+          self.recognizedText = partialText
+
+        case .completed(let finalText):
+          self.isListening = false
+          self.recognizedText = finalText
+          self.processRecognizedText(finalText)
+
+        case .error(let error):
+          self.isListening = false
+          self.showError(error.localizedDescription)
+        }
       }
       .store(in: &cancellables)
   }
