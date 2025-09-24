@@ -29,7 +29,7 @@
   </table>
 </div>
 
-## 📚 Exploring Foundation Models
+## Exploring Foundation Models
 
 This project includes playground examples organized by chapters to help you learn everything about Apple's Foundation Models framework. 
 
@@ -46,21 +46,28 @@ It is part of the [Exploring Foundation Models](https://academy.rudrank.com/prod
 
 You can now try Foundation Lab on TestFlight! Join the beta: [https://testflight.apple.com/join/JWR9FpP3](https://testflight.apple.com/join/JWR9FpP3)
 
+## Getting Started
+
+- Clone the repository
+- Open `FoundationLab.xcodeproj` in Xcode
+- Ensure you have a device with Apple Intelligence enabled
+- Build and run the project
+- (Optional) For web search functionality:
+  - Get an API key from [Exa AI](https://exa.ai)
+  - Tap the gear icon in the app to access Settings
+  - Enter your Exa API key in the settings screen
+- Explore the different capabilities through the examples!
+
 ## Features
 
-### Core AI Capabilities
 - **Basic Chat**: Simple conversational interactions
 - **Structured Data Generation**: Type-safe data generation with `@Generable`
 - **Generation Guides**: Constrained outputs with `@Guide` annotations
-- **Streaming Responses**: Real-time response streaming
-- **Tool Calling**: Custom tools for extended functionality
+- **Streaming Responses**: Response streaming
+- **Tool Calling**: Built-in tools for extended functionality
 - **Model Availability**: System capability checking
 
-### Creative Features
-- **Creative Writing**: Story outline and narrative generation
-- **Business Ideas**: Startup concept and business plan generation
-
-### Custom Tools
+### Example Tools
 - **Weather Tool**: Multi-city weather information with simulated data
 - **Web Search Tool**: Real-time web search using Exa AI API
 
@@ -212,42 +219,6 @@ Webpage metadata extraction and social media summary generation:
 - Supports platform-specific formatting (Twitter, LinkedIn, Facebook)
 - Automatic hashtag generation
 - No API key required
-
-
-
-
-## Getting Started
-
-### Running the App
-1. Clone the repository
-2. Open `FoundationLab.xcodeproj` in Xcode
-3. Ensure you have a device with Apple Intelligence enabled
-4. Build and run the project
-5. (Optional) For web search functionality:
-   - Get an API key from [Exa AI](https://exa.ai)
-   - Tap the gear icon in the app to access Settings
-   - Enter your Exa API key in the settings screen
-6. Explore the different AI capabilities through the example buttons
-
-### Learning with Playgrounds
-The playground examples are organized in the `Foundation Lab/Playgrounds/` folder:
-
-```
-Playgrounds/
-├── 02_GettingStartedWithSessions/     # Basic session management
-├── 03_GenerationOptionsAndSamplingControl/  # Controlling AI responses
-├── 08_BasicToolUse/                   # Custom tools and integrations
-└── 13_SupportedLanguagesAndInternationalization/  # Multilingual support
-```
-
-To run playgrounds:
-1. Open any `.swift` file in the playground folders
-2. Use Xcode's playground execution (⌘+Shift+Return)
-3. Each example is self-contained and runnable
-
-**Note:** All features except web search work without any additional setup. The web search tool requires an Exa API key for functionality.
-
-
 
 ## Contributing
 
