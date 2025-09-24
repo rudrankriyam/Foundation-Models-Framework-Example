@@ -151,6 +151,15 @@ final class SpeechRecognitionStateMachine: ObservableObject {
                 }
             }
             .store(in: &cancellables)
+
+        // Bind to speech synthesis state changes
+        speechSynthesisService.$isSpeaking
+            .sink { [weak self] _ in
+                Task { @MainActor in
+                    self?.handleSpeechSynthesisStateChange()
+                }
+            }
+            .store(in: &cancellables)
     }
 
 
@@ -185,9 +194,12 @@ final class SpeechRecognitionStateMachine: ObservableObject {
         if !speechSynthesisService.isSpeaking {
             if case .synthesizingResponse = state {
                 state = .completed
-                // Auto-transition to idle after a delay
+                // Auto-transition to idle after a delay to allow user to hear the response
                 Task { [weak self] in
-                    self?.state = .idle
+                    try? await Task.sleep(nanoseconds: 500_000_000) // 500ms delay
+                    await MainActor.run {
+                        self?.state = .idle
+                    }
                 }
             }
         }
