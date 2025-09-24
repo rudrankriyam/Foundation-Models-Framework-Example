@@ -29,15 +29,11 @@
   </table>
 </div>
 
-> Note:- For folks starring it, please do not judge the codebase. I have to do some refactoring that I vibe-coded to ship this, fast. Okay?
+## 📚 Exploring Foundation Models
 
-A practical iOS app demonstrating Apple's Foundation Models framework with various examples of on-device AI capabilities.
+This project includes playground examples organized by chapters to help you learn everything about Apple's Foundation Models framework. 
 
-## Exploring AI for iOS Development
-
-Love this project? Check out my books to explore more of AI and iOS development:
-- [Exploring AI for iOS Development](https://academy.rudrank.com/product/ai)
-- [Exploring AI-Assisted Coding for iOS Development](https://academy.rudrank.com/product/ai-assisted-coding)
+It is part of the [Exploring Foundation Models](https://academy.rudrank.com/product/foundation-models) book.
 
 ## Requirements
 
@@ -222,8 +218,9 @@ Webpage metadata extraction and social media summary generation:
 
 ## Getting Started
 
+### Running the App
 1. Clone the repository
-2. Open `FMF.xcodeproj` in Xcode
+2. Open `FoundationLab.xcodeproj` in Xcode
 3. Ensure you have a device with Apple Intelligence enabled
 4. Build and run the project
 5. (Optional) For web search functionality:
@@ -231,6 +228,22 @@ Webpage metadata extraction and social media summary generation:
    - Tap the gear icon in the app to access Settings
    - Enter your Exa API key in the settings screen
 6. Explore the different AI capabilities through the example buttons
+
+### Learning with Playgrounds
+The playground examples are organized in the `Foundation Lab/Playgrounds/` folder:
+
+```
+Playgrounds/
+├── 02_GettingStartedWithSessions/     # Basic session management
+├── 03_GenerationOptionsAndSamplingControl/  # Controlling AI responses
+├── 08_BasicToolUse/                   # Custom tools and integrations
+└── 13_SupportedLanguagesAndInternationalization/  # Multilingual support
+```
+
+To run playgrounds:
+1. Open any `.swift` file in the playground folders
+2. Use Xcode's playground execution (⌘+Shift+Return)
+3. Each example is self-contained and runnable
 
 **Note:** All features except web search work without any additional setup. The web search tool requires an Exa API key for functionality.
 
