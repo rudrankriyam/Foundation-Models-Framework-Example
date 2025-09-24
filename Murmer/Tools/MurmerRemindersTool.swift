@@ -150,17 +150,14 @@ struct MurmerRemindersTool: Tool {
 
       if let hours = extractNumber(from: lowercased, unit: "hour") {
         let result = calendar.date(byAdding: .hour, value: hours, to: now)
-        print("[MurmerRemindersTool.parseTimeExpression] Date in \(hours) hours: \(result?.description ?? "nil")")
         return result
       }
       if let minutes = extractNumber(from: lowercased, unit: "minute") {
         let result = calendar.date(byAdding: .minute, value: minutes, to: now)
-        print("[MurmerRemindersTool.parseTimeExpression] Date in \(minutes) minutes: \(result?.description ?? "nil")")
         return result
       }
       if let days = extractNumber(from: lowercased, unit: "day") {
         let result = calendar.date(byAdding: .day, value: days, to: now)
-        print("[MurmerRemindersTool.parseTimeExpression] Date in \(days) days: \(result?.description ?? "nil")")
         return result
       }
     }
@@ -168,7 +165,6 @@ struct MurmerRemindersTool: Tool {
     // Handle next week
     if lowercased.contains("next week") {
       let result = calendar.date(byAdding: .weekOfYear, value: 1, to: now)
-      print("[MurmerRemindersTool.parseTimeExpression] Next week date: \(result?.description ?? "nil")")
       return result
     }
 
@@ -178,7 +174,6 @@ struct MurmerRemindersTool: Tool {
       if lowercased.contains(dayName) {
         let weekday = index + 1  // Sunday = 1
         let result = nextOccurrence(of: weekday, from: now)
-        print("[MurmerRemindersTool.parseTimeExpression] Next \(dayName) date: \(result?.description ?? "nil")")
         return result
       }
     }
@@ -195,7 +190,6 @@ struct MurmerRemindersTool: Tool {
       let matches = regex.matches(in: text, range: NSRange(text.startIndex..., in: text))
 
       if let match = matches.first {
-        print("[MurmerRemindersTool.extractTime] Processing first match with \(match.numberOfRanges) ranges")
         if match.numberOfRanges >= 2,
           let hourRange = Range(match.range(at: 1), in: text),
           let hour = Int(text[hourRange])
@@ -227,14 +221,12 @@ struct MurmerRemindersTool: Tool {
         }
       }
     } catch {
-      print("[MurmerRemindersTool.extractTime] ERROR: Failed to create regex for pattern \(pattern): \(error)")
     }
 
     return nil
   }
 
   private func extractNumber(from text: String, unit: String) -> Int? {
-    print("[MurmerRemindersTool.extractNumber] Looking for number with unit '\(unit)' in: '\(text)'")
     let pattern = #"(\d+)\s*"# + unit
 
     do {
@@ -266,7 +258,6 @@ struct MurmerRemindersTool: Tool {
   }
 
   private func nextOccurrence(of weekday: Int, from date: Date) -> Date? {
-    print("[MurmerRemindersTool.nextOccurrence] Finding next occurrence of weekday \(weekday) from \(date)")
     let calendar = Calendar.current
     let currentWeekday = calendar.component(.weekday, from: date)
 
@@ -285,12 +276,10 @@ struct MurmerRemindersTool: Tool {
     let calendars = eventStore.calendars(for: .reminder)
 
     for (index, cal) in calendars.enumerated() {
-      print("[MurmerRemindersTool.getOrCreateList]   Calendar \(index): '\(cal.title)' (ID: \(cal.calendarIdentifier))")
     }
 
     if let existingCalendar = calendars.first(where: { $0.title.lowercased() == name.lowercased() })
     {
-      print("[MurmerRemindersTool.getOrCreateList] Found existing calendar: '\(existingCalendar.title)'")
       return existingCalendar
     }
 
@@ -300,10 +289,8 @@ struct MurmerRemindersTool: Tool {
     newCalendar.title = name
 
     let defaultCalendar = eventStore.defaultCalendarForNewReminders()
-    print("[MurmerRemindersTool.getOrCreateList] Default calendar: \(defaultCalendar?.title ?? "nil")")
 
     newCalendar.source = defaultCalendar?.source
-    print("[MurmerRemindersTool.getOrCreateList] Calendar source: \(newCalendar.source?.title ?? "nil")")
 
     guard newCalendar.source != nil else {
       throw MurmerError.cannotCreateList
@@ -311,7 +298,6 @@ struct MurmerRemindersTool: Tool {
 
     do {
       try eventStore.saveCalendar(newCalendar, commit: true)
-      print("[MurmerRemindersTool.getOrCreateList] Successfully saved new calendar: '\(newCalendar.title)')")
     } catch {
       throw error
     }

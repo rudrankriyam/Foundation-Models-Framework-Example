@@ -51,7 +51,6 @@ class AudioManager: ObservableObject {
                 if granted {
                     self.setupAudioEngine()
                 } else {
-                    print("[AudioManager] Microphone permission denied")
                 }
             }
         } catch {
@@ -101,7 +100,6 @@ class AudioManager: ObservableObject {
 
         // Log audio levels periodically (every 50th buffer to avoid spam)
         if Int.random(in: 0..<50) == 0 {
-            print("[AudioManager] Audio level - RMS: \(rms), Normalized: \(normalizedAmplitude), Smoothed: \(smoothedAmplitude)")
         }
 
         // Update on main thread

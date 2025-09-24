@@ -96,7 +96,6 @@ final class SpeechSynthesizer: NSObject, ObservableObject {
             try audioSession.setCategory(.playback, mode: .default, options: [.duckOthers])
             try audioSession.setActive(true)
         } catch {
-            print("[SpeechSynthesizer] Audio session setup failed: \(error)")
         }
         #endif
     }

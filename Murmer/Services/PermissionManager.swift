@@ -15,25 +15,34 @@ import AVFoundation
 import UIKit
 #elseif os(macOS)
 import AppKit
+import AVFoundation
 #endif
 
 @MainActor
 class PermissionManager: ObservableObject {
     
-    #if os(iOS)
-    @Published var microphonePermissionStatus: AVAudioApplication.recordPermission = .undetermined
-    #else
+#if os(iOS)
+    @Published var microphonePermissionStatus: AVAudioSession.RecordPermission = .undetermined {
+        didSet { updateAllPermissionsStatus() }
+    }
+#else
     /// Custom microphone permission enum for macOS placeholder
     enum MicrophonePermissionStatus {
         case undetermined
         case denied
         case granted
     }
-    @Published var microphonePermissionStatus: MicrophonePermissionStatus = .undetermined
-    #endif
-    
-    @Published var speechPermissionStatus: SFSpeechRecognizerAuthorizationStatus = .notDetermined
-    @Published var remindersPermissionStatus: EKAuthorizationStatus = .notDetermined
+    @Published var microphonePermissionStatus: MicrophonePermissionStatus = .undetermined {
+        didSet { updateAllPermissionsStatus() }
+    }
+#endif
+
+    @Published var speechPermissionStatus: SFSpeechRecognizerAuthorizationStatus = .notDetermined {
+        didSet { updateAllPermissionsStatus() }
+    }
+    @Published var remindersPermissionStatus: EKAuthorizationStatus = .notDetermined {
+        didSet { updateAllPermissionsStatus() }
+    }
     @Published var allPermissionsGranted = false
     @Published var showPermissionAlert = false
     @Published var permissionAlertMessage = ""
@@ -41,38 +50,47 @@ class PermissionManager: ObservableObject {
     private let eventStore = EKEventStore()
     
     init() {
+        initializeAudioSessionIfNeeded()
         checkAllPermissions()
+    }
+
+    private func initializeAudioSessionIfNeeded() {
+        #if os(iOS)
+        // Initialize AVAudioSession early to prevent factory registration issues
+        do {
+            let audioSession = AVAudioSession.sharedInstance()
+            // Just access the shared instance to ensure it's initialized
+            _ = audioSession
+        } catch {
+        }
+        #endif
     }
     
     func checkAllPermissions() {
-        #if os(iOS)
         checkMicrophonePermission()
-        #endif
-        
         checkSpeechPermission()
         checkRemindersPermission()
         updateAllPermissionsStatus()
+        debugPrintPermissionStatuses(context: "Initial check")
     }
     
     func requestAllPermissions() async -> Bool {
-        #if os(iOS)
-        let micGranted = await requestMicrophonePermission()
-        #else
-        let micGranted = true // Assume granted or not applicable on macOS
-        #endif
+        _ = await requestMicrophonePermission()
         
         _ = await requestSpeechPermission()
         _ = await requestRemindersPermission()
         
         updateAllPermissionsStatus()
+        debugPrintPermissionStatuses(context: "Post-request")
         return allPermissionsGranted
     }
     
     // MARK: - Microphone Permission
     
-    #if os(iOS)
+#if os(iOS)
     private func checkMicrophonePermission() {
-        microphonePermissionStatus = AVAudioApplication.shared.recordPermission
+        let status = AVAudioSession.sharedInstance().recordPermission
+        microphonePermissionStatus = status
     }
 
     private func requestMicrophonePermission() async -> Bool {
@@ -80,24 +98,91 @@ class PermissionManager: ObservableObject {
             return true
         }
 
-        let granted = await AVAudioApplication.requestRecordPermission()
-        await MainActor.run {
-            self.microphonePermissionStatus = granted ? .granted : .denied
+        return await withCheckedContinuation { continuation in
+            AVAudioSession.sharedInstance().requestRecordPermission { granted in
+                // Update on main thread synchronously to avoid concurrency issues
+                DispatchQueue.main.async {
+                    self.microphonePermissionStatus = granted ? .granted : .denied
+                    continuation.resume(returning: granted)
+                }
+            }
+        }
+    }
+#else
+    // macOS implementations for microphone permission
+
+    private func checkMicrophonePermission() {
+        // On macOS, we can't directly check microphone permission status
+        // We need to attempt access to determine the status
+        // For now, keep the current status unless it's the initial state
+        if microphonePermissionStatus == .undetermined {
+            // Try to determine status by attempting a quick access test
+            Task { @MainActor in
+                let _ = await self.testMicrophoneAccess()
+            }
+        }
+    }
+
+    private func testMicrophoneAccess() async -> Bool {
+        return await withCheckedContinuation { continuation in
+            let audioEngine = AVAudioEngine()
+            let inputNode = audioEngine.inputNode
+
+            // Use a safer format check
+            let inputFormat = inputNode.outputFormat(forBus: 0)
+            let recordingFormat: AVAudioFormat
+
+            if inputFormat.sampleRate > 0 && inputFormat.channelCount > 0 {
+                recordingFormat = inputFormat
+            } else {
+                guard let fallbackFormat = AVAudioFormat(standardFormatWithSampleRate: 16000, channels: 1) else {
+                    DispatchQueue.main.async {
+                        self.microphonePermissionStatus = .denied
+                        continuation.resume(returning: false)
+                    }
+                    return
+                }
+                recordingFormat = fallbackFormat
+            }
+
+            inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { _, _ in
+                // Empty tap
+            }
+
+            do {
+                try audioEngine.start()
+                // Success - microphone access is granted
+                audioEngine.stop()
+                inputNode.removeTap(onBus: 0)
+
+                DispatchQueue.main.async {
+                    self.microphonePermissionStatus = .granted
+                    continuation.resume(returning: true)
+                }
+            } catch {
+                // Failed - microphone access denied
+                audioEngine.stop()
+                inputNode.removeTap(onBus: 0)
+
+                DispatchQueue.main.async {
+                    self.microphonePermissionStatus = .denied
+                    continuation.resume(returning: false)
+                }
+            }
+        }
+    }
+
+    private func requestMicrophonePermission() async -> Bool {
+
+        if microphonePermissionStatus == .granted {
+            return true
+        }
+
+        let granted = await testMicrophoneAccess()
+        if granted {
+        } else {
         }
         return granted
-    }
-    #else
-    // macOS stub implementations for microphone permission
-    
-    private func checkMicrophonePermission() {
-        // No direct equivalent or always granted, placeholder implementation
-        microphonePermissionStatus = .granted
-    }
-    
-    private func requestMicrophonePermission() async -> Bool {
-        // macOS does not require explicit microphone permission requesting here
-        microphonePermissionStatus = .granted
-        return true
     }
     #endif
     
@@ -133,20 +218,26 @@ class PermissionManager: ObservableObject {
     }
     
     private func requestRemindersPermission() async -> Bool {
-        if remindersPermissionStatus == .fullAccess {
+        if isRemindersPermissionGranted(remindersPermissionStatus) {
             return true
         }
         
         do {
             if #available(iOS 17.0, *) {
-                let granted = try await eventStore.requestFullAccessToReminders()
-                remindersPermissionStatus = granted ? .fullAccess : .denied
-                return granted
-            } else {
-                let granted = try await eventStore.requestAccess(to: .reminder)
-                remindersPermissionStatus = granted ? .authorized : .denied
-                return granted
+                do {
+                    let granted = try await eventStore.requestFullAccessToReminders()
+                    remindersPermissionStatus = granted ? .fullAccess : .denied
+                    if granted {
+                        return true
+                    }
+                } catch {
+                    // Fall back to the legacy API if full access is unavailable (e.g. missing entitlement)
+                }
             }
+
+            let granted = try await eventStore.requestAccess(to: .reminder)
+            remindersPermissionStatus = granted ? .authorized : .denied
+            return granted
         } catch {
             remindersPermissionStatus = .denied
             return false
@@ -162,20 +253,26 @@ class PermissionManager: ObservableObject {
         let micGranted = microphonePermissionStatus == .granted
         #endif
         
-        allPermissionsGranted = micGranted &&
-                                speechPermissionStatus == .authorized && remindersPermissionStatus == .fullAccess
+        let speechGranted = speechPermissionStatus == .authorized
+        let remindersGranted = isRemindersPermissionGranted(remindersPermissionStatus)
+
+        allPermissionsGranted = micGranted && speechGranted && remindersGranted
+    }
+
+    private func isRemindersPermissionGranted(_ status: EKAuthorizationStatus) -> Bool {
+        if #available(iOS 17.0, macOS 14.0, *) {
+            return status == .fullAccess || status == .authorized
+        } else {
+            return status == .authorized
+        }
     }
     
     func showSettingsAlert() {
         var deniedPermissions: [String] = []
-        
-        #if os(iOS)
+
         if microphonePermissionStatus == .denied {
             deniedPermissions.append("Microphone")
         }
-        #else
-        // On macOS, microphone permission is always granted or handled differently, no alert needed
-        #endif
         
         if speechPermissionStatus == .denied || speechPermissionStatus == .restricted {
             deniedPermissions.append("Speech Recognition")
@@ -188,6 +285,9 @@ class PermissionManager: ObservableObject {
             permissionAlertMessage = "Please enable \(deniedPermissions.joined(separator: ", ")) in Settings to use Murmer."
             showPermissionAlert = true
         }
+    }
+
+    private func debugPrintPermissionStatuses(context: String) {
     }
     
     func openSettings() {

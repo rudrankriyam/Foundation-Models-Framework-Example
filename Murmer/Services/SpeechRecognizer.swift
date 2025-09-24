@@ -114,19 +114,25 @@ class SpeechRecognizer: NSObject, ObservableObject {
     func requestPermission() async -> Bool {
         return await withCheckedContinuation { continuation in
             SFSpeechRecognizer.requestAuthorization { authStatus in
-                Task { @MainActor in
-                    switch authStatus {
-                    case .authorized:
+                switch authStatus {
+                case .authorized:
+                    DispatchQueue.main.async {
                         self.hasPermission = true
                         continuation.resume(returning: true)
-                    case .denied, .restricted:
+                    }
+                case .denied, .restricted:
+                    DispatchQueue.main.async {
                         self.hasPermission = false
                         self.state = .error(.notAuthorized)
                         continuation.resume(returning: false)
-                    case .notDetermined:
+                    }
+                case .notDetermined:
+                    DispatchQueue.main.async {
                         self.hasPermission = false
                         continuation.resume(returning: false)
-                    @unknown default:
+                    }
+                @unknown default:
+                    DispatchQueue.main.async {
                         self.hasPermission = false
                         continuation.resume(returning: false)
                     }
@@ -136,6 +142,7 @@ class SpeechRecognizer: NSObject, ObservableObject {
     }
     
     func startRecognition() throws {
+
         // Check current authorization status instead of cached value
         let authStatus = SFSpeechRecognizer.authorizationStatus()
 
@@ -162,8 +169,9 @@ class SpeechRecognizer: NSObject, ObservableObject {
 #if os(iOS)
         // Configure audio session - available only on iOS
         let audioSession = AVAudioSession.sharedInstance()
-        
+
         do {
+            // Use voice recognition mode for better speech recognition performance
             try audioSession.setCategory(.record, mode: .measurement, options: .duckOthers)
             try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
         } catch {
@@ -221,13 +229,28 @@ class SpeechRecognizer: NSObject, ObservableObject {
         }
         
         
-        // Configure audio input
-        let recordingFormat = inputNode.outputFormat(forBus: 0)
-        
+        // Configure audio input with proper format
+        let inputFormat = inputNode.outputFormat(forBus: 0)
+
+        // Create a proper recording format if input format is invalid
+        let recordingFormat: AVAudioFormat
+        if inputFormat.sampleRate > 0 && inputFormat.channelCount > 0 {
+            recordingFormat = inputFormat
+        } else {
+            // Fallback to a standard format
+            guard let fallbackFormat = AVAudioFormat(standardFormatWithSampleRate: 16000, channels: 1) else {
+                let error = SpeechRecognitionError.audioSessionFailed
+                state = .error(error)
+                throw error
+            }
+            recordingFormat = fallbackFormat
+        }
+
+
         audioBufferCount = 0
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { [weak self] buffer, _ in
-            recognitionRequest.append(buffer)
-            
+            self?.recognitionRequest?.append(buffer)
+
             // Log every 50th buffer to avoid spam
             if let self = self {
                 self.audioBufferCount += 1
@@ -237,7 +260,7 @@ class SpeechRecognizer: NSObject, ObservableObject {
         }
         
         audioEngine.prepare()
-        
+
         do {
             try audioEngine.start()
         } catch {
