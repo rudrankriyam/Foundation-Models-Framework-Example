@@ -88,7 +88,7 @@ enum SpeechRecognitionError: LocalizedError, Equatable {
 }
 
 @MainActor
-class SpeechRecognizer: NSObject, ObservableObject {
+class SpeechRecognizer: NSObject, ObservableObject, SpeechRecognitionService {
     @Published var state: SpeechRecognitionState = .idle
     @Published var hasPermission = false
     @Published var currentAmplitude: Double = 0

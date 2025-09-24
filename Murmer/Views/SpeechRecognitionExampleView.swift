@@ -10,7 +10,7 @@ import AVFoundation
 
 struct SpeechRecognitionExampleView: View {
     @StateObject private var speechRecognizer = SpeechRecognizer()
-    @StateObject private var permissionManager = PermissionManager()
+    @StateObject private var permissionManager = PermissionService()
     @State private var showSettings = false
     @State private var showError = false
     @State private var errorMessage = ""

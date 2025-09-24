@@ -18,7 +18,7 @@ import AppKit
 /// A service class that handles text-to-speech synthesis
 /// Follows the single responsibility principle with one public method
 @MainActor
-final class SpeechSynthesizer: NSObject, ObservableObject {
+final class SpeechSynthesizer: NSObject, ObservableObject, SpeechSynthesisService {
 
     // MARK: - Published Properties
 

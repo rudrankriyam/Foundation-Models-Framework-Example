@@ -11,7 +11,7 @@ import Playgrounds
 
 /// Independent inference service that processes text input and returns text output
 /// This service is completely decoupled from speech recognition and synthesis
-class InferenceService {
+class InferenceService: InferenceServiceProtocol {
     public let session: LanguageModelSession
     
     init() {

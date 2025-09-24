@@ -11,7 +11,7 @@ import Speech
 import EventKit
 
 struct PermissionRequestView: View {
-    @ObservedObject var permissionManager: PermissionManager
+    @ObservedObject var permissionService: PermissionService
     @State private var isRequestingPermissions = false
     
     var body: some View {
@@ -44,21 +44,21 @@ struct PermissionRequestView: View {
                     icon: "mic.fill",
                     title: "Microphone",
                     description: "To hear your voice",
-                    status: permissionManager.microphonePermissionStatus == .granted ? .granted : .pending
+                    status: permissionService.microphonePermissionStatus == .granted ? .granted : .pending
                 )
                 
                 PermissionItemView(
                     icon: "waveform",
                     title: "Speech Recognition",
                     description: "To understand your words",
-                    status: permissionManager.speechPermissionStatus == .authorized ? .granted : .pending
+                    status: permissionService.speechPermissionStatus == .authorized ? .granted : .pending
                 )
                 
                 PermissionItemView(
                     icon: "checklist",
                     title: "Reminders",
                     description: "To save your reminders",
-                    status: permissionManager.remindersPermissionStatus == .fullAccess ? .granted : .pending
+                    status: permissionService.remindersPermissionStatus == .fullAccess ? .granted : .pending
                 )
             }
             .padding()
@@ -77,7 +77,7 @@ struct PermissionRequestView: View {
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
                             .scaleEffect(0.8)
                     } else {
-                        Text(permissionManager.allPermissionsGranted ? "Continue" : "Grant Permissions")
+                        Text(permissionService.allPermissionsGranted ? "Continue" : "Grant Permissions")
                             .fontWeight(.semibold)
                     }
                 }
@@ -92,31 +92,31 @@ struct PermissionRequestView: View {
             .disabled(isRequestingPermissions)
         }
         .padding()
-        .alert("Permissions Required", 
-               isPresented: $permissionManager.showPermissionAlert) {
-            Button("Open Settings", action: permissionManager.openSettings)
+        .alert("Permissions Required",
+               isPresented: $permissionService.showPermissionAlert) {
+            Button("Open Settings", action: permissionService.openSettings)
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text(permissionManager.permissionAlertMessage)
+            Text(permissionService.permissionAlertMessage)
         }
     }
     
     private func requestPermissions() {
         // If all permissions are already granted, just update the status
-        if permissionManager.allPermissionsGranted {
+        if permissionService.allPermissionsGranted {
             // Force a re-check to ensure the parent view updates
-            permissionManager.checkAllPermissions()
+            permissionService.checkAllPermissions()
             return
         }
         
         isRequestingPermissions = true
         
         Task {
-            _ = await permissionManager.requestAllPermissions()
+            _ = await permissionService.requestAllPermissions()
             isRequestingPermissions = false
-            
-            if !permissionManager.allPermissionsGranted {
-                permissionManager.showSettingsAlert()
+
+            if !permissionService.allPermissionsGranted {
+                permissionService.showSettingsAlert()
             }
         }
     }

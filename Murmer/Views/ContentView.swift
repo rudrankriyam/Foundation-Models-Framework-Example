@@ -12,16 +12,16 @@ struct ContentView: View {
     
     var body: some View {
         ZStack {
-            if viewModel.permissionManager.allPermissionsGranted {
+            if viewModel.permissionService.allPermissionsGranted {
                 MurmerMainView(viewModel: viewModel)
             } else {
-                PermissionRequestView(permissionManager: viewModel.permissionManager)
+                PermissionRequestView(permissionService: viewModel.permissionService)
             }
         }
         .onAppear {
-            viewModel.permissionManager.checkAllPermissions()
+            viewModel.permissionService.checkAllPermissions()
         }
-        .onChange(of: viewModel.permissionManager.allPermissionsGranted) { _, _ in
+        .onChange(of: viewModel.permissionService.allPermissionsGranted) { _, _ in
             // Force view update when permissions change
         }
     }

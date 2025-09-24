@@ -19,19 +19,13 @@ import AVFoundation
 #endif
 
 @MainActor
-class PermissionManager: ObservableObject {
+class PermissionService: ObservableObject, PermissionServiceProtocol {
     
 #if os(iOS)
     @Published var microphonePermissionStatus: AVAudioSession.RecordPermission = .undetermined {
         didSet { updateAllPermissionsStatus() }
     }
 #else
-    /// Custom microphone permission enum for macOS placeholder
-    enum MicrophonePermissionStatus {
-        case undetermined
-        case denied
-        case granted
-    }
     @Published var microphonePermissionStatus: MicrophonePermissionStatus = .undetermined {
         didSet { updateAllPermissionsStatus() }
     }
