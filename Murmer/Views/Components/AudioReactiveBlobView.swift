@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct AudioReactiveBlobView: View {
-    @ObservedObject var audioManager: AudioManager
+    @ObservedObject var speechRecognizer: SpeechRecognizer
     @State private var pulseScale: CGFloat = 1.0
     @State private var isListening = false
 
@@ -19,8 +19,8 @@ struct AudioReactiveBlobView: View {
     private let baseSize: CGFloat = 100
     private let maxScale: CGFloat = 1.2
 
-    init(audioManager: AudioManager, listeningState: Binding<Bool> = .constant(false)) {
-        self.audioManager = audioManager
+    init(speechRecognizer: SpeechRecognizer, listeningState: Binding<Bool> = .constant(false)) {
+        self.speechRecognizer = speechRecognizer
         self._listeningState = listeningState
     }
 
@@ -43,7 +43,7 @@ struct AudioReactiveBlobView: View {
                 .foregroundColor(.white)
                 .scaleEffect(pulseScale)
         }
-        .onChange(of: audioManager.currentAmplitude) { _, amplitude in
+        .onChange(of: speechRecognizer.currentAmplitude) { _, amplitude in
             // Gentle pulse based on audio level
             let targetScale = 1.0 + (amplitude * 0.3)
             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
@@ -68,7 +68,7 @@ struct AudioReactiveBlobView: View {
 #Preview {
     @State var isListening = false
 
-    return AudioReactiveBlobView(audioManager: AudioManager(), listeningState: $isListening)
+    return AudioReactiveBlobView(speechRecognizer: SpeechRecognizer(), listeningState: $isListening)
         .frame(width: 150, height: 150)
         .background(Color.gray.opacity(0.1))
         .onTapGesture {

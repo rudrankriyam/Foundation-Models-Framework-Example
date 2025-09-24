@@ -82,6 +82,9 @@ final class SpeechSynthesizer: NSObject, ObservableObject {
                 }
             }
 
+            // Configure audio session for playback before synthesis
+            self.configurePlaybackSession()
+
             let utterance = self.createUtterance(from: text)
             self.startSynthesis(utterance: utterance)
         }
@@ -122,12 +125,21 @@ final class SpeechSynthesizer: NSObject, ObservableObject {
     // MARK: - Private Methods
 
     private func setupAudioSession() {
+        // Initial setup - audio session will be configured dynamically before synthesis
+    }
+
+    private func configurePlaybackSession() {
         #if os(iOS)
         do {
             let audioSession = AVAudioSession.sharedInstance()
+
+            // Configure for playback with proper options for speech synthesis
             try audioSession.setCategory(.playback, mode: .default, options: [.duckOthers])
-            try audioSession.setActive(true)
+            try audioSession.setActive(true, options: [])
+
+            print("🔊 Configured audio session for speech synthesis playback")
         } catch {
+            print("🔊 Failed to configure audio session for playback: \(error.localizedDescription)")
         }
         #endif
     }
@@ -198,9 +210,14 @@ final class SpeechSynthesizer: NSObject, ObservableObject {
     private func createUtterance(from text: String) -> AVSpeechUtterance {
         let utterance = AVSpeechUtterance(string: text)
         utterance.voice = selectedVoice ?? AVSpeechSynthesisVoice(language: "en-US")
-        utterance.rate = rate
-        utterance.pitchMultiplier = pitch
-        utterance.volume = volume
+
+        // Ensure reasonable parameters
+        utterance.rate = max(0.1, min(1.0, rate)) // AVSpeechUtterance rate range is 0.0 to 1.0
+        utterance.pitchMultiplier = max(0.5, min(2.0, pitch))
+        utterance.volume = max(0.0, min(1.0, volume))
+
+        print("🔊 Created utterance: text='\(text)', voice=\(utterance.voice?.name ?? "default"), rate=\(utterance.rate), pitch=\(utterance.pitchMultiplier), volume=\(utterance.volume)")
+
         return utterance
     }
 
@@ -209,6 +226,7 @@ final class SpeechSynthesizer: NSObject, ObservableObject {
         isSpeaking = true
         error = nil
 
+        print("🔊 Starting speech synthesis: '\(utterance.speechString)'")
         synthesizer.speak(utterance)
     }
 
@@ -225,6 +243,7 @@ final class SpeechSynthesizer: NSObject, ObservableObject {
     }
 
     private func handleSuccess() {
+        print("🔊 Speech synthesis completed successfully")
         completion?(.success(()))
         resetState()
     }
@@ -241,19 +260,19 @@ final class SpeechSynthesizer: NSObject, ObservableObject {
 extension SpeechSynthesizer: AVSpeechSynthesizerDelegate {
 
     nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didStart utterance: AVSpeechUtterance) {
-        Task { @MainActor in
+        DispatchQueue.main.async {
             self.isSpeaking = true
         }
     }
 
     nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
-        Task { @MainActor in
+        DispatchQueue.main.async {
             self.handleSuccess()
         }
     }
 
     nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
-        Task { @MainActor in
+        DispatchQueue.main.async {
             self.handleError(.cancelled)
         }
     }

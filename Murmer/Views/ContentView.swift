@@ -64,7 +64,7 @@ struct MurmerMainView: View {
                             .blur(radius: 8)
                     }
 
-                    AudioReactiveBlobView(audioManager: viewModel.audioManager, listeningState: $viewModel.isListening)
+                    AudioReactiveBlobView(speechRecognizer: viewModel.speechRecognizer, listeningState: $viewModel.isListening)
                         .frame(width: 120, height: 120)
                         .onTapGesture {
                             toggleListening()

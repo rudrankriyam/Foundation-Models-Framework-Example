@@ -28,7 +28,6 @@ class MurmerViewModel: ObservableObject {
   // Track if we're currently processing text to prevent interference
   private var isProcessingText = false
 
-  let audioManager = AudioManager()
   let speechRecognizer = SpeechRecognizer()
   let permissionManager = PermissionManager()
 
@@ -106,10 +105,6 @@ class MurmerViewModel: ObservableObject {
       print("📱 Resetting flags: wasCancelled=false, isProcessingText=false")
       wasCancelled = false
       isProcessingText = false
-
-      // Stop audio manager first to prevent conflicts
-      print("📱 Stopping AudioManager to prevent conflicts")
-      audioManager.stopAudioSession()
 
       print("📱 Calling speechRecognizer.startRecognition()")
       try speechRecognizer.startRecognition()

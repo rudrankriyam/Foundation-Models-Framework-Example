@@ -11,6 +11,7 @@ import Speech
 import AVFoundation
 #endif
 import Combine
+import Accelerate
 
 // MARK: - Recognition State
 
@@ -90,6 +91,8 @@ enum SpeechRecognitionError: LocalizedError, Equatable {
 class SpeechRecognizer: NSObject, ObservableObject {
     @Published var state: SpeechRecognitionState = .idle
     @Published var hasPermission = false
+    @Published var currentAmplitude: Double = 0
+    @Published var isRecording = false
 
     private let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
@@ -99,6 +102,11 @@ class SpeechRecognizer: NSObject, ObservableObject {
 
     // Simple flag to prevent double processing
     private var hasProcessedFinalResult = false
+    
+    // Amplitude monitoring parameters
+    private var amplitudeHistory: [Double] = []
+    private let historySize = 10
+    private let smoothingFactor = 0.8
     
     override init() {
         super.init()
@@ -171,30 +179,17 @@ class SpeechRecognizer: NSObject, ObservableObject {
             throw error
         }
 
-        // Cancel any ongoing recognition first
-        print("🚀 Calling stopRecognition() to clean up")
-        stopRecognition()
-        
-        // Wait a brief moment for cleanup to complete
-        Thread.sleep(forTimeInterval: 0.1)
-        
-#if os(iOS)
-        // Configure audio session - available only on iOS
-        let audioSession = AVAudioSession.sharedInstance()
-
-        do {
-            // Use a more compatible audio session configuration
-            try audioSession.setCategory(.record, mode: .spokenAudio, options: [.duckOthers, .allowBluetooth])
-            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
-        } catch {
-            print("Audio session configuration failed: \(error.localizedDescription)")
-            let recognitionError = SpeechRecognitionError.audioSessionFailed
-            state = .error(recognitionError)
-            throw recognitionError
+        // Cancel any ongoing recognition first, but only if we're currently listening
+        if case .listening = state {
+            print("🚀 Currently listening, calling stopRecognition() to clean up")
+            stopRecognition()
+            // Wait a brief moment for cleanup to complete
+            Thread.sleep(forTimeInterval: 0.1)
+        } else {
+            print("🚀 Not currently listening, skipping cleanup")
         }
-#else
-        // AVAudioSession is not available on macOS, skipping audio session configuration
-#endif
+
+        print("🚀 Starting speech recognition without manual audio session configuration")
         
         // Create and configure recognition request
         recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
@@ -269,21 +264,7 @@ class SpeechRecognizer: NSObject, ObservableObject {
         }
         
         // Configure audio input with proper format
-        let inputFormat = inputNode.outputFormat(forBus: 0)
-
-        // Create a proper recording format
-        let recordingFormat: AVAudioFormat
-        if inputFormat.sampleRate > 0 && inputFormat.channelCount > 0 {
-            recordingFormat = inputFormat
-        } else {
-            // Fallback to a standard format optimized for speech
-            guard let fallbackFormat = AVAudioFormat(standardFormatWithSampleRate: 16000, channels: 1) else {
-                let error = SpeechRecognitionError.audioSessionFailed
-                state = .error(error)
-                throw error
-            }
-            recordingFormat = fallbackFormat
-        }
+        let recordingFormat = inputNode.outputFormat(forBus: 0)
 
         // Remove any existing tap before installing new one
         if inputNode.numberOfInputs > 0 {
@@ -293,7 +274,14 @@ class SpeechRecognizer: NSObject, ObservableObject {
         audioBufferCount = 0
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { [weak self] buffer, _ in
             guard let self = self, !self.hasProcessedFinalResult else { return }
+            
+            // Send buffer to speech recognition
             self.recognitionRequest?.append(buffer)
+
+            // Process amplitude for visual feedback on main thread
+            DispatchQueue.main.async {
+                self.processAudioBuffer(buffer)
+            }
 
             // Log every 50th buffer to avoid spam
             self.audioBufferCount += 1
@@ -317,6 +305,7 @@ class SpeechRecognizer: NSObject, ObservableObject {
         // Update state to listening
         print("🚀 Setting state to .listening()")
         state = .listening()
+        isRecording = true
         print("🚀 START RECOGNITION COMPLETED SUCCESSFULLY")
         
     }
@@ -334,8 +323,24 @@ class SpeechRecognizer: NSObject, ObservableObject {
             state = .idle
         }
         
+        isRecording = false
+        currentAmplitude = 0
+
         // Clean up resources
         cleanupRecognition()
+
+        // Deactivate audio session to allow speech synthesis
+        #if os(iOS)
+        DispatchQueue.global(qos: .background).async {
+            do {
+                let audioSession = AVAudioSession.sharedInstance()
+                try audioSession.setActive(false, options: .notifyOthersOnDeactivation)
+                print("🎤 Deactivated audio session after speech recognition")
+            } catch {
+                print("🎤 Failed to deactivate audio session: \(error.localizedDescription)")
+            }
+        }
+        #endif
     }
     
     private func cleanupRecognition() {
@@ -368,17 +373,63 @@ class SpeechRecognizer: NSObject, ObservableObject {
             }
         }
 
-#if os(iOS)
-        // Deactivate audio session
-        do {
-            let audioSession = AVAudioSession.sharedInstance()
-            try audioSession.setActive(false, options: .notifyOthersOnDeactivation)
-        } catch {
-            print("🧹 Error deactivating audio session: \(error.localizedDescription)")
-        }
-#endif
+        // Let the system handle audio session cleanup automatically
         
         print("🧹 CLEANUP COMPLETED")
+    }
+    
+    // MARK: - Amplitude Monitoring
+    
+    private func processAudioBuffer(_ buffer: AVAudioPCMBuffer) {
+        guard let channelData = buffer.floatChannelData?[0] else {
+            return
+        }
+        let frameLength = Int(buffer.frameLength)
+
+        // Calculate RMS amplitude
+        var rms: Float = 0
+        vDSP_rmsqv(channelData, 1, &rms, vDSP_Length(frameLength))
+
+        // Smooth the amplitude using logarithmic scale for better dynamic range
+        let normalizedAmplitude = Double(min(log10(1 + rms * 9), 1.0))
+        let smoothedAmplitude = smoothAmplitude(normalizedAmplitude)
+
+        // Update amplitude on main thread
+        currentAmplitude = smoothedAmplitude
+    }
+
+    private func smoothAmplitude(_ newAmplitude: Double) -> Double {
+        amplitudeHistory.append(newAmplitude)
+        if amplitudeHistory.count > historySize {
+            amplitudeHistory.removeFirst()
+        }
+
+        // Apply exponential smoothing
+        var smoothed = amplitudeHistory[0]
+        for i in 1..<amplitudeHistory.count {
+            smoothed = smoothed * smoothingFactor + amplitudeHistory[i] * (1 - smoothingFactor)
+        }
+
+        return smoothed
+    }
+}
+
+// MARK: - SFSpeechRecognitionTaskDelegate
+extension SpeechRecognizer: SFSpeechRecognitionTaskDelegate {
+    nonisolated func speechRecognitionTask(_ task: SFSpeechRecognitionTask, didFinishRecognition recognitionResult: SFSpeechRecognitionResult) {
+        print("🎯 TASK DELEGATE: Final recognition result - '\(recognitionResult.bestTranscription.formattedString)'")
+    }
+
+    nonisolated func speechRecognitionTaskFinishedReadingAudio(_ task: SFSpeechRecognitionTask) {
+        print("🎯 TASK DELEGATE: Finished reading audio")
+    }
+
+    nonisolated func speechRecognitionTaskWasCancelled(_ task: SFSpeechRecognitionTask) {
+        print("🎯 TASK DELEGATE: Task was cancelled")
+    }
+
+    nonisolated func speechRecognitionTask(_ task: SFSpeechRecognitionTask, didFinishSuccessfully successfully: Bool) {
+        print("🎯 TASK DELEGATE: Task finished successfully: \(successfully)")
     }
 }
 
