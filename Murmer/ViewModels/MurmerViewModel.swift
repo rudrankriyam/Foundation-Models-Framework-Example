@@ -25,8 +25,9 @@ class MurmerViewModel: ObservableObject {
   let audioManager = AudioManager()
   let speechRecognizer = SpeechRecognizer()
   let permissionManager = PermissionManager()
-  
+
   private let inferenceService = InferenceService()
+  private let speechSynthesizer = SpeechSynthesizer()
   private let eventStore = EKEventStore()
 
   private var cancellables = Set<AnyCancellable>()
@@ -104,9 +105,12 @@ class MurmerViewModel: ObservableObject {
       do {
         // Use the inference service to process the text
         let response = try await inferenceService.processText(text)
-        
+
         // Store the response for display
         lastCreatedReminder = response
+
+        // Speak the AI response
+        try await speechSynthesizer.synthesizeAndSpeak(text: response)
 
         showSuccessAnimation()
         provideHapticFeedback("success")
