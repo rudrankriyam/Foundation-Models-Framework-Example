@@ -48,8 +48,97 @@ struct WeatherTool: Tool {
 
         // Mock weather data for demonstration
         let mockWeatherData = generateMockWeatherData(for: city, countryCode: arguments.countryCode)
+        
+        print("THIS IS CALLED")
 
         return mockWeatherData
+    }
+
+    // New method with ToolCallContext for multi-tool coordination (iOS 26.1+)
+    @available(iOS 26.1, macOS 26.1, *)
+    func call(arguments: Arguments, context: ToolCallContext) async throws -> WeatherData {
+        let city = arguments.city.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !city.isEmpty else {
+            throw WeatherError.emptyCity
+        }
+
+        // Multi-tool coordination: Check if user location was recently obtained
+        let recentLocationData = findRecentLocationData(in: context.transcript)
+
+        if let locationData = recentLocationData,
+           arguments.city.lowercased() == "here" || arguments.city.lowercased() == "current location" {
+
+            // Use coordinates from location tool for more accurate weather
+            return await getWeatherByCoordinates(
+                latitude: locationData.latitude,
+                longitude: locationData.longitude,
+                city: locationData.city
+            )
+        }
+
+        // Standard behavior for city names
+        let mockWeatherData = generateMockWeatherData(for: city, countryCode: arguments.countryCode)
+        return mockWeatherData
+    }
+
+    @available(iOS 26.1, macOS 26.1, *)
+    private func findRecentLocationData(in transcript: Transcript) -> LocationTool.LocationData? {
+        // Look through recent transcript entries for location tool calls
+        for entry in transcript.reversed() {
+            if case .toolOutput(let output) = entry,
+               output.toolName == "getUserLocation" {
+
+                // Try to extract location data from the tool output
+                // In a real implementation, you'd parse the structured output
+                if let locationData = extractLocationData(from: output) {
+                    return locationData
+                }
+            }
+        }
+        return nil
+    }
+
+    @available(iOS 26.1, macOS 26.1, *)
+    private func extractLocationData(from output: Transcript.ToolOutput) -> LocationTool.LocationData? {
+        // In a real implementation, you'd properly parse the tool output
+        // For demo purposes, return mock recent location data
+        return LocationTool.LocationData(
+            latitude: 37.7749,
+            longitude: -122.4194,
+            city: "San Francisco",
+            country: "US",
+            timestamp: DateFormatter.todayString
+        )
+    }
+
+    @available(iOS 26.1, macOS 26.1, *)
+    private func getWeatherByCoordinates(latitude: Double, longitude: Double, city: String?) async -> WeatherData {
+        // In real implementation, use coordinates for precise weather API call
+        let displayCity = city ?? "Current Location"
+
+        let baseTemperature = Double.random(in: 18...25) // Slightly different range for coord-based queries
+        let humidity = Int.random(in: 45...75)
+        let windSpeed = Double.random(in: 8...20)
+
+        let conditions = ["Clear", "Partly Cloudy", "Cloudy", "Sunny"].randomElement()!
+        let descriptions = [
+            "Clear": "Clear sky with excellent visibility",
+            "Partly Cloudy": "Partly cloudy with good weather",
+            "Cloudy": "Overcast conditions",
+            "Sunny": "Bright and sunny"
+        ]
+
+        return WeatherData(
+            city: displayCity,
+            country: "Coordinates-based",
+            temperature: round(baseTemperature * 10) / 10,
+            feelsLike: round((baseTemperature + Double.random(in: -2...2)) * 10) / 10,
+            humidity: humidity,
+            conditions: conditions,
+            description: descriptions[conditions] ?? "Weather conditions available",
+            windSpeed: round(windSpeed * 10) / 10
+        )
     }
 
     private func generateMockWeatherData(for city: String, countryCode: String?) -> WeatherData {
