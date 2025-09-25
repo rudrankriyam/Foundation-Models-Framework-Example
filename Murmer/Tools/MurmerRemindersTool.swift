@@ -27,6 +27,7 @@ struct MurmerRemindersTool: Tool {
     var listName: String?
   }
 
+  @MainActor
   func call(arguments: Arguments) async throws -> some PromptRepresentable {
     let eventStore = EKEventStore()
     
@@ -74,16 +75,7 @@ struct MurmerRemindersTool: Tool {
     reminder.calendar = calendar
 
     // Save the reminder
-    try await withCheckedThrowingContinuation { continuation in
-      DispatchQueue.main.async {
-        do {
-          try eventStore.save(reminder, commit: true)
-          continuation.resume()
-        } catch {
-          continuation.resume(throwing: error)
-        }
-      }
-    }
+    try eventStore.save(reminder, commit: true)
 
     let successMessage = arguments.dueDate != nil 
       ? "Reminder '\(reminder.title ?? "")' created successfully with due date."
@@ -97,17 +89,7 @@ struct MurmerRemindersTool: Tool {
 
   private func requestAccess(_ eventStore: EKEventStore) async -> Bool {
     do {
-      if #available(macOS 14.0, iOS 17.0, *) {
-        let result = try await eventStore.requestFullAccessToReminders()
-        if result {
-          return true
-        }
-        // Fallback to legacy API if full access is unavailable (e.g. entitlement missing)
-      } else {
-        let result = try await eventStore.requestAccess(to: .reminder)
-        return result
-      }
-      let result = try await eventStore.requestAccess(to: .reminder)
+      let result = try await eventStore.requestFullAccessToReminders()
       return result
     } catch {
       return false
@@ -115,11 +97,7 @@ struct MurmerRemindersTool: Tool {
   }
 
   private static func isRemindersAccessGranted(_ status: EKAuthorizationStatus) -> Bool {
-    if #available(iOS 17.0, macOS 14.0, *) {
-      return status == .fullAccess || status == .authorized
-    } else {
-      return status == .authorized
-    }
+    status == .fullAccess || status == .writeOnly
   }
 
 
@@ -142,16 +120,7 @@ struct MurmerRemindersTool: Tool {
       throw MurmerError.cannotCreateList
     }
 
-    try await withCheckedThrowingContinuation { continuation in
-      DispatchQueue.main.async {
-        do {
-          try eventStore.saveCalendar(newCalendar, commit: true)
-          continuation.resume()
-        } catch {
-          continuation.resume(throwing: error)
-        }
-      }
-    }
+    try eventStore.saveCalendar(newCalendar, commit: true)
     return newCalendar
   }
 }

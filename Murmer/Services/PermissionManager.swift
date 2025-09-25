@@ -55,13 +55,9 @@ class PermissionService: ObservableObject, PermissionServiceProtocol {
     private func initializeAudioSessionIfNeeded() {
         #if os(iOS)
         // Initialize AVAudioSession early to prevent factory registration issues
-        do {
-            let audioSession = AVAudioSession.sharedInstance()
-            // Just access the shared instance to ensure it's initialized
-            _ = audioSession
-        } catch {
-            print("⚠️ Failed to initialize AVAudioSession: \(error.localizedDescription)")
-        }
+        let audioSession = AVAudioSession.sharedInstance()
+        // Just access the shared instance to ensure it's initialized
+        _ = audioSession
         #endif
     }
     
@@ -210,21 +206,8 @@ class PermissionService: ObservableObject, PermissionServiceProtocol {
         }
         
         do {
-            if #available(iOS 17.0, *) {
-                do {
-                    let granted = try await eventStore.requestFullAccessToReminders()
-                    remindersPermissionStatus = granted ? .fullAccess : .denied
-                    if granted {
-                        return true
-                    }
-                } catch {
-                    // Fall back to the legacy API if full access is unavailable (e.g. missing entitlement)
-                    print("⚠️ Full reminders access unavailable, falling back to standard access: \(error.localizedDescription)")
-                }
-            }
-
-            let granted = try await eventStore.requestAccess(to: .reminder)
-            remindersPermissionStatus = granted ? .authorized : .denied
+            let granted = try await eventStore.requestFullAccessToReminders()
+            remindersPermissionStatus = granted ? .fullAccess : .denied
             return granted
         } catch {
             remindersPermissionStatus = .denied
@@ -248,11 +231,7 @@ class PermissionService: ObservableObject, PermissionServiceProtocol {
     }
 
     private func isRemindersPermissionGranted(_ status: EKAuthorizationStatus) -> Bool {
-        if #available(iOS 17.0, macOS 14.0, *) {
-            return status == .fullAccess || status == .authorized
-        } else {
-            return status == .authorized
-        }
+        return status == .fullAccess || status == .writeOnly
     }
     
     func showSettingsAlert() {

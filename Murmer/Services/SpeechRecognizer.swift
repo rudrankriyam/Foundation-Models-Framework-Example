@@ -212,7 +212,7 @@ class SpeechRecognizer: NSObject, ObservableObject, SpeechRecognitionService {
             }
         }
 
-        if let error = lastError {
+        if lastError != nil {
             print("🚀 Audio session configuration failed after all attempts")
             let recognitionError = SpeechRecognitionError.audioSessionFailed
             state = .error(recognitionError)
@@ -316,7 +316,6 @@ class SpeechRecognizer: NSObject, ObservableObject, SpeechRecognitionService {
         }
 
         // Use nil format to let AVAudioEngine handle format conversion automatically
-        let validFormat: AVAudioFormat? = nil
         print("🎤 Using automatic format conversion (nil format)")
 
         // If we still need a specific format, use the recording format or fallback
@@ -428,16 +427,9 @@ class SpeechRecognizer: NSObject, ObservableObject, SpeechRecognitionService {
         // Remove tap safely
         let inputNode = audioEngine.inputNode
         if inputNode.numberOfInputs > 0 {
-            do {
-                inputNode.removeTap(onBus: 0)
-            } catch {
-                print("🧹 Error removing audio tap: \(error.localizedDescription)")
-            }
+            inputNode.removeTap(onBus: 0)
         }
 
-        // Let the system handle audio session cleanup automatically
-
-        // Prevent further callback processing after cleanup
         hasProcessedFinalResult = true
 
         print("🧹 CLEANUP COMPLETED")

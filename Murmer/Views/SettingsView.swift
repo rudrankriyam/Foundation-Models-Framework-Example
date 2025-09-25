@@ -271,7 +271,7 @@ struct SettingsView: View {
         case .enhanced:
             return .orange
         case .premium:
-            return .green
+            return .indigo
         @unknown default:
             return .gray
         }

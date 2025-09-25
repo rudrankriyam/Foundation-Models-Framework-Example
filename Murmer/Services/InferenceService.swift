@@ -104,15 +104,3 @@ class InferenceService: InferenceServiceProtocol {
         return formatter.string(from: Date())
     }
 }
-
-#Playground {
-    Task {
-        do {
-            let service = InferenceService()
-            let text = try await service.processText("Pay the credit card bill tomorrow morning")
-            debugPrint(service.session.transcript)
-        } catch {
-            debugPrint(" An error occurred: \(error)")
-        }
-    }
-}

@@ -26,31 +26,60 @@ class MurmerViewModel: ObservableObject {
     @Published var showError = false
     @Published var errorMessage = ""
     @Published var lastCreatedReminder: String = ""
+    @Published var partialText: String = ""
     
     // MARK: - Services
-    
-    let speechRecognizer = SpeechRecognizer()
-    let speechSynthesizer = SpeechSynthesizer()
-    let inferenceService = InferenceService()
-    let permissionService = PermissionService()
-    
+
+    let speechRecognizer: SpeechRecognizer
+    let speechSynthesizer: SpeechSynthesizer
+    let inferenceService: InferenceService
+    let permissionService: PermissionService
+
     // MARK: - Private Properties
-    
+
     private let stateMachine: SpeechRecognitionStateMachine
     private let eventStore = EKEventStore()
-    
+
     private var cancellables = Set<AnyCancellable>()
-    
+
     // MARK: - Initialization
-    
+
     init() {
+        self.speechRecognizer = SpeechRecognizer()
+        self.speechSynthesizer = SpeechSynthesizer()
+        self.inferenceService = InferenceService()
+        self.permissionService = PermissionService()
+
         self.stateMachine = SpeechRecognitionStateMachine(
             speechRecognitionService: speechRecognizer,
             speechSynthesisService: speechSynthesizer,
             inferenceService: inferenceService,
             permissionService: permissionService
         )
-        
+
+        setupBindings()
+        loadReminderLists()
+    }
+
+    // For testing with dependency injection
+    init(
+        speechRecognizer: SpeechRecognizer,
+        speechSynthesizer: SpeechSynthesizer,
+        inferenceService: InferenceService,
+        permissionService: PermissionService
+    ) {
+        self.speechRecognizer = speechRecognizer
+        self.speechSynthesizer = speechSynthesizer
+        self.inferenceService = inferenceService
+        self.permissionService = permissionService
+
+        self.stateMachine = SpeechRecognitionStateMachine(
+            speechRecognitionService: speechRecognizer,
+            speechSynthesisService: speechSynthesizer,
+            inferenceService: inferenceService,
+            permissionService: permissionService
+        )
+
         setupBindings()
         loadReminderLists()
     }
@@ -61,10 +90,16 @@ class MurmerViewModel: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] state in
                 guard let self = self else { return }
-                
+
                 self.handleStateMachineStateChange(state)
             }
             .store(in: &cancellables)
+
+        // Bind to speech recognizer state changes for partial text
+        speechRecognizer.$state
+            .receive(on: DispatchQueue.main)
+            .map { $0.partialText }
+            .assign(to: &$partialText)
     }
     
     private func handleStateMachineStateChange(_ state: SpeechRecognitionStateMachine.State) {

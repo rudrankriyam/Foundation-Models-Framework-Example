@@ -5,9 +5,11 @@
 //  Created by Rudrank Riyam on 9/24/25.
 //
 
-import Foundation
-import Combine
 import AVFoundation
+import Combine
+import EventKit
+import Foundation
+import Speech
 
 // MARK: - Speech Recognition Protocols
 
@@ -127,7 +129,3 @@ enum MicrophonePermissionStatus {
 }
 #endif
 
-// MARK: - Import Requirements
-
-import Speech
-import EventKit

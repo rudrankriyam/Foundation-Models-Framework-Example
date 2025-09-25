@@ -130,7 +130,7 @@ class SpeechRecognitionStateMachineTests: XCTestCase {
             speechRecognitionService: mockSpeechRecognition,
             speechSynthesisService: mockSpeechSynthesis,
             inferenceService: mockInference,
-            permissionManager: mockPermissions
+            permissionService: mockPermissions
         )
     }
 
@@ -221,17 +221,14 @@ class MurmerViewModelTests: XCTestCase {
         let mockInference = MockInferenceService()
         mockPermissions = MockPermissionService()
 
-        mockStateMachine = SpeechRecognitionStateMachine(
-            speechRecognitionService: mockSpeechRecognition,
-            speechSynthesisService: mockSpeechSynthesis,
+        viewModel = MurmerViewModel(
+            speechRecognizer: mockSpeechRecognition,
+            speechSynthesizer: mockSpeechSynthesis,
             inferenceService: mockInference,
-            permissionManager: mockPermissions
+            permissionService: mockPermissions
         )
 
-        viewModel = MurmerViewModel(
-            stateMachine: mockStateMachine,
-            permissionManager: mockPermissions
-        )
+        mockStateMachine = viewModel.stateMachine
 
         cancellables = Set<AnyCancellable>()
     }

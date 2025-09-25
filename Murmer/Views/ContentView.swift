@@ -69,9 +69,9 @@ struct MurmerMainView: View {
                     }
                     
                     // Transcription display
-                    if !viewModel.recognizedText.isEmpty || viewModel.isListening || !viewModel.speechRecognizer.state.partialText.isEmpty {
+                    if !viewModel.recognizedText.isEmpty || viewModel.isListening || !viewModel.partialText.isEmpty {
                         VStack(spacing: 8) {
-                            if viewModel.speechRecognizer.state.partialText.isEmpty && (viewModel.isListening || viewModel.speechRecognizer.isRecording) {
+                            if viewModel.partialText.isEmpty && (viewModel.isListening || viewModel.speechRecognizer.isRecording) {
                                 HStack(spacing: 4) {
                                     ForEach(0..<3) { index in
                                         Circle()
@@ -88,14 +88,14 @@ struct MurmerMainView: View {
                                 }
                                 .padding()
                             } else {
-                                let displayText = viewModel.speechRecognizer.state.partialText.isEmpty ? viewModel.recognizedText : viewModel.speechRecognizer.state.partialText
+                                let displayText = viewModel.partialText.isEmpty ? viewModel.recognizedText : viewModel.partialText
                                 Text(displayText)
                                     .font(.title3)
                                     .foregroundStyle(.primary)
                                     .multilineTextAlignment(.center)
                                     .padding()
                                     .frame(maxWidth: 300)
-                                    .onChange(of: viewModel.speechRecognizer.state.partialText) { _, newValue in
+                                    .onChange(of: viewModel.partialText) { _, newValue in
                                         print("🔄 UI PARTIAL TEXT CHANGED: '\(newValue)'")
                                     }
                             }
