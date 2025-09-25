@@ -125,6 +125,7 @@ struct MurmerMainView: View {
             Spacer()
         }
         .padding()
+        .background(SimpleTopGradientView())
         .successFeedback(
             isShowing: $viewModel.showSuccess,
             message: "Reminder created: \"\(viewModel.lastCreatedReminder)\""
@@ -156,6 +157,35 @@ struct MurmerMainView: View {
         let impact = UIImpactFeedbackGenerator(style: .medium)
         impact.impactOccurred()
         #endif
+    }
+}
+
+// MARK: - Supporting Views
+
+struct SimpleTopGradientView: View {
+    @Environment(\.colorScheme) var scheme
+
+    var body: some View {
+        LinearGradient(colors: [
+            Color.indigo.opacity(0.4), .antiPrimary
+        ], startPoint: .top, endPoint: .center)
+        .ignoresSafeArea()
+    }
+}
+
+extension Color {
+    static var antiPrimary: Color {
+#if os(iOS) || os(tvOS) || os(macCatalyst) || os(visionOS)
+        return Color(UIColor { traitCollection in
+            if traitCollection.userInterfaceStyle == .dark {
+                return UIColor.black
+            } else {
+                return UIColor.white
+            }
+        })
+#else
+        return .white
+#endif
     }
 }
 
