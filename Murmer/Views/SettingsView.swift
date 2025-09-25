@@ -31,7 +31,6 @@ struct SettingsView: View {
                 .padding()
             }
             .navigationTitle("Voice Settings")
-            .background(SimpleTopGradientView())
             .toolbar {
                 ToolbarItem(placement: .automatic) {
                     Button("Done") {

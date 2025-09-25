@@ -21,23 +21,24 @@ struct PermissionRequestView: View {
                 Circle()
                     .fill(Color.purple)
                     .frame(width: 120, height: 120)
-                
+
                 Image(systemName: "waveform.circle.fill")
                     .font(.system(size: 60))
-                    .foregroundStyle(.white)
-            }
-            .shadow(radius: 20)
-            
-            // Title
+                    .foregroundStyle(Color.indigo)
+                    .padding(.vertical)
+
+
             Text("Welcome to Murmer")
                 .font(.largeTitle)
                 .fontWeight(.bold)
-            
+                .padding(.bottom, 4)
+
             Text("Voice-powered reminders, beautifully simple")
                 .font(.body)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
-            
+                .padding(.bottom)
+
             // Permission items
             VStack(spacing: 20) {
                 PermissionItemView(
@@ -62,14 +63,8 @@ struct PermissionRequestView: View {
                 )
             }
             .padding()
-            .background {
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(.regularMaterial)
-            }
-            
-            Spacer()
-            
-            // Action button
+            .glassEffect(.regular, in:.rect(cornerRadius: 12))
+
             Button(action: requestPermissions) {
                 HStack {
                     if isRequestingPermissions {
@@ -82,14 +77,13 @@ struct PermissionRequestView: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: 50)
-                .background(
-                    RoundedRectangle(cornerRadius: 15)
-                        .fill(Color.purple)
-                )
-                .foregroundColor(.white)
             }
+            .controlSize(.large)
+            .buttonBorderShape(.roundedRectangle(radius: 12))
             .disabled(isRequestingPermissions)
+            .buttonStyle(.glassProminent)
+            .tint(.indigo)
+            .padding(.vertical)
         }
         .padding()
         .alert("Permissions Required",
@@ -127,44 +121,57 @@ struct PermissionItemView: View {
     let title: String
     let description: String
     let status: PermissionStatus
-    
+
     enum PermissionStatus {
         case pending, granted
     }
-    
+
     var body: some View {
         HStack(spacing: 15) {
-            // Icon
-            ZStack {
-                Circle()
-                    .fill(status == .granted ? Color.green.opacity(0.2) : Color.gray.opacity(0.2))
-                    .frame(width: 44, height: 44)
-                
-                Image(systemName: icon)
-                    .font(.system(size: 20))
-                    .foregroundStyle(status == .granted ? Color.green : Color.gray)
-            }
-            
-            // Text
+            Image(systemName: icon)
+                .font(.system(size: 20))
+                .foregroundStyle(status == .granted ? Color.indigo : Color.gray)
+
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(.headline)
                     .foregroundStyle(.primary)
-                
+
                 Text(description)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            
+
             Spacer()
-            
-            // Status
+
             if status == .granted {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.title2)
-                    .foregroundStyle(.green)
+                    .foregroundStyle(Color.indigo.gradient)
                     .transition(.scale.combined(with: .opacity))
             }
         }
+    }
+}
+
+#Preview {
+    PermissionRequestView(permissionService: MockPermissionService())
+}
+
+// Mock PermissionService for preview
+class MockPermissionService: PermissionService {
+    override init() {
+        super.init()
+        // Set up mock permissions for preview
+        #if os(iOS)
+        self.microphonePermissionStatus = .undetermined
+        #else
+        self.microphonePermissionStatus = .granted
+        #endif
+        self.speechPermissionStatus = .notDetermined
+        self.remindersPermissionStatus = .notDetermined
+        self.allPermissionsGranted = false
+        self.showPermissionAlert = false
+        self.permissionAlertMessage = ""
     }
 }
