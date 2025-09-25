@@ -66,6 +66,7 @@ class AudioManager: ObservableObject {
     private func setupAudioEngine() {
         audioEngine = AVAudioEngine()
         guard let audioEngine = audioEngine else {
+            print("[AudioManager] Failed to create audio engine")
             return
         }
 
@@ -73,9 +74,17 @@ class AudioManager: ObservableObject {
         audioFormat = inputNode?.inputFormat(forBus: 0)
 
         guard let audioFormat = audioFormat else {
+            print("[AudioManager] Failed to get input format - no input device available")
             return
         }
 
+        // Validate the audio format
+        guard isValidAudioFormat(audioFormat) else {
+            print("[AudioManager] Invalid audio format - sample rate: \(audioFormat.sampleRate), channels: \(audioFormat.channelCount)")
+            return
+        }
+
+        print("[AudioManager] Setting up audio engine with format - sample rate: \(audioFormat.sampleRate), channels: \(audioFormat.channelCount)")
 
         // Install tap on input node to capture audio
         let bufferSize = AVAudioFrameCount(1024) // Reasonable buffer size for amplitude analysis
@@ -83,6 +92,20 @@ class AudioManager: ObservableObject {
             [weak self] buffer, _ in
             self?.processAudioBuffer(buffer)
         }
+    }
+
+    private func isValidAudioFormat(_ format: AVAudioFormat) -> Bool {
+        // Check for valid sample rate (should be > 0 and reasonable)
+        guard format.sampleRate > 0 && format.sampleRate <= 192000 else {
+            return false
+        }
+
+        // Check for valid channel count (should be > 0)
+        guard format.channelCount > 0 else {
+            return false
+        }
+
+        return true
     }
 
     private func processAudioBuffer(_ buffer: AVAudioPCMBuffer) {
@@ -132,14 +155,30 @@ class AudioManager: ObservableObject {
 
     func startAudioSession() {
         guard let audioEngine = audioEngine else {
+            print("[AudioManager] Audio engine not initialized, setting up...")
             setupAudioEngine()
+
+            // Check if setup was successful
+            guard audioFormat != nil else {
+                print("[AudioManager] Failed to setup audio engine - no valid input device")
+                return
+            }
+
+            return
+        }
+
+        // Check if we have a valid audio format before starting
+        guard audioFormat != nil else {
+            print("[AudioManager] No valid audio format available")
             return
         }
 
         do {
             try audioEngine.start()
             isRecording = true
+            print("[AudioManager] Audio session started successfully")
         } catch {
+            print("[AudioManager] Failed to start audio engine: \(error.localizedDescription)")
         }
     }
 

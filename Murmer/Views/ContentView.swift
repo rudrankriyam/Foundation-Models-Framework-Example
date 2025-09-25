@@ -11,19 +11,7 @@ struct ContentView: View {
     @StateObject private var viewModel = MurmerViewModel()
     
     var body: some View {
-        ZStack {
-            // Background gradient
-            LinearGradient(
-                colors: [
-                    Color(.systemIndigo).opacity(0.15),
-                    Color(.systemPurple).opacity(0.1),
-                    Color(.systemBlue).opacity(0.05)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
-            
+        Group {
             if viewModel.permissionManager.allPermissionsGranted {
                 MurmerMainView(viewModel: viewModel)
             } else {
