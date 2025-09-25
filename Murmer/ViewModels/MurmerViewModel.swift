@@ -11,221 +11,186 @@ import Foundation
 import FoundationModels
 import SwiftUI
 
+#if os(iOS)
+import UIKit
+#endif
+
 @MainActor
 class MurmerViewModel: ObservableObject {
-  @Published var isListening = false
-  @Published var recognizedText = ""
-  @Published var selectedList = "Default"
-  @Published var availableLists: [String] = ["Default"]
-  @Published var showSuccess = false
-  @Published var showError = false
-  @Published var errorMessage = ""
-  @Published var lastCreatedReminder: String = ""
+    // MARK: - Published Properties
+    
+    @Published var isListening = false
+    @Published var recognizedText = ""
+    @Published var selectedList = "Default"
+    @Published var availableLists: [String] = ["Default"]
+    @Published var showError = false
+    @Published var errorMessage = ""
+    @Published var lastCreatedReminder: String = ""
+    @Published var partialText: String = ""
+    
+    // MARK: - Services
 
-  let audioManager = AudioManager()
-  let speechRecognizer = SpeechRecognizer()
-  let permissionManager = PermissionManager()
+    let speechRecognizer: SpeechRecognizer
+    let speechSynthesizer: SpeechSynthesizer
+    let inferenceService: InferenceService
+    let permissionService: PermissionService
 
-  private let eventStore = EKEventStore()
-  private let reminderTool = MurmerRemindersTool()
+    // MARK: - Private Properties
 
-  private var cancellables = Set<AnyCancellable>()
+    private let stateMachine: SpeechRecognitionStateMachine
+    private let eventStore = EKEventStore()
 
-  init() {
-    setupBindings()
-    loadReminderLists()
-  }
+    private var cancellables = Set<AnyCancellable>()
 
-  private func setupBindings() {
-    // Bind speech recognition text
-    speechRecognizer.$recognizedText
-      .receive(on: DispatchQueue.main)
-      .sink { [weak self] text in
-        if !text.isEmpty {
-          self?.recognizedText = text
-          self?.processRecognizedText(text)
-        }
-      }
-      .store(in: &cancellables)
+    // MARK: - Initialization
 
-    // Handle errors
-    speechRecognizer.$error
-      .compactMap { $0 }
-      .receive(on: DispatchQueue.main)
-      .sink { [weak self] error in
-        self?.showError(error.localizedDescription)
-      }
-      .store(in: &cancellables)
-  }
+    init() {
+        self.speechRecognizer = SpeechRecognizer()
+        self.speechSynthesizer = SpeechSynthesizer()
+        self.inferenceService = InferenceService()
+        self.permissionService = PermissionService()
 
-  func startListening() async {
-    guard permissionManager.allPermissionsGranted else {
-      let granted = await permissionManager.requestAllPermissions()
-
-      if !granted {
-        permissionManager.showSettingsAlert()
-        return
-      }
-      return
-    }
-
-    do {
-      try speechRecognizer.startRecognition()
-      audioManager.startAudioSession()
-
-      isListening = true
-      recognizedText = ""
-      showSuccess = false
-      showError = false
-
-    } catch {
-      showError(error.localizedDescription)
-    }
-  }
-
-  func stopListening() {
-    speechRecognizer.stopRecognition()
-    audioManager.stopAudioSession()
-
-    isListening = false
-  }
-
-  private func processRecognizedText(_ text: String) {
-    Task {
-      // Stop listening while processing
-      stopListening()
-
-      do {
-        // Extract time expression
-        let timeExpression = extractTimeExpression(from: text)
-
-        // Create reminder using the tool
-        let listName = selectedList == "Default" ? nil : selectedList
-
-        let arguments = MurmerRemindersTool.Arguments(
-          text: text,
-          timeExpression: timeExpression,
-          listName: listName
+        self.stateMachine = SpeechRecognitionStateMachine(
+            speechRecognitionService: speechRecognizer,
+            speechSynthesisService: speechSynthesizer,
+            inferenceService: inferenceService,
+            permissionService: permissionService
         )
 
-        _ = try await reminderTool.call(arguments: arguments)
-
-        // The tool returns properties directly in the GeneratedContent
-        // We can access the success status and title from the output
-        lastCreatedReminder = recognizedText  // Use the original text as the reminder title
-
-        showSuccessAnimation()
-        provideHapticFeedback("success")
-
-        // Clear the recognized text after a delay
-        try? await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
-        recognizedText = ""
-
-      } catch {
-        showError("Failed to create reminder: \(error.localizedDescription)")
-        provideHapticFeedback("error")
-      }
+        setupBindings()
+        loadReminderLists()
     }
-  }
 
-  private func extractTimeExpression(from text: String) -> String? {
-    // Common time patterns
-    let timePatterns = [
-      "tomorrow", "today", "tonight",
-      "next week", "next month",
-      "in \\d+ (hour|minute|day|week)",
-      "at \\d+(:\\d+)? ?(am|pm)?",
-      "(monday|tuesday|wednesday|thursday|friday|saturday|sunday)",
-    ]
+    // For testing with dependency injection
+    init(
+        speechRecognizer: SpeechRecognizer,
+        speechSynthesizer: SpeechSynthesizer,
+        inferenceService: InferenceService,
+        permissionService: PermissionService
+    ) {
+        self.speechRecognizer = speechRecognizer
+        self.speechSynthesizer = speechSynthesizer
+        self.inferenceService = inferenceService
+        self.permissionService = permissionService
 
-    let lowercased = text.lowercased()
+        self.stateMachine = SpeechRecognitionStateMachine(
+            speechRecognitionService: speechRecognizer,
+            speechSynthesisService: speechSynthesizer,
+            inferenceService: inferenceService,
+            permissionService: permissionService
+        )
 
-    for pattern in timePatterns {
-      if let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) {
-        let matches = regex.matches(
-          in: lowercased, range: NSRange(lowercased.startIndex..., in: lowercased))
+        setupBindings()
+        loadReminderLists()
+    }
+    
+    private func setupBindings() {
+        // Bind to state machine state changes
+        stateMachine.$state
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] state in
+                guard let self = self else { return }
 
-        if let match = matches.first,
-          let range = Range(match.range, in: lowercased)
-        {
-          _ = String(lowercased[range])
+                self.handleStateMachineStateChange(state)
+            }
+            .store(in: &cancellables)
 
-          // Extract the time expression and any surrounding context with safe bounds checking
-          let safeStartIndex = max(
-            lowercased.startIndex,
-            lowercased.index(range.lowerBound, offsetBy: -10, limitedBy: lowercased.startIndex)
-              ?? lowercased.startIndex)
-          let safeEndIndex = min(
-            lowercased.endIndex,
-            lowercased.index(range.upperBound, offsetBy: 10, limitedBy: lowercased.endIndex)
-              ?? lowercased.endIndex)
-
-          let extracted = String(lowercased[safeStartIndex..<safeEndIndex]).trimmingCharacters(
-            in: .whitespaces)
-          return extracted
+        // Bind to speech recognizer state changes for partial text
+        speechRecognizer.$state
+            .receive(on: DispatchQueue.main)
+            .map { $0.partialText }
+            .assign(to: &$partialText)
+    }
+    
+    private func handleStateMachineStateChange(_ state: SpeechRecognitionStateMachine.State) {
+        print("🔄 STATE MACHINE CHANGED: \(state)")
+        
+        switch state {
+        case .idle:
+            isListening = false
+            recognizedText = ""
+            
+        case .listening:
+            isListening = true
+            
+        case .processingSpeech(let text):
+            recognizedText = text
+            isListening = false
+            
+        case .synthesizingResponse(let response):
+            lastCreatedReminder = response
+            
+        case .completed:
+            isListening = false
+            
+        case .error(let error):
+            isListening = false
+            showError(error.localizedDescription)
+        default:
+            break // Handle other states as needed
         }
-      }
     }
-
-    return nil
-  }
-
-  func loadReminderLists() {
-    Task {
-      let calendars = eventStore.calendars(for: .reminder)
-      let listNames = calendars.map { $0.title }.sorted()
-
-      await MainActor.run {
-        self.availableLists = ["Default"] + listNames
-      }
-    }
-  }
-
-  private func showSuccessAnimation() {
-    withAnimation(.easeInOut(duration: 0.3)) {
-      showSuccess = true
-    }
-
-    // Hide after delay
-    Task {
-      try? await Task.sleep(nanoseconds: 3_000_000_000)  // 3 seconds
-      withAnimation(.easeInOut(duration: 0.3)) {
-        showSuccess = false
-      }
-    }
-  }
-
-  private func showError(_ message: String) {
-    errorMessage = message
-
-    withAnimation(.easeInOut(duration: 0.3)) {
-      showError = true
-    }
-
-    // Hide after delay
-    Task {
-      try? await Task.sleep(nanoseconds: 5_000_000_000)  // 5 seconds
-      withAnimation(.easeInOut(duration: 0.3)) {
+    
+    // MARK: - Public Interface
+    
+    func startListening() async {
+        print("📱 START LISTENING CALLED")
+        
+        // Reset UI state
         showError = false
-      }
+        
+        // Delegate to state machine
+        await stateMachine.startWorkflow()
     }
-  }
-
-  private func provideHapticFeedback(_ type: String) {
-    #if os(iOS)
-      let generator = UINotificationFeedbackGenerator()
-      generator.prepare()
-
-      switch type {
-      case "success":
-        generator.notificationOccurred(.success)
-      case "error":
-        generator.notificationOccurred(.error)
-      case "warning":
-        generator.notificationOccurred(.warning)
-      default:
-        break
-      }
-    #endif
-  }
+    
+    func stopListening() {
+        print("📱 STOP LISTENING CALLED")
+        
+        // Delegate to state machine
+        stateMachine.stopWorkflow()
+    }
+    
+    // MARK: - UI Feedback Methods
+    
+    
+    func loadReminderLists() {
+        Task {
+            let calendars = eventStore.calendars(for: .reminder)
+            let listNames = calendars.map { $0.title }.sorted()
+            
+            await MainActor.run {
+                self.availableLists = ["Default"] + listNames
+            }
+        }
+    }
+    
+    
+    private func showError(_ message: String) {
+        errorMessage = message
+        
+        withAnimation(.easeInOut(duration: 0.3)) {
+            showError = true
+        }
+        
+#if os(iOS)
+        provideHapticFeedback(.error)
+#endif
+        
+        // Hide after delay
+        Task { [weak self] in
+            await MainActor.run {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    self?.showError = false
+                }
+            }
+        }
+    }
+    
+#if os(iOS)
+    private func provideHapticFeedback(_ type: UINotificationFeedbackGenerator.FeedbackType) {
+        let generator = UINotificationFeedbackGenerator()
+        generator.prepare()
+        generator.notificationOccurred(type)
+    }
+#endif
 }

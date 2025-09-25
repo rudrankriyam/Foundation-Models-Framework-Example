@@ -12,16 +12,16 @@ struct ContentView: View {
     
     var body: some View {
         Group {
-            if viewModel.permissionManager.allPermissionsGranted {
+            if viewModel.permissionService.allPermissionsGranted {
                 MurmerMainView(viewModel: viewModel)
             } else {
-                PermissionRequestView(permissionManager: viewModel.permissionManager)
+                PermissionRequestView(permissionService: viewModel.permissionService)
             }
         }
         .onAppear {
-            viewModel.permissionManager.checkAllPermissions()
+            viewModel.permissionService.checkAllPermissions()
         }
-        .onChange(of: viewModel.permissionManager.allPermissionsGranted) { _, _ in
+        .onChange(of: viewModel.permissionService.allPermissionsGranted) { _, _ in
             // Force view update when permissions change
         }
     }
@@ -38,13 +38,7 @@ struct MurmerMainView: View {
                 Text("Murmer")
                     .font(.largeTitle)
                     .fontWeight(.bold)
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.purple, .indigo],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
+                    .foregroundStyle(.primary)
                 
                 GlassDropdown(
                     selectedValue: $viewModel.selectedList,
@@ -65,24 +59,13 @@ struct MurmerMainView: View {
                     // Glow effect when listening
                     if viewModel.isListening {
                         Circle()
-                            .fill(
-                                RadialGradient(
-                                    gradient: Gradient(colors: [
-                                        Color.purple.opacity(0.3),
-                                        Color.indigo.opacity(0.2),
-                                        Color.clear
-                                    ]),
-                                    center: .center,
-                                    startRadius: 0,
-                                    endRadius: 200
-                                )
-                            )
+                            .fill(Color.indigo.opacity(0.2))
                             .frame(width: 400, height: 400)
                             .blur(radius: 30)
                             .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: viewModel.isListening)
                     }
                     
-                    AudioReactiveBlobView(audioManager: viewModel.audioManager)
+                    AudioReactiveBlobView(speechRecognizer: viewModel.speechRecognizer, listeningState: $viewModel.isListening)
                         .frame(width: 250, height: 250)
                         .scaleEffect(blobScale)
                         .onTapGesture {
@@ -93,7 +76,7 @@ struct MurmerMainView: View {
                 // Transcription display
                 if !viewModel.recognizedText.isEmpty || viewModel.isListening {
                     VStack(spacing: 8) {
-                        if viewModel.isListening && viewModel.speechRecognizer.partialText.isEmpty {
+                        if viewModel.isListening && viewModel.partialText.isEmpty {
                             HStack(spacing: 4) {
                                 ForEach(0..<3) { index in
                                     Circle()
@@ -110,7 +93,7 @@ struct MurmerMainView: View {
                             }
                             .padding()
                         } else {
-                            Text(viewModel.speechRecognizer.partialText.isEmpty ? viewModel.recognizedText : viewModel.speechRecognizer.partialText)
+                            Text(viewModel.partialText.isEmpty ? viewModel.recognizedText : viewModel.partialText)
                                 .font(.title3)
                                 .foregroundStyle(.primary)
                                 .multilineTextAlignment(.center)
@@ -142,10 +125,14 @@ struct MurmerMainView: View {
             Spacer()
         }
         .padding()
-        .successFeedback(
-            isShowing: $viewModel.showSuccess,
-            message: "Reminder created: \"\(viewModel.lastCreatedReminder)\""
-        )
+        .background(SimpleTopGradientView())
+        .alert("Reminder Created", isPresented: .constant(!viewModel.lastCreatedReminder.isEmpty)) {
+            Button("OK", role: .cancel) {
+                viewModel.lastCreatedReminder = ""
+            }
+        } message: {
+            Text("Reminder created: \"\(viewModel.lastCreatedReminder)\"")
+        }
         .alert("Error", isPresented: $viewModel.showError) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -175,6 +162,7 @@ struct MurmerMainView: View {
         #endif
     }
 }
+
 
 #Preview {
     ContentView()

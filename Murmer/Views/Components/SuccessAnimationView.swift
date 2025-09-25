@@ -17,25 +17,14 @@ struct SuccessAnimationView: View {
         ZStack {
             // Background circle
             Circle()
-                .fill(
-                    RadialGradient(
-                        gradient: Gradient(colors: [
-                            Color.green.opacity(0.3),
-                            Color.green.opacity(0.1),
-                            Color.clear
-                        ]),
-                        center: .center,
-                        startRadius: 0,
-                        endRadius: 100
-                    )
-                )
+                .fill(Color.green.opacity(0.2))
                 .frame(width: 200, height: 200)
                 .scaleEffect(particleScale)
                 .opacity(1 - particleScale)
             
             // Success circle
             Circle()
-                .fill(Color.green.gradient)
+                .fill(Color.green)
                 .frame(width: 100, height: 100)
                 .scaleEffect(scale)
                 .opacity(opacity)

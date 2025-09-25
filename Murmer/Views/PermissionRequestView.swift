@@ -11,56 +11,56 @@ import Speech
 import EventKit
 
 struct PermissionRequestView: View {
-    @ObservedObject var permissionManager: PermissionManager
+    @ObservedObject var permissionService: PermissionService
     @State private var isRequestingPermissions = false
     
     var body: some View {
-        VStack(spacing: 0) {
-                Image(systemName: "waveform")
+        VStack(spacing: 16) {
+            Image(systemName: "waveform")
                 .padding()
-                    .font(.system(size: 60))
-                    .foregroundStyle(Color.indigo.gradient)
-                    .glassEffect(.regular, in: .circle)
-                    .padding(.vertical)
-
-
-            Text("Welcome to Murmer")
-                .font(.largeTitle)
-                .fontWeight(.bold)
-                .padding(.bottom, 4)
-
-            Text("Voice-powered reminders, beautifully simple")
-                .font(.body)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.bottom)
-
+                .font(.system(size: 60))
+                .padding(.vertical)
+                .glassEffect(.clear, in: .circle)
+            
+            VStack(spacing: 0) {
+                Text("Welcome to Murmer")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                    .padding(.bottom, 4)
+                
+                Text("Voice-powered reminders")
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.bottom)
+            }
+            
             // Permission items
             VStack(spacing: 20) {
                 PermissionItemView(
                     icon: "mic.fill",
                     title: "Microphone",
                     description: "To hear your voice",
-                    status: permissionManager.microphonePermissionStatus == .granted ? .granted : .pending
+                    status: permissionService.microphonePermissionStatus == .granted ? .granted : .pending
                 )
                 
                 PermissionItemView(
                     icon: "waveform",
                     title: "Speech Recognition",
                     description: "To understand your words",
-                    status: permissionManager.speechPermissionStatus == .authorized ? .granted : .pending
+                    status: permissionService.speechPermissionStatus == .authorized ? .granted : .pending
                 )
                 
                 PermissionItemView(
                     icon: "checklist",
                     title: "Reminders",
                     description: "To save your reminders",
-                    status: permissionManager.remindersPermissionStatus == .fullAccess ? .granted : .pending
+                    status: permissionService.hasRemindersAccess ? .granted : .pending
                 )
             }
             .padding()
             .glassEffect(.regular, in:.rect(cornerRadius: 12))
-
+            
             Button(action: requestPermissions) {
                 HStack {
                     if isRequestingPermissions {
@@ -68,7 +68,7 @@ struct PermissionRequestView: View {
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
                             .scaleEffect(0.8)
                     } else {
-                        Text(permissionManager.allPermissionsGranted ? "Continue" : "Grant Permissions")
+                        Text(permissionService.allPermissionsGranted ? "Continue" : "Grant Permissions")
                             .fontWeight(.semibold)
                     }
                 }
@@ -83,30 +83,32 @@ struct PermissionRequestView: View {
         }
         .padding()
         .alert("Permissions Required",
-               isPresented: $permissionManager.showPermissionAlert) {
-            Button("Open Settings", action: permissionManager.openSettings)
+               isPresented: $permissionService.showPermissionAlert) {
+            Button("Open Settings", action: permissionService.openSettings)
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text(permissionManager.permissionAlertMessage)
+            Text(permissionService.permissionAlertMessage)
         }
+        .frame(maxHeight: .infinity)
+        .background(SimpleTopGradientView())
     }
     
-    private func requestPermissions() {
+    func requestPermissions() {
         // If all permissions are already granted, just update the status
-        if permissionManager.allPermissionsGranted {
+        if permissionService.allPermissionsGranted {
             // Force a re-check to ensure the parent view updates
-            permissionManager.checkAllPermissions()
+            permissionService.checkAllPermissions()
             return
         }
         
         isRequestingPermissions = true
         
         Task {
-            _ = await permissionManager.requestAllPermissions()
+            _ = await permissionService.requestAllPermissions()
             isRequestingPermissions = false
             
-            if !permissionManager.allPermissionsGranted {
-                permissionManager.showSettingsAlert()
+            if !permissionService.allPermissionsGranted {
+                permissionService.showSettingsAlert()
             }
         }
     }
@@ -117,29 +119,29 @@ struct PermissionItemView: View {
     let title: String
     let description: String
     let status: PermissionStatus
-
+    
     enum PermissionStatus {
         case pending, granted
     }
-
+    
     var body: some View {
-        HStack(spacing: 15) {
+        return HStack(spacing: 15) {
             Image(systemName: icon)
                 .font(.system(size: 20))
                 .foregroundStyle(status == .granted ? Color.indigo : Color.gray)
-
+            
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(.headline)
                     .foregroundStyle(.primary)
-
+                
                 Text(description)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-
+            
             Spacer()
-
+            
             if status == .granted {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.title2)
@@ -150,24 +152,24 @@ struct PermissionItemView: View {
     }
 }
 
-#Preview {
-    PermissionRequestView(permissionManager: MockPermissionManager())
-}
-
-// Mock PermissionManager for preview
-class MockPermissionManager: PermissionManager {
+// Mock PermissionService for preview
+class MockPermissionService: PermissionService {
     override init() {
         super.init()
         // Set up mock permissions for preview
-        #if os(iOS)
+#if os(iOS)
         self.microphonePermissionStatus = .undetermined
-        #else
+#else
         self.microphonePermissionStatus = .granted
-        #endif
+#endif
         self.speechPermissionStatus = .notDetermined
         self.remindersPermissionStatus = .notDetermined
         self.allPermissionsGranted = false
         self.showPermissionAlert = false
         self.permissionAlertMessage = ""
     }
+}
+
+#Preview {
+    PermissionRequestView(permissionService: MockPermissionService())
 }
