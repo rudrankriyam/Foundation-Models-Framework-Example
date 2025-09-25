@@ -15,30 +15,26 @@ struct PermissionRequestView: View {
     @State private var isRequestingPermissions = false
     
     var body: some View {
-        VStack(spacing: 30) {
-            // App icon placeholder
-            ZStack {
-                Circle()
-                    .fill(Color.purple)
-                    .frame(width: 120, height: 120)
-
-                Image(systemName: "waveform.circle.fill")
-                    .font(.system(size: 60))
-                    .foregroundStyle(Color.indigo)
-                    .padding(.vertical)
+        VStack(spacing: 16) {
+            Image(systemName: "waveform")
+                .padding()
+                .font(.system(size: 60))
+                .padding(.vertical)
+                .glassEffect(.clear, in: .circle)
+            
+            VStack(spacing: 0) {
+                Text("Welcome to Murmer")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                    .padding(.bottom, 4)
+                
+                Text("Voice-powered reminders")
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.bottom)
             }
-
-            Text("Welcome to Murmer")
-                .font(.largeTitle)
-                .fontWeight(.bold)
-                .padding(.bottom, 4)
-
-            Text("Voice-powered reminders, beautifully simple")
-                .font(.body)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.bottom)
-
+            
             // Permission items
             VStack(spacing: 20) {
                 PermissionItemView(
@@ -64,7 +60,7 @@ struct PermissionRequestView: View {
             }
             .padding()
             .glassEffect(.regular, in:.rect(cornerRadius: 12))
-
+            
             Button(action: requestPermissions) {
                 HStack {
                     if isRequestingPermissions {
@@ -93,6 +89,8 @@ struct PermissionRequestView: View {
         } message: {
             Text(permissionService.permissionAlertMessage)
         }
+        .frame(maxHeight: .infinity)
+        .background(SimpleTopGradientView())
     }
     
     func requestPermissions() {
@@ -108,7 +106,7 @@ struct PermissionRequestView: View {
         Task {
             _ = await permissionService.requestAllPermissions()
             isRequestingPermissions = false
-
+            
             if !permissionService.allPermissionsGranted {
                 permissionService.showSettingsAlert()
             }
@@ -121,29 +119,29 @@ struct PermissionItemView: View {
     let title: String
     let description: String
     let status: PermissionStatus
-
+    
     enum PermissionStatus {
         case pending, granted
     }
-
+    
     var body: some View {
         return HStack(spacing: 15) {
             Image(systemName: icon)
                 .font(.system(size: 20))
                 .foregroundStyle(status == .granted ? Color.indigo : Color.gray)
-
+            
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(.headline)
                     .foregroundStyle(.primary)
-
+                
                 Text(description)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-
+            
             Spacer()
-
+            
             if status == .granted {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.title2)
@@ -159,11 +157,11 @@ class MockPermissionService: PermissionService {
     override init() {
         super.init()
         // Set up mock permissions for preview
-        #if os(iOS)
+#if os(iOS)
         self.microphonePermissionStatus = .undetermined
-        #else
+#else
         self.microphonePermissionStatus = .granted
-        #endif
+#endif
         self.speechPermissionStatus = .notDetermined
         self.remindersPermissionStatus = .notDetermined
         self.allPermissionsGranted = false
@@ -172,8 +170,6 @@ class MockPermissionService: PermissionService {
     }
 }
 
-struct PermissionRequestView_Previews: PreviewProvider {
-    static var previews: some View {
-        PermissionRequestView(permissionService: MockPermissionService())
-    }
+#Preview {
+    PermissionRequestView(permissionService: MockPermissionService())
 }

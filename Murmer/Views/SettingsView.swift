@@ -285,7 +285,7 @@ struct SimpleTopGradientView: View {
 
     var body: some View {
         LinearGradient(colors: [
-            Color.indigo.opacity(0.4), .antiPrimary
+            Color.indigo.opacity(0.44), .antiPrimary
         ], startPoint: .top, endPoint: .center)
         .ignoresSafeArea()
     }
