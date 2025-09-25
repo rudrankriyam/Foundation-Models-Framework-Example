@@ -280,9 +280,9 @@ final class SpeechSynthesizer: NSObject, ObservableObject, SpeechSynthesisServic
 
         // Deactivate audio session to allow other audio components to take over
         #if os(iOS)
-        DispatchQueue.global(qos: .background).async {
+        Task.detached {
             // Add small delay to ensure synthesis is fully complete
-            Thread.sleep(forTimeInterval: 0.1)
+            try await Task.sleep(for: .milliseconds(100))
             do {
                 let audioSession = AVAudioSession.sharedInstance()
                 try audioSession.setActive(false, options: .notifyOthersOnDeactivation)
@@ -303,8 +303,8 @@ final class SpeechSynthesizer: NSObject, ObservableObject, SpeechSynthesisServic
 
         // Deactivate audio session on error as well
         #if os(iOS)
-        DispatchQueue.global(qos: .background).async {
-            Thread.sleep(forTimeInterval: 0.1)
+        Task.detached {
+            try await Task.sleep(for: .milliseconds(100))
             do {
                 let audioSession = AVAudioSession.sharedInstance()
                 try audioSession.setActive(false, options: .notifyOthersOnDeactivation)
