@@ -47,7 +47,8 @@
       "Bash(xcrun devicectl device process launch:*)",
       "Bash(xcrun xcodebuild build -scheme \"Foundation Models Framework Example\" -destination \"platform=macOS\")",
       "Bash(xcode-select:*)",
-      "Bash(gh pr:*)"
+      "Bash(gh pr:*)",
+      "Bash(xcrun xcodebuild build:*)"
     ],
     "deny": [],
     "includeCoAuthoredBy": false

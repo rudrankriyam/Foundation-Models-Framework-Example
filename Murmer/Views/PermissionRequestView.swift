@@ -26,7 +26,7 @@ struct PermissionRequestView: View {
                     .font(.system(size: 60))
                     .foregroundStyle(Color.indigo)
                     .padding(.vertical)
-
+            }
 
             Text("Welcome to Murmer")
                 .font(.largeTitle)
@@ -95,7 +95,7 @@ struct PermissionRequestView: View {
         }
     }
     
-    private func requestPermissions() {
+    func requestPermissions() {
         // If all permissions are already granted, just update the status
         if permissionService.allPermissionsGranted {
             // Force a re-check to ensure the parent view updates
@@ -127,7 +127,7 @@ struct PermissionItemView: View {
     }
 
     var body: some View {
-        HStack(spacing: 15) {
+        return HStack(spacing: 15) {
             Image(systemName: icon)
                 .font(.system(size: 20))
                 .foregroundStyle(status == .granted ? Color.indigo : Color.gray)
@@ -154,10 +154,6 @@ struct PermissionItemView: View {
     }
 }
 
-#Preview {
-    PermissionRequestView(permissionService: MockPermissionService())
-}
-
 // Mock PermissionService for preview
 class MockPermissionService: PermissionService {
     override init() {
@@ -173,5 +169,11 @@ class MockPermissionService: PermissionService {
         self.allPermissionsGranted = false
         self.showPermissionAlert = false
         self.permissionAlertMessage = ""
+    }
+}
+
+struct PermissionRequestView_Previews: PreviewProvider {
+    static var previews: some View {
+        PermissionRequestView(permissionService: MockPermissionService())
     }
 }

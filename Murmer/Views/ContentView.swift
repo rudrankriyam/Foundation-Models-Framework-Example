@@ -65,7 +65,7 @@ struct MurmerMainView: View {
                             .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: viewModel.isListening)
                     }
                     
-                    AudioReactiveBlobView(audioManager: viewModel.audioManager)
+                    AudioReactiveBlobView(speechRecognizer: viewModel.speechRecognizer, listeningState: $viewModel.isListening)
                         .frame(width: 250, height: 250)
                         .scaleEffect(blobScale)
                         .onTapGesture {
@@ -76,7 +76,7 @@ struct MurmerMainView: View {
                 // Transcription display
                 if !viewModel.recognizedText.isEmpty || viewModel.isListening {
                     VStack(spacing: 8) {
-                        if viewModel.isListening && viewModel.speechRecognizer.partialText.isEmpty {
+                        if viewModel.isListening && viewModel.partialText.isEmpty {
                             HStack(spacing: 4) {
                                 ForEach(0..<3) { index in
                                     Circle()
@@ -93,7 +93,7 @@ struct MurmerMainView: View {
                             }
                             .padding()
                         } else {
-                            Text(viewModel.speechRecognizer.partialText.isEmpty ? viewModel.recognizedText : viewModel.speechRecognizer.partialText)
+                            Text(viewModel.partialText.isEmpty ? viewModel.recognizedText : viewModel.partialText)
                                 .font(.title3)
                                 .foregroundStyle(.primary)
                                 .multilineTextAlignment(.center)
@@ -126,10 +126,13 @@ struct MurmerMainView: View {
         }
         .padding()
         .background(SimpleTopGradientView())
-        .successFeedback(
-            isShowing: $viewModel.showSuccess,
-            message: "Reminder created: \"\(viewModel.lastCreatedReminder)\""
-        )
+        .alert("Reminder Created", isPresented: .constant(!viewModel.lastCreatedReminder.isEmpty)) {
+            Button("OK", role: .cancel) {
+                viewModel.lastCreatedReminder = ""
+            }
+        } message: {
+            Text("Reminder created: \"\(viewModel.lastCreatedReminder)\"")
+        }
         .alert("Error", isPresented: $viewModel.showError) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -160,34 +163,6 @@ struct MurmerMainView: View {
     }
 }
 
-// MARK: - Supporting Views
-
-struct SimpleTopGradientView: View {
-    @Environment(\.colorScheme) var scheme
-
-    var body: some View {
-        LinearGradient(colors: [
-            Color.indigo.opacity(0.4), .antiPrimary
-        ], startPoint: .top, endPoint: .center)
-        .ignoresSafeArea()
-    }
-}
-
-extension Color {
-    static var antiPrimary: Color {
-#if os(iOS) || os(tvOS) || os(macCatalyst) || os(visionOS)
-        return Color(UIColor { traitCollection in
-            if traitCollection.userInterfaceStyle == .dark {
-                return UIColor.black
-            } else {
-                return UIColor.white
-            }
-        })
-#else
-        return .white
-#endif
-    }
-}
 
 #Preview {
     ContentView()
