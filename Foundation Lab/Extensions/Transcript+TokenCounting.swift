@@ -60,14 +60,14 @@ extension Transcript {
 
 // MARK: - Token Estimation Utilities
 
-/// Estimates token count using Apple's guidance: 4 characters per token
+/// Estimates token count using Apple's guidance: 4.5 characters per token
 func estimateTokensAdvanced(_ text: String) -> Int {
     guard !text.isEmpty else { return 0 }
     
     let characterCount = text.count
     
-    // Simple: 4 characters per token across all content types
-    let tokensPerChar = 1.0 / 4.0
+    // Simple: 4.5 characters per token across all content types
+    let tokensPerChar = 1.0 / 4.5
     
     return max(1, Int(ceil(Double(characterCount) * tokensPerChar)))
 }
@@ -77,8 +77,8 @@ func estimateTokensForStructuredContent(_ content: GeneratedContent) -> Int {
     let jsonString = content.jsonString
     let characterCount = jsonString.count
     
-    // Use same 4 chars per token for JSON
-    let tokensPerChar = 1.0 / 4.0
+    // Use same 4.5 chars per token for JSON
+    let tokensPerChar = 1.0 / 4.5
     
     return max(1, Int(ceil(Double(characterCount) * tokensPerChar)))
 }
