@@ -48,7 +48,9 @@
       "Bash(xcrun xcodebuild build -scheme \"Foundation Models Framework Example\" -destination \"platform=macOS\")",
       "Bash(xcode-select:*)",
       "Bash(gh pr:*)",
-      "Bash(xcrun xcodebuild build:*)"
+      "Bash(xcrun xcodebuild build:*)",
+      "WebSearch",
+      "WebFetch(domain:brave.com)"
     ],
     "deny": [],
     "includeCoAuthoredBy": false

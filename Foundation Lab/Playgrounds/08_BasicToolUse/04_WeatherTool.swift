@@ -55,32 +55,35 @@ struct WeatherTool: Tool {
     }
 
     // New method with ToolCallContext for multi-tool coordination (iOS 26.1+)
-    @available(iOS 26.1, macOS 26.1, *)
-    func call(arguments: Arguments, context: ToolCallContext) async throws -> WeatherData {
-        let city = arguments.city.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        guard !city.isEmpty else {
-            throw WeatherError.emptyCity
-        }
-
-        // Multi-tool coordination: Check if user location was recently obtained
-        let recentLocationData = findRecentLocationData(in: context.transcript)
-
-        if let locationData = recentLocationData,
-           arguments.city.lowercased() == "here" || arguments.city.lowercased() == "current location" {
-
-            // Use coordinates from location tool for more accurate weather
-            return await getWeatherByCoordinates(
-                latitude: locationData.latitude,
-                longitude: locationData.longitude,
-                city: locationData.city
-            )
-        }
-
-        // Standard behavior for city names
-        let mockWeatherData = generateMockWeatherData(for: city, countryCode: arguments.countryCode)
-        return mockWeatherData
-    }
+    //
+    // Only for Xcode 26.1
+    //
+//    @available(iOS 26.1, macOS 26.1, *)
+//    func call(arguments: Arguments, context: ToolCallContext) async throws -> WeatherData {
+//        let city = arguments.city.trimmingCharacters(in: .whitespacesAndNewlines)
+//
+//        guard !city.isEmpty else {
+//            throw WeatherError.emptyCity
+//        }
+//
+//        // Multi-tool coordination: Check if user location was recently obtained
+//        let recentLocationData = findRecentLocationData(in: context.transcript)
+//
+//        if let locationData = recentLocationData,
+//           arguments.city.lowercased() == "here" || arguments.city.lowercased() == "current location" {
+//
+//            // Use coordinates from location tool for more accurate weather
+//            return await getWeatherByCoordinates(
+//                latitude: locationData.latitude,
+//                longitude: locationData.longitude,
+//                city: locationData.city
+//            )
+//        }
+//
+//        // Standard behavior for city names
+//        let mockWeatherData = generateMockWeatherData(for: city, countryCode: arguments.countryCode)
+//        return mockWeatherData
+//    }
 
     @available(iOS 26.1, macOS 26.1, *)
     private func findRecentLocationData(in transcript: Transcript) -> LocationTool.LocationData? {
