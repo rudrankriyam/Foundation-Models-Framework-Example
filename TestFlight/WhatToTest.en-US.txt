@@ -1,0 +1,10 @@
+New in this build:
+
+- Added support for optional field semantics in dynamic schemas
+- Implemented .possiblyAbsent and .possiblyNull optionality controls for better token efficiency
+- Updated OptionalFieldsSchemaView with selectable example scenarios
+- Improved schema generation with iOS 26.1 optional semantics support
+
+Please test:
+- Creating schemas with optional properties using different semantic options
+- Generating content with .possiblyAbsent vs .possiblyNull semantics
