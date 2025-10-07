@@ -10,14 +10,20 @@ import FoundationModels
 
 @available(iOS 26.1, macOS 26.1, *)
 struct OptionalFieldsSchemaView: View {
+    enum ExampleType: String, CaseIterable, Identifiable {
+        case userProfile = "User Profile"
+        case productListing = "Product Listing"
+        case eventDetails = "Event Details"
+        
+        var id: String { rawValue }
+    }
+    
     @State private var executor = ExampleExecutor()
     @State private var userProfileInput = "Sarah Johnson, 28 years old, from San Francisco. Works as a Product Manager. Enjoys hiking and photography."
     @State private var productListingInput = "MacBook Pro M3, starting at $1999. Available in Space Gray and Silver."
     @State private var eventInput = "Tech Conference 2024 on March 15. Registration required. Early bird discount available."
-    @State private var selectedExample = 0
+    @State private var selectedExample: ExampleType = .userProfile
     @State private var includeOptionalFields = true
-    
-    private let examples = ["User Profile", "Product Listing", "Event Details"]
     
     var body: some View {
         ExampleViewBase(
@@ -29,13 +35,13 @@ struct OptionalFieldsSchemaView: View {
             errorMessage: executor.errorMessage,
             codeExample: exampleCode,
             onRun: { Task { await runExample() } },
-            onReset: { selectedExample = 0; includeOptionalFields = true }
+            onReset: { selectedExample = .userProfile; includeOptionalFields = true }
         ) {
             VStack(alignment: .leading, spacing: Spacing.medium) {
                 // Example selector
                 Picker("Example", selection: $selectedExample) {
-                    ForEach(0..<examples.count, id: \.self) { index in
-                        Text(examples[index]).tag(index)
+                    ForEach(ExampleType.allCases) { example in
+                        Text(example.rawValue).tag(example)
                     }
                 }
                 .pickerStyle(.segmented)
@@ -115,17 +121,17 @@ struct OptionalFieldsSchemaView: View {
     
     private var bindingForSelectedExample: Binding<String> {
         switch selectedExample {
-        case 0: $userProfileInput
-        case 1: $productListingInput
-        default: $eventInput
+        case .userProfile: $userProfileInput
+        case .productListing: $productListingInput
+        case .eventDetails: $eventInput
         }
     }
     
     private var currentInput: String {
         switch selectedExample {
-        case 0: userProfileInput
-        case 1: productListingInput
-        default: eventInput
+        case .userProfile: userProfileInput
+        case .productListing: productListingInput
+        case .eventDetails: eventInput
         }
     }
     
@@ -137,69 +143,61 @@ struct OptionalFieldsSchemaView: View {
         let optionality: DynamicGenerationSchema.Optionality
     }
     
-    private func makeField(
-        name: String,
-        type: String,
-        description: String,
-        schema: DynamicGenerationSchema,
-        optionality: DynamicGenerationSchema.Optionality
-    ) -> SchemaField {
-        // When includeOptionalFields is false, convert optional fields to required
-        let actualOptionality = includeOptionalFields ? optionality : .required
-        
-        return SchemaField(
-            name: name,
-            type: type,
-            description: description,
-            schema: schema,
-            optionality: actualOptionality
-        )
-    }
+
     
     private var schemaFields: [SchemaField] {
-        schemaFields(for: selectedExample)
+        let allFields = allSchemaFields
+        if includeOptionalFields {
+            return allFields
+        } else {
+            return allFields.filter { field in
+                // Only include required fields when toggle is off
+                // Note: Can't pattern match on Optionality, so we check by excluding optional ones
+                return field.name == "name" || field.name == "age" || field.name == "title" || field.name == "date" || field.name == "price"
+            }
+        }
     }
     
-    private func schemaFields(for index: Int) -> [SchemaField] {
-        switch index {
-        case 0: // User Profile
+    private var allSchemaFields: [SchemaField] {
+        switch selectedExample {
+        case .userProfile:
             return [
-                makeField(
+                SchemaField(
                     name: "name",
                     type: "String",
                     description: "The person's full name",
                     schema: .init(type: String.self),
                     optionality: .required
                 ),
-                makeField(
+                SchemaField(
                     name: "age",
                     type: "Int",
                     description: "The person's age",
                     schema: .init(type: Int.self),
                     optionality: .required
                 ),
-                makeField(
+                SchemaField(
                     name: "location",
                     type: "String",
                     description: "Where the person is from or lives",
                     schema: .init(type: String.self),
                     optionality: .possiblyAbsent
                 ),
-                makeField(
+                SchemaField(
                     name: "occupation",
                     type: "String",
                     description: "The person's job or profession",
                     schema: .init(type: String.self),
                     optionality: .possiblyAbsent
                 ),
-                makeField(
+                SchemaField(
                     name: "bio",
                     type: "String",
                     description: "Brief biographical information",
                     schema: .init(type: String.self),
                     optionality: .possiblyNull
                 ),
-                makeField(
+                SchemaField(
                     name: "interests",
                     type: "[String]",
                     description: "Hobbies or interests mentioned",
@@ -208,44 +206,44 @@ struct OptionalFieldsSchemaView: View {
                 )
             ]
             
-        case 1: // Product Listing
+        case .productListing:
             return [
-                makeField(
+                SchemaField(
                     name: "name",
                     type: "String",
                     description: "Product name",
                     schema: .init(type: String.self),
                     optionality: .required
                 ),
-                makeField(
+                SchemaField(
                     name: "price",
                     type: "Float",
                     description: "Product price",
                     schema: .init(type: Float.self),
                     optionality: .required
                 ),
-                makeField(
+                SchemaField(
                     name: "description",
                     type: "String",
                     description: "Product description",
                     schema: .init(type: String.self),
                     optionality: .possiblyAbsent
                 ),
-                makeField(
+                SchemaField(
                     name: "colors",
                     type: "[String]",
                     description: "Available colors",
                     schema: .init(arrayOf: .init(type: String.self)),
                     optionality: .possiblyAbsent
                 ),
-                makeField(
+                SchemaField(
                     name: "inStock",
                     type: "Bool",
                     description: "Whether the product is in stock",
                     schema: .init(type: Bool.self),
                     optionality: .possiblyNull
                 ),
-                makeField(
+                SchemaField(
                     name: "discount",
                     type: "Float",
                     description: "Discount percentage if any",
@@ -254,44 +252,44 @@ struct OptionalFieldsSchemaView: View {
                 )
             ]
             
-        default: // Event Details
+        case .eventDetails:
             return [
-                makeField(
+                SchemaField(
                     name: "title",
                     type: "String",
                     description: "Event title",
                     schema: .init(type: String.self),
                     optionality: .required
                 ),
-                makeField(
+                SchemaField(
                     name: "date",
                     type: "String",
                     description: "Event date",
                     schema: .init(type: String.self),
                     optionality: .required
                 ),
-                makeField(
+                SchemaField(
                     name: "venue",
                     type: "String",
                     description: "Event location or venue",
                     schema: .init(type: String.self),
                     optionality: .possiblyAbsent
                 ),
-                makeField(
+                SchemaField(
                     name: "capacity",
                     type: "Int",
                     description: "Maximum attendees",
                     schema: .init(type: Int.self),
                     optionality: .possiblyAbsent
                 ),
-                makeField(
+                SchemaField(
                     name: "registration",
                     type: "String",
                     description: "Registration requirements",
                     schema: .init(type: String.self),
                     optionality: .possiblyNull
                 ),
-                makeField(
+                SchemaField(
                     name: "earlyBird",
                     type: "Bool",
                     description: "Early bird discount available",
@@ -304,7 +302,7 @@ struct OptionalFieldsSchemaView: View {
     
     private func runExample() async {
         await executor.execute {
-            let schema = try createSchema(for: selectedExample)
+            let schema = try createSchema()
             let session = LanguageModelSession()
             
             let prompt = includeOptionalFields ?
@@ -351,9 +349,8 @@ struct OptionalFieldsSchemaView: View {
         }
     }
     
-    private func createSchema(for index: Int) throws -> GenerationSchema {
-        let fields = schemaFields(for: index)
-        let properties = fields.map { field in
+    private func createSchema() throws -> GenerationSchema {
+        let properties = schemaFields.map { field in
             DynamicGenerationSchema.Property(
                 name: field.name,
                 description: field.description,
@@ -362,7 +359,12 @@ struct OptionalFieldsSchemaView: View {
             )
         }
         
-        let schemaName = index == 0 ? "UserProfile" : index == 1 ? "ProductListing" : "EventDetails"
+        let schemaName: String
+        switch selectedExample {
+        case .userProfile: schemaName = "UserProfile"
+        case .productListing: schemaName = "ProductListing"
+        case .eventDetails: schemaName = "EventDetails"
+        }
         let schema = DynamicGenerationSchema(
             name: schemaName,
             description: "Extract \(includeOptionalFields ? "all" : "required") information",
