@@ -81,6 +81,17 @@ enum DefaultPrompts {
     "Create a thriller story outline",
     "Write a fantasy adventure concept"
   ]
+
+  // MARK: - Optional Semantics
+
+  static let optionalSemantics = "Prepare a regional expansion plan for our subscription service."
+
+  static let optionalSemanticsSuggestions = [
+    optionalSemantics,
+    "Draft an expansion plan for a food delivery startup",
+    "Outline a launch strategy for a wearable device",
+    "Plan a service rollout for a productivity app"
+  ]
   
   // MARK: - Model Availability
   
@@ -183,7 +194,29 @@ let idea = response.content
 
 """
   }
-  
+
+  static func optionalSemanticsCode(prompt: String) -> String {
+    return """
+import FoundationModels
+
+if #available(iOS 26.1, macOS 26.1, *) {
+    let session = LanguageModelSession()
+
+    let businessResponse = try await session.respond(
+        to: "\(prompt)",
+        generating: BusinessIdeaOptionalSemantics.self
+    )
+    let businessIdea = businessResponse.content
+
+    let expansionResponse = try await session.respond(
+        to: "\(prompt)",
+        generating: EnterpriseExpansionPlan.self
+    )
+    let expansionPlan = expansionResponse.content
+}
+"""
+  }
+
   static func creativeWritingCode(prompt: String, instructions: String? = nil) -> String {
     var code = "import FoundationModels\n\n"
     code += "// Uses StoryOutline struct from DataModels.swift\n"

@@ -20,7 +20,7 @@ struct BusinessIdeasView: View {
       currentPrompt: $currentPrompt,
       isRunning: executor.isRunning,
       errorMessage: executor.errorMessage,
-      codeExample: DefaultPrompts.businessIdeasCode(prompt: currentPrompt),
+      codeExample: codeExample,
       onRun: executeBusinessIdea,
       onReset: resetToDefaults
     ) {
@@ -29,7 +29,7 @@ struct BusinessIdeasView: View {
         HStack {
           Image(systemName: "info.circle")
             .foregroundColor(.orange)
-          Text("Generates structured business ideas with market analysis and revenue models")
+          Text(infoBannerText)
             .font(.caption)
             .foregroundColor(.secondary)
           Spacer()
@@ -43,6 +43,13 @@ struct BusinessIdeasView: View {
           suggestions: DefaultPrompts.businessIdeasSuggestions,
           onSelect: { currentPrompt = $0 }
         )
+
+        if #available(iOS 26.1, macOS 26.1, *) {
+          PromptSuggestions(
+            suggestions: DefaultPrompts.optionalSemanticsSuggestions,
+            onSelect: { currentPrompt = $0 }
+          )
+        }
         
         // Prompt History
         if !executor.promptHistory.isEmpty {
@@ -70,31 +77,36 @@ struct BusinessIdeasView: View {
   
   private func executeBusinessIdea() {
     Task {
-      await executor.executeStructured(
-        prompt: currentPrompt,
-        type: BusinessIdea.self
-      ) { idea in
-        """
-        💡 Business Name: \(idea.name)
-        
-        📝 Description:
-        \(idea.description)
-        
-        🎯 Target Market:
-        \(idea.targetMarket)
-        
-        💪 Key Advantages:
-        \(idea.advantages.map { "• \($0)" }.joined(separator: "\n"))
-        
-        💰 Revenue Model:
-        \(idea.revenueModel)
-        
-        💵 Estimated Startup Cost:
-        \(idea.estimatedStartupCost)
-        
-        ⏱️ Timeline:
-        \(idea.timeline ?? "To be determined")
-        """
+      if #available(iOS 26.1, macOS 26.1, *) {
+        await executor.executeStructured(
+          prompt: currentPrompt,
+          type: BusinessIdeaOptionalSemantics.self
+        ) { idea in
+          formattedIdea(
+            name: idea.name,
+            description: idea.description,
+            targetMarket: idea.targetMarket,
+            advantages: idea.advantages,
+            revenueModel: idea.revenueModel,
+            estimatedStartupCost: idea.estimatedStartupCost,
+            timeline: idea.timeline
+          )
+        }
+      } else {
+        await executor.executeStructured(
+          prompt: currentPrompt,
+          type: BusinessIdea.self
+        ) { idea in
+          formattedIdea(
+            name: idea.name,
+            description: idea.description,
+            targetMarket: idea.targetMarket,
+            advantages: idea.advantages,
+            revenueModel: idea.revenueModel,
+            estimatedStartupCost: idea.estimatedStartupCost,
+            timeline: idea.timeline
+          )
+        }
       }
     }
   }
@@ -102,6 +114,56 @@ struct BusinessIdeasView: View {
   private func resetToDefaults() {
     currentPrompt = "" // Clear the prompt completely
     executor.clearAll() // Clear all results, errors, and history
+  }
+}
+
+private extension BusinessIdeasView {
+  var codeExample: String {
+    DefaultPrompts.optionalSemanticsCode(prompt: currentPrompt)
+  }
+
+  var infoBannerText: String {
+    if #available(iOS 26.1, macOS 26.1, *) {
+      return "Generates structured business ideas with market analysis and optional timeline semantics"
+    } else {
+      return "Generates structured business ideas with market analysis"
+    }
+  }
+
+  func formattedIdea(
+    name: String,
+    description: String,
+    targetMarket: String,
+    advantages: [String],
+    revenueModel: String,
+    estimatedStartupCost: String,
+    timeline: String?
+  ) -> String {
+    """
+    💡 Business Name: \(name)
+
+    📝 Description:
+    \(description)
+
+    🎯 Target Market:
+    \(targetMarket)
+
+    💪 Key Advantages:
+    \(advantages.map { "• \($0)" }.joined(separator: "\n"))
+
+    💰 Revenue Model:
+    \(revenueModel)
+
+    💵 Estimated Startup Cost:
+    \(estimatedStartupCost)
+
+    ⏱️ Timeline:
+    \(timelineSection(for: timeline))
+    """
+  }
+
+  func timelineSection(for timeline: String?) -> String {
+    timeline ?? "To be determined"
   }
 }
 

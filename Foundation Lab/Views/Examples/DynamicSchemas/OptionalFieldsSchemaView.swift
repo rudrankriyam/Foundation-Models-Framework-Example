@@ -8,6 +8,7 @@
 import SwiftUI
 import FoundationModels
 
+@available(iOS 26.1, macOS 26.1, *)
 struct OptionalFieldsSchemaView: View {
     @State private var executor = ExampleExecutor()
     @State private var userProfileInput = "Sarah Johnson, 28 years old, from San Francisco. Works as a Product Manager. Enjoys hiking and photography."
@@ -15,9 +16,9 @@ struct OptionalFieldsSchemaView: View {
     @State private var eventInput = "Tech Conference 2024 on March 15. Registration required. Early bird discount available."
     @State private var selectedExample = 0
     @State private var includeOptionalFields = true
-
+    
     private let examples = ["User Profile", "Product Listing", "Event Details"]
-
+    
     var body: some View {
         ExampleViewBase(
             title: "Optional vs Required Fields",
@@ -38,35 +39,31 @@ struct OptionalFieldsSchemaView: View {
                     }
                 }
                 .pickerStyle(.segmented)
-
+                
                 // Optional fields toggle
                 Toggle("Request Optional Fields", isOn: $includeOptionalFields)
                     .font(.caption)
                     .padding()
                     .background(Color.blue.opacity(0.1))
                     .cornerRadius(8)
-
+                
                 // Schema preview
                 VStack(alignment: .leading, spacing: Spacing.small) {
                     Text("Schema Structure")
                         .font(.headline)
-
+                    
                     VStack(alignment: .leading, spacing: 4) {
                         ForEach(schemaFields, id: \.name) { field in
                             HStack {
-                                Image(systemName: field.isOptional ? "questionmark.circle" : "checkmark.circle.fill")
-                                    .foregroundColor(field.isOptional ? .orange : .green)
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.green)
                                     .font(.caption)
-
+                                
                                 Text(field.name)
                                     .font(.system(.caption, design: .monospaced))
-
-                                Text(field.isOptional ? "(optional)" : "(required)")
-                                    .font(.caption2)
-                                    .foregroundColor(field.isOptional ? .orange : .green)
-
+                                
                                 Spacer()
-
+                                
                                 Text(field.type)
                                     .font(.caption2)
                                     .foregroundColor(.secondary)
@@ -77,7 +74,7 @@ struct OptionalFieldsSchemaView: View {
                     .background(Color.gray.opacity(0.1))
                     .cornerRadius(8)
                 }
-
+                
                 HStack {
                     Button("Extract Data") {
                         Task {
@@ -86,7 +83,7 @@ struct OptionalFieldsSchemaView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .disabled(executor.isRunning || currentInput.isEmpty)
-
+                    
                     if executor.isRunning {
                         ProgressView()
                             .scaleEffect(0.8)
@@ -114,77 +111,212 @@ struct OptionalFieldsSchemaView: View {
             .padding()
         }
     }
-
-
+    
+    
     private var bindingForSelectedExample: Binding<String> {
         switch selectedExample {
-        case 0: return $userProfileInput
-        case 1: return $productListingInput
-        default: return $eventInput
+        case 0: $userProfileInput
+        case 1: $productListingInput
+        default: $eventInput
         }
     }
-
+    
     private var currentInput: String {
         switch selectedExample {
-        case 0: return userProfileInput
-        case 1: return productListingInput
-        default: return eventInput
+        case 0: userProfileInput
+        case 1: productListingInput
+        default: eventInput
         }
     }
-
+    
     private struct SchemaField {
         let name: String
         let type: String
-        let isOptional: Bool
+        let description: String
+        let schema: DynamicGenerationSchema
+        let optionality: DynamicGenerationSchema.Optionality
     }
-
+    
+    private func makeField(
+        name: String,
+        type: String,
+        description: String,
+        schema: DynamicGenerationSchema,
+        optionality: DynamicGenerationSchema.Optionality
+    ) -> SchemaField {
+        // When includeOptionalFields is false, convert optional fields to required
+        let actualOptionality = includeOptionalFields ? optionality : .required
+        
+        return SchemaField(
+            name: name,
+            type: type,
+            description: description,
+            schema: schema,
+            optionality: actualOptionality
+        )
+    }
+    
     private var schemaFields: [SchemaField] {
-        switch selectedExample {
+        schemaFields(for: selectedExample)
+    }
+    
+    private func schemaFields(for index: Int) -> [SchemaField] {
+        switch index {
         case 0: // User Profile
             return [
-                SchemaField(name: "name", type: "String", isOptional: false),
-                SchemaField(name: "age", type: "Int", isOptional: false),
-                SchemaField(name: "location", type: "String", isOptional: true),
-                SchemaField(name: "occupation", type: "String", isOptional: true),
-                SchemaField(name: "bio", type: "String", isOptional: true),
-                SchemaField(name: "interests", type: "[String]", isOptional: true)
+                makeField(
+                    name: "name",
+                    type: "String",
+                    description: "The person's full name",
+                    schema: .init(type: String.self),
+                    optionality: .required
+                ),
+                makeField(
+                    name: "age",
+                    type: "Int",
+                    description: "The person's age",
+                    schema: .init(type: Int.self),
+                    optionality: .required
+                ),
+                makeField(
+                    name: "location",
+                    type: "String",
+                    description: "Where the person is from or lives",
+                    schema: .init(type: String.self),
+                    optionality: .possiblyAbsent
+                ),
+                makeField(
+                    name: "occupation",
+                    type: "String",
+                    description: "The person's job or profession",
+                    schema: .init(type: String.self),
+                    optionality: .possiblyAbsent
+                ),
+                makeField(
+                    name: "bio",
+                    type: "String",
+                    description: "Brief biographical information",
+                    schema: .init(type: String.self),
+                    optionality: .possiblyNull
+                ),
+                makeField(
+                    name: "interests",
+                    type: "[String]",
+                    description: "Hobbies or interests mentioned",
+                    schema: .init(arrayOf: .init(type: String.self)),
+                    optionality: .possiblyAbsent
+                )
             ]
+            
         case 1: // Product Listing
             return [
-                SchemaField(name: "name", type: "String", isOptional: false),
-                SchemaField(name: "price", type: "Float", isOptional: false),
-                SchemaField(name: "description", type: "String", isOptional: true),
-                SchemaField(name: "colors", type: "[String]", isOptional: true),
-                SchemaField(name: "inStock", type: "Bool", isOptional: true),
-                SchemaField(name: "discount", type: "Float", isOptional: true)
+                makeField(
+                    name: "name",
+                    type: "String",
+                    description: "Product name",
+                    schema: .init(type: String.self),
+                    optionality: .required
+                ),
+                makeField(
+                    name: "price",
+                    type: "Float",
+                    description: "Product price",
+                    schema: .init(type: Float.self),
+                    optionality: .required
+                ),
+                makeField(
+                    name: "description",
+                    type: "String",
+                    description: "Product description",
+                    schema: .init(type: String.self),
+                    optionality: .possiblyAbsent
+                ),
+                makeField(
+                    name: "colors",
+                    type: "[String]",
+                    description: "Available colors",
+                    schema: .init(arrayOf: .init(type: String.self)),
+                    optionality: .possiblyAbsent
+                ),
+                makeField(
+                    name: "inStock",
+                    type: "Bool",
+                    description: "Whether the product is in stock",
+                    schema: .init(type: Bool.self),
+                    optionality: .possiblyNull
+                ),
+                makeField(
+                    name: "discount",
+                    type: "Float",
+                    description: "Discount percentage if any",
+                    schema: .init(type: Float.self),
+                    optionality: .possiblyNull
+                )
             ]
+            
         default: // Event Details
             return [
-                SchemaField(name: "title", type: "String", isOptional: false),
-                SchemaField(name: "date", type: "String", isOptional: false),
-                SchemaField(name: "venue", type: "String", isOptional: true),
-                SchemaField(name: "capacity", type: "Int", isOptional: true),
-                SchemaField(name: "registration", type: "String", isOptional: true),
-                SchemaField(name: "earlyBird", type: "Bool", isOptional: true)
+                makeField(
+                    name: "title",
+                    type: "String",
+                    description: "Event title",
+                    schema: .init(type: String.self),
+                    optionality: .required
+                ),
+                makeField(
+                    name: "date",
+                    type: "String",
+                    description: "Event date",
+                    schema: .init(type: String.self),
+                    optionality: .required
+                ),
+                makeField(
+                    name: "venue",
+                    type: "String",
+                    description: "Event location or venue",
+                    schema: .init(type: String.self),
+                    optionality: .possiblyAbsent
+                ),
+                makeField(
+                    name: "capacity",
+                    type: "Int",
+                    description: "Maximum attendees",
+                    schema: .init(type: Int.self),
+                    optionality: .possiblyAbsent
+                ),
+                makeField(
+                    name: "registration",
+                    type: "String",
+                    description: "Registration requirements",
+                    schema: .init(type: String.self),
+                    optionality: .possiblyNull
+                ),
+                makeField(
+                    name: "earlyBird",
+                    type: "Bool",
+                    description: "Early bird discount available",
+                    schema: .init(type: Bool.self),
+                    optionality: .possiblyNull
+                )
             ]
         }
     }
-
+    
     private func runExample() async {
         await executor.execute {
             let schema = try createSchema(for: selectedExample)
             let session = LanguageModelSession()
-
+            
             let prompt = includeOptionalFields ?
             "Extract all available information from this text, including optional details:" :
             "Extract only the essential required information from this text:"
-
+            
             let response = try await session.respond(
                 to: Prompt("\(prompt)\n\n\(currentInput)"),
                 schema: schema,
                 options: .init(temperature: 0.1)
             )
-
+            
             let properties: [String: GeneratedContent]
             switch response.content.kind {
             case .structure(let props, _):
@@ -193,18 +325,16 @@ struct OptionalFieldsSchemaView: View {
                 properties = [:]
             }
             
-            var extractedFields: [(String, String, Bool)] = []
-
+            var extractedFields: [(SchemaField, String)] = []
+            
             // Check which fields were extracted
             for field in schemaFields {
                 if let value = properties[field.name] {
                     let valueStr = formatFieldValue(value)
-                    extractedFields.append((field.name, valueStr, field.isOptional))
-                } else if !field.isOptional {
-                    extractedFields.append((field.name, "<missing required field>", field.isOptional))
+                    extractedFields.append((field, valueStr))
                 }
             }
-
+            
             return """
             📝 Input:
             \(currentInput)
@@ -215,152 +345,33 @@ struct OptionalFieldsSchemaView: View {
             \(formatExtractedFields(extractedFields))
             
             ✅ Schema Validation:
-            • Required fields: \(schemaFields.filter { !$0.isOptional }.count)
-            • Optional fields: \(schemaFields.filter { $0.isOptional }.count)
-            • Fields extracted: \(extractedFields.filter { $0.1 != "<missing required field>" }.count)
-            • Missing required: \(extractedFields.filter { $0.1 == "<missing required field>" }.count)
+            • Total fields: \(schemaFields.count)
+            • Fields extracted: \(extractedFields.count)
             """
         }
     }
-
+    
     private func createSchema(for index: Int) throws -> GenerationSchema {
-        let properties: [DynamicGenerationSchema.Property]
-
-        switch index {
-        case 0: // User Profile
-            properties = [
-                DynamicGenerationSchema.Property(
-                    name: "name",
-                    description: "The person's full name",
-                    schema: .init(type: String.self),
-                    isOptional: false
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "age",
-                    description: "The person's age",
-                    schema: .init(type: Int.self),
-                    isOptional: false
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "location",
-                    description: "Where the person is from or lives",
-                    schema: .init(type: String.self),
-                    isOptional: true
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "occupation",
-                    description: "The person's job or profession",
-                    schema: .init(type: String.self),
-                    isOptional: true
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "bio",
-                    description: "Brief biographical information",
-                    schema: .init(type: String.self),
-                    isOptional: true
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "interests",
-                    description: "Hobbies or interests mentioned",
-                    schema: .init(arrayOf: .init(type: String.self)),
-                    isOptional: true
-                )
-            ]
-
-        case 1: // Product Listing
-            properties = [
-                DynamicGenerationSchema.Property(
-                    name: "name",
-                    description: "Product name",
-                    schema: .init(type: String.self),
-                    isOptional: false
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "price",
-                    description: "Product price",
-                    schema: .init(type: Float.self),
-                    isOptional: false
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "description",
-                    description: "Product description",
-                    schema: .init(type: String.self),
-                    isOptional: true
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "colors",
-                    description: "Available colors",
-                    schema: .init(arrayOf: .init(type: String.self)),
-                    isOptional: true
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "inStock",
-                    description: "Whether the product is in stock",
-                    schema: .init(type: Bool.self),
-                    isOptional: true
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "discount",
-                    description: "Discount percentage if any",
-                    schema: .init(type: Float.self),
-                    isOptional: true
-                )
-            ]
-
-        default: // Event Details
-            properties = [
-                DynamicGenerationSchema.Property(
-                    name: "title",
-                    description: "Event title",
-                    schema: .init(type: String.self),
-                    isOptional: false
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "date",
-                    description: "Event date",
-                    schema: .init(type: String.self),
-                    isOptional: false
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "venue",
-                    description: "Event location or venue",
-                    schema: .init(type: String.self),
-                    isOptional: true
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "capacity",
-                    description: "Maximum attendees",
-                    schema: .init(type: Int.self),
-                    isOptional: true
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "registration",
-                    description: "Registration requirements",
-                    schema: .init(type: String.self),
-                    isOptional: true
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "earlyBird",
-                    description: "Early bird discount available",
-                    schema: .init(type: Bool.self),
-                    isOptional: true
-                )
-            ]
+        let fields = schemaFields(for: index)
+        let properties = fields.map { field in
+            DynamicGenerationSchema.Property(
+                name: field.name,
+                description: field.description,
+                schema: field.schema,
+                optionality: field.optionality
+            )
         }
-
-        // We can't filter properties based on isOptional since it's not stored
-        // So we'll handle this in the prompt instead
-
+        
         let schemaName = index == 0 ? "UserProfile" : index == 1 ? "ProductListing" : "EventDetails"
         let schema = DynamicGenerationSchema(
             name: schemaName,
             description: "Extract \(includeOptionalFields ? "all" : "required") information",
             properties: properties
         )
-
+        
         return try GenerationSchema(root: schema, dependencies: [])
     }
-
+    
     private func formatFieldValue(_ content: GeneratedContent) -> String {
         switch content.kind {
         case .string(let str):
@@ -387,15 +398,14 @@ struct OptionalFieldsSchemaView: View {
             return "<unknown>"
         }
     }
-
-    private func formatExtractedFields(_ fields: [(String, String, Bool)]) -> String {
-        fields.map { field in
-            let icon = field.2 ? "○" : "●" // Optional vs Required
-            let status = field.1.contains("missing") ? "Missing" : "Present"
-            return "\(icon) \(field.0): \(field.1) \(status)"
+    
+    private func formatExtractedFields(_ fields: [(SchemaField, String)]) -> String {
+        fields.map { entry in
+            let (field, value) = entry
+            return "• \(field.name): \(value)"
         }.joined(separator: "\n")
     }
-
+    
     private var exampleCode: String {
         """
         // Creating schemas with optional fields
@@ -407,43 +417,51 @@ struct OptionalFieldsSchemaView: View {
                     name: "name",
                     description: "Full name",
                     schema: .init(type: String.self),
-                    isOptional: false  // Required field
+                    optionality: .required
                 ),
                 DynamicGenerationSchema.Property(
                     name: "email",
                     description: "Email address",
                     schema: .init(type: String.self),
-                    isOptional: true   // Optional field
+                    optionality: .possiblyAbsent
                 ),
                 DynamicGenerationSchema.Property(
                     name: "age",
                     description: "User age",
                     schema: .init(type: Int.self),
-                    isOptional: false  // Required field
+                    optionality: .required
                 ),
                 DynamicGenerationSchema.Property(
                     name: "preferences",
                     description: "User preferences",
                     schema: .init(arrayOf: .init(type: String.self)),
-                    isOptional: true   // Optional field
+                    optionality: .possiblyNull
                 )
             ]
         )
         
-        // The model will:
-        // 1. Always extract required fields
-        // 2. Extract optional fields when available
-        // 3. Omit optional fields if not found
-        // 4. Handle missing required fields gracefully
+        // Optionality options:
+        // • .required: model must emit the field
+        // • .possiblyAbsent: field may be omitted entirely
+        // • .possiblyNull: field may appear with a null value
         
-        // You can filter properties dynamically:
-        let requiredOnly = properties.filter { !$0.isOptional }
+        // Filter to just required properties:
+        let requiredOnly = userSchema.properties.filter {
+            if case .required = $0.optionality {
+                return true
+            }
+            return false
+        }
         """
     }
 }
 
 #Preview {
-    NavigationStack {
-        OptionalFieldsSchemaView()
+    if #available(iOS 26.1, macOS 26.1, *) {
+        NavigationStack {
+            OptionalFieldsSchemaView()
+        }
+    } else {
+        Text("Requires iOS/macOS 26.1")
     }
 }
