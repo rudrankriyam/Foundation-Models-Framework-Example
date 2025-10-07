@@ -16,6 +16,14 @@ struct OptionalFieldsSchemaView: View {
         case eventDetails = "Event Details"
         
         var id: String { rawValue }
+        
+        var schemaName: String {
+            switch self {
+            case .userProfile: "UserProfile"
+            case .productListing: "ProductListing"
+            case .eventDetails: "EventDetails"
+            }
+        }
     }
     
     @State private var executor = ExampleExecutor()
@@ -146,15 +154,17 @@ struct OptionalFieldsSchemaView: View {
 
     
     private var schemaFields: [SchemaField] {
-        let allFields = allSchemaFields
-        if includeOptionalFields {
-            return allFields
-        } else {
-            return allFields.filter { field in
-                // Only include required fields when toggle is off
-                // Note: Can't pattern match on Optionality, so we check by excluding optional ones
-                return field.name == "name" || field.name == "age" || field.name == "title" || field.name == "date" || field.name == "price"
-            }
+        includeOptionalFields ? allSchemaFields : requiredFields
+    }
+    
+    private var requiredFields: [SchemaField] {
+        switch selectedExample {
+        case .userProfile:
+            return allSchemaFields.filter { ["name", "age"].contains($0.name) }
+        case .productListing:
+            return allSchemaFields.filter { ["name", "price"].contains($0.name) }
+        case .eventDetails:
+            return allSchemaFields.filter { ["title", "date"].contains($0.name) }
         }
     }
     
@@ -359,12 +369,7 @@ struct OptionalFieldsSchemaView: View {
             )
         }
         
-        let schemaName: String
-        switch selectedExample {
-        case .userProfile: schemaName = "UserProfile"
-        case .productListing: schemaName = "ProductListing"
-        case .eventDetails: schemaName = "EventDetails"
-        }
+        let schemaName = selectedExample.schemaName
         let schema = DynamicGenerationSchema(
             name: schemaName,
             description: "Extract \(includeOptionalFields ? "all" : "required") information",
@@ -442,18 +447,16 @@ struct OptionalFieldsSchemaView: View {
             ]
         )
         
-        // Optionality options:
+        // Optionality options (iOS 26.1+):
         // • .required: model must emit the field
         // • .possiblyAbsent: field may be omitted entirely
         // • .possiblyNull: field may appear with a null value
         
-        // Filter to just required properties:
-        let requiredOnly = userSchema.properties.filter {
-            if case .required = $0.optionality {
-                return true
-            }
-            return false
-        }
+        // Use the optionality parameter to control field requirements
+        let response = try await session.respond(
+            to: "Extract user information",
+            schema: GenerationSchema(root: userSchema, dependencies: [])
+        )
         """
     }
 }
