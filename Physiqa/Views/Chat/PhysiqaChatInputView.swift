@@ -14,7 +14,7 @@ struct PhysiqaChatInputView: View {
     @Binding var messageText: String
     let chatViewModel: PhysiqaChatViewModel
     @FocusState.Binding var isTextFieldFocused: Bool
-    
+
     private var backgroundColor: Color {
         #if os(macOS)
         Color(NSColor.windowBackgroundColor)
@@ -22,7 +22,7 @@ struct PhysiqaChatInputView: View {
         Color(UIColor.systemBackground)
         #endif
     }
-    
+
     var body: some View {
         VStack(spacing: 12) {
             // Quick action suggestions
@@ -33,17 +33,17 @@ struct PhysiqaChatInputView: View {
                             messageText = "How am I doing today?"
                             sendMessage()
                         }
-                        
+
                         QuickActionChip(text: "Set a fitness goal") {
                             messageText = "Help me set a fitness goal"
                             sendMessage()
                         }
-                        
+
                         QuickActionChip(text: "Sleep tips") {
                             messageText = "Give me tips to improve my sleep"
                             sendMessage()
                         }
-                        
+
                         QuickActionChip(text: "Weekly summary") {
                             messageText = "Show me my weekly health summary"
                             sendMessage()
@@ -53,7 +53,7 @@ struct PhysiqaChatInputView: View {
                 }
                 .padding(.vertical, 8)
             }
-            
+
             // Input field
             HStack(spacing: 12) {
                 TextField("Ask Physiqa anything...", text: $messageText, axis: .vertical)
@@ -75,13 +75,13 @@ struct PhysiqaChatInputView: View {
                     #if os(iOS)
                     .submitLabel(.send)
                     #endif
-                
+
                 Button(action: sendMessage) {
                     ZStack {
                         Circle()
                             .fill(messageText.isEmpty ? Color.primary.opacity(0.06) : Color.primary.opacity(0.1))
                             .frame(width: 36, height: 36)
-                        
+
                         Image(systemName: "arrow.up")
                             .font(.system(size: 16, weight: .medium))
                             .foregroundStyle(messageText.isEmpty ? .tertiary : .primary)
@@ -103,14 +103,14 @@ struct PhysiqaChatInputView: View {
                 .ignoresSafeArea()
         )
     }
-    
+
     private func sendMessage() {
         let trimmedMessage = messageText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedMessage.isEmpty else { return }
-        
+
         messageText = ""
         isTextFieldFocused = true // Keep focus for continuous conversation
-        
+
         Task {
             await chatViewModel.sendMessage(trimmedMessage)
         }
@@ -120,7 +120,7 @@ struct PhysiqaChatInputView: View {
 struct QuickActionChip: View {
     let text: String
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
             Text(text)

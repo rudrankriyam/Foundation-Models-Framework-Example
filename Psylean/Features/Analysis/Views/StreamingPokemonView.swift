@@ -10,7 +10,7 @@ import FoundationModels
 
 struct StreamingPokemonView: View {
     let analysis: PokemonAnalysis.PartiallyGenerated
-    
+
     var body: some View {
         VStack(spacing: 20) {
             // Title
@@ -21,7 +21,7 @@ struct StreamingPokemonView: View {
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
             }
-            
+
             // Pokemon Card
             if let name = analysis.pokemonName {
                 #if os(iOS) || os(macOS)
@@ -42,7 +42,7 @@ struct StreamingPokemonView: View {
                 )
                 #endif
             }
-            
+
             // Battle Analysis
             if analysis.battleRole != nil || analysis.statAnalysis != nil {
                 #if os(iOS) || os(macOS)
@@ -59,19 +59,19 @@ struct StreamingPokemonView: View {
                 )
                 #endif
             }
-            
+
             // Abilities
             if let abilities = analysis.abilities, !abilities.isEmpty {
                 VStack(alignment: .leading, spacing: 12) {
                     Label("Abilities", systemImage: "star.fill")
                         .font(.headline)
-                    
+
                     ForEach(Array(abilities.enumerated()), id: \.offset) { _, ability in
                         AbilityRow(ability: ability)
                     }
                 }
             }
-            
+
             // Type Matchups
             if let strengths = analysis.strengths, let weaknesses = analysis.weaknesses,
                !strengths.isEmpty || !weaknesses.isEmpty {
@@ -83,13 +83,13 @@ struct StreamingPokemonView: View {
                 TypeMatchupsCard(strengths: strengths, weaknesses: weaknesses)
                 #endif
             }
-            
+
             // Moves
             if let moves = analysis.recommendedMoves, !moves.isEmpty {
                 VStack(alignment: .leading, spacing: 12) {
                     Label("Recommended Moves", systemImage: "bolt.horizontal.fill")
                         .font(.headline)
-                    
+
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                         ForEach(moves, id: \.self) { move in
                             Text(move)
@@ -104,18 +104,18 @@ struct StreamingPokemonView: View {
                     }
                 }
             }
-            
+
             // Evolution Chain
             if let evolutions = analysis.evolutionChain, !evolutions.isEmpty {
                 EvolutionChainView(evolutions: evolutions)
             }
-            
+
             // Fun Facts
             if let facts = analysis.funFacts, !facts.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
                     Label("Fun Facts", systemImage: "lightbulb.fill")
                         .font(.headline)
-                    
+
                     ForEach(Array(facts.enumerated()), id: \.offset) { _, fact in
                         Text("• \(fact)")
                             .font(.subheadline)
@@ -123,7 +123,7 @@ struct StreamingPokemonView: View {
                     }
                 }
             }
-            
+
             // Quote
             if let quote = analysis.legendaryQuote {
                 Text("\"\(quote)\"")
@@ -147,7 +147,7 @@ struct StreamingPokemonView: View {
 struct GlassEffectContainer<Content: View>: View {
     let spacing: CGFloat
     @ViewBuilder let content: Content
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: spacing) {
             content

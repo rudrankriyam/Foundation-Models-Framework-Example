@@ -14,27 +14,27 @@ extension ExampleExecutor {
         get { result }
         set { result = newValue }
     }
-    
+
     /// Convenience method to match the naming used in dynamic schema examples
     func reset() {
         clear()
     }
-    
+
     /// Execute a custom async operation and capture the result
     func execute(_ operation: @escaping () async throws -> String) async {
         isRunning = true
         errorMessage = nil
         result = ""
-        
+
         do {
             result = try await operation()
         } catch {
             errorMessage = handleError(error)
         }
-        
+
         isRunning = false
     }
-    
+
     /// Execute with a DynamicGenerationSchema
     func execute(
         withPrompt prompt: String,
@@ -44,7 +44,7 @@ extension ExampleExecutor {
         isRunning = true
         errorMessage = nil
         result = ""
-        
+
         do {
             let session = LanguageModelSession()
             let generationSchema = try GenerationSchema(root: schema, dependencies: [])
@@ -52,7 +52,7 @@ extension ExampleExecutor {
                 to: Prompt(prompt),
                 schema: generationSchema
             )
-            
+
             // Format the output content properly
             if let formatResults = formatResults {
                 result = formatResults(formatGeneratedContent(output.content))
@@ -62,10 +62,10 @@ extension ExampleExecutor {
         } catch {
             errorMessage = handleError(error)
         }
-        
+
         isRunning = false
     }
-    
+
     /// Helper to format GeneratedContent as JSON string
     private func formatGeneratedContent(_ content: GeneratedContent) -> String {
         do {
@@ -80,7 +80,7 @@ extension ExampleExecutor {
             return "Error formatting content: \(error.localizedDescription)"
         }
     }
-    
+
     /// Recursively build a JSON-compatible object from GeneratedContent
     private func buildJSONObject(from content: GeneratedContent) throws -> Any {
         switch content.kind {

@@ -66,7 +66,7 @@ struct ToolsView: View {
       // iPhone: 2 columns with flexible sizing
       return [
         GridItem(.flexible(minimum: 140), spacing: 12),
-        GridItem(.flexible(minimum: 140), spacing: 12),
+        GridItem(.flexible(minimum: 140), spacing: 12)
       ]
     #elseif os(macOS)
       // Mac: Adaptive columns based on available width
@@ -75,7 +75,7 @@ struct ToolsView: View {
       // Default fallback
       return [
         GridItem(.flexible(minimum: 140), spacing: 12),
-        GridItem(.flexible(minimum: 140), spacing: 12),
+        GridItem(.flexible(minimum: 140), spacing: 12)
       ]
     #endif
   }

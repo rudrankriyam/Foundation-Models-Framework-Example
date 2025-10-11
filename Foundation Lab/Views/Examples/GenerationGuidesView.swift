@@ -11,7 +11,7 @@ import SwiftUI
 struct GenerationGuidesView: View {
   @State private var currentPrompt = DefaultPrompts.generationGuides
   @State private var executor = ExampleExecutor()
-  
+
   var body: some View {
     ExampleViewBase(
       title: "Generation Guides",
@@ -37,13 +37,13 @@ struct GenerationGuidesView: View {
         .padding()
         .background(Color.purple.opacity(0.1))
         .cornerRadius(8)
-        
+
         // Prompt Suggestions
         PromptSuggestions(
           suggestions: DefaultPrompts.generationGuidesSuggestions,
           onSelect: { currentPrompt = $0 }
         )
-        
+
         // Prompt History
         if !executor.promptHistory.isEmpty {
           PromptHistory(
@@ -51,13 +51,13 @@ struct GenerationGuidesView: View {
             onSelect: { currentPrompt = $0 }
           )
         }
-        
+
         // Result Display
         if !executor.result.isEmpty {
           VStack(alignment: .leading, spacing: 12) {
             Label("Generated Product Review", systemImage: "star.leadinghalf.filled")
               .font(.headline)
-            
+
             ResultDisplay(
               result: executor.result,
               isSuccess: executor.errorMessage == nil
@@ -67,7 +67,7 @@ struct GenerationGuidesView: View {
       }
     }
   }
-  
+
   private func executeGenerationGuides() {
     Task {
       await executor.executeStructured(
@@ -77,23 +77,23 @@ struct GenerationGuidesView: View {
         """
         🛍️ Product: \(review.productName)
         ⭐ Rating: \(review.rating)/5
-        
+
         ✅ Pros:
         \(review.pros.map { "• \($0)" }.joined(separator: "\n"))
-        
+
         ❌ Cons:
         \(review.cons.map { "• \($0)" }.joined(separator: "\n"))
-        
+
         💬 Review:
         \(review.reviewText)
-        
+
         📌 Recommendation:
         \(review.recommendation)
         """
       }
     }
   }
-  
+
   private func resetToDefaults() {
     currentPrompt = "" // Clear the prompt completely
     executor.clearAll() // Clear all results, errors, and history

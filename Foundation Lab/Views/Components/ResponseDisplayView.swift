@@ -45,7 +45,7 @@ struct ResponseDisplayView: View {
       Text("Request")
         .font(.subheadline)
         .fontWeight(.medium)
-      
+
       ScrollView {
         Text(requestResponse.request)
           .font(.system(.body, design: .default))
@@ -59,7 +59,7 @@ struct ResponseDisplayView: View {
     }
     .padding(.horizontal)
   }
-  
+
   private var responseView: some View {
     VStack(alignment: .leading, spacing: Spacing.xSmall) {
       HStack {
@@ -71,7 +71,7 @@ struct ResponseDisplayView: View {
           .font(.subheadline)
           .fontWeight(.medium)
       }
-      
+
       ScrollView {
         Text(requestResponse.response)
           .font(.system(.body, design: .monospaced))
@@ -93,7 +93,7 @@ struct ResponseDisplayView: View {
           .stroke(Color.main.opacity(0.2), lineWidth: 1)
       )
   }
-  
+
   private var responseBackgroundView: some View {
     RoundedRectangle(cornerRadius: CornerRadius.small)
       .fill(responseBackgroundColor)

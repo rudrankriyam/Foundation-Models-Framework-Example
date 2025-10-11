@@ -9,7 +9,7 @@ import SwiftUI
 
 struct SidebarView: View {
     @Binding var selection: TabSelection?
-    
+
     var body: some View {
         List(selection: $selection) {
             ForEach(TabSelection.allCases, id: \.self) { tab in
@@ -43,7 +43,7 @@ extension TabSelection {
             return "gear"
         }
     }
-    
+
 #if os(macOS)
     var keyboardShortcut: KeyEquivalent {
         switch self {

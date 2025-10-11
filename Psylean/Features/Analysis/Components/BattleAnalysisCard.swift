@@ -11,7 +11,7 @@ import FoundationModels
 struct BattleAnalysisCard: View {
     let role: BattleRole?
     let statAnalysis: StatAnalysis.PartiallyGenerated?
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             if let role = role {
@@ -22,7 +22,7 @@ struct BattleAnalysisCard: View {
                     Spacer()
                 }
             }
-            
+
             if let stats = statAnalysis {
                 if let total = stats.totalStats {
                     HStack {
@@ -35,7 +35,7 @@ struct BattleAnalysisCard: View {
                             .fontWeight(.semibold)
                     }
                 }
-                
+
                 if let strategy = stats.battleStrategy {
                     Text(strategy)
                         .font(.caption)
@@ -44,7 +44,7 @@ struct BattleAnalysisCard: View {
             }
         }
     }
-    
+
     private func battleRoleIcon(for role: BattleRole) -> String {
         switch role {
         case .physicalAttacker: return "bolt.fill"

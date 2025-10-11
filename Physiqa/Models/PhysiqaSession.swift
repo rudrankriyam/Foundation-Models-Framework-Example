@@ -16,18 +16,18 @@ final class PhysiqaSession {
     var messages: [BuddyMessage]
     var sessionType: SessionType
     var summary: String?
-    
+
     init(sessionType: SessionType = .general) {
         self.id = UUID()
         self.startDate = Date()
         self.sessionType = sessionType
         self.messages = []
     }
-    
+
     func addMessage(_ message: BuddyMessage) {
         messages.append(message)
     }
-    
+
     func endSession(withSummary summary: String? = nil) {
         self.endDate = Date()
         self.summary = summary
@@ -41,7 +41,7 @@ final class BuddyMessage {
     var isFromUser: Bool
     var timestamp: Date
     var relatedMetricTypes: [MetricType]
-    
+
     init(content: String, isFromUser: Bool, relatedMetricTypes: [MetricType] = []) {
         self.id = UUID()
         self.content = content
@@ -57,7 +57,7 @@ enum SessionType: String, Codable, CaseIterable {
     case goalSetting = "Goal Setting"
     case analysis = "Health Analysis"
     case coaching = "Coaching Session"
-    
+
     var icon: String {
         switch self {
         case .general: return "bubble.left.and.bubble.right.fill"

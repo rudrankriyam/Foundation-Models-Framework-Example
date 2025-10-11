@@ -13,23 +13,23 @@ extension Color {
     static let healthPrimary = Color(red: 0.0, green: 0.78, blue: 0.88) // Bright cyan
     static let healthSecondary = Color(red: 0.44, green: 0.86, blue: 0.58) // Fresh green
     static let healthAccent = Color(red: 1.0, green: 0.45, blue: 0.42) // Warm coral
-    
+
     // MARK: - Metric-Specific Colors
     static let heartColor = Color(red: 0.91, green: 0.12, blue: 0.31) // Heart red
     static let stepsColor = Color(red: 0.0, green: 0.48, blue: 1.0) // Activity blue
     static let sleepColor = Color(red: 0.58, green: 0.39, blue: 0.87) // Sleep purple
     static let caloriesColor = Color(red: 1.0, green: 0.58, blue: 0.0) // Energy orange
     static let mindfulnessColor = Color(red: 0.0, green: 0.73, blue: 0.62) // Calm teal
-    
+
     // MARK: - Status Colors
     static let successGreen = Color(red: 0.2, green: 0.78, blue: 0.35)
     static let warningYellow = Color(red: 1.0, green: 0.8, blue: 0.0)
     static let alertRed = Color(red: 0.91, green: 0.26, blue: 0.21)
-    
+
     // MARK: - Background Colors
     static let lightBackground = Color(red: 0.97, green: 0.98, blue: 0.99)
     static let darkBackground = Color(red: 0.11, green: 0.11, blue: 0.14)
-    
+
     // MARK: - Glass Tint Colors
     static let glassTintLight = Color.white.opacity(0.3)
     static let glassTintDark = Color.black.opacity(0.2)
@@ -42,25 +42,25 @@ extension LinearGradient {
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
-    
+
     static let heartGradient = LinearGradient(
         colors: [.heartColor, .heartColor.opacity(0.8)],
         startPoint: .top,
         endPoint: .bottom
     )
-    
+
     static let activityGradient = LinearGradient(
         colors: [.stepsColor, .stepsColor.opacity(0.7)],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
-    
+
     static let sleepGradient = LinearGradient(
         colors: [.sleepColor.opacity(0.8), .sleepColor],
         startPoint: .top,
         endPoint: .bottom
     )
-    
+
     static let energyGradient = LinearGradient(
         colors: [.caloriesColor, .caloriesColor.opacity(0.7)],
         startPoint: .topLeading,
@@ -82,7 +82,7 @@ extension MetricType {
         case .bloodOxygen: return Color.cyan
         }
     }
-    
+
     var gradient: LinearGradient {
         switch self {
         case .steps: return .activityGradient

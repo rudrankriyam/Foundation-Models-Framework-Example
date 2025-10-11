@@ -12,24 +12,24 @@ struct PokeAPIClient {
     private static let baseURL = "pokeapi.co"
     private static let apiVersion = "v2"
     private static let session = URLSession.shared
-    
+
     /// Fetches Pokemon data for the given identifier
     static func fetchPokemon(identifier: String) async throws -> PokemonAPIData {
         var components = URLComponents()
         components.scheme = "https"
         components.host = baseURL
         components.path = "/api/\(apiVersion)/pokemon/\(identifier.lowercased())"
-        
+
         guard let url = components.url else {
             throw APIError.invalidURL
         }
-        
+
         let (data, response) = try await session.data(from: url)
-        
+
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIError.invalidResponse
         }
-        
+
         switch httpResponse.statusCode {
         case 200:
             return try JSONDecoder().decode(PokemonAPIData.self, from: data)
@@ -41,41 +41,41 @@ struct PokeAPIClient {
             throw APIError.httpError(statusCode: httpResponse.statusCode)
         }
     }
-    
+
     /// Fetches evolution chain for a species URL
     static func fetchEvolutionChain(from speciesURL: String) async throws -> EvolutionChain {
         guard let url = URL(string: speciesURL) else {
             throw APIError.invalidURL
         }
-        
+
         let (data, _) = try await session.data(from: url)
         let species = try JSONDecoder().decode(PokemonSpecies.self, from: data)
-        
+
         guard let evolutionURL = URL(string: species.evolutionChain.url) else {
             throw APIError.invalidURL
         }
-        
+
         let (evolutionData, _) = try await session.data(from: evolutionURL)
         return try JSONDecoder().decode(EvolutionChain.self, from: evolutionData)
     }
-    
+
     /// Fetches Pokemon by type
     static func fetchPokemonByType(_ type: String) async throws -> [String] {
         var components = URLComponents()
         components.scheme = "https"
         components.host = baseURL
         components.path = "/api/\(apiVersion)/type/\(type.lowercased())"
-        
+
         guard let url = components.url else {
             throw APIError.invalidURL
         }
-        
+
         let (data, response) = try await session.data(from: url)
-        
+
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIError.invalidResponse
         }
-        
+
         switch httpResponse.statusCode {
         case 200:
             let typeData = try JSONDecoder().decode(TypeData.self, from: data)
@@ -97,7 +97,7 @@ enum APIError: LocalizedError {
     case typeNotFound(String)
     case rateLimited
     case httpError(statusCode: Int)
-    
+
     var errorDescription: String? {
         switch self {
         case .invalidURL:
@@ -129,62 +129,62 @@ struct PokemonAPIData: Codable {
     let abilities: [AbilityElement]
     let stats: [StatElement]
     let species: NamedResource
-    
+
     struct Sprites: Codable {
         let frontDefault: String?
         let other: Other?
-        
+
         struct Other: Codable {
             let officialArtwork: OfficialArtwork?
-            
+
             enum CodingKeys: String, CodingKey {
                 case officialArtwork = "official-artwork"
             }
-            
+
             struct OfficialArtwork: Codable {
                 let frontDefault: String?
-                
+
                 enum CodingKeys: String, CodingKey {
                     case frontDefault = "front_default"
                 }
             }
         }
-        
+
         enum CodingKeys: String, CodingKey {
             case frontDefault = "front_default"
             case other
         }
     }
-    
+
     struct TypeElement: Codable {
         let type: NamedResource
     }
-    
+
     struct AbilityElement: Codable {
         let ability: NamedResource
         let isHidden: Bool
-        
+
         enum CodingKeys: String, CodingKey {
             case ability
             case isHidden = "is_hidden"
         }
     }
-    
+
     struct StatElement: Codable {
         let baseStat: Int
         let stat: NamedResource
-        
+
         enum CodingKeys: String, CodingKey {
             case baseStat = "base_stat"
             case stat
         }
     }
-    
+
     struct NamedResource: Codable {
         let name: String
         let url: String
     }
-    
+
     enum CodingKeys: String, CodingKey {
         case id, name, height, weight, sprites, types, abilities, stats, species
         case baseExperience = "base_experience"
@@ -195,11 +195,11 @@ struct PokemonAPIData: Codable {
 
 struct PokemonSpecies: Codable {
     let evolutionChain: EvolutionChainLink
-    
+
     struct EvolutionChainLink: Codable {
         let url: String
     }
-    
+
     enum CodingKeys: String, CodingKey {
         case evolutionChain = "evolution_chain"
     }
@@ -207,16 +207,16 @@ struct PokemonSpecies: Codable {
 
 struct EvolutionChain: Codable {
     let chain: ChainLink
-    
+
     struct ChainLink: Codable {
         let species: NamedResource
         let evolvesTo: [ChainLink]
-        
+
         struct NamedResource: Codable {
             let name: String
             let url: String
         }
-        
+
         enum CodingKeys: String, CodingKey {
             case species
             case evolvesTo = "evolves_to"
@@ -228,10 +228,10 @@ struct EvolutionChain: Codable {
 
 struct TypeData: Codable {
     let pokemon: [PokemonEntry]
-    
+
     struct PokemonEntry: Codable {
         let pokemon: NamedResource
-        
+
         struct NamedResource: Codable {
             let name: String
             let url: String

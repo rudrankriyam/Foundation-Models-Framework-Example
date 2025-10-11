@@ -21,7 +21,7 @@ struct ChatMessage: Identifiable, Equatable {
   init(content: String, isFromUser: Bool, isContextSummary: Bool = false) {
     self.init(entryID: nil, content: content, isFromUser: isFromUser, isContextSummary: isContextSummary)
   }
-  
+
   init(entryID: Transcript.Entry.ID?, content: String, isFromUser: Bool, isContextSummary: Bool = false) {
     self.id = UUID()
     self.entryID = entryID
@@ -30,18 +30,16 @@ struct ChatMessage: Identifiable, Equatable {
     self.timestamp = Date()
     self.isContextSummary = isContextSummary
   }
-  
+
   init(content: AttributedString, isFromUser: Bool, isContextSummary: Bool = false) {
     self.init(id: UUID(), content: content, isFromUser: isFromUser, timestamp: Date(), isContextSummary: isContextSummary)
   }
 
-  init(id: UUID, content: String, isFromUser: Bool, timestamp: Date, isContextSummary: Bool = false)
-  {
+  init(id: UUID, content: String, isFromUser: Bool, timestamp: Date, isContextSummary: Bool = false) {
     self.init(id: id, content: AttributedString(content), isFromUser: isFromUser, timestamp: timestamp, isContextSummary: isContextSummary)
   }
-  
-  init(id: UUID, content: AttributedString, isFromUser: Bool, timestamp: Date, isContextSummary: Bool = false)
-  {
+
+  init(id: UUID, content: AttributedString, isFromUser: Bool, timestamp: Date, isContextSummary: Bool = false) {
     self.id = id
     self.entryID = nil
     self.content = content
@@ -75,7 +73,7 @@ struct RequestResponsePair: Identifiable {
   let response: String
   let isError: Bool
   let timestamp: Date
-  
+
   init(request: String, response: String, isError: Bool = false) {
     self.request = request
     self.response = response
@@ -265,4 +263,3 @@ struct EnterpriseExpansionPlan {
   @Guide(description: "Dependencies that could delay launch", semantics: .possiblyNull)
   let launchDependencies: [String]?
 }
-

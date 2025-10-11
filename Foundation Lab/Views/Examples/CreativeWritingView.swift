@@ -13,7 +13,7 @@ struct CreativeWritingView: View {
   @State private var instructions = ""
   @State private var executor = ExampleExecutor()
   @State private var showInstructions = false
-  
+
   var body: some View {
     ExampleViewBase(
       title: "Creative Writing",
@@ -39,13 +39,13 @@ struct CreativeWritingView: View {
         .padding()
         .background(Color.indigo.opacity(0.1))
         .cornerRadius(8)
-        
+
         // Prompt Suggestions
         PromptSuggestions(
           suggestions: DefaultPrompts.creativeWritingSuggestions,
           onSelect: { currentPrompt = $0 }
         )
-        
+
         // Prompt History
         if !executor.promptHistory.isEmpty {
           PromptHistory(
@@ -53,13 +53,13 @@ struct CreativeWritingView: View {
             onSelect: { currentPrompt = $0 }
           )
         }
-        
+
         // Result Display
         if !executor.result.isEmpty {
           VStack(alignment: .leading, spacing: 12) {
             Label("Story Outline", systemImage: "book.closed")
               .font(.headline)
-            
+
             ResultDisplay(
               result: executor.result,
               isSuccess: executor.errorMessage == nil
@@ -69,7 +69,7 @@ struct CreativeWritingView: View {
       }
     }
   }
-  
+
   private func executeCreativeWriting() {
     Task {
       await executor.executeStructured(
@@ -78,25 +78,25 @@ struct CreativeWritingView: View {
       ) { story in
         """
         📖 Title: \(story.title)
-        
+
         🎭 Genre: \(story.genre)
-        
+
         👤 Protagonist:
         \(story.protagonist)
-        
+
         ⚔️ Central Conflict:
         \(story.conflict)
-        
+
         📍 Setting:
         \(story.setting)
-        
+
         🎯 Major Themes:
         \(story.themes.map { "• \($0)" }.joined(separator: "\n"))
         """
       }
     }
   }
-  
+
   private func resetToDefaults() {
     currentPrompt = "" // Clear the prompt completely
     executor.clearAll() // Clear all results, errors, and history

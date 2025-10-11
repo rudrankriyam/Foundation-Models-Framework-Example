@@ -13,20 +13,20 @@ struct GenericCardView: View {
     let icon: String
     let title: String
     let subtitle: String
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.small) {
             Image(systemName: icon)
                 .font(.title2)
                 .foregroundStyle(.tint)
                 .frame(width: 32, height: 32)
-            
+
             VStack(alignment: .leading, spacing: Spacing.small) {
                 Text(title)
                     .font(.headline)
                     .foregroundStyle(Color.primary)
                     .lineLimit(1)
-                
+
                 Text(subtitle)
                     .font(.caption)
                     .foregroundStyle(Color.secondary)
@@ -34,7 +34,7 @@ struct GenericCardView: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .multilineTextAlignment(.leading)
             }
-            
+
             Spacer(minLength: 0)
         }
         .padding()
@@ -44,4 +44,3 @@ struct GenericCardView: View {
 #endif
     }
 }
-

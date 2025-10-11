@@ -16,25 +16,25 @@ struct NestedDynamicSchemaView: View {
     John Ternus, Software Engineering led by Craig Federighi, and Services led by Eddy Cue. \
     The company was founded in 1976 and has over 160,000 employees worldwide.
     """
-    
+
     @State private var orderInput = """
     Order #12345 was placed on January 15, 2024 by Jane Smith. She ordered 2 iPhone 15 Pro units \
     at $999 each and 1 MacBook Pro 14" for $1999. The items should be shipped to 123 Main St, \
     San Francisco, CA 94105. Payment was made with Visa ending in 4242. Express shipping was selected.
     """
-    
+
     @State private var eventInput = """
     The AI Conference 2024 will be held at the Moscone Center in San Francisco from March 15-17. \
     The keynote speaker is Dr. Sarah Johnson from Stanford University who will talk about \
     "The Future of Language Models". Other sessions include "Computer Vision Advances" by Prof. Michael Chen \
     and "Ethics in AI" by Dr. Emily Rodriguez. Registration costs $599 for early bird tickets.
     """
-    
+
     @State private var selectedExample = 0
     @State private var nestingDepth = 2
-    
+
     private let examples = ["Company Structure", "Order Details", "Event Information"]
-    
+
     var body: some View {
         ExampleViewBase(
             title: "Nested Objects",
@@ -55,12 +55,12 @@ struct NestedDynamicSchemaView: View {
                     }
                 }
                 .pickerStyle(.segmented)
-                
+
                 // Nesting visualization
                 VStack(alignment: .leading, spacing: Spacing.small) {
                     Text("Schema Structure")
                         .font(.headline)
-                    
+
                     Text(schemaVisualization)
                         .font(.system(.caption, design: .monospaced))
                         .padding(8)
@@ -68,7 +68,7 @@ struct NestedDynamicSchemaView: View {
                         .background(Color.gray.opacity(0.1))
                         .cornerRadius(8)
                 }
-                
+
                 HStack {
                     Button("Extract Nested Data") {
                         Task {
@@ -77,19 +77,19 @@ struct NestedDynamicSchemaView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .disabled(executor.isRunning || currentInput.isEmpty)
-                    
+
                     if executor.isRunning {
                         ProgressView()
                             .scaleEffect(0.8)
                     }
                 }
-                
+
                 // Results section
                 if !executor.results.isEmpty {
                     VStack(alignment: .leading, spacing: Spacing.small) {
                         Text("Generated Data")
                             .font(.headline)
-                        
+
                         ScrollView {
                             Text(executor.results)
                                 .font(.system(.caption, design: .monospaced))
@@ -105,7 +105,7 @@ struct NestedDynamicSchemaView: View {
             .padding()
         }
     }
-    
+
     private var bindingForSelectedExample: Binding<String> {
         switch selectedExample {
         case 0: return $companyInput
@@ -113,7 +113,7 @@ struct NestedDynamicSchemaView: View {
         default: return $eventInput
         }
     }
-    
+
     private var currentInput: String {
         switch selectedExample {
         case 0: return companyInput
@@ -121,7 +121,7 @@ struct NestedDynamicSchemaView: View {
         default: return eventInput
         }
     }
-    
+
     private var schemaVisualization: String {
         switch selectedExample {
         case 0:
@@ -169,36 +169,36 @@ struct NestedDynamicSchemaView: View {
             """
         }
     }
-    
+
     private func runExample() async {
         await executor.execute {
             let schema = try createSchema(for: selectedExample)
             let session = LanguageModelSession()
-            
+
             let prompt = """
             Extract the structured information from this text:
-            
+
             \(currentInput)
             """
-            
+
             let response = try await session.respond(
                 to: Prompt(prompt),
                 schema: schema,
                 options: .init(temperature: 0.1)
             )
-            
+
             return """
             📝 Input:
             \(currentInput)
-            
+
             📊 Extracted Nested Structure:
             \(formatNestedContent(response.content, indent: 0))
-            
+
             🔍 Nesting Levels Found: \(countNestingLevels(response.content))
             """
         }
     }
-    
+
     private func createSchema(for index: Int) throws -> GenerationSchema {
         switch index {
         case 0:
@@ -220,7 +220,7 @@ struct NestedDynamicSchemaView: View {
                     )
                 ]
             )
-            
+
             let personSchema = DynamicGenerationSchema(
                 name: "Person",
                 description: "Information about a person",
@@ -238,7 +238,7 @@ struct NestedDynamicSchemaView: View {
                     )
                 ]
             )
-            
+
             let departmentSchema = DynamicGenerationSchema(
                 name: "Department",
                 description: "Company department",
@@ -256,7 +256,7 @@ struct NestedDynamicSchemaView: View {
                     )
                 ]
             )
-            
+
             let companySchema = DynamicGenerationSchema(
                 name: "Company",
                 description: "Company information",
@@ -296,12 +296,12 @@ struct NestedDynamicSchemaView: View {
                     )
                 ]
             )
-            
+
             return try GenerationSchema(
                 root: companySchema,
                 dependencies: [locationSchema, personSchema, departmentSchema]
             )
-            
+
         case 1:
             // Order with nested customer, items, and shipping
             let customerSchema = DynamicGenerationSchema(
@@ -313,7 +313,7 @@ struct NestedDynamicSchemaView: View {
                     )
                 ]
             )
-            
+
             let orderItemSchema = DynamicGenerationSchema(
                 name: "OrderItem",
                 properties: [
@@ -332,7 +332,7 @@ struct NestedDynamicSchemaView: View {
                     )
                 ]
             )
-            
+
             let addressSchema = DynamicGenerationSchema(
                 name: "Address",
                 properties: [
@@ -354,7 +354,7 @@ struct NestedDynamicSchemaView: View {
                     )
                 ]
             )
-            
+
             let shippingSchema = DynamicGenerationSchema(
                 name: "ShippingInfo",
                 properties: [
@@ -369,7 +369,7 @@ struct NestedDynamicSchemaView: View {
                     )
                 ]
             )
-            
+
             let paymentSchema = DynamicGenerationSchema(
                 name: "PaymentInfo",
                 properties: [
@@ -384,7 +384,7 @@ struct NestedDynamicSchemaView: View {
                     )
                 ]
             )
-            
+
             let orderSchema = DynamicGenerationSchema(
                 name: "Order",
                 properties: [
@@ -414,12 +414,12 @@ struct NestedDynamicSchemaView: View {
                     )
                 ]
             )
-            
+
             return try GenerationSchema(
                 root: orderSchema,
                 dependencies: [customerSchema, orderItemSchema, addressSchema, shippingSchema, paymentSchema]
             )
-            
+
         default:
             // Event with nested venue and sessions
             let venueSchema = DynamicGenerationSchema(
@@ -435,7 +435,7 @@ struct NestedDynamicSchemaView: View {
                     )
                 ]
             )
-            
+
             let dateRangeSchema = DynamicGenerationSchema(
                 name: "DateRange",
                 properties: [
@@ -449,7 +449,7 @@ struct NestedDynamicSchemaView: View {
                     )
                 ]
             )
-            
+
             let speakerSchema = DynamicGenerationSchema(
                 name: "Speaker",
                 properties: [
@@ -464,7 +464,7 @@ struct NestedDynamicSchemaView: View {
                     )
                 ]
             )
-            
+
             let sessionSchema = DynamicGenerationSchema(
                 name: "Session",
                 properties: [
@@ -478,7 +478,7 @@ struct NestedDynamicSchemaView: View {
                     )
                 ]
             )
-            
+
             let eventSchema = DynamicGenerationSchema(
                 name: "Event",
                 properties: [
@@ -506,26 +506,26 @@ struct NestedDynamicSchemaView: View {
                     )
                 ]
             )
-            
+
             return try GenerationSchema(
                 root: eventSchema,
                 dependencies: [venueSchema, dateRangeSchema, speakerSchema, sessionSchema]
             )
         }
     }
-    
+
     private func formatNestedContent(_ content: GeneratedContent, indent: Int) -> String {
         let indentString = String(repeating: "  ", count: indent)
         var result = ""
-        
+
         switch content.kind {
         case .structure(let properties, let orderedKeys):
             for key in orderedKeys {
                 if let value = properties[key] {
                     result += "\n\(indentString)\(key): "
-                    
+
                     switch value.kind {
-                    case .structure(_, _):
+                    case .structure:
                         // Nested object
                         result += formatNestedContent(value, indent: indent + 1)
                     case .array(let elements):
@@ -571,24 +571,24 @@ struct NestedDynamicSchemaView: View {
         @unknown default:
             result += "unknown"
         }
-        
+
         return result
     }
-    
+
     private func countNestingLevels(_ content: GeneratedContent, currentLevel: Int = 0) -> Int {
         var maxLevel = currentLevel
-        
+
         switch content.kind {
         case .structure(let properties, _):
             for (_, value) in properties {
                 switch value.kind {
-                case .structure(_, _):
+                case .structure:
                     maxLevel = max(maxLevel, countNestingLevels(value, currentLevel: currentLevel + 1))
                 case .array(let elements):
                     for element in elements {
                         maxLevel = max(maxLevel, countNestingLevels(element, currentLevel: currentLevel + 1))
                     }
-                case .string(_), .number(_), .bool(_), .null:
+                case .string, .number, .bool, .null:
                     break
                 @unknown default:
                     break
@@ -598,15 +598,15 @@ struct NestedDynamicSchemaView: View {
             for element in elements {
                 maxLevel = max(maxLevel, countNestingLevels(element, currentLevel: currentLevel + 1))
             }
-        case .string(_), .number(_), .bool(_), .null:
+        case .string, .number, .bool, .null:
             break
         @unknown default:
             break
         }
-        
+
         return maxLevel
     }
-    
+
     private var exampleCode: String {
         """
         // Creating deeply nested schemas
@@ -623,7 +623,7 @@ struct NestedDynamicSchemaView: View {
                 )
             ]
         )
-        
+
         let personSchema = DynamicGenerationSchema(
             name: "Person",
             properties: [
@@ -637,7 +637,7 @@ struct NestedDynamicSchemaView: View {
                 )
             ]
         )
-        
+
         // Arrays of nested objects
         let teamSchema = DynamicGenerationSchema(
             name: "Team",
@@ -648,7 +648,7 @@ struct NestedDynamicSchemaView: View {
                 )
             ]
         )
-        
+
         // Register all schemas as dependencies
         let schema = try GenerationSchema(
             root: teamSchema,

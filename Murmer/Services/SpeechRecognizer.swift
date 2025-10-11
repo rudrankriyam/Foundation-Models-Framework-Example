@@ -102,26 +102,26 @@ class SpeechRecognizer: NSObject, ObservableObject, SpeechRecognitionService {
 
     // Simple flag to prevent double processing
     private var hasProcessedFinalResult = false
-    
+
     // Amplitude monitoring parameters
     private var amplitudeHistory: [Double] = []
     private let historySize = 10
     private let smoothingFactor = 0.8
-    
+
     override init() {
         super.init()
-        
+
         speechRecognizer?.delegate = self
-        
+
         // Check initial permission status
         let authStatus = SFSpeechRecognizer.authorizationStatus()
         hasPermission = authStatus == .authorized
     }
-    
+
     deinit {
-        
+
     }
-    
+
     func requestPermission() async -> Bool {
         return await withCheckedContinuation { continuation in
             SFSpeechRecognizer.requestAuthorization { authStatus in
@@ -151,7 +151,7 @@ class SpeechRecognizer: NSObject, ObservableObject, SpeechRecognitionService {
             }
         }
     }
-    
+
     func startRecognition() throws {
         print("🚀 START RECOGNITION CALLED")
 
@@ -228,20 +228,20 @@ class SpeechRecognizer: NSObject, ObservableObject, SpeechRecognitionService {
             state = .error(error)
             throw error
         }
-        
+
         // Configure request with better settings
         recognitionRequest.shouldReportPartialResults = true
         recognitionRequest.requiresOnDeviceRecognition = false
-        
+
         if #available(iOS 16.0, *) {
             recognitionRequest.addsPunctuation = true
         }
-        
+
         // Add timeout to prevent indefinite listening
         if #available(iOS 13.0, *) {
             recognitionRequest.taskHint = .dictation
         }
-        
+
         // Reset flag when starting new recognition
         hasProcessedFinalResult = false
 
@@ -283,7 +283,7 @@ class SpeechRecognizer: NSObject, ObservableObject, SpeechRecognitionService {
 
                 if let result = result {
                     let transcription = result.bestTranscription.formattedString
-                    
+
                     if result.isFinal {
                         print("🎯 FINAL RESULT: '\(transcription)'")
                         self.hasProcessedFinalResult = true
@@ -334,7 +334,7 @@ class SpeechRecognizer: NSObject, ObservableObject, SpeechRecognitionService {
         }
 
         audioBufferCount = 0
-        inputNode.installTap(onBus: 0, bufferSize: 1024, format: tapFormat) { [weak self] (buffer: AVAudioPCMBuffer, when: AVAudioTime) in
+        inputNode.installTap(onBus: 0, bufferSize: 1024, format: tapFormat) { [weak self] (buffer: AVAudioPCMBuffer, _: AVAudioTime) in
             guard let self = self, !self.hasProcessedFinalResult else { return }
 
             // Send buffer to speech recognition
@@ -369,12 +369,12 @@ class SpeechRecognizer: NSObject, ObservableObject, SpeechRecognitionService {
         state = .listening()
         isRecording = true
         print("🚀 START RECOGNITION COMPLETED SUCCESSFULLY")
-        
+
     }
-    
+
     func stopRecognition() {
         print("🛑 STOP RECOGNITION CALLED")
-        
+
         // If we're listening and have partial text, complete with that text
         if case .listening(let partialText) = state, !partialText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             print("🛑 Completing with partial text: '\(partialText)'")
@@ -383,7 +383,7 @@ class SpeechRecognizer: NSObject, ObservableObject, SpeechRecognitionService {
             print("🛑 No partial text to use, setting to idle")
             state = .idle
         }
-        
+
         isRecording = false
         currentAmplitude = 0
 
@@ -403,10 +403,10 @@ class SpeechRecognizer: NSObject, ObservableObject, SpeechRecognitionService {
         }
         #endif
     }
-    
+
     private func cleanupRecognition() {
         print("🧹 CLEANUP RECOGNITION")
-        
+
         // Cancel any ongoing recognition task
         if let task = recognitionTask {
             task.cancel()
@@ -423,7 +423,7 @@ class SpeechRecognizer: NSObject, ObservableObject, SpeechRecognitionService {
         if audioEngine.isRunning {
             audioEngine.stop()
         }
-        
+
         // Remove tap safely
         let inputNode = audioEngine.inputNode
         if inputNode.numberOfInputs > 0 {
@@ -434,9 +434,9 @@ class SpeechRecognizer: NSObject, ObservableObject, SpeechRecognitionService {
 
         print("🧹 CLEANUP COMPLETED")
     }
-    
+
     // MARK: - Amplitude Monitoring
-    
+
     private func processAudioBuffer(_ buffer: AVAudioPCMBuffer) {
         guard let channelData = buffer.floatChannelData?[0] else {
             return

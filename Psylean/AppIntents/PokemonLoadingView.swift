@@ -11,7 +11,7 @@ struct PokemonLoadingView: View {
     let query: String
     @State private var rotationAngle: Double = 0
     @State private var pulseScale: CGFloat = 1.0
-    
+
     var body: some View {
         VStack(spacing: 24) {
             // Animated Pokeball
@@ -26,7 +26,7 @@ struct PokemonLoadingView: View {
                     )
                     .frame(width: 80, height: 80)
                     .scaleEffect(pulseScale)
-                
+
                 Circle()
                     .fill(Color.white)
                     .frame(width: 76, height: 76)
@@ -36,12 +36,12 @@ struct PokemonLoadingView: View {
                             .frame(width: 80, height: 40)
                             .offset(y: 20)
                     )
-                
+
                 // Center band
                 Rectangle()
                     .fill(Color.black)
                     .frame(width: 80, height: 8)
-                
+
                 // Center button
                 Circle()
                     .fill(Color.white)
@@ -61,18 +61,18 @@ struct PokemonLoadingView: View {
                 withAnimation(.linear(duration: 2).repeatForever(autoreverses: false)) {
                     rotationAngle = 360
                 }
-                
+
                 withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) {
                     pulseScale = 1.1
                 }
             }
-            
+
             VStack(spacing: 12) {
                 Text("Searching for Pokemon...")
                     .font(.headline)
                     .fontWeight(.semibold)
                     .foregroundColor(.primary)
-                
+
                 Text("\"\(query)\"")
                     .font(.subheadline)
                     .foregroundColor(.secondary)

@@ -21,9 +21,9 @@ enum DynamicSchemaExampleType: String, CaseIterable, Identifiable {
     case formBuilder = "form_builder"
     case errorHandling = "error_handling"
     case invoiceProcessing = "invoice_processing"
-    
+
     var id: String { rawValue }
-    
+
     var title: String {
         switch self {
         case .basicObject:
@@ -52,7 +52,7 @@ enum DynamicSchemaExampleType: String, CaseIterable, Identifiable {
             return "Invoice Processing"
         }
     }
-    
+
     var subtitle: String {
         switch self {
         case .basicObject:
@@ -81,7 +81,7 @@ enum DynamicSchemaExampleType: String, CaseIterable, Identifiable {
             return "Real-world invoice data extraction"
         }
     }
-    
+
     var icon: String {
         switch self {
         case .basicObject:
@@ -110,7 +110,7 @@ enum DynamicSchemaExampleType: String, CaseIterable, Identifiable {
             return "doc.richtext"
         }
     }
-    
+
     var complexity: Complexity {
         switch self {
         case .basicObject, .arraySchema, .enumSchema:
@@ -123,13 +123,13 @@ enum DynamicSchemaExampleType: String, CaseIterable, Identifiable {
             return .expert
         }
     }
-    
+
     enum Complexity {
         case beginner
         case intermediate
         case advanced
         case expert
-        
+
         var color: Color {
             switch self {
             case .beginner:
@@ -142,7 +142,7 @@ enum DynamicSchemaExampleType: String, CaseIterable, Identifiable {
                 return .purple
             }
         }
-        
+
         var label: String {
             switch self {
             case .beginner:

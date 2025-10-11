@@ -10,7 +10,7 @@ import SwiftUI
 struct AnalyzeButton: View {
     let action: () async -> Void
     @State private var isLoading = false
-    
+
     var body: some View {
         Button {
             Task {

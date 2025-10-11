@@ -61,7 +61,7 @@ struct MessageBubbleView: View {
     messageContentStack
     #endif
   }
-  
+
   private var messageContentStack: some View {
     VStack(alignment: message.isFromUser ? .trailing : .leading, spacing: Spacing.xSmall) {
       if !message.isFromUser && message.content.characters.isEmpty {
@@ -69,14 +69,13 @@ struct MessageBubbleView: View {
       } else {
         messageText
       }
-      
-      
+
       if message.isContextSummary {
         contextSummaryIndicator
       }
     }
   }
-  
+
   private var typingIndicator: some View {
     HStack(spacing: Spacing.xSmall) {
       ForEach(0..<3, id: \.self) { index in
@@ -106,7 +105,7 @@ struct MessageBubbleView: View {
     )
     #endif
   }
-  
+
   private var messageText: some View {
     Text(message.content)
       .padding(.horizontal, Spacing.large)
@@ -125,7 +124,7 @@ struct MessageBubbleView: View {
       )
       #endif
   }
-  
+
   private var contextSummaryIndicator: some View {
     HStack {
       Image(systemName: "arrow.triangle.2.circlepath")
@@ -139,7 +138,6 @@ struct MessageBubbleView: View {
     .accessibilityLabel("Context summary indicator")
     .accessibilityValue("This message contains a summary of previous conversation context")
   }
-
 
   // MARK: - Accessibility Computed Properties
 
@@ -220,8 +218,7 @@ struct MessageBubbleView: View {
 
       if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
         let window = windowScene.windows.first,
-        let rootVC = window.rootViewController
-      {
+        let rootVC = window.rootViewController {
 
         // For iPad - set popover presentation
         if let popover = activityVC.popoverPresentationController {
@@ -240,7 +237,6 @@ struct MessageBubbleView: View {
   }
 }
 
-
 // MARK: - Essential Previews
 
 #Preview("Message Bubbles") {
@@ -254,17 +250,17 @@ struct MessageBubbleView: View {
         content: "Hello! How are you today?",
         isFromUser: true
       ))
-      
+
       MessageBubbleView(message: ChatMessage(
         content: "I'm doing great! How can I help you?",
         isFromUser: false
       ))
-      
+
       MessageBubbleView(message: ChatMessage(
         content: "## Foundation Models\n\nThey provide **powerful** on-device AI capabilities. For *streaming*, you can use `async sequences` to receive partial responses as they're generated, creating a more **responsive** user experience.",
         isFromUser: false
       ))
-      
+
       MessageBubbleView(message: ChatMessage(
         content: "",
         isFromUser: false
@@ -320,7 +316,7 @@ struct MessageBubbleView: View {
         content: "Hello! How are you today?",
         isFromUser: true
       ))
-      
+
       MessageBubbleView(message: ChatMessage(
         content: "## Rich Text Support\n\nI can display **bold**, *italic*, and `code` formatting!",
         isFromUser: false

@@ -128,4 +128,3 @@ enum MicrophonePermissionStatus {
     case granted
 }
 #endif
-

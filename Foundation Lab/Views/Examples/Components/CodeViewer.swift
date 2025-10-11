@@ -13,15 +13,15 @@ struct CodeViewer: View {
   let code: String
   let language: String
   @State private var isCopied = false
-  
+
   @Environment(\.colorScheme) private var colorScheme
   @State var highlightedCode: AttributedString?
-  
+
   init(code: String, language: String = "swift") {
     self.code = code
     self.language = language
   }
-  
+
   var body: some View {
     VStack(alignment: .leading, spacing: Spacing.small) {
       HStack {
@@ -29,9 +29,9 @@ struct CodeViewer: View {
           .font(.footnote)
           .fontWeight(.medium)
           .foregroundColor(.secondary)
-        
+
         Spacer()
-        
+
         Button(action: copyToClipboard) {
           Image(systemName: isCopied ? "checkmark" : "doc.on.doc")
             .font(.callout)
@@ -40,7 +40,7 @@ struct CodeViewer: View {
         }
         .buttonStyle(.glass)
       }
-      
+
       ScrollView {
         ScrollView {
           Text(highlightedCode ?? AttributedString(code))
@@ -67,7 +67,7 @@ struct CodeViewer: View {
       }
     }
   }
-  
+
   private func copyToClipboard() {
     #if os(iOS)
     UIPasteboard.general.string = code
@@ -75,7 +75,7 @@ struct CodeViewer: View {
     NSPasteboard.general.clearContents()
     NSPasteboard.general.setString(code, forType: .string)
     #endif
-    
+
     isCopied = true
     DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
       isCopied = false
@@ -88,12 +88,12 @@ struct CodeDisclosure: View {
   let code: String
   let language: String
   @State private var isExpanded = false
-  
+
   init(code: String, language: String = "swift") {
     self.code = code
     self.language = language
   }
-  
+
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
       Button(action: {
@@ -103,16 +103,16 @@ struct CodeDisclosure: View {
           Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
             .font(.caption2)
             .foregroundColor(.secondary)
-          
+
           Text("View Code")
             .font(.callout)
             .foregroundColor(.primary)
-          
+
           Spacer()
         }
       }
       .buttonStyle(.plain)
-      
+
       if isExpanded {
         CodeViewer(code: code, language: language)
           .padding(.top, Spacing.small)
@@ -134,7 +134,7 @@ let response = try await session.generate(
     using: .conversational
 )
 """)
-      
+
       CodeViewer(code: """
 @Generable
 struct Book {
@@ -165,7 +165,7 @@ let response = try await session.generate(
     using: .conversational
 )
 """)
-      
+
       CodeDisclosure(code: """
 // Structured data example
 @Generable

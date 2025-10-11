@@ -11,7 +11,7 @@ import SwiftUI
 struct BusinessIdeasView: View {
   @State private var currentPrompt = DefaultPrompts.businessIdeas
   @State private var executor = ExampleExecutor()
-  
+
   var body: some View {
     ExampleViewBase(
       title: "Business Ideas",
@@ -37,7 +37,7 @@ struct BusinessIdeasView: View {
         .padding()
         .background(Color.orange.opacity(0.1))
         .cornerRadius(8)
-        
+
         // Prompt Suggestions
         PromptSuggestions(
           suggestions: DefaultPrompts.businessIdeasSuggestions,
@@ -50,7 +50,7 @@ struct BusinessIdeasView: View {
             onSelect: { currentPrompt = $0 }
           )
         }
-        
+
         // Prompt History
         if !executor.promptHistory.isEmpty {
           PromptHistory(
@@ -58,13 +58,13 @@ struct BusinessIdeasView: View {
             onSelect: { currentPrompt = $0 }
           )
         }
-        
+
         // Result Display
         if !executor.result.isEmpty {
           VStack(alignment: .leading, spacing: 12) {
             Label("Generated Business Concept", systemImage: "briefcase")
               .font(.headline)
-            
+
             ResultDisplay(
               result: executor.result,
               isSuccess: executor.errorMessage == nil
@@ -74,7 +74,7 @@ struct BusinessIdeasView: View {
       }
     }
   }
-  
+
   private func executeBusinessIdea() {
     Task {
       if #available(iOS 26.1, macOS 26.1, *) {
@@ -110,7 +110,7 @@ struct BusinessIdeasView: View {
       }
     }
   }
-  
+
   private func resetToDefaults() {
     currentPrompt = "" // Clear the prompt completely
     executor.clearAll() // Clear all results, errors, and history

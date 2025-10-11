@@ -11,7 +11,7 @@ import FoundationModels
 struct ExamplesView: View {
     @Binding var viewModel: ContentViewModel
     @Namespace private var glassNamespace
-    
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.large) {
@@ -46,10 +46,9 @@ struct ExamplesView: View {
             }
         }
     }
-    
+
     // MARK: - View Components
-    
-    
+
     private var exampleButtonsView: some View {
         LazyVGrid(columns: adaptiveGridColumns, spacing: Spacing.large) {
             ForEach(ExampleType.allCases) { exampleType in
@@ -66,7 +65,7 @@ struct ExamplesView: View {
         }
         .padding(.horizontal, Spacing.medium)
     }
-    
+
     private var adaptiveGridColumns: [GridItem] {
 #if os(iOS)
         // iPhone: 2 columns with flexible sizing and better spacing
@@ -95,7 +94,7 @@ struct ExamplesView: View {
             )
         }
     }
-    
+
     @ViewBuilder
     private var loadingView: some View {
         if viewModel.isLoading {

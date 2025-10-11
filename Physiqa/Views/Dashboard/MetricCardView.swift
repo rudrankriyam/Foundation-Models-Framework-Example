@@ -12,7 +12,7 @@ struct MetricCardView: View {
     let value: Double
     let isSelected: Bool
     @State private var isAnimating = false
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
@@ -20,18 +20,18 @@ struct MetricCardView: View {
                     .font(.body)
                     .foregroundStyle(isSelected ? .primary : .secondary)
                     .frame(width: 24, height: 24)
-                
+
                 Spacer()
             }
-            
+
             Spacer()
-            
+
             VStack(alignment: .leading, spacing: 4) {
                 Text(formattedValue)
                     .font(.title2)
                     .fontWeight(.semibold)
                     .foregroundStyle(.primary)
-                
+
                 Text(metricType.rawValue)
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -51,7 +51,7 @@ struct MetricCardView: View {
         .scaleEffect(isSelected ? 1.02 : 1.0)
         .animation(.easeInOut(duration: 0.2), value: isSelected)
     }
-    
+
     private var formattedValue: String {
         switch metricType {
         case .steps, .activeEnergy:
@@ -78,7 +78,7 @@ struct MetricCardView: View {
             MetricCardView(metricType: .steps, value: 8432, isSelected: false)
             MetricCardView(metricType: .heartRate, value: 72, isSelected: true)
         }
-        
+
         HStack(spacing: 16) {
             MetricCardView(metricType: .sleep, value: 7.5, isSelected: false)
             MetricCardView(metricType: .activeEnergy, value: 412, isSelected: false)

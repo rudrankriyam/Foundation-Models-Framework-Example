@@ -250,7 +250,6 @@ struct SettingsView: View {
         return locale.localizedString(forLanguageCode: languageCode)?.capitalized ?? languageCode
     }
 
-
     private func qualityString(_ quality: AVSpeechSynthesisVoiceQuality) -> String {
         switch quality {
         case .default:

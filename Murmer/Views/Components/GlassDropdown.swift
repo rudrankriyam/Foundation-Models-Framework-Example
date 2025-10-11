@@ -11,9 +11,9 @@ struct GlassDropdown: View {
     @Binding var selectedValue: String
     let options: [String]
     let title: String
-    
+
     @State private var isExpanded = false
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Header
@@ -27,14 +27,14 @@ struct GlassDropdown: View {
                         Text(title)
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                        
+
                         Text(selectedValue)
                             .font(.body)
                             .foregroundStyle(.primary)
                     }
-                    
+
                     Spacer()
-                    
+
                     Image(systemName: "chevron.down")
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -44,12 +44,12 @@ struct GlassDropdown: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            
+
             // Dropdown content
             if isExpanded {
                 Divider()
                     .background(Color.primary.opacity(0.1))
-                
+
                 ScrollView {
                     VStack(spacing: 0) {
                         ForEach(options, id: \.self) { option in
@@ -58,7 +58,7 @@ struct GlassDropdown: View {
                                     selectedValue = option
                                     isExpanded = false
                                 }
-                                
+
                                 // Haptic feedback
                                 #if os(iOS)
                                 let impact = UIImpactFeedbackGenerator(style: .light)
@@ -69,9 +69,9 @@ struct GlassDropdown: View {
                                     Text(option)
                                         .font(.body)
                                         .foregroundStyle(selectedValue == option ? .primary : .secondary)
-                                    
+
                                     Spacer()
-                                    
+
                                     if selectedValue == option {
                                         Image(systemName: "checkmark")
                                             .font(.caption)
@@ -82,7 +82,7 @@ struct GlassDropdown: View {
                                 .contentShape(Rectangle())
                             }
                             .buttonStyle(.plain)
-                            
+
                             if option != options.last {
                                 Divider()
                                     .background(Color.primary.opacity(0.05))

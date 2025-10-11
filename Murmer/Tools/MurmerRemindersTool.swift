@@ -30,7 +30,7 @@ struct MurmerRemindersTool: Tool {
   @MainActor
   func call(arguments: Arguments) async throws -> some PromptRepresentable {
     let eventStore = EKEventStore()
-    
+
     // Check and request permissions
     let authStatus = EKEventStore.authorizationStatus(for: .reminder)
     if !Self.isRemindersAccessGranted(authStatus) {
@@ -39,11 +39,11 @@ struct MurmerRemindersTool: Tool {
         throw MurmerError.accessDenied
       }
     }
-    
+
     // Create reminder
     let reminder = EKReminder(eventStore: eventStore)
     reminder.title = arguments.text
-    
+
     // Set due date if provided by the AI
     if let dueDateString = arguments.dueDate {
       let formatter = ISO8601DateFormatter()
@@ -54,7 +54,7 @@ struct MurmerRemindersTool: Tool {
           from: dueDate
         )
         reminder.dueDateComponents = components
-        
+
         // Add alarm for the due date
         let alarm = EKAlarm(absoluteDate: dueDate)
         reminder.addAlarm(alarm)
@@ -77,15 +77,12 @@ struct MurmerRemindersTool: Tool {
     // Save the reminder
     try eventStore.save(reminder, commit: true)
 
-    let successMessage = arguments.dueDate != nil 
+    let successMessage = arguments.dueDate != nil
       ? "Reminder '\(reminder.title ?? "")' created successfully with due date."
       : "Reminder '\(reminder.title ?? "")' created successfully."
-    
+
     return successMessage
   }
-
-
-
 
   private func requestAccess(_ eventStore: EKEventStore) async -> Bool {
     do {
@@ -100,11 +97,10 @@ struct MurmerRemindersTool: Tool {
     status == .fullAccess || status == .writeOnly
   }
 
-
   private func getOrCreateList(named name: String, eventStore: EKEventStore) async throws -> EKCalendar {
     // Check if list exists
     let calendars = eventStore.calendars(for: .reminder)
-    
+
     if let existingCalendar = calendars.first(where: { $0.title.lowercased() == name.lowercased() }) {
       return existingCalendar
     }
@@ -124,8 +120,6 @@ struct MurmerRemindersTool: Tool {
     return newCalendar
   }
 }
-
-
 
 // MARK: - Errors
 enum MurmerError: LocalizedError {

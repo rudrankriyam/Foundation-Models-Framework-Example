@@ -41,7 +41,7 @@ final class ExampleExecutor {
         do {
             let session: LanguageModelSession
             let model = SystemLanguageModel(useCase: .general, guardrails: guardrails)
-            
+
             if let instructions = instructions {
                 session = LanguageModelSession(model: model, instructions: Instructions(instructions))
             } else {

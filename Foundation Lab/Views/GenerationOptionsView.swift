@@ -87,10 +87,10 @@ struct GenerationOptionsView: View {
             VStack(spacing: Spacing.large) {
                 // Temperature
                 temperatureSlider
-                
+
                 // Sampling Section
                 samplingSection
-                
+
                 // Max Response Tokens
                 maxTokensSlider
             }
@@ -120,7 +120,7 @@ struct GenerationOptionsView: View {
         .padding()
         .background(.thinMaterial, in: .rect(cornerRadius: CornerRadius.small))
     }
-    
+
     private var samplingSection: some View {
         VStack(alignment: .leading, spacing: Spacing.medium) {
             Text("Sampling Strategy")

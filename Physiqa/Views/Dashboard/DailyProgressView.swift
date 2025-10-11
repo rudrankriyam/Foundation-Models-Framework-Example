@@ -13,54 +13,54 @@ struct DailyProgressCard: View {
     let goalValue: Double
     let animationNamespace: Namespace.ID
     @State private var animatedProgress: Double = 0
-    
+
     private var progress: Double {
         min(currentValue / goalValue, 1.0)
     }
-    
+
     private var progressPercentage: Int {
         Int(progress * 100)
     }
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: metricType.icon)
                     .font(.body)
                     .foregroundStyle(.secondary)
-                
+
                 Spacer()
-                
+
                 Text("\(progressPercentage)%")
                     .font(.caption)
                     .fontWeight(.medium)
                     .foregroundStyle(.secondary)
             }
-            
+
             VStack(alignment: .leading, spacing: 4) {
                 Text(metricType.rawValue)
                     .font(.caption)
                     .foregroundStyle(.tertiary)
-                
+
                 HStack(spacing: 4) {
                     Text(formattedValue)
                         .font(.title3)
                         .fontWeight(.semibold)
                         .foregroundStyle(.primary)
-                    
+
                     Text("/ \(formattedGoal)")
                         .font(.caption)
                         .foregroundStyle(.tertiary)
                 }
             }
-            
+
             // Progress Bar
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
                     Capsule()
                         .fill(Color.primary.opacity(0.08))
                         .frame(height: 4)
-                    
+
                     Capsule()
                         .fill(Color.primary.opacity(0.3))
                         .frame(width: geometry.size.width * animatedProgress, height: 4)
@@ -75,7 +75,7 @@ struct DailyProgressCard: View {
             animatedProgress = progress
         }
     }
-    
+
     private var progressColor: Color {
         switch progress {
         case 0.8...: return .successGreen
@@ -83,7 +83,7 @@ struct DailyProgressCard: View {
         default: return .alertRed
         }
     }
-    
+
     private var formattedValue: String {
         switch metricType {
         case .steps, .activeEnergy:
@@ -94,7 +94,7 @@ struct DailyProgressCard: View {
             return "\(Int(currentValue))"
         }
     }
-    
+
     private var formattedGoal: String {
         switch metricType {
         case .steps, .activeEnergy:
@@ -112,9 +112,9 @@ struct ActivityRingsView: View {
     let steps: Double
     let activeEnergy: Double
     let standHours: Int
-    
+
     @State private var animateRings = false
-    
+
     var body: some View {
         ZStack {
             // Stand Ring (Outer)
@@ -124,7 +124,7 @@ struct ActivityRingsView: View {
                 lineWidth: 8,
                 radius: 60
             )
-            
+
             // Active Energy Ring (Middle)
             ActivityRing(
                 progress: activeEnergy / 500,
@@ -132,7 +132,7 @@ struct ActivityRingsView: View {
                 lineWidth: 8,
                 radius: 45
             )
-            
+
             // Steps Ring (Inner)
             ActivityRing(
                 progress: steps / 10000,
@@ -157,15 +157,15 @@ struct ActivityRing: View {
     let color: Color
     let lineWidth: CGFloat
     let radius: CGFloat
-    
+
     @State private var animatedProgress: Double = 0
-    
+
     var body: some View {
         ZStack {
             Circle()
                 .stroke(color.opacity(0.1), lineWidth: lineWidth)
                 .frame(width: radius * 2, height: radius * 2)
-            
+
             Circle()
                 .trim(from: 0, to: animatedProgress)
                 .stroke(
@@ -191,14 +191,14 @@ struct ActivityRing: View {
                 goalValue: 10000,
                 animationNamespace: Namespace().wrappedValue
             )
-            
+
             DailyProgressCard(
                 metricType: .activeEnergy,
                 currentValue: 342,
                 goalValue: 500,
                 animationNamespace: Namespace().wrappedValue
             )
-            
+
             DailyProgressCard(
                 metricType: .sleep,
                 currentValue: 6.5,

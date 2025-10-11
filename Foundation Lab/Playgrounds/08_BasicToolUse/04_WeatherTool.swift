@@ -48,7 +48,7 @@ struct WeatherTool: Tool {
 
         // Mock weather data for demonstration
         let mockWeatherData = generateMockWeatherData(for: city, countryCode: arguments.countryCode)
-        
+
         print("THIS IS CALLED")
 
         return mockWeatherData

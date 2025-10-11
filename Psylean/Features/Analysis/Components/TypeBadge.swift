@@ -10,7 +10,7 @@ import SwiftUI
 struct TypeBadge: View {
     let type: String
     var small = false
-    
+
     var body: some View {
         Text(type.capitalized)
             .font(small ? .caption : .subheadline)

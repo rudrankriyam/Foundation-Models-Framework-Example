@@ -10,11 +10,11 @@ import SwiftUI
 struct ErrorView: View {
     let error: Error
     let retry: () -> Void
-    
+
     private var errorDetails: (type: String, description: String, suggestion: String?) {
         // Check if it's a GenerationError
         let errorString = String(describing: error)
-        
+
         if errorString.contains("assetsUnavailable") {
             return (
                 "Assets Unavailable",
@@ -53,29 +53,29 @@ struct ErrorView: View {
             )
         }
     }
-    
+
     var body: some View {
         VStack(spacing: 16) {
             Image(systemName: "exclamationmark.triangle")
                 .font(.largeTitle)
                 .foregroundColor(.red)
-            
+
             Text(errorDetails.type)
                 .font(.headline)
-            
+
             VStack(spacing: 8) {
                 Text(errorDetails.description)
                     .font(.subheadline)
                     .foregroundStyle(.primary)
                     .multilineTextAlignment(.center)
-                
+
                 if let suggestion = errorDetails.suggestion {
                     Text(suggestion)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 }
-                
+
                 // Always show the actual error for debugging
                 Text("Error Details: \(String(describing: error))")
                     .font(.caption2)
@@ -83,7 +83,7 @@ struct ErrorView: View {
                     .multilineTextAlignment(.center)
                     .padding(.top, 4)
             }
-            
+
             Button("Retry") {
                 retry()
             }

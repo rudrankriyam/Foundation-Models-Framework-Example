@@ -14,7 +14,7 @@ struct BasicChatView: View {
     @State private var executor = ExampleExecutor()
     @State private var showInstructions = false
     @State private var usePermissiveGuardrails = false
-    
+
     var body: some View {
         ExampleViewBase(
             title: "One-shot",
@@ -38,18 +38,18 @@ struct BasicChatView: View {
                             Image(systemName: showInstructions ? "chevron.down" : "chevron.right")
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
-                            
+
                             Text("Instructions")
                                 .font(.callout)
                                 .foregroundColor(.primary)
-                            
+
                             Spacer()
                         }
                     }
                     .buttonStyle(.plain)
                     .padding(.horizontal, Spacing.medium)
                     .padding(.vertical, Spacing.small)
-                    
+
                     if showInstructions {
                         VStack(alignment: .leading, spacing: Spacing.small) {
                             TextEditor(text: $instructions)
@@ -67,21 +67,21 @@ struct BasicChatView: View {
                 }
                 .background(Color.gray.opacity(0.1))
                 .cornerRadius(12)
-                
+
                 // Guardrails Toggle
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Permissive Content Transformations")
                             .font(.callout)
                             .foregroundColor(.primary)
-                        
+
                         Text("Allow potentially unsafe content for text transformations")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
-                    
+
                     Spacer()
-                    
+
                     Toggle("", isOn: $usePermissiveGuardrails)
                         .labelsHidden()
                 }
@@ -89,13 +89,13 @@ struct BasicChatView: View {
                 .padding(.vertical, Spacing.small)
                 .background(Color.gray.opacity(0.1))
                 .cornerRadius(12)
-                
+
                 // Prompt Suggestions
                 PromptSuggestions(
                     suggestions: DefaultPrompts.basicChatSuggestions,
                     onSelect: { currentPrompt = $0 }
                 )
-                
+
                 // Prompt History
                 if !executor.promptHistory.isEmpty {
                     PromptHistory(
@@ -103,7 +103,7 @@ struct BasicChatView: View {
                         onSelect: { currentPrompt = $0 }
                     )
                 }
-                
+
                 // Result Display
                 if !executor.result.isEmpty {
                     ResultDisplay(
@@ -114,11 +114,11 @@ struct BasicChatView: View {
             }
         }
     }
-    
+
     private func executeChat() {
         Task {
             let guardrails: SystemLanguageModel.Guardrails = usePermissiveGuardrails ? .permissiveContentTransformations : .default
-            
+
             await executor.executeBasic(
                 prompt: currentPrompt,
                 instructions: instructions.isEmpty ? nil : instructions,
@@ -126,7 +126,7 @@ struct BasicChatView: View {
             )
         }
     }
-    
+
     private func resetToDefaults() {
         currentPrompt = "" // Clear the prompt completely
         instructions = DefaultPrompts.basicChatInstructions

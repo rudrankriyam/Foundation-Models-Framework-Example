@@ -11,7 +11,7 @@ import FoundationModels
 struct TypeMatchupsCard: View {
     let strengths: [TypeMatchup.PartiallyGenerated]
     let weaknesses: [TypeMatchup.PartiallyGenerated]
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             if !strengths.isEmpty {
@@ -20,7 +20,7 @@ struct TypeMatchupsCard: View {
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundStyle(.green)
-                    
+
                     ForEach(Array(strengths.enumerated()), id: \.offset) { _, matchup in
                         if let type = matchup.type {
                             HStack {
@@ -36,14 +36,14 @@ struct TypeMatchupsCard: View {
                     }
                 }
             }
-            
+
             if !weaknesses.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
                     Label("Weak Against", systemImage: "exclamationmark.shield.fill")
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundStyle(.red)
-                    
+
                     ForEach(Array(weaknesses.enumerated()), id: \.offset) { _, matchup in
                         if let type = matchup.type {
                             HStack {

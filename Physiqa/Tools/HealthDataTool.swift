@@ -25,7 +25,7 @@ struct HealthDataTool: Tool {
 
     func call(arguments: Arguments) async throws -> some PromptRepresentable {
         let healthManager = await MainActor.run { HealthDataManager.shared }
-        
+
         switch arguments.dataType.lowercased() {
         case "today":
             return await fetchTodayData(healthManager: healthManager, refresh: arguments.refreshFromHealthKit ?? false)
@@ -45,12 +45,12 @@ struct HealthDataTool: Tool {
             return createErrorOutput(error: "Invalid data type. Use 'today', 'weekly', 'steps', 'heartRate', 'sleep', 'activeEnergy', or 'distance'.")
         }
     }
-    
+
     private func fetchTodayData(healthManager: HealthDataManager, refresh: Bool) async -> GeneratedContent {
         if refresh {
             await healthManager.fetchTodayHealthData()
         }
-        
+
         let metricsJSON = await MainActor.run {
             """
             {
@@ -62,7 +62,7 @@ struct HealthDataTool: Tool {
             }
             """
         }
-        
+
         return GeneratedContent(properties: [
             "status": "success",
             "dataType": "today",
@@ -71,17 +71,17 @@ struct HealthDataTool: Tool {
             "message": "Today's health data retrieved successfully"
         ])
     }
-    
+
     private func fetchWeeklyData(healthManager: HealthDataManager) async -> GeneratedContent {
         let weeklyData = await healthManager.fetchWeeklyData()
-        
+
         var weeklyStatsArray: [String] = []
-        
+
         for (metric, dailyData) in weeklyData {
             let values = dailyData.map { $0.value }
             let total = values.reduce(0, +)
             let average = values.isEmpty ? 0 : total / Double(values.count)
-            
+
             weeklyStatsArray.append("""
                 "\(metric.rawValue)": {
                     "total": \(String(format: "%.0f", total)),
@@ -90,9 +90,9 @@ struct HealthDataTool: Tool {
                 }
                 """)
         }
-        
+
         let weeklyStatsJSON = "{\(weeklyStatsArray.joined(separator: ","))}"
-        
+
         return GeneratedContent(properties: [
             "status": "success",
             "dataType": "weekly",
@@ -101,12 +101,12 @@ struct HealthDataTool: Tool {
             "message": "Weekly health data retrieved successfully"
         ])
     }
-    
+
     private func fetchSpecificMetric(healthManager: HealthDataManager, type: MetricType, refresh: Bool) async -> GeneratedContent {
         if refresh {
             await healthManager.fetchTodayHealthData()
         }
-        
+
         let value: Double = await MainActor.run {
             switch type {
             case .steps:
@@ -123,11 +123,11 @@ struct HealthDataTool: Tool {
                 return 0.0
             }
         }
-        
+
         if type.rawValue == "unsupported" {
             return createErrorOutput(error: "Metric type not supported")
         }
-        
+
         return await GeneratedContent(properties: [
             "status": "success",
             "metric": type.rawValue,

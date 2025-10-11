@@ -162,7 +162,6 @@ final class SpeechRecognitionStateMachine: ObservableObject {
             .store(in: &cancellables)
     }
 
-
     private func handleSpeechRecognitionStateChange(from recognitionState: SpeechRecognitionState) {
         switch recognitionState {
         case .idle:

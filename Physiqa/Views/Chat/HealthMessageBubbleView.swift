@@ -10,7 +10,7 @@ import SwiftUI
 struct HealthMessageBubbleView: View {
     let content: String
     let isFromUser: Bool
-    
+
     var body: some View {
         HStack(alignment: .bottom, spacing: 8) {
             if !isFromUser {
@@ -19,13 +19,13 @@ struct HealthMessageBubbleView: View {
                     Circle()
                         .fill(Color.primary.opacity(0.1))
                         .frame(width: 28, height: 28)
-                    
+
                     Image(systemName: "heart.fill")
                         .font(.system(size: 14))
                         .foregroundStyle(.secondary)
                 }
             }
-            
+
             VStack(alignment: isFromUser ? .trailing : .leading, spacing: 4) {
                 // Message content
                 Text(content)
@@ -43,7 +43,7 @@ struct HealthMessageBubbleView: View {
                     )
                     .frame(maxWidth: 280, alignment: isFromUser ? .trailing : .leading)
             }
-            
+
             if isFromUser {
                 // User avatar placeholder
                 Circle()
@@ -67,12 +67,12 @@ struct HealthMessageBubbleView: View {
             content: "Hi! I'm Physiqa, your personal health coach. How can I help you today?",
             isFromUser: false
         )
-        
+
         HealthMessageBubbleView(
             content: "Can you show me my health stats for today?",
             isFromUser: true
         )
-        
+
         HealthMessageBubbleView(
             content: "Of course! Let me fetch your health data for today. You've been doing great with 8,432 steps so far! That's 84% of your daily goal. Your sleep last night was also good at 7.2 hours. Keep up the excellent work!",
             isFromUser: false

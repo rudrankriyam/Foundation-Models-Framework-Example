@@ -13,7 +13,7 @@ struct PokemonCard: View {
     let number: Int?
     let types: [PokemonType.PartiallyGenerated]?
     let description: String?
-    
+
     var body: some View {
         VStack(spacing: 16) {
             // Image
@@ -30,14 +30,14 @@ struct PokemonCard: View {
                         .frame(height: 180)
                 }
             }
-            
+
             // Name & Number
             if let name = name {
                 HStack {
                     Text(name.capitalized)
                         .font(.title2)
                         .fontWeight(.semibold)
-                    
+
                     if let number = number {
                         Text("#\(String(format: "%03d", number))")
                             .font(.title3)
@@ -45,7 +45,7 @@ struct PokemonCard: View {
                     }
                 }
             }
-            
+
             // Types
             if let types = types, !types.isEmpty {
                 HStack(spacing: 8) {
@@ -56,7 +56,7 @@ struct PokemonCard: View {
                     }
                 }
             }
-            
+
             // Description
             if let description = description {
                 Text(description)

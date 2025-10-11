@@ -14,9 +14,9 @@ struct BasicDynamicSchemaView: View {
     @State private var productInput = "The iPhone 15 Pro costs $999 and has a 6.1 inch display"
     @State private var customInput = ""
     @State private var selectedExample = 0
-    
+
     private let examples = ["Person", "Product", "Custom"]
-    
+
     var body: some View {
         ExampleViewBase(
             title: "Basic Object Schema",
@@ -27,7 +27,7 @@ struct BasicDynamicSchemaView: View {
             errorMessage: executor.errorMessage,
             codeExample: exampleCode,
             onRun: { Task { await runExample() } },
-            onReset: { 
+            onReset: {
                 selectedExample = 0
                 personInput = "John Doe is 32 years old, works as a software engineer and loves hiking."
                 productInput = "The iPhone 15 Pro costs $999 and has a 6.1 inch display"
@@ -43,13 +43,12 @@ struct BasicDynamicSchemaView: View {
                 }
                 .pickerStyle(.segmented)
                 .padding(.bottom)
-                
-                
+
                 // Schema preview
                 VStack(alignment: .leading, spacing: Spacing.small) {
                     Text("Generated Schema")
                         .font(.headline)
-                    
+
                     Text(schemaDescription)
                         .font(.system(.caption, design: .monospaced))
                         .padding(8)
@@ -57,7 +56,7 @@ struct BasicDynamicSchemaView: View {
                         .background(Color.gray.opacity(0.1))
                         .cornerRadius(8)
                 }
-                
+
                 HStack {
                     Button("Extract Data") {
                         Task {
@@ -66,19 +65,19 @@ struct BasicDynamicSchemaView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .disabled(executor.isRunning || currentInput.isEmpty)
-                    
+
                     if executor.isRunning {
                         ProgressView()
                             .scaleEffect(0.8)
                     }
                 }
-                
+
                 // Results section
                 if !executor.results.isEmpty {
                     VStack(alignment: .leading, spacing: Spacing.small) {
                         Text("Generated Data")
                             .font(.headline)
-                        
+
                         ScrollView {
                             Text(executor.results)
                                 .font(.system(.caption, design: .monospaced))
@@ -94,7 +93,7 @@ struct BasicDynamicSchemaView: View {
             .padding()
         }
     }
-    
+
     private var bindingForSelectedExample: Binding<String> {
         switch selectedExample {
         case 0: return $personInput
@@ -102,7 +101,7 @@ struct BasicDynamicSchemaView: View {
         default: return $customInput
         }
     }
-    
+
     private var currentInput: String {
         switch selectedExample {
         case 0: return personInput
@@ -110,7 +109,7 @@ struct BasicDynamicSchemaView: View {
         default: return customInput
         }
     }
-    
+
     private var schemaDescription: String {
         switch selectedExample {
         case 0:
@@ -151,37 +150,37 @@ struct BasicDynamicSchemaView: View {
             """
         }
     }
-    
+
     private func runExample() async {
         await executor.execute {
             let schema = try createSchema(for: selectedExample)
             let session = LanguageModelSession()
-            
+
             let prompt = """
             Extract the following information from this text:
-            
+
             \(currentInput)
             """
-            
+
             let response = try await session.respond(
                 to: Prompt(prompt),
                 schema: schema,
                 options: .init(temperature: 0.1)
             )
-            
+
             return """
             📝 Input:
             \(currentInput)
-            
+
             📊 Extracted Data:
             \(formatContent(response.content))
-            
+
             🔍 Schema Used:
             \(selectedExample == 0 ? "Person" : selectedExample == 1 ? "Product" : "CustomObject")
             """
         }
     }
-    
+
     private func createSchema(for index: Int) throws -> GenerationSchema {
         switch index {
         case 0:
@@ -191,33 +190,33 @@ struct BasicDynamicSchemaView: View {
                 description: "The person's full name",
                 schema: .init(type: String.self)
             )
-            
+
             let ageProperty = DynamicGenerationSchema.Property(
                 name: "age",
                 description: "The person's age in years",
                 schema: .init(type: Int.self)
             )
-            
+
             let occupationProperty = DynamicGenerationSchema.Property(
                 name: "occupation",
                 description: "The person's job or profession",
                 schema: .init(type: String.self)
             )
-            
+
             let hobbiesProperty = DynamicGenerationSchema.Property(
                 name: "hobbies",
                 description: "List of hobbies or interests",
                 schema: .init(arrayOf: .init(type: String.self))
             )
-            
+
             let personSchema = DynamicGenerationSchema(
                 name: "Person",
                 description: "Information about a person",
                 properties: [nameProperty, ageProperty, occupationProperty, hobbiesProperty]
             )
-            
+
             return try GenerationSchema(root: personSchema, dependencies: [])
-            
+
         case 1:
             // Product schema
             let nameProperty = DynamicGenerationSchema.Property(
@@ -225,13 +224,13 @@ struct BasicDynamicSchemaView: View {
                 description: "Product name",
                 schema: .init(type: String.self)
             )
-            
+
             let priceProperty = DynamicGenerationSchema.Property(
                 name: "price",
                 description: "Price in USD",
                 schema: .init(type: Float.self)
             )
-            
+
             // Nested specifications object
             let specsProperties = [
                 DynamicGenerationSchema.Property(
@@ -247,27 +246,27 @@ struct BasicDynamicSchemaView: View {
                     isOptional: true
                 )
             ]
-            
+
             let specsSchema = DynamicGenerationSchema(
                 name: "Specifications",
                 description: "Product specifications",
                 properties: specsProperties
             )
-            
+
             let specsProperty = DynamicGenerationSchema.Property(
                 name: "specifications",
                 description: "Product specifications",
                 schema: specsSchema
             )
-            
+
             let productSchema = DynamicGenerationSchema(
                 name: "Product",
                 description: "Product information",
                 properties: [nameProperty, priceProperty, specsProperty]
             )
-            
+
             return try GenerationSchema(root: productSchema, dependencies: [specsSchema])
-            
+
         default:
             // Custom simple schema
             let field1 = DynamicGenerationSchema.Property(
@@ -275,23 +274,23 @@ struct BasicDynamicSchemaView: View {
                 description: "A text field",
                 schema: .init(type: String.self)
             )
-            
+
             let field2 = DynamicGenerationSchema.Property(
                 name: "field2",
                 description: "A number field",
                 schema: .init(type: Int.self)
             )
-            
+
             let customSchema = DynamicGenerationSchema(
                 name: "CustomObject",
                 description: "A custom object",
                 properties: [field1, field2]
             )
-            
+
             return try GenerationSchema(root: customSchema, dependencies: [])
         }
     }
-    
+
     private func formatContent(_ content: GeneratedContent) -> String {
         // Format the generated content for display
         switch content.kind {
@@ -309,7 +308,7 @@ struct BasicDynamicSchemaView: View {
             return "Error: Expected object structure"
         }
     }
-    
+
     private func formatValue(_ content: GeneratedContent) -> String {
         switch content.kind {
         case .string(let stringValue):
@@ -337,7 +336,7 @@ struct BasicDynamicSchemaView: View {
             return "unknown"
         }
     }
-    
+
     private var exampleCode: String {
         """
         // Creating a basic object schema at runtime
@@ -346,22 +345,22 @@ struct BasicDynamicSchemaView: View {
             description: "The person's full name",
             schema: .init(type: String.self)
         )
-        
+
         let ageProperty = DynamicGenerationSchema.Property(
             name: "age",
             description: "The person's age in years",
             schema: .init(type: Int.self)
         )
-        
+
         let personSchema = DynamicGenerationSchema(
             name: "Person",
             description: "Information about a person",
             properties: [nameProperty, ageProperty]
         )
-        
+
         // Convert to GenerationSchema for use with LanguageModelSession
         let schema = try GenerationSchema(root: personSchema, dependencies: [])
-        
+
         // Use the schema to extract structured data
         let response = try await session.respond(
             to: prompt, // Uses the actual user input

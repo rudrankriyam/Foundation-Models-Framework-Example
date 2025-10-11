@@ -10,12 +10,12 @@ import SwiftUI
 struct LoadingView: View {
     let message: String
     @State private var animateDots = false
-    
+
     var body: some View {
         VStack(spacing: 16) {
             ProgressView()
                 .scaleEffect(1.2)
-            
+
             Text(message)
                 .font(.headline)
                 .foregroundStyle(.secondary)

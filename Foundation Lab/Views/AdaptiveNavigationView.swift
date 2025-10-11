@@ -14,7 +14,7 @@ struct AdaptiveNavigationView: View {
     @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     private let navigationCoordinator = NavigationCoordinator.shared
-    
+
     var body: some View {
 #if os(iOS)
         if horizontalSizeClass == .compact {
@@ -29,7 +29,7 @@ struct AdaptiveNavigationView: View {
         splitViewNavigation
 #endif
     }
-    
+
     private var tabBasedNavigation: some View {
         TabView(selection: .init(
             get: { navigationCoordinator.tabSelection },
@@ -41,28 +41,28 @@ struct AdaptiveNavigationView: View {
                         .background(TopGradientView())
                 }
             }
-            
+
             Tab(TabSelection.integrations.displayName, systemImage: "wrench.and.screwdriver", value: .integrations) {
                 NavigationStack {
                     IntegrationsView()
                         .background(TopGradientView())
                 }
             }
-            
+
             Tab(TabSelection.languages.displayName, systemImage: "globe", value: .languages) {
                 NavigationStack {
                     LanguagesView()
                         .background(TopGradientView())
                 }
             }
-            
+
             Tab(TabSelection.chat.displayName, systemImage: "bubble.left.and.bubble.right", value: .chat) {
                 NavigationStack {
                     ChatView(viewModel: $chatViewModel)
                         .background(TopGradientView())
                 }
             }
-            
+
             Tab(TabSelection.settings.displayName, systemImage: "gear", value: .settings) {
                 NavigationStack {
                     SettingsView()
@@ -78,7 +78,7 @@ struct AdaptiveNavigationView: View {
             navigationCoordinator.splitViewSelection = newValue
         }
     }
-    
+
     private var splitViewNavigation: some View {
         NavigationSplitView(
             columnVisibility: $columnVisibility
@@ -97,7 +97,7 @@ struct AdaptiveNavigationView: View {
             }
         }
     }
-    
+
     @ViewBuilder
     private var detailView: some View {
         switch navigationCoordinator.splitViewSelection ?? .examples {

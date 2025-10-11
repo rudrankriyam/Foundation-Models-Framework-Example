@@ -12,7 +12,7 @@ struct PromptField: View {
   @Binding var text: String
   let placeholder: String
   let minHeight: CGFloat
-  
+
   init(
     text: Binding<String>,
     placeholder: String = "Enter your prompt here...",
@@ -22,22 +22,22 @@ struct PromptField: View {
     self.placeholder = placeholder
     self.minHeight = minHeight
   }
-  
+
   var body: some View {
     VStack(alignment: .leading, spacing: Spacing.small) {
       HStack {
         Label("Prompt", systemImage: "text.quote")
           .font(.headline)
-        
+
         Spacer()
-        
+
         if !text.isEmpty {
           Text("\(text.count) characters")
             .font(.caption)
             .foregroundColor(.secondary)
         }
       }
-      
+
       ZStack(alignment: .topLeading) {
         TextEditor(text: $text)
           .font(.body)
@@ -46,7 +46,7 @@ struct PromptField: View {
           .background(Color.gray.opacity(0.1))
           .cornerRadius(CornerRadius.small)
           .frame(minHeight: minHeight)
-        
+
         if text.isEmpty {
           Text(placeholder)
             .font(.body)
@@ -65,7 +65,7 @@ struct SimplePromptField: View {
   @Binding var text: String
   let placeholder: String
   let icon: String?
-  
+
   init(
     text: Binding<String>,
     placeholder: String = "Enter text...",
@@ -75,14 +75,14 @@ struct SimplePromptField: View {
     self.placeholder = placeholder
     self.icon = icon
   }
-  
+
   var body: some View {
     HStack {
       if let icon = icon {
         Image(systemName: icon)
           .foregroundColor(.secondary)
       }
-      
+
       TextField(placeholder, text: $text)
         .textFieldStyle(RoundedBorderTextFieldStyle())
     }
@@ -94,26 +94,26 @@ struct PromptHistory: View {
   let history: [String]
   let onSelect: (String) -> Void
   @State private var isExpanded = false
-  
+
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
-      Button(action: { 
+      Button(action: {
         isExpanded.toggle()
       }) {
         HStack(spacing: Spacing.small) {
           Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
             .font(.caption2)
             .foregroundColor(.secondary)
-          
+
           Text("Recent")
             .font(.callout)
             .foregroundColor(.primary)
-          
+
           Spacer()
         }
       }
       .buttonStyle(.plain)
-      
+
       if isExpanded && !history.isEmpty {
         VStack(alignment: .leading, spacing: Spacing.small) {
           ForEach(history.prefix(5), id: \.self) { prompt in
@@ -143,7 +143,7 @@ struct PromptHistory: View {
       text: .constant(""),
       placeholder: "What would you like to know?"
     )
-    
+
     PromptField(
       text: .constant("Tell me about Swift programming"),
       minHeight: 80
@@ -159,7 +159,7 @@ struct PromptHistory: View {
       placeholder: "Enter city name",
       icon: "location"
     )
-    
+
     SimplePromptField(
       text: .constant("San Francisco")
     )

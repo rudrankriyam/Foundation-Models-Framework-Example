@@ -16,9 +16,9 @@ struct ArrayDynamicSchemaView: View {
     @State private var selectedExample = 0
     @State private var minItems = 2
     @State private var maxItems = 5
-    
+
     private let examples = ["Todo List", "Recipe Ingredients", "Article Tags"]
-    
+
     var body: some View {
         ExampleViewBase(
             title: "Array Schemas",
@@ -39,12 +39,12 @@ struct ArrayDynamicSchemaView: View {
                     }
                 }
                 .pickerStyle(.segmented)
-                
+
                 // Constraints controls
                 VStack(alignment: .leading, spacing: Spacing.small) {
                     Text("Array Constraints")
                         .font(.headline)
-                    
+
                     HStack {
                         VStack(alignment: .leading) {
                             Text("Min Items: \(minItems)")
@@ -52,9 +52,9 @@ struct ArrayDynamicSchemaView: View {
                             Stepper("", value: $minItems, in: 0...10)
                                 .labelsHidden()
                         }
-                        
+
                         Spacer()
-                        
+
                         VStack(alignment: .leading) {
                             Text("Max Items: \(maxItems)")
                                 .font(.caption)
@@ -66,12 +66,12 @@ struct ArrayDynamicSchemaView: View {
                     .background(Color.gray.opacity(0.1))
                     .cornerRadius(8)
                 }
-                
+
                 // Schema info
                 VStack(alignment: .leading, spacing: Spacing.small) {
                     Text("Schema Info")
                         .font(.headline)
-                    
+
                     Text(schemaInfo)
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -80,7 +80,7 @@ struct ArrayDynamicSchemaView: View {
                         .background(Color.orange.opacity(0.1))
                         .cornerRadius(8)
                 }
-                
+
                 HStack {
                     Button("Extract Array") {
                         Task {
@@ -89,19 +89,19 @@ struct ArrayDynamicSchemaView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .disabled(executor.isRunning || currentInput.isEmpty)
-                    
+
                     if executor.isRunning {
                         ProgressView()
                             .scaleEffect(0.8)
                     }
                 }
-                
+
                 // Results section
                 if !executor.results.isEmpty {
                     VStack(alignment: .leading, spacing: Spacing.small) {
                         Text("Generated Data")
                             .font(.headline)
-                        
+
                         ScrollView {
                             Text(executor.results)
                                 .font(.system(.caption, design: .monospaced))
@@ -117,7 +117,7 @@ struct ArrayDynamicSchemaView: View {
             .padding()
         }
     }
-    
+
     private var bindingForSelectedExample: Binding<String> {
         switch selectedExample {
         case 0: return $todoInput
@@ -125,7 +125,7 @@ struct ArrayDynamicSchemaView: View {
         default: return $tagsInput
         }
     }
-    
+
     private var currentInput: String {
         switch selectedExample {
         case 0: return todoInput
@@ -133,7 +133,7 @@ struct ArrayDynamicSchemaView: View {
         default: return tagsInput
         }
     }
-    
+
     private var schemaInfo: String {
         let itemType = selectedExample == 0 ? "TodoItem" : selectedExample == 1 ? "Ingredient" : "Tag"
         return """
@@ -143,24 +143,24 @@ struct ArrayDynamicSchemaView: View {
         • The model will respect these constraints when generating the array.
         """
     }
-    
+
     private func runExample() async {
         await executor.execute {
             let schema = try createSchema(for: selectedExample)
             let session = LanguageModelSession()
-            
+
             let prompt = """
             Extract the items from this text. Return between \(minItems) and \(maxItems) items.
-            
+
             Text: \(currentInput)
             """
-            
+
             let response = try await session.respond(
                 to: Prompt(prompt),
                 schema: schema,
                 options: .init(temperature: 0.1)
             )
-            
+
             let items: [GeneratedContent]
             switch response.content.kind {
             case .array(let elements):
@@ -168,14 +168,14 @@ struct ArrayDynamicSchemaView: View {
             default:
                 items = []
             }
-            
+
             return """
             📝 Input:
             \(currentInput)
-            
+
             Extracted Items (Count: \(items.count)):
             \(formatItems(items))
-            
+
             Constraints:
             - Minimum: \(minItems) items
             - Maximum: \(maxItems) items
@@ -184,7 +184,7 @@ struct ArrayDynamicSchemaView: View {
             """
         }
     }
-    
+
     private func createSchema(for index: Int) throws -> GenerationSchema {
         switch index {
         case 0:
@@ -206,15 +206,15 @@ struct ArrayDynamicSchemaView: View {
                     )
                 ]
             )
-            
+
             let arraySchema = DynamicGenerationSchema(
                 arrayOf: todoItemSchema,
                 minimumElements: minItems,
                 maximumElements: maxItems
             )
-            
+
             return try GenerationSchema(root: arraySchema, dependencies: [todoItemSchema])
-            
+
         case 1:
             // Recipe ingredients array
             let ingredientSchema = DynamicGenerationSchema(
@@ -234,15 +234,15 @@ struct ArrayDynamicSchemaView: View {
                     )
                 ]
             )
-            
+
             let arraySchema = DynamicGenerationSchema(
                 arrayOf: ingredientSchema,
                 minimumElements: minItems,
                 maximumElements: maxItems
             )
-            
+
             return try GenerationSchema(root: arraySchema, dependencies: [ingredientSchema])
-            
+
         default:
             // Simple string array for tags
             let stringSchema = DynamicGenerationSchema(type: String.self)
@@ -251,16 +251,16 @@ struct ArrayDynamicSchemaView: View {
                 minimumElements: minItems,
                 maximumElements: maxItems
             )
-            
+
             return try GenerationSchema(root: arraySchema, dependencies: [])
         }
     }
-    
+
     private func formatItems(_ items: [GeneratedContent]) -> String {
         var result = ""
         for (index, item) in items.enumerated() {
             result += "\n\(index + 1). "
-            
+
             // Try to format as object with properties
             switch item.kind {
             case .structure(let properties, _):
@@ -287,7 +287,7 @@ struct ArrayDynamicSchemaView: View {
         }
         return result
     }
-    
+
     private var exampleCode: String {
         """
         // Creating an array schema with constraints
@@ -302,25 +302,25 @@ struct ArrayDynamicSchemaView: View {
                 )
             ]
         )
-        
+
         // Array with min/max constraints
         let arraySchema = DynamicGenerationSchema(
             arrayOf: itemSchema,
             minimumElements: 2,
             maximumElements: 5
         )
-        
+
         let schema = try GenerationSchema(
             root: arraySchema,
             dependencies: [itemSchema]
         )
-        
+
         // The model will generate between 2 and 5 items
         let response = try await session.respond(
             to: prompt,
             schema: schema
         )
-        
+
         // Edge cases handled:
         // - Empty arrays (if minimum is 0)
         // - Maximum element enforcement

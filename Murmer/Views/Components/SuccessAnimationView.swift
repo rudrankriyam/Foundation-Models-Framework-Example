@@ -12,7 +12,7 @@ struct SuccessAnimationView: View {
     @State private var opacity: Double = 0
     @State private var checkmarkScale: CGFloat = 0
     @State private var particleScale: CGFloat = 0
-    
+
     var body: some View {
         ZStack {
             // Background circle
@@ -21,7 +21,7 @@ struct SuccessAnimationView: View {
                 .frame(width: 200, height: 200)
                 .scaleEffect(particleScale)
                 .opacity(1 - particleScale)
-            
+
             // Success circle
             Circle()
                 .fill(Color.green)
@@ -31,7 +31,7 @@ struct SuccessAnimationView: View {
                 #if os(iOS) || os(macOS)
                 .glassEffect(.regular, in: .rect(cornerRadius: 20))
                 #endif
-            
+
             // Checkmark
             Image(systemName: "checkmark")
                 .font(.system(size: 50, weight: .bold))
@@ -42,19 +42,19 @@ struct SuccessAnimationView: View {
             animateSuccess()
         }
     }
-    
+
     private func animateSuccess() {
         // Circle animation
         withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) {
             scale = 1.0
             opacity = 1.0
         }
-        
+
         // Checkmark animation (delayed)
         withAnimation(.spring(response: 0.3, dampingFraction: 0.6).delay(0.2)) {
             checkmarkScale = 1.0
         }
-        
+
         // Particle animation (delayed)
         withAnimation(.easeOut(duration: 1.0).delay(0.3)) {
             particleScale = 2.0
@@ -65,19 +65,19 @@ struct SuccessAnimationView: View {
 struct SuccessFeedbackModifier: ViewModifier {
     @Binding var isShowing: Bool
     let message: String
-    
+
     func body(content: Content) -> some View {
         ZStack {
             content
-            
+
             if isShowing {
                 VStack {
                     Spacer()
-                    
+
                     VStack(spacing: 20) {
                         SuccessAnimationView()
                             .frame(height: 200)
-                        
+
                         Text(message)
                             .font(.headline)
                             .foregroundStyle(.primary)
@@ -97,7 +97,7 @@ struct SuccessFeedbackModifier: ViewModifier {
                         insertion: .scale.combined(with: .opacity),
                         removal: .scale(scale: 0.8).combined(with: .opacity)
                     ))
-                    
+
                     Spacer()
                 }
             }

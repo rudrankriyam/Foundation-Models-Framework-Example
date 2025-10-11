@@ -14,9 +14,9 @@ struct OptionalFieldsSchemaView: View {
         case userProfile = "User Profile"
         case productListing = "Product Listing"
         case eventDetails = "Event Details"
-        
+
         var id: String { rawValue }
-        
+
         var schemaName: String {
             switch self {
             case .userProfile: "UserProfile"
@@ -25,14 +25,14 @@ struct OptionalFieldsSchemaView: View {
             }
         }
     }
-    
+
     @State private var executor = ExampleExecutor()
     @State private var userProfileInput = "Sarah Johnson, 28 years old, from San Francisco. Works as a Product Manager. Enjoys hiking and photography."
     @State private var productListingInput = "MacBook Pro M3, starting at $1999. Available in Space Gray and Silver."
     @State private var eventInput = "Tech Conference 2024 on March 15. Registration required. Early bird discount available."
     @State private var selectedExample: ExampleType = .userProfile
     @State private var includeOptionalFields = true
-    
+
     var body: some View {
         ExampleViewBase(
             title: "Optional vs Required Fields",
@@ -53,31 +53,31 @@ struct OptionalFieldsSchemaView: View {
                     }
                 }
                 .pickerStyle(.segmented)
-                
+
                 // Optional fields toggle
                 Toggle("Request Optional Fields", isOn: $includeOptionalFields)
                     .font(.caption)
                     .padding()
                     .background(Color.blue.opacity(0.1))
                     .cornerRadius(8)
-                
+
                 // Schema preview
                 VStack(alignment: .leading, spacing: Spacing.small) {
                     Text("Schema Structure")
                         .font(.headline)
-                    
+
                     VStack(alignment: .leading, spacing: 4) {
                         ForEach(schemaFields, id: \.name) { field in
                             HStack {
                                 Image(systemName: "checkmark.circle.fill")
                                     .foregroundColor(.green)
                                     .font(.caption)
-                                
+
                                 Text(field.name)
                                     .font(.system(.caption, design: .monospaced))
-                                
+
                                 Spacer()
-                                
+
                                 Text(field.type)
                                     .font(.caption2)
                                     .foregroundColor(.secondary)
@@ -88,7 +88,7 @@ struct OptionalFieldsSchemaView: View {
                     .background(Color.gray.opacity(0.1))
                     .cornerRadius(8)
                 }
-                
+
                 HStack {
                     Button("Extract Data") {
                         Task {
@@ -97,19 +97,19 @@ struct OptionalFieldsSchemaView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .disabled(executor.isRunning || currentInput.isEmpty)
-                    
+
                     if executor.isRunning {
                         ProgressView()
                             .scaleEffect(0.8)
                     }
                 }
-                
+
                 // Results section
                 if !executor.results.isEmpty {
                     VStack(alignment: .leading, spacing: Spacing.small) {
                         Text("Generated Data")
                             .font(.headline)
-                        
+
                         ScrollView {
                             Text(executor.results)
                                 .font(.system(.caption, design: .monospaced))
@@ -125,8 +125,7 @@ struct OptionalFieldsSchemaView: View {
             .padding()
         }
     }
-    
-    
+
     private var bindingForSelectedExample: Binding<String> {
         switch selectedExample {
         case .userProfile: $userProfileInput
@@ -134,7 +133,7 @@ struct OptionalFieldsSchemaView: View {
         case .eventDetails: $eventInput
         }
     }
-    
+
     private var currentInput: String {
         switch selectedExample {
         case .userProfile: userProfileInput
@@ -142,7 +141,7 @@ struct OptionalFieldsSchemaView: View {
         case .eventDetails: eventInput
         }
     }
-    
+
     private struct SchemaField {
         let name: String
         let type: String
@@ -150,13 +149,11 @@ struct OptionalFieldsSchemaView: View {
         let schema: DynamicGenerationSchema
         let optionality: DynamicGenerationSchema.Optionality
     }
-    
 
-    
     private var schemaFields: [SchemaField] {
         includeOptionalFields ? allSchemaFields : requiredFields
     }
-    
+
     private var requiredFields: [SchemaField] {
         switch selectedExample {
         case .userProfile:
@@ -167,7 +164,7 @@ struct OptionalFieldsSchemaView: View {
             return allSchemaFields.filter { ["title", "date"].contains($0.name) }
         }
     }
-    
+
     private var allSchemaFields: [SchemaField] {
         switch selectedExample {
         case .userProfile:
@@ -215,7 +212,7 @@ struct OptionalFieldsSchemaView: View {
                     optionality: .possiblyAbsent
                 )
             ]
-            
+
         case .productListing:
             return [
                 SchemaField(
@@ -261,7 +258,7 @@ struct OptionalFieldsSchemaView: View {
                     optionality: .possiblyNull
                 )
             ]
-            
+
         case .eventDetails:
             return [
                 SchemaField(
@@ -309,22 +306,22 @@ struct OptionalFieldsSchemaView: View {
             ]
         }
     }
-    
+
     private func runExample() async {
         await executor.execute {
             let schema = try createSchema()
             let session = LanguageModelSession()
-            
+
             let prompt = includeOptionalFields ?
             "Extract all available information from this text, including optional details:" :
             "Extract only the essential required information from this text:"
-            
+
             let response = try await session.respond(
                 to: Prompt("\(prompt)\n\n\(currentInput)"),
                 schema: schema,
                 options: .init(temperature: 0.1)
             )
-            
+
             let properties: [String: GeneratedContent]
             switch response.content.kind {
             case .structure(let props, _):
@@ -332,9 +329,9 @@ struct OptionalFieldsSchemaView: View {
             default:
                 properties = [:]
             }
-            
+
             var extractedFields: [(SchemaField, String)] = []
-            
+
             // Check which fields were extracted
             for field in schemaFields {
                 if let value = properties[field.name] {
@@ -342,23 +339,23 @@ struct OptionalFieldsSchemaView: View {
                     extractedFields.append((field, valueStr))
                 }
             }
-            
+
             return """
             📝 Input:
             \(currentInput)
-            
+
             🔍 Extraction Mode: \(includeOptionalFields ? "All Fields" : "Required Only")
-            
+
             📊 Extracted Fields:
             \(formatExtractedFields(extractedFields))
-            
+
             ✅ Schema Validation:
             • Total fields: \(schemaFields.count)
             • Fields extracted: \(extractedFields.count)
             """
         }
     }
-    
+
     private func createSchema() throws -> GenerationSchema {
         let properties = schemaFields.map { field in
             DynamicGenerationSchema.Property(
@@ -368,17 +365,17 @@ struct OptionalFieldsSchemaView: View {
                 optionality: field.optionality
             )
         }
-        
+
         let schemaName = selectedExample.schemaName
         let schema = DynamicGenerationSchema(
             name: schemaName,
             description: "Extract \(includeOptionalFields ? "all" : "required") information",
             properties: properties
         )
-        
+
         return try GenerationSchema(root: schema, dependencies: [])
     }
-    
+
     private func formatFieldValue(_ content: GeneratedContent) -> String {
         switch content.kind {
         case .string(let str):
@@ -399,20 +396,20 @@ struct OptionalFieldsSchemaView: View {
             return "[\(items.joined(separator: ", "))]"
         case .null:
             return "null"
-        case .structure(_, _):
+        case .structure:
             return "<object>"
         @unknown default:
             return "<unknown>"
         }
     }
-    
+
     private func formatExtractedFields(_ fields: [(SchemaField, String)]) -> String {
         fields.map { entry in
             let (field, value) = entry
             return "• \(field.name): \(value)"
         }.joined(separator: "\n")
     }
-    
+
     private var exampleCode: String {
         """
         // Creating schemas with optional fields
@@ -446,12 +443,12 @@ struct OptionalFieldsSchemaView: View {
                 )
             ]
         )
-        
+
         // Optionality options (iOS 26.1+):
         // • .required: model must emit the field
         // • .possiblyAbsent: field may be omitted entirely
         // • .possiblyNull: field may appear with a null value
-        
+
         // Use the optionality parameter to control field requirements
         let response = try await session.respond(
             to: "Extract user information",

@@ -23,7 +23,7 @@ struct CelebrationEffect: ViewModifier {
   func body(content: Content) -> some View {
     content
       .overlay(
-        GeometryReader { geometry in
+        GeometryReader { _ in
           ForEach(particles) { particle in
             Circle()
               .fill(particle.color)

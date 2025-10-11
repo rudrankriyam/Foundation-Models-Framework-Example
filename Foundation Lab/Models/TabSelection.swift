@@ -13,7 +13,7 @@ enum TabSelection: String, CaseIterable, Hashable {
   case languages
   case chat
   case settings
-  
+
   var displayName: String {
     switch self {
     case .integrations:

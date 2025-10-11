@@ -12,17 +12,17 @@ import FoundationModels
 struct HealthDashboardView: View {
     @Query(sort: \HealthMetric.timestamp, order: .reverse) private var metrics: [HealthMetric]
     @Query(sort: \HealthInsight.generatedAt, order: .reverse) private var insights: [HealthInsight]
-    @State private var selectedMetricType: MetricType? = nil
+    @State private var selectedMetricType: MetricType?
     @State private var showingBuddyChat = false
     @State private var isLoading = true
     @State private var healthDataManager = HealthDataManager.shared
     @Environment(\.modelContext) private var modelContext
     @Namespace private var animationNamespace
-    
+
     @State private var todayMetrics: [MetricType: Double] = [:]
     @State private var encouragementMessage = "Loading your health insights..."
     @State private var isGeneratingMessage = false
-    
+
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
@@ -32,11 +32,11 @@ struct HealthDashboardView: View {
                         .padding()
                 } else {
                     headerSection
-                    
+
                     dailyProgressSection
-                    
+
                     metricsGridSection
-                    
+
                     insightsSection
                 }
             }
@@ -82,7 +82,7 @@ struct HealthDashboardView: View {
             }
         }
     }
-    
+
     // MARK: - Header Section
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -95,13 +95,13 @@ struct HealthDashboardView: View {
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
-                    
+
                     Spacer()
-                    
+
                     HealthScoreRing(score: calculateHealthScore())
                         .frame(width: 80, height: 80)
                 }
-                
+
             Text(encouragementMessage)
                 .font(.callout)
                 .foregroundStyle(.secondary)
@@ -109,14 +109,14 @@ struct HealthDashboardView: View {
         .padding()
         .glassEffect(.regular, in: .rect(cornerRadius: 20))
     }
-    
+
     // MARK: - Daily Progress Section
     private var dailyProgressSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Daily Progress")
                 .font(.headline)
                 .padding(.horizontal, 4)
-            
+
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach([MetricType.steps, .activeEnergy, .sleep], id: \.self) { type in
@@ -132,14 +132,14 @@ struct HealthDashboardView: View {
             }
         }
     }
-    
+
     // MARK: - Metrics Grid Section
     private var metricsGridSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Health Metrics")
                 .font(.headline)
                 .padding(.horizontal, 4)
-            
+
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 150))], spacing: 12) {
                 ForEach(MetricType.allCases, id: \.self) { type in
                     MetricCardView(
@@ -156,16 +156,16 @@ struct HealthDashboardView: View {
             }
         }
     }
-    
+
     // MARK: - Insights Section
     private var insightsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("AI Insights")
                     .font(.headline)
-                
+
                 Spacer()
-                
+
                 if !insights.isEmpty {
                     let unreadCount = insights.filter { !$0.isRead }.count
                     if unreadCount > 0 {
@@ -180,7 +180,7 @@ struct HealthDashboardView: View {
                 }
             }
             .padding(.horizontal, 4)
-            
+
             if insights.isEmpty {
                 InsightPlaceholderView()
             } else {
@@ -190,7 +190,7 @@ struct HealthDashboardView: View {
             }
         }
     }
-    
+
     // MARK: - Helper Methods
     private var timeOfDay: String {
         let hour = Calendar.current.component(.hour, from: Date())
@@ -200,36 +200,36 @@ struct HealthDashboardView: View {
         default: return "evening"
         }
     }
-    
+
     @MainActor
     private func generateEncouragementMessage() async {
         guard !isGeneratingMessage else { return }
         isGeneratingMessage = true
-        
+
         let score = calculateHealthScore()
         let stepsProgress = (todayMetrics[.steps] ?? 0) / MetricType.steps.defaultGoal * 100
         let sleepHours = todayMetrics[.sleep] ?? 0
         let activeEnergy = Int(todayMetrics[.activeEnergy] ?? 0)
-        
+
         do {
             let session = LanguageModelSession(
                 instructions: Instructions(
                     "You are a supportive health coach. Generate a brief, encouraging message (max 15 words) based on the user's health data. Do NOT use quotes, numbers, specific metrics, or emojis. Focus on general encouragement and motivation."
                 )
             )
-            
+
             let prompt = """
                 Health Score: \(Int(score))/100
                 Steps Progress: \(Int(stepsProgress))% of daily goal
                 Sleep: \(String(format: "%.1f", sleepHours)) hours last night
                 Active Energy: \(activeEnergy) calories burned today
                 Time of Day: \(timeOfDay)
-                
+
                 Generate a personalized, encouraging message.
                 """
-            
+
             let response = try await session.respond(to: Prompt(prompt))
-            
+
             // Clean up the response: remove quotes and trim whitespace
             encouragementMessage = response.content
                 .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -240,24 +240,24 @@ struct HealthDashboardView: View {
             // Fallback to simple message if AI generation fails
             encouragementMessage = score >= 75 ? "Great progress today!" : "Keep working towards your goals!"
         }
-        
+
         isGeneratingMessage = false
     }
-    
+
     private func calculateHealthScore() -> Double {
         // Simple health score calculation - will be improved with AI
         let stepsScore = min((todayMetrics[.steps] ?? 0) / MetricType.steps.defaultGoal, 1.0)
         let sleepScore = min((todayMetrics[.sleep] ?? 0) / MetricType.sleep.defaultGoal, 1.0)
         let activityScore = min((todayMetrics[.activeEnergy] ?? 0) / MetricType.activeEnergy.defaultGoal, 1.0)
-        
+
         return (stepsScore + sleepScore + activityScore) / 3.0 * 100
     }
-    
+
     // MARK: - Data Loading
     @MainActor
     private func loadHealthData() async {
         healthDataManager.setModelContext(modelContext)
-        
+
         // Request authorization if needed
         if !healthDataManager.isAuthorized {
             do {
@@ -268,10 +268,10 @@ struct HealthDashboardView: View {
                 return
             }
         }
-        
+
         // Fetch today's health data
         await healthDataManager.fetchTodayHealthData()
-        
+
         // Update UI with fetched data
         todayMetrics = [
             .steps: healthDataManager.todaySteps,
@@ -280,9 +280,9 @@ struct HealthDashboardView: View {
             .activeEnergy: healthDataManager.todayActiveEnergy,
             .distance: healthDataManager.todayDistance
         ]
-        
+
         isLoading = false
-        
+
         // Generate personalized encouragement message
         await generateEncouragementMessage()
     }
@@ -292,12 +292,12 @@ struct HealthDashboardView: View {
 struct HealthScoreRing: View {
     let score: Double
     @State private var animatedScore: Double = 0
-    
+
     var body: some View {
         ZStack {
             Circle()
                 .stroke(Color.primary.opacity(0.1), lineWidth: 6)
-            
+
             Circle()
                 .trim(from: 0, to: animatedScore / 100)
                 .stroke(
@@ -306,13 +306,13 @@ struct HealthScoreRing: View {
                 )
                 .rotationEffect(.degrees(-90))
                 .animation(.easeOut(duration: 1.5), value: animatedScore)
-            
+
             VStack(spacing: 2) {
                 Text("\(Int(animatedScore))")
                     .font(.title2)
                     .fontWeight(.semibold)
                     .foregroundStyle(.primary)
-                
+
                 Text("Score")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
@@ -331,11 +331,11 @@ struct InsightPlaceholderView: View {
             Image(systemName: "lightbulb.fill")
                 .font(.title2)
                 .foregroundStyle(.secondary)
-            
+
             Text("No insights yet")
                 .font(.subheadline)
                 .fontWeight(.medium)
-            
+
             Text("Start tracking your health metrics to receive personalized AI insights")
                 .font(.caption)
                 .foregroundStyle(.tertiary)

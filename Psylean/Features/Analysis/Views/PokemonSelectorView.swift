@@ -11,7 +11,7 @@ struct PokemonSelectorView: View {
     @Binding var pokemonIdentifier: String
     @Binding var showingPicker: Bool
     @State private var showExamples = true
-    
+
     let popularPokemon = [
         ("pikachu", "25", "Electric"),
         ("charizard", "6", "Fire/Flying"),
@@ -20,7 +20,7 @@ struct PokemonSelectorView: View {
         ("lucario", "448", "Fighting/Steel"),
         ("garchomp", "445", "Dragon/Ground")
     ]
-    
+
     var body: some View {
         VStack(spacing: 20) {
             VStack(alignment: .leading, spacing: 8) {
@@ -30,12 +30,12 @@ struct PokemonSelectorView: View {
                     #if os(iOS)
                     .textInputAutocapitalization(.never)
                     #endif
-                
+
                 Text("Try: 'cute grass pokemon', 'fierce fire type', or 'pikachu'")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            
+
             // Toggle between examples and popular
             HStack {
                 Button {
@@ -46,9 +46,9 @@ struct PokemonSelectorView: View {
                         .fontWeight(showExamples ? .medium : .regular)
                         .foregroundStyle(showExamples ? .primary : .secondary)
                 }
-                
+
                 Spacer()
-                
+
                 Button {
                     showExamples = false
                 } label: {
@@ -59,7 +59,7 @@ struct PokemonSelectorView: View {
                 }
             }
             .padding(.horizontal, 4)
-            
+
             if showExamples {
                 // Example Searches
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
@@ -102,7 +102,7 @@ struct PokemonSelectorView: View {
                                     ProgressView()
                                 }
                                 .frame(width: 80, height: 80)
-                                
+
                                 Text(pokemon.0.capitalized)
                                     .font(.caption)
                                     .lineLimit(1)

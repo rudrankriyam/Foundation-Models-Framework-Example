@@ -13,7 +13,7 @@ import EventKit
 struct PermissionRequestView: View {
     @ObservedObject var permissionService: PermissionService
     @State private var isRequestingPermissions = false
-    
+
     var body: some View {
         VStack(spacing: 16) {
             Image(systemName: "waveform")
@@ -21,20 +21,20 @@ struct PermissionRequestView: View {
                 .font(.system(size: 60))
                 .padding(.vertical)
                 .glassEffect(.clear, in: .circle)
-            
+
             VStack(spacing: 0) {
                 Text("Welcome to Murmer")
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .padding(.bottom, 4)
-                
+
                 Text("Voice-powered reminders")
                     .font(.body)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.bottom)
             }
-            
+
             // Permission items
             VStack(spacing: 20) {
                 PermissionItemView(
@@ -43,14 +43,14 @@ struct PermissionRequestView: View {
                     description: "To hear your voice",
                     status: permissionService.microphonePermissionStatus == .granted ? .granted : .pending
                 )
-                
+
                 PermissionItemView(
                     icon: "waveform",
                     title: "Speech Recognition",
                     description: "To understand your words",
                     status: permissionService.speechPermissionStatus == .authorized ? .granted : .pending
                 )
-                
+
                 PermissionItemView(
                     icon: "checklist",
                     title: "Reminders",
@@ -59,8 +59,8 @@ struct PermissionRequestView: View {
                 )
             }
             .padding()
-            .glassEffect(.regular, in:.rect(cornerRadius: 12))
-            
+            .glassEffect(.regular, in: .rect(cornerRadius: 12))
+
             Button(action: requestPermissions) {
                 HStack {
                     if isRequestingPermissions {
@@ -92,7 +92,7 @@ struct PermissionRequestView: View {
         .frame(maxHeight: .infinity)
         .background(SimpleTopGradientView())
     }
-    
+
     func requestPermissions() {
         // If all permissions are already granted, just update the status
         if permissionService.allPermissionsGranted {
@@ -100,13 +100,13 @@ struct PermissionRequestView: View {
             permissionService.checkAllPermissions()
             return
         }
-        
+
         isRequestingPermissions = true
-        
+
         Task {
             _ = await permissionService.requestAllPermissions()
             isRequestingPermissions = false
-            
+
             if !permissionService.allPermissionsGranted {
                 permissionService.showSettingsAlert()
             }
@@ -119,29 +119,29 @@ struct PermissionItemView: View {
     let title: String
     let description: String
     let status: PermissionStatus
-    
+
     enum PermissionStatus {
         case pending, granted
     }
-    
+
     var body: some View {
         return HStack(spacing: 15) {
             Image(systemName: icon)
                 .font(.system(size: 20))
                 .foregroundStyle(status == .granted ? Color.indigo : Color.gray)
-            
+
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(.headline)
                     .foregroundStyle(.primary)
-                
+
                 Text(description)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            
+
             Spacer()
-            
+
             if status == .granted {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.title2)

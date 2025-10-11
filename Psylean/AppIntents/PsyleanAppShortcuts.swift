@@ -19,7 +19,7 @@ struct PsyleanAppShortcuts: AppShortcutsProvider {
             shortTitle: "Analyze Pokemon",
             systemImageName: "sparkles"
         )
-        
+
         AppShortcut(
             intent: QuickPikachuIntent(),
             phrases: [
@@ -29,7 +29,7 @@ struct PsyleanAppShortcuts: AppShortcutsProvider {
             shortTitle: "Show Pikachu",
             systemImageName: "bolt.fill"
         )
-        
+
         AppShortcut(
             intent: RandomPokemonIntent(),
             phrases: [
@@ -39,7 +39,7 @@ struct PsyleanAppShortcuts: AppShortcutsProvider {
             shortTitle: "Random Pokemon",
             systemImageName: "dice"
         )
-        
+
         AppShortcut(
             intent: LegendaryPokemonIntent(),
             phrases: [
@@ -50,6 +50,6 @@ struct PsyleanAppShortcuts: AppShortcutsProvider {
             systemImageName: "star.fill"
         )
     }
-    
+
     static var shortcutTileColor: ShortcutTileColor = .orange
 }

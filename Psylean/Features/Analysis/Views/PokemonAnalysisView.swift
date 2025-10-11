@@ -13,11 +13,11 @@ struct PokemonAnalysisView: View {
     @State private var pokemonIdentifier = ""
     @State private var hasStartedAnalysis = false
     @Namespace private var glassNamespace
-    
+
     init(pokemonIdentifier: String = "") {
         self._pokemonIdentifier = State(initialValue: pokemonIdentifier)
     }
-    
+
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
@@ -29,7 +29,7 @@ struct PokemonAnalysisView: View {
                     )
                     .transition(.scale.combined(with: .opacity))
                 }
-                
+
                 // Analysis Content
                 if let analysis = analyzer.analysis {
                     StreamingPokemonView(analysis: analysis)
@@ -79,25 +79,25 @@ struct PokemonAnalysisView: View {
             analyzer.prewarm()
         }
     }
-    
+
     private func startAnalysis() async {
         guard !pokemonIdentifier.isEmpty else { return }
-        
+
         hasStartedAnalysis = true
         analyzer.reset()
-        
+
         do {
             try await analyzer.analyzePokemon(pokemonIdentifier)
         } catch {
             // Error is handled by the analyzer
         }
     }
-    
+
     private func retryAnalysis() async {
         analyzer.reset()
         await startAnalysis()
     }
-    
+
     private func resetAnalysis() {
         hasStartedAnalysis = false
         analyzer.reset()

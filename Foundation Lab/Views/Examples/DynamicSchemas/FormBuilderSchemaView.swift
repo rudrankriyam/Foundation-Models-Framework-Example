@@ -24,9 +24,9 @@ struct FormBuilderSchemaView: View {
     """
     @State private var generationMode = 0
     @State private var includeValidation = true
-    
+
     private let modes = ["Generate & Extract", "Generate Schema Only", "Use Predefined"]
-    
+
     var body: some View {
         ExampleViewBase(
             title: "Dynamic Form Builder",
@@ -44,7 +44,7 @@ struct FormBuilderSchemaView: View {
                 VStack(alignment: .leading, spacing: Spacing.small) {
                     Text("Generation Mode")
                         .font(.headline)
-                    
+
                     Picker("Mode", selection: $generationMode) {
                         ForEach(0..<modes.count, id: \.self) { index in
                             Text(modes[index]).tag(index)
@@ -52,16 +52,16 @@ struct FormBuilderSchemaView: View {
                     }
                     .pickerStyle(.segmented)
                 }
-                
+
                 // Options
                 Toggle("Include validation rules", isOn: $includeValidation)
                     .padding(.vertical, 8)
-                
+
                 // Sample data display (read-only)
                 VStack(alignment: .leading, spacing: Spacing.small) {
                     Text("Sample Form Data")
                         .font(.headline)
-                    
+
                     Text(formData)
                         .font(.system(.caption, design: .monospaced))
                         .padding()
@@ -69,13 +69,13 @@ struct FormBuilderSchemaView: View {
                         .background(Color.gray.opacity(0.1))
                         .cornerRadius(8)
                 }
-                
+
                 // Results
                 if !executor.results.isEmpty {
                     VStack(alignment: .leading, spacing: Spacing.small) {
                         Text("Generated Form Schema & Extracted Data")
                             .font(.headline)
-                        
+
                         ScrollView {
                             Text(executor.results)
                                 .font(.system(.caption, design: .monospaced))
@@ -91,74 +91,74 @@ struct FormBuilderSchemaView: View {
             .padding()
         }
     }
-    
+
     private func runExample() async {
         await executor.execute {
             let session = LanguageModelSession()
-            
+
             switch generationMode {
             case 0: // Generate & Extract
                 // First, create a simple form schema from the description
                 let formSchema = createFormSchemaFromDescription(formDescription)
-                
+
                 // Then extract data using that schema
                 let extractionSchema = try GenerationSchema(root: formSchema, dependencies: [])
                 let response = try await session.respond(
                     to: Prompt("Extract form data from: \(formData)"),
                     schema: extractionSchema
                 )
-                
+
                 let extractedData = formatGeneratedContent(response.content)
-                
+
                 return """
                 📋 Generated Form Schema:
                 \(describeSchema(formSchema))
-                
+
                 📊 Extracted Data:
                 \(extractedData)
-                
+
                 ✅ Validation: All fields processed successfully
                 """
-                
+
             case 1: // Generate Schema Only
                 let formSchema = createFormSchemaFromDescription(formDescription)
-                
+
                 return """
                 📋 Generated Form Schema:
                 \(describeSchema(formSchema))
-                
+
                 💡 Use this schema to extract structured data from unstructured text
                 """
-                
+
             case 2: // Use Predefined
                 let predefinedSchema = createPredefinedJobApplicationSchema()
                 let extractionSchema = try GenerationSchema(root: predefinedSchema, dependencies: [])
-                
+
                 let response = try await session.respond(
                     to: Prompt("Extract job application data from: \(formData)"),
                     schema: extractionSchema
                 )
-                
+
                 let extractedData = formatGeneratedContent(response.content)
-                
+
                 return """
                 📋 Using Predefined Job Application Schema
-                
+
                 📊 Extracted Data:
                 \(extractedData)
                 """
-                
+
             default:
                 return "Invalid mode"
             }
         }
     }
-    
+
     private func createFormSchemaFromDescription(_ description: String) -> DynamicGenerationSchema {
         // Analyze the description to determine likely fields
         let lowercased = description.lowercased()
         var properties: [DynamicGenerationSchema.Property] = []
-        
+
         // Personal info fields
         if lowercased.contains("personal") || lowercased.contains("name") {
             properties.append(
@@ -169,7 +169,7 @@ struct FormBuilderSchemaView: View {
                 )
             )
         }
-        
+
         if lowercased.contains("email") || lowercased.contains("contact") {
             properties.append(
                 DynamicGenerationSchema.Property(
@@ -182,7 +182,7 @@ struct FormBuilderSchemaView: View {
                 )
             )
         }
-        
+
         if lowercased.contains("phone") || lowercased.contains("contact") {
             properties.append(
                 DynamicGenerationSchema.Property(
@@ -196,7 +196,7 @@ struct FormBuilderSchemaView: View {
                 )
             )
         }
-        
+
         // Experience fields
         if lowercased.contains("experience") || lowercased.contains("job") {
             properties.append(
@@ -210,7 +210,7 @@ struct FormBuilderSchemaView: View {
                     isOptional: true
                 )
             )
-            
+
             properties.append(
                 DynamicGenerationSchema.Property(
                     name: "currentPosition",
@@ -220,7 +220,7 @@ struct FormBuilderSchemaView: View {
                 )
             )
         }
-        
+
         // Skills fields
         if lowercased.contains("skill") {
             properties.append(
@@ -231,7 +231,7 @@ struct FormBuilderSchemaView: View {
                 )
             )
         }
-        
+
         // Additional common fields
         properties.append(
             DynamicGenerationSchema.Property(
@@ -241,7 +241,7 @@ struct FormBuilderSchemaView: View {
                 isOptional: true
             )
         )
-        
+
         properties.append(
             DynamicGenerationSchema.Property(
                 name: "salaryExpectation",
@@ -250,7 +250,7 @@ struct FormBuilderSchemaView: View {
                 isOptional: true
             )
         )
-        
+
         properties.append(
             DynamicGenerationSchema.Property(
                 name: "remoteWork",
@@ -259,14 +259,14 @@ struct FormBuilderSchemaView: View {
                 isOptional: true
             )
         )
-        
+
         return DynamicGenerationSchema(
             name: "FormData",
             description: "Form data extracted from user input",
             properties: properties
         )
     }
-    
+
     private func createPredefinedJobApplicationSchema() -> DynamicGenerationSchema {
         return DynamicGenerationSchema(
             name: "JobApplication",
@@ -358,32 +358,32 @@ struct FormBuilderSchemaView: View {
             ]
         )
     }
-    
+
     private func describeSchema(_ schema: DynamicGenerationSchema) -> String {
         var description = "Schema Definition:\n"
         description += "Fields:\n"
-        
+
         // Note: In a real implementation, we would need access to schema internals
         // For now, we just show the basic info
         description += "  [Schema details would be displayed here]\n"
-        
+
         return description
     }
-    
+
     // Helper functions to extract schema constraints
     private func getPattern(from schema: DynamicGenerationSchema) -> String? {
         // This is a simplified version - in real implementation would need to inspect schema internals
         return nil
     }
-    
+
     private func getRange(from schema: DynamicGenerationSchema) -> (Any?, Any?)? {
         // This is a simplified version - in real implementation would need to inspect schema internals
         return nil
     }
-    
+
     private func formatGeneratedContent(_ content: GeneratedContent) -> String {
         var result: [String: Any] = [:]
-        
+
         switch content.kind {
         case .structure(let properties, let orderedKeys):
             for key in orderedKeys {
@@ -405,7 +405,7 @@ struct FormBuilderSchemaView: View {
         @unknown default:
             return "unknown"
         }
-        
+
         do {
             let data = try JSONSerialization.data(withJSONObject: result, options: [.prettyPrinted, .sortedKeys])
             return String(data: data, encoding: .utf8) ?? "Unable to format"
@@ -413,7 +413,7 @@ struct FormBuilderSchemaView: View {
             return "Error formatting content: \(error.localizedDescription)"
         }
     }
-    
+
     private func convertToJSONValue(_ content: GeneratedContent) -> Any {
         switch content.kind {
         case .structure(let properties, let orderedKeys):
@@ -438,7 +438,7 @@ struct FormBuilderSchemaView: View {
             return "unknown"
         }
     }
-    
+
     private func formatJSONArray(_ array: [Any]) -> String {
         do {
             let data = try JSONSerialization.data(withJSONObject: array, options: [.prettyPrinted])
@@ -447,14 +447,14 @@ struct FormBuilderSchemaView: View {
             return "Error formatting array: \(error.localizedDescription)"
         }
     }
-    
+
     private var exampleCode: String {
         """
         // Generate form schema from description
         func generateFormSchema(from description: String) -> DynamicGenerationSchema {
             // Analyze description to determine fields
             var properties: [DynamicGenerationSchema.Property] = []
-            
+
             if description.contains("email") {
                 properties.append(.init(
                     name: "email",
@@ -465,7 +465,7 @@ struct FormBuilderSchemaView: View {
                     )
                 ))
             }
-            
+
             if description.contains("experience") {
                 properties.append(.init(
                     name: "yearsOfExperience",
@@ -476,13 +476,13 @@ struct FormBuilderSchemaView: View {
                     )
                 ))
             }
-            
+
             return DynamicGenerationSchema(
                 name: "FormData",
                 properties: properties
             )
         }
-        
+
         // Extract data using generated schema
         let schema = generateFormSchema(from: userDescription)
         let response = try await session.respond(

@@ -13,7 +13,7 @@ struct InsightCardView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var isExpanded = false
     @State private var showCelebration = false
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // Header
@@ -23,35 +23,35 @@ struct InsightCardView: View {
                         .font(.callout)
                         .foregroundStyle(.secondary)
                         .frame(width: 20, height: 20)
-                    
+
                     VStack(alignment: .leading, spacing: 2) {
                         Text(insight.title)
                             .font(.subheadline)
                             .fontWeight(.medium)
                             .lineLimit(isExpanded ? nil : 1)
-                        
+
                         Text(timeAgo(from: insight.generatedAt))
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
                     }
                 }
-                
+
                 Spacer()
-                
+
                 if !insight.isRead {
                     Circle()
                         .fill(Color.primary.opacity(0.3))
                         .frame(width: 6, height: 6)
                 }
             }
-            
+
             // Content
             Text(insight.content)
                 .font(.callout)
                 .foregroundStyle(.primary.opacity(0.8))
                 .lineLimit(isExpanded ? nil : 2)
                 .animation(.easeInOut, value: isExpanded)
-            
+
             // Action Items
             if isExpanded && !insight.actionItems.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {
@@ -59,14 +59,14 @@ struct InsightCardView: View {
                         .font(.caption)
                         .fontWeight(.medium)
                         .foregroundStyle(.secondary)
-                    
+
                     ForEach(insight.actionItems, id: \.self) { item in
                         HStack(alignment: .top, spacing: 8) {
                             Image(systemName: "circle.fill")
                                 .font(.system(size: 4))
                                 .foregroundStyle(.secondary)
                                 .padding(.top, 4)
-                            
+
                             Text(item)
                                 .font(.caption)
                                 .foregroundStyle(.primary.opacity(0.8))
@@ -75,7 +75,7 @@ struct InsightCardView: View {
                 }
                 .padding(.top, 4)
             }
-            
+
             // Priority Badge
             if insight.priority == .urgent || insight.priority == .high {
                 HStack {
@@ -86,9 +86,9 @@ struct InsightCardView: View {
                         .padding(.vertical, 4)
                         .background(Color.primary.opacity(0.06))
                         .clipShape(Capsule())
-                    
+
                     Spacer()
-                    
+
                     if isExpanded {
                         Button {
                             markAsRead()
@@ -132,15 +132,15 @@ struct InsightCardView: View {
             }
         )
     }
-    
+
     private var categoryColor: Color {
         return .primary
     }
-    
+
     private var priorityColor: Color {
         return .primary
     }
-    
+
     private func markAsRead() {
         insight.isRead = true
         if insight.category == .achievement {
@@ -148,14 +148,13 @@ struct InsightCardView: View {
         }
         try? modelContext.save()
     }
-    
+
     private func timeAgo(from date: Date) -> String {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .abbreviated
         return formatter.localizedString(for: date, relativeTo: Date())
     }
 }
-
 
 #Preview {
     VStack(spacing: 16) {
@@ -167,7 +166,7 @@ struct InsightCardView: View {
             relatedMetrics: [.steps],
             actionItems: ["Keep up the momentum", "Try increasing your daily goal by 500 steps"]
         ))
-        
+
         InsightCardView(insight: HealthInsight(
             title: "Sleep Pattern Alert",
             content: "Your sleep duration has decreased by 15% this week. This might affect your recovery and energy levels.",

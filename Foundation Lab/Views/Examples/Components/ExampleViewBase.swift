@@ -20,7 +20,7 @@ struct ExampleViewBase<Content: View>: View {
   let onRun: () -> Void
   let onReset: () -> Void
   let content: Content
-  
+
   init(
     title: String,
     description: String,
@@ -44,7 +44,7 @@ struct ExampleViewBase<Content: View>: View {
     self.onReset = onReset
     self.content = content()
   }
-  
+
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: Spacing.large) {
@@ -80,7 +80,7 @@ struct ExampleViewBase<Content: View>: View {
     .background(TopGradientView())
     #endif
   }
-  
+
   private var promptSection: some View {
     VStack(alignment: .leading, spacing: Spacing.small) {
       Text("PROMPT")
@@ -97,7 +97,7 @@ struct ExampleViewBase<Content: View>: View {
         .cornerRadius(12)
     }
   }
-  
+
   private var actionButtons: some View {
     HStack(spacing: Spacing.small) {
       Button(action: onReset) {
@@ -110,7 +110,7 @@ struct ExampleViewBase<Content: View>: View {
       .buttonStyle(.glassProminent)
       .tint(.secondary)
       .disabled(currentPrompt == defaultPrompt || currentPrompt.isEmpty)
-      
+
       Button(action: onRun) {
         HStack(spacing: Spacing.small) {
           if isRunning {
@@ -137,14 +137,14 @@ struct ExampleViewBase<Content: View>: View {
 struct PromptSuggestions: View {
   let suggestions: [String]
   let onSelect: (String) -> Void
-  
+
   var body: some View {
     VStack(alignment: .leading, spacing: Spacing.small) {
       Text("SUGGESTIONS")
         .font(.footnote)
         .fontWeight(.medium)
         .foregroundColor(.secondary)
-      
+
       ScrollView(.horizontal, showsIndicators: false) {
         HStack(spacing: Spacing.small) {
           ForEach(suggestions, id: \.self) { suggestion in

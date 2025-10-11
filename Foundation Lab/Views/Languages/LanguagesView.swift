@@ -10,7 +10,7 @@ import FoundationModels
 
 struct LanguagesView: View {
     @Namespace private var glassNamespace
-    
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.large) {
@@ -39,7 +39,7 @@ struct LanguagesView: View {
             languageExample.createView()
         }
     }
-    
+
     private var adaptiveGridColumns: [GridItem] {
 #if os(iOS)
         // iPhone: 2 columns with flexible sizing and better spacing

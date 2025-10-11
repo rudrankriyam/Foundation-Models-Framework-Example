@@ -11,7 +11,7 @@ import FoundationModels
 enum IntegrationSection: String, CaseIterable {
     case tools = "Tools"
     case schemas = "Schemas"
-    
+
     var displayName: String {
         return rawValue
     }
@@ -19,18 +19,18 @@ enum IntegrationSection: String, CaseIterable {
 
 struct IntegrationsView: View {
     @State private var selectedSection: IntegrationSection = .tools
-    
+
     var body: some View {
         VStack(spacing: 0) {
             // Segmented picker at the top
             segmentedPicker
-            
+
             // Content based on selection
             TabView(selection: $selectedSection) {
                 // Tools Section - reuse existing ToolsView
                 ToolsView()
                     .tag(IntegrationSection.tools)
-                
+
                 // Schemas Section - reuse existing SchemaExamplesView
                 SchemaExamplesView()
                     .tag(IntegrationSection.schemas)
@@ -80,7 +80,7 @@ struct IntegrationsView: View {
             }
         }
     }
-    
+
     private var segmentedPicker: some View {
         Picker("Integration Section", selection: $selectedSection) {
             ForEach(IntegrationSection.allCases, id: \.self) { section in

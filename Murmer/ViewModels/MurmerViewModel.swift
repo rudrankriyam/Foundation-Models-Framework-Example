@@ -18,7 +18,7 @@ import UIKit
 @MainActor
 class MurmerViewModel: ObservableObject {
     // MARK: - Published Properties
-    
+
     @Published var isListening = false
     @Published var recognizedText = ""
     @Published var selectedList = "Default"
@@ -27,7 +27,7 @@ class MurmerViewModel: ObservableObject {
     @Published var errorMessage = ""
     @Published var lastCreatedReminder: String = ""
     @Published var partialText: String = ""
-    
+
     // MARK: - Services
 
     let speechRecognizer: SpeechRecognizer
@@ -83,7 +83,7 @@ class MurmerViewModel: ObservableObject {
         setupBindings()
         loadReminderLists()
     }
-    
+
     private func setupBindings() {
         // Bind to state machine state changes
         stateMachine.$state
@@ -101,28 +101,28 @@ class MurmerViewModel: ObservableObject {
             .map { $0.partialText }
             .assign(to: &$partialText)
     }
-    
+
     private func handleStateMachineStateChange(_ state: SpeechRecognitionStateMachine.State) {
         print("🔄 STATE MACHINE CHANGED: \(state)")
-        
+
         switch state {
         case .idle:
             isListening = false
             recognizedText = ""
-            
+
         case .listening:
             isListening = true
-            
+
         case .processingSpeech(let text):
             recognizedText = text
             isListening = false
-            
+
         case .synthesizingResponse(let response):
             lastCreatedReminder = response
-            
+
         case .completed:
             isListening = false
-            
+
         case .error(let error):
             isListening = false
             showError(error.localizedDescription)
@@ -130,52 +130,50 @@ class MurmerViewModel: ObservableObject {
             break // Handle other states as needed
         }
     }
-    
+
     // MARK: - Public Interface
-    
+
     func startListening() async {
         print("📱 START LISTENING CALLED")
-        
+
         // Reset UI state
         showError = false
-        
+
         // Delegate to state machine
         await stateMachine.startWorkflow()
     }
-    
+
     func stopListening() {
         print("📱 STOP LISTENING CALLED")
-        
+
         // Delegate to state machine
         stateMachine.stopWorkflow()
     }
-    
+
     // MARK: - UI Feedback Methods
-    
-    
+
     func loadReminderLists() {
         Task {
             let calendars = eventStore.calendars(for: .reminder)
             let listNames = calendars.map { $0.title }.sorted()
-            
+
             await MainActor.run {
                 self.availableLists = ["Default"] + listNames
             }
         }
     }
-    
-    
+
     private func showError(_ message: String) {
         errorMessage = message
-        
+
         withAnimation(.easeInOut(duration: 0.3)) {
             showError = true
         }
-        
+
 #if os(iOS)
         provideHapticFeedback(.error)
 #endif
-        
+
         // Hide after delay
         Task { [weak self] in
             await MainActor.run {
@@ -185,7 +183,7 @@ class MurmerViewModel: ObservableObject {
             }
         }
     }
-    
+
 #if os(iOS)
     private func provideHapticFeedback(_ type: UINotificationFeedbackGenerator.FeedbackType) {
         let generator = UINotificationFeedbackGenerator()

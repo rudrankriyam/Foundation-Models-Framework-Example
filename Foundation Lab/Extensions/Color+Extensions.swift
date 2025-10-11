@@ -12,7 +12,7 @@ extension Color {
     static var main: Color {
         Color.indigo
     }
-    
+
     /// Secondary background color that adapts to the platform
     static var secondaryBackgroundColor: Color {
         #if os(iOS)

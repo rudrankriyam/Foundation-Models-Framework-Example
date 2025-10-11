@@ -15,14 +15,14 @@ struct GuidedDynamicSchemaView: View {
     @State private var rangeInput = "Generate prices between $10 and $100 for electronics"
     @State private var arrayInput = "Create a shopping list with 3-5 items each having 2-4 attributes"
     @State private var validationInput = "Generate valid email addresses for 5 employees at techcorp.com"
-    
+
     private let guideTypes = [
         "Pattern Matching",
-        "Number Ranges", 
+        "Number Ranges",
         "Array Constraints",
         "Complex Validation"
     ]
-    
+
     var body: some View {
         ExampleViewBase(
             title: "Generation Guides",
@@ -40,7 +40,7 @@ struct GuidedDynamicSchemaView: View {
                 VStack(alignment: .leading, spacing: Spacing.small) {
                     Text("Constraint Type")
                         .font(.headline)
-                    
+
                     Picker("Guide Type", selection: $selectedGuideType) {
                         ForEach(0..<guideTypes.count, id: \.self) { index in
                             Text(guideTypes[index]).tag(index)
@@ -48,13 +48,13 @@ struct GuidedDynamicSchemaView: View {
                     }
                     .pickerStyle(.segmented)
                 }
-                
+
                 // Guide explanation
                 VStack(alignment: .leading, spacing: Spacing.small) {
                     Label("How it works", systemImage: "info.circle")
                         .font(.headline)
                         .foregroundColor(.blue)
-                    
+
                     Text(guideExplanation)
                         .font(.caption)
                         .padding()
@@ -62,13 +62,13 @@ struct GuidedDynamicSchemaView: View {
                         .background(Color.blue.opacity(0.1))
                         .cornerRadius(8)
                 }
-                
+
                 // Results
                 if !executor.results.isEmpty {
                     VStack(alignment: .leading, spacing: Spacing.small) {
                         Text("Generated Data with Constraints")
                             .font(.headline)
-                        
+
                         ScrollView {
                             Text(executor.results)
                                 .font(.system(.caption, design: .monospaced))
@@ -84,7 +84,7 @@ struct GuidedDynamicSchemaView: View {
             .padding()
         }
     }
-    
+
     private var currentInput: String {
         switch selectedGuideType {
         case 0: return patternInput
@@ -94,7 +94,7 @@ struct GuidedDynamicSchemaView: View {
         default: return ""
         }
     }
-    
+
     private var bindingForSelectedGuide: Binding<String> {
         switch selectedGuideType {
         case 0: return $patternInput
@@ -104,7 +104,7 @@ struct GuidedDynamicSchemaView: View {
         default: return .constant("")
         }
     }
-    
+
     private var guideExplanation: String {
         switch selectedGuideType {
         case 0: return "Pattern constraints use regex to ensure generated strings match specific formats (e.g., phone numbers, postal codes, IDs)"
@@ -114,10 +114,10 @@ struct GuidedDynamicSchemaView: View {
         default: return ""
         }
     }
-    
+
     private func runExample() async {
         let schema = createSchema(for: selectedGuideType)
-        
+
         await executor.execute(
             withPrompt: currentInput,
             schema: schema,
@@ -126,22 +126,22 @@ struct GuidedDynamicSchemaView: View {
                    let json = try? JSONSerialization.jsonObject(with: data),
                    let formatted = try? JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys]),
                    let jsonString = String(data: formatted, encoding: .utf8) {
-                    
+
                     // Add validation summary
                     var result = "=== Generated Data ===\n" + jsonString
                     result += "\n\n=== Constraint Validation ==="
                     result += validateConstraints(json, for: selectedGuideType)
-                    
+
                     return result
                 }
                 return output
             }
         )
     }
-    
+
     private func createSchema(for index: Int) -> DynamicGenerationSchema {
         let schema: DynamicGenerationSchema
-        
+
         switch index {
         case 0: // Pattern Matching
             let phoneEntrySchema = DynamicGenerationSchema(
@@ -172,7 +172,7 @@ struct GuidedDynamicSchemaView: View {
                     )
                 ]
             )
-            
+
             schema = DynamicGenerationSchema(
                 name: "PhoneDirectory",
                 description: "Phone directory",
@@ -188,7 +188,7 @@ struct GuidedDynamicSchemaView: View {
                     )
                 ]
             )
-            
+
         case 1: // Number Ranges
             let productSchema = DynamicGenerationSchema(
                 name: "Product",
@@ -226,7 +226,7 @@ struct GuidedDynamicSchemaView: View {
                     )
                 ]
             )
-            
+
             schema = DynamicGenerationSchema(
                 name: "ProductCatalog",
                 description: "Product catalog",
@@ -242,13 +242,13 @@ struct GuidedDynamicSchemaView: View {
                     )
                 ]
             )
-            
+
         case 2: // Array Constraints
             let attributeSchema = DynamicGenerationSchema(
                 type: String.self,
                 guides: [.anyOf(["organic", "gluten-free", "vegan", "non-GMO", "local", "fair-trade"])]
             )
-            
+
             let shoppingItemSchema = DynamicGenerationSchema(
                 name: "ShoppingItem",
                 description: "Shopping list item",
@@ -287,7 +287,7 @@ struct GuidedDynamicSchemaView: View {
                     )
                 ]
             )
-            
+
             schema = DynamicGenerationSchema(
                 name: "ShoppingList",
                 description: "Shopping list",
@@ -320,7 +320,7 @@ struct GuidedDynamicSchemaView: View {
                     )
                 ]
             )
-            
+
         case 3: // Complex Validation
             let employeeSchema = DynamicGenerationSchema(
                 name: "Employee",
@@ -377,7 +377,7 @@ struct GuidedDynamicSchemaView: View {
                     )
                 ]
             )
-            
+
             schema = DynamicGenerationSchema(
                 name: "EmployeeDirectory",
                 description: "Employee directory",
@@ -401,22 +401,22 @@ struct GuidedDynamicSchemaView: View {
                     )
                 ]
             )
-            
+
         default:
             return DynamicGenerationSchema(
                 name: "Default",
                 properties: []
             )
         }
-        
+
         return schema
     }
-    
+
     private func validateConstraints(_ json: Any, for guideType: Int) -> String {
         guard let dict = json as? [String: Any] else { return "\nCould not validate" }
-        
+
         var validations = [String]()
-        
+
         switch guideType {
         case 0: // Pattern validation
             if let entries = dict["entries"] as? [[String: Any]] {
@@ -429,7 +429,7 @@ struct GuidedDynamicSchemaView: View {
                 }.count
                 validations.append("\nAll \(validPhones) phone numbers match pattern")
             }
-            
+
         case 1: // Range validation
             if let products = dict["products"] as? [[String: Any]] {
                 let pricesInRange = products.filter { product in
@@ -440,7 +440,7 @@ struct GuidedDynamicSchemaView: View {
                 }.count
                 validations.append("\nAll \(pricesInRange) prices within $10-$100 range")
             }
-            
+
         case 2: // Array constraints
             if let items = dict["items"] as? [[String: Any]] {
                 validations.append("\nShopping list has \(items.count) items (constraint: 3-5)")
@@ -452,7 +452,7 @@ struct GuidedDynamicSchemaView: View {
                 }.count
                 validations.append("\nAll \(validAttributes) items have 2-4 attributes")
             }
-            
+
         case 3: // Complex validation
             if let employees = dict["employees"] as? [[String: Any]] {
                 validations.append("\nGenerated \(employees.count) employee records")
@@ -464,43 +464,43 @@ struct GuidedDynamicSchemaView: View {
                 }.count
                 validations.append("\nAll \(validEmails) emails use @techcorp.com domain")
             }
-            
+
         default:
             break
         }
-        
+
         return validations.joined()
     }
-    
+
     private var exampleCode: String {
         """
         // Using GenerationGuide constraints with DynamicGenerationSchema
-        
+
         // 1. Pattern constraints for strings
         let phoneSchema = DynamicGenerationSchema(
             type: String.self,
             guides: [.pattern(/\\(\\d{3}\\) \\d{3}-\\d{4}/)]
         )
-        
+
         // 2. Range constraints for numbers
         let priceSchema = DynamicGenerationSchema(
             type: Double.self,
             guides: [.range(10.0...100.0)]
         )
-        
+
         // 3. Array length constraints
         let itemsSchema = DynamicGenerationSchema(
             arrayOf: itemSchema,
             minimumElements: 3,
             maximumElements: 5
         )
-        
+
         // 4. Enum constraints for valid values
         let categorySchema = DynamicGenerationSchema(
             type: String.self,
             guides: [.anyOf(["A", "B", "C"])]
         )
-        
+
         // 5. Constant values for fixed fields
         let versionSchema = DynamicGenerationSchema(
             type: String.self,

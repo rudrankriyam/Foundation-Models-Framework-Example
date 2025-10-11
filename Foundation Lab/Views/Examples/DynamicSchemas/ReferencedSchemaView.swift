@@ -148,10 +148,10 @@ struct ReferencedSchemaView: View {
             return """
             📦 Person (reusable schema)
             └── Used by: BlogPost.author, Comment.author
-            
+
             📦 Comment (reusable schema)
             └── Used by: BlogPost.comments[]
-            
+
             🏗️ BlogPost (root schema)
             ├── author → Person (reference)
             └── comments → [Comment] (reference)
@@ -160,10 +160,10 @@ struct ReferencedSchemaView: View {
             return """
             📦 Person (base schema)
             └── Extended by: Developer, Designer
-            
+
             📦 Task (reusable schema)
             └── Used by: Project.tasks[], Person.assignedTasks[]
-            
+
             🏗️ Project (root schema)
             ├── manager → Person (reference)
             ├── team → [Person] (reference)
@@ -173,10 +173,10 @@ struct ReferencedSchemaView: View {
             return """
             📦 Person (reusable schema)
             └── Used by: Book.borrowedBy, Loan.borrower
-            
+
             📦 Book (reusable schema)
             └── Used by: Library.books[], Loan.book
-            
+
             📦 Loan (combines references)
             ├── book → Book (reference)
             └── borrower → Person (reference)
@@ -191,7 +191,7 @@ struct ReferencedSchemaView: View {
 
             let prompt = """
             Extract the structured information from this text:
-            
+
             \(currentInput)
             """
 
@@ -204,13 +204,13 @@ struct ReferencedSchemaView: View {
             return """
             📝 Input:
             \(currentInput)
-            
+
             📊 Extracted Data:
             \(formatReferencedContent(response.content))
-            
+
             🔗 Referenced Schemas Used:
             \(referencedSchemas.map { "• \($0)" }.joined(separator: "\n"))
-            
+
             ✅ Benefits:
             • No schema duplication
             • Consistent data structure
@@ -451,7 +451,7 @@ struct ReferencedSchemaView: View {
                         output += "\n\(indentStr)\(key): "
 
                         switch val.kind {
-                        case .structure(_, _):
+                        case .structure:
                             // This is a referenced object
                             if !processedRefs.contains(key) {
                                 processedRefs.insert(key)
@@ -505,7 +505,7 @@ struct ReferencedSchemaView: View {
     private var exampleCode: String {
         """
         // Creating schemas with references
-        
+
         // Define a reusable Person schema
         let personSchema = DynamicGenerationSchema(
             name: "Person",
@@ -517,7 +517,7 @@ struct ReferencedSchemaView: View {
                 )
             ]
         )
-        
+
         // Define a Comment schema that references Person
         let commentSchema = DynamicGenerationSchema(
             name: "Comment",
@@ -532,7 +532,7 @@ struct ReferencedSchemaView: View {
                 )
             ]
         )
-        
+
         // Main schema using references
         let blogPostSchema = DynamicGenerationSchema(
             name: "BlogPost",
@@ -547,13 +547,13 @@ struct ReferencedSchemaView: View {
                 )
             ]
         )
-        
+
         // Register all schemas in dependencies
         let schema = try GenerationSchema(
             root: blogPostSchema,
             dependencies: [personSchema, commentSchema]
         )
-        
+
         // Benefits:
         // - Avoid duplication
         // - Maintain consistency

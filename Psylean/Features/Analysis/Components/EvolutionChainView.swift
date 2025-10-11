@@ -10,12 +10,12 @@ import FoundationModels
 
 struct EvolutionChainView: View {
     let evolutions: [Evolution.PartiallyGenerated]
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Label("Evolution Chain", systemImage: "arrow.right.circle.fill")
                 .font(.headline)
-            
+
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 16) {
                     ForEach(Array(evolutions.enumerated()), id: \.offset) { index, evolution in
@@ -24,7 +24,7 @@ struct EvolutionChainView: View {
                                 .font(.title3)
                                 .foregroundStyle(.secondary)
                         }
-                        
+
                         EvolutionStage(evolution: evolution)
                     }
                 }
@@ -36,7 +36,7 @@ struct EvolutionChainView: View {
 
 struct EvolutionStage: View {
     let evolution: Evolution.PartiallyGenerated
-    
+
     var body: some View {
         VStack(spacing: 8) {
             if let name = evolution.pokemonName {
@@ -44,13 +44,13 @@ struct EvolutionStage: View {
                     .font(.subheadline)
                     .fontWeight(.medium)
             }
-            
+
             if let method = evolution.evolutionMethod {
                 Text(method)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            
+
             if let requirement = evolution.evolutionRequirement {
                 Text(requirement)
                     .font(.caption2)

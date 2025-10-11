@@ -25,9 +25,9 @@ final class ChatViewModel {
     // MARK: - Public Properties
 
     private(set) var session: LanguageModelSession
-    
+
     // MARK: - Feedback State
-    
+
     private(set) var feedbackState: [Transcript.Entry.ID: LanguageModelFeedback.Sentiment] = [:]
 
     // MARK: - Sliding Window Configuration
@@ -85,7 +85,7 @@ final class ChatViewModel {
         // Use the new session method to log feedback attachment
         _ = session.logFeedbackAttachment(sentiment: sentiment)
     }
-    
+
     @MainActor
     func getFeedback(for entryID: Transcript.Entry.ID) -> LanguageModelFeedback.Sentiment? {
         return feedbackState[entryID]
@@ -99,7 +99,7 @@ final class ChatViewModel {
             instructions: Instructions(instructions)
         )
     }
-    
+
     @MainActor
     func updateInstructions(_ newInstructions: String) {
         instructions = newInstructions
@@ -122,18 +122,18 @@ final class ChatViewModel {
 
         // Get entries that fit within our target window size
         let windowEntries = session.transcript.entriesWithinTokenBudget(targetWindowSize)
-        
+
         // Always preserve instructions at the beginning
         var finalEntries = windowEntries
-        if let instructions = session.transcript.first(where: { 
-            if case .instructions(_) = $0 { return true }
-            return false 
+        if let instructions = session.transcript.first(where: {
+            if case .instructions = $0 { return true }
+            return false
         }) {
             if !finalEntries.contains(where: { $0.id == instructions.id }) {
                 finalEntries.insert(instructions, at: 0)
             }
         }
-        
+
         // Create new session with windowed transcript
         let windowedTranscript = Transcript(entries: finalEntries)
         _ = windowedTranscript.estimatedTokenCount
@@ -201,7 +201,6 @@ final class ChatViewModel {
         }.joined(separator: "\n\n")
     }
 
-
     @MainActor
     private func generateConversationSummary() async throws -> ConversationSummary {
         let summarySession = LanguageModelSession(
@@ -213,7 +212,7 @@ final class ChatViewModel {
         let conversationText = createConversationText()
         let summaryPrompt = """
       Please summarize the following entire conversation comprehensively. Include all key points, topics discussed, user preferences, and important context that would help continue the conversation naturally:
-      
+
       \(conversationText)
       """
 
@@ -228,18 +227,18 @@ final class ChatViewModel {
     private func createNewSessionWithContext(summary: ConversationSummary) {
         let contextInstructions = """
       \(instructions)
-      
+
       You are continuing a conversation with a user. Here's a summary of your previous conversation:
-      
+
       CONVERSATION SUMMARY:
       \(summary.summary)
-      
+
       KEY TOPICS DISCUSSED:
       \(summary.keyTopics.map { "• \($0)" }.joined(separator: "\n"))
-      
+
       USER PREFERENCES/REQUESTS:
       \(summary.userPreferences.map { "• \($0)" }.joined(separator: "\n"))
-      
+
       Continue the conversation naturally, referencing this context when relevant. The user's next message is a continuation of your previous discussion.
       """
 
@@ -262,7 +261,7 @@ final class ChatViewModel {
         errorMessage = error.localizedDescription
         showError = true
     }
-    
+
     @MainActor
     func dismissError() {
         showError = false

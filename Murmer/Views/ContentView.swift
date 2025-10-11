@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject private var viewModel = MurmerViewModel()
-    
+
     var body: some View {
         Group {
             if viewModel.permissionService.allPermissionsGranted {
@@ -30,7 +30,7 @@ struct ContentView: View {
 struct MurmerMainView: View {
     @ObservedObject var viewModel: MurmerViewModel
     @State private var blobScale: CGFloat = 1.0
-    
+
     var body: some View {
         VStack(spacing: 30) {
             // Header with list selector
@@ -39,7 +39,7 @@ struct MurmerMainView: View {
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .foregroundStyle(.primary)
-                
+
                 GlassDropdown(
                     selectedValue: $viewModel.selectedList,
                     options: viewModel.availableLists,
@@ -49,9 +49,9 @@ struct MurmerMainView: View {
             }
             .padding(.horizontal)
             .frame(maxWidth: .infinity, alignment: .leading)
-            
+
             Spacer()
-            
+
             // Main content
             VStack(spacing: 40) {
                 // Audio reactive blob
@@ -64,7 +64,7 @@ struct MurmerMainView: View {
                             .blur(radius: 30)
                             .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: viewModel.isListening)
                     }
-                    
+
                     AudioReactiveBlobView(speechRecognizer: viewModel.speechRecognizer, listeningState: $viewModel.isListening)
                         .frame(width: 250, height: 250)
                         .scaleEffect(blobScale)
@@ -72,7 +72,7 @@ struct MurmerMainView: View {
                             toggleListening()
                         }
                 }
-                
+
                 // Transcription display
                 if !viewModel.recognizedText.isEmpty || viewModel.isListening {
                     VStack(spacing: 8) {
@@ -113,7 +113,7 @@ struct MurmerMainView: View {
                         removal: .scale(scale: 0.8).combined(with: .opacity)
                     ))
                 }
-                
+
                 // Instructions
                 if !viewModel.isListening && viewModel.recognizedText.isEmpty {
                     Text("Tap the blob to start")
@@ -121,7 +121,7 @@ struct MurmerMainView: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            
+
             Spacer()
         }
         .padding()
@@ -139,7 +139,7 @@ struct MurmerMainView: View {
             Text(viewModel.errorMessage)
         }
     }
-    
+
     private func toggleListening() {
         if viewModel.isListening {
             viewModel.stopListening()
@@ -154,7 +154,7 @@ struct MurmerMainView: View {
                 }
             }
         }
-        
+
         // Haptic feedback
         #if os(iOS)
         let impact = UIImpactFeedbackGenerator(style: .medium)
@@ -162,7 +162,6 @@ struct MurmerMainView: View {
         #endif
     }
 }
-
 
 #Preview {
     ContentView()

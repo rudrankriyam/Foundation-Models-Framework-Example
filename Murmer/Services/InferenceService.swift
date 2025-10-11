@@ -13,7 +13,7 @@ import Playgrounds
 /// This service is completely decoupled from speech recognition and synthesis
 class InferenceService: InferenceServiceProtocol {
     public let session: LanguageModelSession
-    
+
     init() {
         let instructions = """
         You are a helpful AI assistant for managing reminders through voice commands.
@@ -47,13 +47,13 @@ class InferenceService: InferenceServiceProtocol {
 
         Always respond in a conversational, helpful manner and confirm what you've done.
         """
-        
+
         self.session = LanguageModelSession(
             tools: [MurmerRemindersTool()],
             instructions: Instructions(instructions)
         )
     }
-    
+
     /// Process text input and return text output
     /// - Parameter text: The input text from speech recognition
     /// - Returns: The response text to be sent to speech synthesis
@@ -61,7 +61,7 @@ class InferenceService: InferenceServiceProtocol {
         let response = try await session.respond(to: text)
         return response.content
     }
-    
+
     // MARK: - Date Formatting Utilities
 
     private static func formatCurrentDate() -> String {

@@ -19,7 +19,7 @@ final class HealthInsight {
     var generatedAt: Date
     var isRead: Bool
     var actionItems: [String]
-    
+
     init(title: String, content: String, category: InsightCategory, priority: InsightPriority = .medium, relatedMetrics: [MetricType] = [], actionItems: [String] = []) {
         self.id = UUID()
         self.title = title
@@ -40,7 +40,7 @@ enum InsightCategory: String, Codable, CaseIterable {
     case warning = "Health Warning"
     case goal = "Goal Progress"
     case comparison = "Comparison"
-    
+
     var icon: String {
         switch self {
         case .trend: return "chart.line.uptrend.xyaxis"
@@ -58,7 +58,7 @@ enum InsightPriority: String, Codable, CaseIterable {
     case medium = "Medium"
     case high = "High"
     case urgent = "Urgent"
-    
+
     var color: String {
         switch self {
         case .low: return "green"

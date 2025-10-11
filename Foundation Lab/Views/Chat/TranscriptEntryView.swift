@@ -10,7 +10,7 @@ import FoundationModels
 
 struct TranscriptEntryView: View {
     let entry: Transcript.Entry
-    
+
     var body: some View {
         switch entry {
         case .prompt(let prompt):
@@ -18,13 +18,13 @@ struct TranscriptEntryView: View {
                 MessageBubbleView(message: ChatMessage(content: text, isFromUser: true))
                     .id(entry.id)
             }
-            
+
         case .response(let response):
             if let text = extractText(from: response.segments), !text.isEmpty {
                 MessageBubbleView(message: ChatMessage(entryID: entry.id, content: text, isFromUser: false))
                     .id(entry.id)
             }
-            
+
         case .toolCalls(let toolCalls):
             ForEach(Array(toolCalls.enumerated()), id: \.offset) { index, toolCall in
                 MessageBubbleView(message: ChatMessage(
@@ -34,7 +34,7 @@ struct TranscriptEntryView: View {
                 ))
                 .id("\(entry.id)-tool-\(index)")
             }
-            
+
         case .toolOutput(let toolOutput):
             if let text = extractText(from: toolOutput.segments), !text.isEmpty {
                 MessageBubbleView(message: ChatMessage(
@@ -44,16 +44,16 @@ struct TranscriptEntryView: View {
                 ))
                 .id(entry.id)
             }
-            
+
         case .instructions:
             // Don't show instructions in chat UI
             EmptyView()
-            
+
         @unknown default:
             EmptyView()
         }
     }
-    
+
     private func extractText(from segments: [Transcript.Segment]) -> String? {
         let text = segments.compactMap { segment in
             if case .text(let textSegment) = segment {
@@ -61,7 +61,7 @@ struct TranscriptEntryView: View {
             }
             return nil
         }.joined(separator: " ")
-        
+
         return text.isEmpty ? nil : text
     }
 }

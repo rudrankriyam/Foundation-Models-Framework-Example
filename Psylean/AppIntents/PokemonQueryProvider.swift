@@ -23,7 +23,7 @@ struct PokemonQueryProvider: DynamicOptionsProvider {
         "Gyarados",
         "Snorlax"
     ]
-    
+
     // Common descriptive queries
     static let descriptiveQueries = [
         "cute grass pokemon",
@@ -37,12 +37,12 @@ struct PokemonQueryProvider: DynamicOptionsProvider {
         "fastest pokemon",
         "strongest pokemon"
     ]
-    
+
     func results() async throws -> [String] {
         // Combine popular Pokemon and descriptive queries
         return Self.popularPokemon + Self.descriptiveQueries
     }
-    
+
     func defaultResult() async -> String? {
         return nil
     }

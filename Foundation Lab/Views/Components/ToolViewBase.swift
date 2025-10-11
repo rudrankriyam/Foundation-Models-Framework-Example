@@ -176,9 +176,9 @@ struct ResultDisplay: View {
           .font(.footnote)
           .fontWeight(.medium)
           .foregroundColor(.secondary)
-        
+
         Spacer()
-        
+
         Button(action: copyToClipboard) {
           Image(systemName: isCopied ? "checkmark" : "doc.on.doc")
             .font(.callout)
@@ -200,7 +200,7 @@ struct ResultDisplay: View {
       .frame(maxHeight: 300)
     }
   }
-  
+
   private func copyToClipboard() {
     #if os(iOS)
     UIPasteboard.general.string = result
@@ -208,14 +208,13 @@ struct ResultDisplay: View {
     NSPasteboard.general.clearContents()
     NSPasteboard.general.setString(result, forType: .string)
     #endif
-    
+
     isCopied = true
     DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
       isCopied = false
     }
   }
 }
-
 
 #Preview {
   NavigationStack {
@@ -281,7 +280,7 @@ final class ToolExecutor {
 
     isRunning = false
   }
-  
+
   /// Executes a tool operation using PromptBuilder
   /// - Parameters:
   ///   - tool: The tool to execute
@@ -377,7 +376,6 @@ final class ToolExecutor {
   }
 }
 
-
 // MARK: - Standard Tool Components
 
 /// Standard execute button for tool views
@@ -386,7 +384,7 @@ struct ToolExecuteButton: View {
   let systemImage: String?
   let isRunning: Bool
   let action: () -> Void
-  
+
   init(
     _ title: String,
     systemImage: String? = nil,
@@ -398,7 +396,7 @@ struct ToolExecuteButton: View {
     self.isRunning = isRunning
     self.action = action
   }
-  
+
   var body: some View {
     Button(action: action) {
       HStack(spacing: Spacing.small) {
@@ -426,7 +424,7 @@ struct ToolInputField: View {
   let label: String
   @Binding var text: String
   let placeholder: String
-  
+
   var body: some View {
     VStack(alignment: .leading, spacing: Spacing.small) {
       Text(label.uppercased())

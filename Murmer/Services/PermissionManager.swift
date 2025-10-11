@@ -20,7 +20,7 @@ import AVFoundation
 
 @MainActor
 class PermissionService: ObservableObject, PermissionServiceProtocol {
-    
+
 #if os(iOS)
     @Published var microphonePermissionStatus: AVAudioApplication.recordPermission = .undetermined {
         didSet { updateAllPermissionsStatus() }
@@ -44,9 +44,9 @@ class PermissionService: ObservableObject, PermissionServiceProtocol {
     var hasRemindersAccess: Bool {
         isRemindersPermissionGranted(remindersPermissionStatus)
     }
-    
+
     private let eventStore = EKEventStore()
-    
+
     init() {
         initializeAudioSessionIfNeeded()
         checkAllPermissions()
@@ -60,7 +60,7 @@ class PermissionService: ObservableObject, PermissionServiceProtocol {
         _ = audioSession
         #endif
     }
-    
+
     func checkAllPermissions() {
         checkMicrophonePermission()
         checkSpeechPermission()
@@ -68,20 +68,20 @@ class PermissionService: ObservableObject, PermissionServiceProtocol {
         updateAllPermissionsStatus()
         debugPrintPermissionStatuses(context: "Initial check")
     }
-    
+
     func requestAllPermissions() async -> Bool {
         _ = await requestMicrophonePermission()
-        
+
         _ = await requestSpeechPermission()
         _ = await requestRemindersPermission()
-        
+
         updateAllPermissionsStatus()
         debugPrintPermissionStatuses(context: "Post-request")
         return allPermissionsGranted
     }
-    
+
     // MARK: - Microphone Permission
-    
+
 #if os(iOS)
     private func checkMicrophonePermission() {
         let status = AVAudioApplication.shared.recordPermission
@@ -92,7 +92,7 @@ class PermissionService: ObservableObject, PermissionServiceProtocol {
         if microphonePermissionStatus == .granted {
             return true
         }
-        
+
         return await AVAudioApplication.requestRecordPermission()
     }
 #else
@@ -105,7 +105,7 @@ class PermissionService: ObservableObject, PermissionServiceProtocol {
         if microphonePermissionStatus == .undetermined {
             // Try to determine status by attempting a quick access test
             Task { @MainActor in
-                let _ = await self.testMicrophoneAccess()
+                _ = await self.testMicrophoneAccess()
             }
         }
     }
@@ -168,18 +168,18 @@ class PermissionService: ObservableObject, PermissionServiceProtocol {
         return await testMicrophoneAccess()
     }
     #endif
-    
+
     // MARK: - Speech Recognition Permission
-    
+
     private func checkSpeechPermission() {
         speechPermissionStatus = SFSpeechRecognizer.authorizationStatus()
     }
-    
+
     private func requestSpeechPermission() async -> Bool {
         if speechPermissionStatus == .authorized {
             return true
         }
-        
+
         return await withCheckedContinuation { continuation in
             SFSpeechRecognizer.requestAuthorization { status in
                 Task { @MainActor in
@@ -189,9 +189,9 @@ class PermissionService: ObservableObject, PermissionServiceProtocol {
             }
         }
     }
-    
+
     // MARK: - Reminders Permission
-    
+
     private func checkRemindersPermission() {
         if #available(iOS 17.0, *) {
             remindersPermissionStatus = EKEventStore.authorizationStatus(for: .reminder)
@@ -199,12 +199,12 @@ class PermissionService: ObservableObject, PermissionServiceProtocol {
             remindersPermissionStatus = EKEventStore.authorizationStatus(for: .reminder)
         }
     }
-    
+
     private func requestRemindersPermission() async -> Bool {
         if isRemindersPermissionGranted(remindersPermissionStatus) {
             return true
         }
-        
+
         do {
             let granted = try await eventStore.requestFullAccessToReminders()
             remindersPermissionStatus = granted ? .fullAccess : .denied
@@ -214,16 +214,16 @@ class PermissionService: ObservableObject, PermissionServiceProtocol {
             return false
         }
     }
-    
+
     // MARK: - Helpers
-    
+
     private func updateAllPermissionsStatus() {
         #if os(iOS)
         let micGranted = microphonePermissionStatus == .granted
         #else
         let micGranted = microphonePermissionStatus == .granted
         #endif
-        
+
         let speechGranted = speechPermissionStatus == .authorized
         let remindersGranted = isRemindersPermissionGranted(remindersPermissionStatus)
 
@@ -233,21 +233,21 @@ class PermissionService: ObservableObject, PermissionServiceProtocol {
     private func isRemindersPermissionGranted(_ status: EKAuthorizationStatus) -> Bool {
         return status == .fullAccess || status == .writeOnly
     }
-    
+
     func showSettingsAlert() {
         var deniedPermissions: [String] = []
 
         if microphonePermissionStatus == .denied {
             deniedPermissions.append("Microphone")
         }
-        
+
         if speechPermissionStatus == .denied || speechPermissionStatus == .restricted {
             deniedPermissions.append("Speech Recognition")
         }
         if remindersPermissionStatus == .denied || remindersPermissionStatus == .restricted {
             deniedPermissions.append("Reminders")
         }
-        
+
         if !deniedPermissions.isEmpty {
             permissionAlertMessage = "Please enable \(deniedPermissions.joined(separator: ", ")) in Settings to use Murmer."
             showPermissionAlert = true
@@ -256,7 +256,7 @@ class PermissionService: ObservableObject, PermissionServiceProtocol {
 
     private func debugPrintPermissionStatuses(context: String) {
     }
-    
+
     func openSettings() {
         #if os(iOS)
         if let settingsURL = URL(string: UIApplication.openSettingsURLString) {

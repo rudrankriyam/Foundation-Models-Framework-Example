@@ -32,7 +32,6 @@ final class PokemonDataTool: Tool {
         let success: Bool
     }
 
-
     @MainActor func recordFetch(pokemonName: String, success: Bool) {
         fetchHistory.append(PokemonFetch(
             pokemonName: pokemonName,
@@ -46,7 +45,6 @@ final class PokemonDataTool: Tool {
             let pokemonData = try await PokeAPIClient.fetchPokemon(identifier: arguments.identifier)
             await recordFetch(pokemonName: pokemonData.name, success: true)
 
-
             var output = formatPokemonData(pokemonData)
 
             if arguments.includeEvolutions {
@@ -57,7 +55,6 @@ final class PokemonDataTool: Tool {
                     output += "\n\nEvolution Chain: Unable to fetch evolution data."
                 }
             }
-
 
             return output
         } catch {
@@ -106,21 +103,21 @@ final class PokemonDataTool: Tool {
 
         return output
     }
-    
+
     private func formatEvolutionChain(_ evolution: EvolutionChain) -> String {
         var output = "Evolution Chain:\n"
-        
+
         func formatChainLink(_ link: EvolutionChain.ChainLink, level: Int = 0) -> String {
             let indent = String(repeating: "  ", count: level)
             var result = "\(indent)→ \(link.species.name.capitalized)\n"
-            
+
             for evolution in link.evolvesTo {
                 result += formatChainLink(evolution, level: level + 1)
             }
-            
+
             return result
         }
-        
+
         output += formatChainLink(evolution.chain)
         return output
     }

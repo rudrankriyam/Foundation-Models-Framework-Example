@@ -41,7 +41,7 @@ struct ChatView: View {
                     Label("Instructions", systemImage: "doc.text")
                 }
                 .help("Customize AI behavior")
-                
+
                 Button(action: { showFeedbackSheet = true }) {
                     Label("Feedback", systemImage: "bubble.left.and.exclamationmark.bubble.right")
                 }

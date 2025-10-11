@@ -16,7 +16,7 @@ final class HealthMetric {
     var unit: String
     var timestamp: Date
     var notes: String?
-    
+
     init(type: MetricType, value: Double, unit: String, timestamp: Date = Date(), notes: String? = nil) {
         self.id = UUID()
         self.type = type
@@ -36,7 +36,7 @@ enum MetricType: String, Codable, CaseIterable {
     case weight = "Weight"
     case bloodPressure = "Blood Pressure"
     case bloodOxygen = "Blood Oxygen"
-    
+
     var icon: String {
         switch self {
         case .steps: return "figure.walk"
@@ -49,7 +49,7 @@ enum MetricType: String, Codable, CaseIterable {
         case .bloodOxygen: return "drop.fill"
         }
     }
-    
+
     var color: String {
         switch self {
         case .steps: return "blue"
@@ -62,7 +62,7 @@ enum MetricType: String, Codable, CaseIterable {
         case .bloodOxygen: return "cyan"
         }
     }
-    
+
     var defaultUnit: String {
         switch self {
         case .steps: return "steps"

@@ -11,7 +11,7 @@ import SwiftUI
 struct StructuredDataView: View {
   @State private var currentPrompt = DefaultPrompts.structuredData
   @State private var executor = ExampleExecutor()
-  
+
   var body: some View {
     ExampleViewBase(
       title: "Structured Data",
@@ -37,13 +37,13 @@ struct StructuredDataView: View {
         .padding()
         .background(Color.main.opacity(0.1))
         .cornerRadius(8)
-        
+
         // Prompt Suggestions
         PromptSuggestions(
           suggestions: DefaultPrompts.structuredDataSuggestions,
           onSelect: { currentPrompt = $0 }
         )
-        
+
         // Prompt History
         if !executor.promptHistory.isEmpty {
           PromptHistory(
@@ -51,13 +51,13 @@ struct StructuredDataView: View {
             onSelect: { currentPrompt = $0 }
           )
         }
-        
+
         // Result Display
         if !executor.result.isEmpty {
           VStack(alignment: .leading, spacing: 12) {
             Label("Generated Book Recommendation", systemImage: "book")
               .font(.headline)
-            
+
             ResultDisplay(
               result: executor.result,
               isSuccess: executor.errorMessage == nil
@@ -67,7 +67,7 @@ struct StructuredDataView: View {
       }
     }
   }
-  
+
   private func executeStructuredData() {
     Task {
       await executor.executeStructured(
@@ -78,14 +78,14 @@ struct StructuredDataView: View {
         📚 Title: \(book.title)
         ✍️ Author: \(book.author)
         🏷️ Genre: \(book.genre)
-        
+
         📖 Description:
         \(book.description)
         """
       }
     }
   }
-  
+
   private func resetToDefaults() {
     currentPrompt = "" // Clear the prompt completely
     executor.clearAll() // Clear all results, errors, and history

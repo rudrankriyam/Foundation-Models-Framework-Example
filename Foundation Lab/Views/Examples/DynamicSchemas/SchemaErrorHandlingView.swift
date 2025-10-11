@@ -13,14 +13,14 @@ struct SchemaErrorHandlingView: View {
     @State private var testInput = "The product costs $49.99 and comes in red, blue, or green colors. It weighs 2.5 kg."
     @State private var selectedScenario = 0
     @State private var showDetailedError = true
-    
+
     private let scenarios = [
         "Basic Extraction",
         "Missing Required Fields",
         "Type Mismatch",
         "Schema Validation Failure"
     ]
-    
+
     var body: some View {
         ExampleViewBase(
             title: "Error Handling",
@@ -31,7 +31,7 @@ struct SchemaErrorHandlingView: View {
             errorMessage: executor.errorMessage,
             codeExample: exampleCode,
             onRun: { Task { await runExample() } },
-            onReset: { 
+            onReset: {
                 executor.reset()
                 selectedScenario = 0
             }
@@ -41,7 +41,7 @@ struct SchemaErrorHandlingView: View {
                 VStack(alignment: .leading, spacing: Spacing.small) {
                     Text("Error Scenario")
                         .font(.headline)
-                    
+
                     Picker("Scenario", selection: $selectedScenario) {
                         ForEach(0..<scenarios.count, id: \.self) { index in
                             Text(scenarios[index]).tag(index)
@@ -49,17 +49,17 @@ struct SchemaErrorHandlingView: View {
                     }
                     .pickerStyle(.segmented)
                 }
-                
+
                 // Options
                 Toggle("Show detailed error information", isOn: $showDetailedError)
                     .padding(.vertical, 8)
-                
+
                 // Scenario description
                 VStack(alignment: .leading, spacing: Spacing.small) {
                     Label("Scenario Details", systemImage: "exclamationmark.triangle")
                         .font(.headline)
                         .foregroundColor(.orange)
-                    
+
                     Text(scenarioDescription)
                         .font(.caption)
                         .padding()
@@ -67,20 +67,20 @@ struct SchemaErrorHandlingView: View {
                         .background(Color.orange.opacity(0.1))
                         .cornerRadius(8)
                 }
-                
+
                 // Results
                 if !executor.results.isEmpty {
                     VStack(alignment: .leading, spacing: Spacing.small) {
                         Text("Extraction Result")
                             .font(.headline)
-                        
+
                         ScrollView {
                             Text(executor.results)
                                 .font(.system(.caption, design: .monospaced))
                                 .padding()
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(executor.errorMessage != nil ? 
-                                    Color.red.opacity(0.1) : 
+                                .background(executor.errorMessage != nil ?
+                                    Color.red.opacity(0.1) :
                                     Color.green.opacity(0.1))
                                 .cornerRadius(8)
                         }
@@ -91,7 +91,7 @@ struct SchemaErrorHandlingView: View {
             .padding()
         }
     }
-    
+
     private var scenarioDescription: String {
         switch selectedScenario {
         case 0:
@@ -106,24 +106,24 @@ struct SchemaErrorHandlingView: View {
             return ""
         }
     }
-    
+
     private func runExample() async {
         let schema = createSchema(for: selectedScenario)
-        
+
         await executor.execute(
             withPrompt: "Extract product information from: \(testInput)",
             schema: schema
         ) { result in
             let status = executor.errorMessage != nil ? "Error Occurred" : "Success"
-            
+
             return """
             \(status)
-            
+
             Schema: \(scenarios[selectedScenario])
-            
+
             Result:
             \(result)
-            
+
             💡 Error Handling Tips:
             - Use optional fields for data that might be missing
             - Provide clear descriptions to guide extraction
@@ -131,7 +131,7 @@ struct SchemaErrorHandlingView: View {
             """
         }
     }
-    
+
     private func createSchema(for scenario: Int) -> DynamicGenerationSchema {
         switch scenario {
         case 0: // Basic extraction
@@ -175,7 +175,7 @@ struct SchemaErrorHandlingView: View {
                     )
                 ]
             )
-            
+
         case 1: // Missing required fields - all fields are required
             return DynamicGenerationSchema(
                 name: "StrictProduct",
@@ -213,7 +213,7 @@ struct SchemaErrorHandlingView: View {
                     )
                 ]
             )
-            
+
         case 2: // Type mismatch scenario
             return DynamicGenerationSchema(
                 name: "TypeSensitiveProduct",
@@ -250,7 +250,7 @@ struct SchemaErrorHandlingView: View {
                     )
                 ]
             )
-            
+
         case 3: // Validation failure scenario
             return DynamicGenerationSchema(
                 name: "ValidatedProduct",
@@ -300,7 +300,7 @@ struct SchemaErrorHandlingView: View {
                     )
                 ]
             )
-            
+
         default:
             return DynamicGenerationSchema(
                 name: "Default",
@@ -308,11 +308,11 @@ struct SchemaErrorHandlingView: View {
             )
         }
     }
-    
+
     private var exampleCode: String {
         """
         // Error handling strategies
-        
+
         // 1. Make fields optional to handle missing data
         let flexibleSchema = DynamicGenerationSchema(
             name: "Product",
@@ -325,14 +325,14 @@ struct SchemaErrorHandlingView: View {
                 )
             ]
         )
-        
+
         // 2. Use clear descriptions for type guidance
         let guidedSchema = DynamicGenerationSchema.Property(
             name: "date",
             description: "Date in format YYYY-MM-DD",
             schema: DynamicGenerationSchema(type: String.self)
         )
-        
+
         // 3. Handle errors gracefully
         do {
             let result = try await session.respond(

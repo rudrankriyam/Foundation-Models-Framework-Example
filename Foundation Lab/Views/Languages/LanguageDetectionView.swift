@@ -11,12 +11,12 @@ import FoundationModels
 struct LanguageDetectionView: View {
     private let languageService = LanguageService.shared
     @State private var errorMessage: String?
-    
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.large) {
                 descriptionSection
-                
+
                 Button("Refresh Supported Languages") {
                     Task {
                         await languageService.loadSupportedLanguages()
@@ -26,7 +26,7 @@ struct LanguageDetectionView: View {
                 .controlSize(.large)
                 .disabled(languageService.isLoading)
                 .padding(.horizontal)
-                
+
                 if languageService.isLoading {
                     HStack {
                         ProgressView()
@@ -37,13 +37,13 @@ struct LanguageDetectionView: View {
                     }
                     .padding(.horizontal)
                 }
-                
+
                 if let errorMessage = languageService.errorMessage {
                     Text(errorMessage)
                         .foregroundColor(.red)
                         .padding(.horizontal)
                 }
-                
+
                 if !languageService.supportedLanguages.isEmpty {
                     languageListSection
                 }
@@ -55,7 +55,7 @@ struct LanguageDetectionView: View {
         .navigationBarTitleDisplayMode(.large)
 #endif
     }
-    
+
     private var descriptionSection: some View {
         VStack(alignment: .leading, spacing: Spacing.medium) {
             CodeViewer(
@@ -66,11 +66,11 @@ let supported = model.supportedLanguages // [Locale.Language]
 for language in supported {
     let code = language.languageCode?.identifier ?? ""
     let region = language.region?.identifier ?? ""
-    
+
     let name = Locale.current.localizedString(forLanguageCode: code) ?? code
-    let regionName = region.isEmpty ? nil : 
+    let regionName = region.isEmpty ? nil :
         (Locale.current.localizedString(forRegionCode: region) ?? region)
-    
+
     print(regionName != nil ? "\\(name) (\\(regionName!))" : "\\(name)")
 }
 """
@@ -78,13 +78,13 @@ for language in supported {
         }
         .padding(.horizontal)
     }
-    
+
     private var languageListSection: some View {
         VStack(alignment: .leading, spacing: Spacing.medium) {
             Text("Supported Languages (\(languageService.supportedLanguages.count))")
                 .font(.headline)
                 .padding(.horizontal)
-            
+
             LazyVGrid(columns: [
                 GridItem(.flexible()),
                 GridItem(.flexible())
@@ -102,7 +102,7 @@ for language in supported {
 struct LanguageCard: View {
     let language: Locale.Language
     let languageService: LanguageService
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.small) {
             Text(displayName)
@@ -114,7 +114,7 @@ struct LanguageCard: View {
         .background(Color.gray.opacity(0.1))
         .cornerRadius(12)
     }
-    
+
     private var displayName: String {
         return languageService.getDisplayName(for: language)
     }

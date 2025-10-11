@@ -12,14 +12,14 @@ struct MultilingualResponsesView: View {
     @State private var isRunning = false
     @State private var results: [LanguagePromptResult] = []
     @State private var errorMessage: String?
-    
+
     private let languageService = LanguageService.shared
-    
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.large) {
                 descriptionSection
-                
+
                 Button("Generate Multilingual Responses") {
                     Task {
                         await generateMultilingualResponses()
@@ -29,7 +29,7 @@ struct MultilingualResponsesView: View {
                 .controlSize(.large)
                 .disabled(isRunning)
                 .padding(.horizontal)
-                
+
                 if isRunning {
                     HStack {
                         ProgressView()
@@ -40,13 +40,13 @@ struct MultilingualResponsesView: View {
                     }
                     .padding(.horizontal)
                 }
-                
+
                 if let errorMessage {
                     Text(errorMessage)
                         .foregroundColor(.red)
                         .padding(.horizontal)
                 }
-                
+
                 if !results.isEmpty {
                     resultsSection
                 }
@@ -58,10 +58,10 @@ struct MultilingualResponsesView: View {
         .navigationBarTitleDisplayMode(.large)
 #endif
     }
-    
+
     private var descriptionSection: some View {
         VStack(alignment: .leading, spacing: Spacing.medium) {
-            
+
             CodeViewer(
                 code: """
 let session = LanguageModelSession(model: SystemLanguageModel.default)
@@ -82,13 +82,13 @@ for prompt in prompts {
         }
         .padding(.horizontal)
     }
-    
+
     private var resultsSection: some View {
         VStack(alignment: .leading, spacing: Spacing.medium) {
             Text("Generated Responses")
                 .font(.headline)
                 .padding(.horizontal)
-            
+
             LazyVStack(spacing: Spacing.medium) {
                 ForEach(results, id: \.language) { result in
                     LanguageResponseCard(result: result)
@@ -97,16 +97,16 @@ for prompt in prompts {
             .padding(.horizontal)
         }
     }
-    
+
     @MainActor
     private func generateMultilingualResponses() async {
         isRunning = true
         errorMessage = nil
         results = []
-        
+
         // Generate prompts dynamically based on supported languages
         var prompts: [LanguagePrompt] = []
-        
+
         // Sample prompts for different languages (you can expand this)
         let promptTemplates: [String: String] = [
             "en": "What is the capital of France? Please provide a brief answer.",
@@ -119,7 +119,7 @@ for prompt in prompts {
             "ja": "日本の首都は何ですか？簡潔にお答えください。",
             "ko": "한국의 수도는 어디인가요? 간단히 답해주세요."
         ]
-        
+
         // Create prompts for supported languages that we have templates for
         for language in languageService.supportedLanguages {
             let code = language.languageCode?.identifier ?? ""
@@ -132,20 +132,20 @@ for prompt in prompts {
                 ))
             }
         }
-        
+
         // If no supported languages found with templates, use fallback
         if prompts.isEmpty {
             prompts = [
                 LanguagePrompt(language: "English", flag: "🌐", text: "What is the capital of France? Please provide a brief answer.")
             ]
         }
-        
+
         let session = LanguageModelSession(model: SystemLanguageModel.default)
-        
+
         for prompt in prompts {
             do {
                 let response = try await session.respond(to: prompt.text)
-                
+
                 let result = LanguagePromptResult(
                     language: prompt.language,
                     flag: prompt.flag,
@@ -153,7 +153,7 @@ for prompt in prompts {
                     response: response.content,
                     isError: false
                 )
-                
+
                 results.append(result)
             } catch {
                 let errorResult = LanguagePromptResult(
@@ -163,11 +163,11 @@ for prompt in prompts {
                     response: "Error: \(error.localizedDescription)",
                     isError: true
                 )
-                
+
                 results.append(errorResult)
             }
         }
-        
+
         isRunning = false
     }
 }
@@ -188,40 +188,40 @@ struct LanguagePromptResult {
 
 struct LanguageResponseCard: View {
     let result: LanguagePromptResult
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.medium) {
             HStack {
                 Text(result.flag)
                     .font(.title2)
-                
+
                 Text(result.language)
                     .font(.headline)
                     .fontWeight(.medium)
-                
+
                 Spacer()
-                
+
                 if result.isError {
                     Image(systemName: "exclamationmark.triangle")
                         .foregroundColor(.red)
                 }
             }
-            
+
             VStack(alignment: .leading, spacing: Spacing.small) {
                 Text("PROMPT")
                     .font(.caption)
                     .fontWeight(.medium)
                     .foregroundStyle(.secondary)
-                
+
                 Text(result.prompt)
                     .font(.body)
                     .padding(.bottom, Spacing.small)
-                
+
                 Text("RESPONSE")
                     .font(.caption)
                     .fontWeight(.medium)
                     .foregroundStyle(.secondary)
-                
+
                 Text(result.response)
                     .font(.body)
                     .fontWeight(.medium)

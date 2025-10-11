@@ -11,7 +11,7 @@ struct ChatInstructionsView: View {
     @Binding var instructions: String
     let onApply: () -> Void
     @Environment(\.dismiss) private var dismiss
-    
+
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: Spacing.medium) {
@@ -19,12 +19,12 @@ struct ChatInstructionsView: View {
                     Text("Customize AI Behavior")
                         .font(.title2)
                         .fontWeight(.semibold)
-                    
+
                     Text("Provide specific instructions to guide how the AI should respond. These instructions will apply to all new conversations.")
                         .font(.body)
                         .foregroundColor(.secondary)
                 }
-                
+
                 TextEditor(text: $instructions)
                     .font(.body)
                     .scrollContentBackground(.hidden)
@@ -35,7 +35,7 @@ struct ChatInstructionsView: View {
                         RoundedRectangle(cornerRadius: 12)
                             .stroke(Color.gray.opacity(0.3), lineWidth: 1)
                     )
-                
+
                 Spacer()
             }
             .padding(Spacing.medium)
@@ -50,7 +50,7 @@ struct ChatInstructionsView: View {
                         dismiss()
                     }
                 }
-                
+
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Apply") {
                         onApply()

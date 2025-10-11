@@ -13,7 +13,7 @@ struct PokemonSnippetView: View {
     let types: [String]
     let description: String
     let imageData: Data?
-    
+
     private var pokemonGradient: LinearGradient {
         let colors = types.isEmpty ? [Color.gray] : types.map { Color.pokemonType($0) }
         return LinearGradient(
@@ -22,10 +22,10 @@ struct PokemonSnippetView: View {
             endPoint: .bottomTrailing
         )
     }
-    
+
     private var pokemonIconName: String {
         guard let primaryType = types.first?.lowercased() else { return "sparkles" }
-        
+
         switch primaryType {
         case "fire": return "flame.fill"
         case "water": return "drop.fill"
@@ -48,7 +48,7 @@ struct PokemonSnippetView: View {
         default: return "sparkles"
         }
     }
-    
+
     var body: some View {
         VStack(spacing: 16) {
             // Pokemon Image - Using synchronously loaded data
@@ -84,11 +84,11 @@ struct PokemonSnippetView: View {
                         Circle()
                             .fill(pokemonGradient.opacity(0.2))
                             .frame(width: 120, height: 120)
-                        
+
                         Circle()
                             .strokeBorder(pokemonGradient, lineWidth: 3)
                             .frame(width: 120, height: 120)
-                        
+
                         // Pokemon-themed icon based on primary type
                         Image(systemName: pokemonIconName)
                             .font(.system(size: 50, weight: .medium))
@@ -103,13 +103,13 @@ struct PokemonSnippetView: View {
                     .font(.title3)
                     .fontWeight(.bold)
                     .foregroundColor(.primary)
-                
+
                 Text("#\(String(format: "%03d", number))")
                     .font(.callout)
                     .fontWeight(.medium)
                     .foregroundStyle(.secondary)
             }
-            
+
             // Type badges
             HStack(spacing: 10) {
                 ForEach(types, id: \.self) { type in
@@ -117,7 +117,7 @@ struct PokemonSnippetView: View {
                         Circle()
                             .fill(Color.pokemonType(type))
                             .frame(width: 8, height: 8)
-                        
+
                         Text(type.capitalized)
                             .font(.footnote)
                             .fontWeight(.semibold)
@@ -135,7 +135,7 @@ struct PokemonSnippetView: View {
                     .foregroundColor(Color.pokemonType(type))
                 }
             }
-            
+
             // Description
             Text(description)
                 .font(.subheadline)

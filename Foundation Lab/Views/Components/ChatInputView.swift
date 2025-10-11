@@ -12,7 +12,7 @@ struct ChatInputView: View {
     @Environment(ChatViewModel.self) var chatViewModel
     @FocusState.Binding var isTextFieldFocused: Bool
     @Namespace private var glassNamespace
-    
+
     var body: some View {
 #if os(iOS) || os(macOS)
         GlassEffectContainer(spacing: Spacing.medium) {
@@ -30,7 +30,7 @@ struct ChatInputView: View {
 #if os(iOS)
                     .submitLabel(.send)
 #endif
-                
+
                 Button(action: sendMessage) {
                     Image(systemName: "arrow.up")
                         .font(.headline)
@@ -66,7 +66,7 @@ struct ChatInputView: View {
                 .onSubmit {
                     sendMessage()
                 }
-            
+
             Button(action: sendMessage) {
                 Image(systemName: "arrow.up.circle.fill")
                     .font(.title2)
@@ -86,14 +86,14 @@ struct ChatInputView: View {
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: messageText.isEmpty)
 #endif
     }
-    
+
     private func sendMessage() {
         let trimmedMessage = messageText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedMessage.isEmpty else { return }
-        
+
         messageText = ""
         isTextFieldFocused = true // Keep focus for continuous conversation
-        
+
         Task {
             await chatViewModel.sendMessage(trimmedMessage)
         }

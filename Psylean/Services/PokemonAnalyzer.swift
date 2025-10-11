@@ -211,7 +211,7 @@ final class PokemonAnalyzer {
             options: GenerationOptions(temperature: 0.3)
         ) {
             "Get basic info for: \(identifier)"
-            
+
             "SEARCH UNDERSTANDING:"
             "- Natural language: 'the fire starter from gen 3' → find Torchic"
             "- Descriptions: 'yellow mouse', 'red dragon' → identify the matching Pokemon"
@@ -219,25 +219,25 @@ final class PokemonAnalyzer {
             "- Typos: 'pikachuu', 'bulbsaur' → correct automatically"
             "- Context clues: 'ash's buddy', 'team rocket's cat' → understand references"
             "- Attributes: 'fastest', 'strongest psychic' → search by stats/type"
-            
+
             "Instructions:"
             "1. Interpret the query flexibly - don't be too literal"
             "2. If it's descriptive or ambiguous, use searchPokemon"
             "3. If it's a clear name/ID (even with typos), use fetchPokemonData"
             "4. Return the name, number, types, and a brief description"
-            
+
             "The response should contain:"
             "- name: The Pokemon's name from the tool"
             "- number: The Pokedex number from the tool"
             "- types: Array of type names (e.g., ['Water', 'Flying'])"
             "- description: A brief, engaging 1-2 sentence description that captures the Pokemon's essence"
-            
+
             "For the description, make it:"
             "- Vivid and engaging"
             "- Highlight what makes this Pokemon special"
             "- Reference its appearance, abilities, or personality"
             "- Keep it concise but memorable"
-            
+
             "Example: For Pikachu, return:"
             "name: 'Pikachu'"
             "number: 25"

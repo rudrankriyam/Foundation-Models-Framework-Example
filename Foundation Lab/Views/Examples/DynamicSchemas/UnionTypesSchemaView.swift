@@ -14,9 +14,9 @@ struct UnionTypesSchemaView: View {
     @State private var paymentInput = "Payment of $150.00 was made via credit card ending in 4242 on December 15, 2024"
     @State private var notificationInput = "System alert: Server maintenance scheduled for tonight at 11PM PST"
     @State private var selectedExample = 0
-    
+
     private let examples = ["Contact", "Payment", "Notification"]
-    
+
     var body: some View {
         ExampleViewBase(
             title: "Union Types (anyOf)",
@@ -38,12 +38,12 @@ struct UnionTypesSchemaView: View {
                 }
                 .pickerStyle(.segmented)
                 .padding(.bottom)
-                
+
                 // Schema visualization
                 VStack(alignment: .leading, spacing: Spacing.small) {
                     Text("Schema Structure")
                         .font(.headline)
-                    
+
                     Text(schemaDescription)
                         .font(.caption)
                         .padding()
@@ -51,13 +51,13 @@ struct UnionTypesSchemaView: View {
                         .background(Color.blue.opacity(0.1))
                         .cornerRadius(8)
                 }
-                
+
                 // Results
                 if !executor.results.isEmpty {
                     VStack(alignment: .leading, spacing: Spacing.small) {
                         Text("Extracted Data")
                             .font(.headline)
-                        
+
                         ScrollView {
                             Text(executor.results)
                                 .font(.system(.caption, design: .monospaced))
@@ -73,7 +73,7 @@ struct UnionTypesSchemaView: View {
             .padding()
         }
     }
-    
+
     private var currentInput: String {
         switch selectedExample {
         case 0: return contactInput
@@ -82,7 +82,7 @@ struct UnionTypesSchemaView: View {
         default: return ""
         }
     }
-    
+
     private var bindingForSelectedExample: Binding<String> {
         switch selectedExample {
         case 0: return $contactInput
@@ -91,7 +91,7 @@ struct UnionTypesSchemaView: View {
         default: return .constant("")
         }
     }
-    
+
     private var schemaDescription: String {
         switch selectedExample {
         case 0: return "Contact can be either:\n• Person (name, email, role)\n• Company (companyName, industry, contactEmail)"
@@ -100,10 +100,10 @@ struct UnionTypesSchemaView: View {
         default: return ""
         }
     }
-    
+
     private func runExample() async {
         let schema = createSchema(for: selectedExample)
-        
+
         await executor.execute(
             withPrompt: "Extract the data from: \(currentInput)",
             schema: schema
@@ -111,15 +111,15 @@ struct UnionTypesSchemaView: View {
             """
             Union Type Detection:
             The model automatically determined which variant matches the input.
-            
+
             Extracted Data:
             \(result)
-            
+
             Note: anyOf schemas allow flexible data extraction when the exact type isn't known in advance.
             """
         }
     }
-    
+
     private func createSchema(for index: Int) -> DynamicGenerationSchema {
         switch index {
         case 0: // Contact - Person or Company
@@ -148,7 +148,7 @@ struct UnionTypesSchemaView: View {
                     )
                 ]
             )
-            
+
             let companySchema = DynamicGenerationSchema(
                 name: "Company",
                 description: "Company contact",
@@ -175,13 +175,13 @@ struct UnionTypesSchemaView: View {
                     )
                 ]
             )
-            
+
             return DynamicGenerationSchema(
                 name: "Contact",
                 description: "Contact information - either person or company",
                 anyOf: [personSchema, companySchema]
             )
-            
+
         case 1: // Payment types with union schema
             let creditCardSchema = DynamicGenerationSchema(
                 name: "CreditCard",
@@ -227,7 +227,7 @@ struct UnionTypesSchemaView: View {
                     )
                 ]
             )
-            
+
             let bankTransferSchema = DynamicGenerationSchema(
                 name: "BankTransfer",
                 description: "Bank transfer payment",
@@ -273,7 +273,7 @@ struct UnionTypesSchemaView: View {
                     )
                 ]
             )
-            
+
             let cryptoSchema = DynamicGenerationSchema(
                 name: "Cryptocurrency",
                 description: "Cryptocurrency payment",
@@ -315,13 +315,13 @@ struct UnionTypesSchemaView: View {
                     )
                 ]
             )
-            
+
             return DynamicGenerationSchema(
                 name: "Payment",
                 description: "Payment information - credit card, bank transfer, or cryptocurrency",
                 anyOf: [creditCardSchema, bankTransferSchema, cryptoSchema]
             )
-            
+
         case 2: // Notification types with union schema
             let systemAlertSchema = DynamicGenerationSchema(
                 name: "SystemAlert",
@@ -364,7 +364,7 @@ struct UnionTypesSchemaView: View {
                     )
                 ]
             )
-            
+
             let userMessageSchema = DynamicGenerationSchema(
                 name: "UserMessage",
                 description: "User-to-user message",
@@ -409,7 +409,7 @@ struct UnionTypesSchemaView: View {
                     )
                 ]
             )
-            
+
             let errorNotificationSchema = DynamicGenerationSchema(
                 name: "ErrorNotification",
                 description: "Error notification",
@@ -450,13 +450,13 @@ struct UnionTypesSchemaView: View {
                     )
                 ]
             )
-            
+
             return DynamicGenerationSchema(
                 name: "Notification",
                 description: "Notification - system alert, user message, or error",
                 anyOf: [systemAlertSchema, userMessageSchema, errorNotificationSchema]
             )
-            
+
         default:
             return DynamicGenerationSchema(
                 name: "Default",
@@ -464,29 +464,29 @@ struct UnionTypesSchemaView: View {
             )
         }
     }
-    
+
     private var exampleCode: String {
         """
         // Creating anyOf schemas for union types
-        
+
         // Define individual schemas
         let personSchema = DynamicGenerationSchema(
             name: "Person",
             properties: [nameProperty, emailProperty]
         )
-        
+
         let companySchema = DynamicGenerationSchema(
-            name: "Company", 
+            name: "Company",
             properties: [companyNameProperty, industryProperty]
         )
-        
+
         // Create union schema
         let contactSchema = DynamicGenerationSchema(
             name: "Contact",
             description: "Either a person or company",
             anyOf: [personSchema, companySchema]
         )
-        
+
         // The model will automatically determine which
         // schema variant best matches the input data
         """

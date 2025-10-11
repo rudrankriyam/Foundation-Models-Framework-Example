@@ -12,12 +12,12 @@ struct SessionManagementView: View {
     @State private var conversationResults: [ConversationStep] = []
     @State private var isRunning = false
     @State private var errorMessage: String?
-    
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.large) {
                 descriptionSection
-                
+
                 Button("Start Multilingual Conversation") {
                     Task {
                         await startMultilingualConversation()
@@ -27,7 +27,7 @@ struct SessionManagementView: View {
                 .controlSize(.large)
                 .disabled(isRunning)
                 .padding(.horizontal)
-                
+
                 if isRunning {
                     HStack {
                         ProgressView()
@@ -38,13 +38,13 @@ struct SessionManagementView: View {
                     }
                     .padding(.horizontal)
                 }
-                
+
                 if let errorMessage {
                     Text(errorMessage)
                         .foregroundColor(.red)
                         .padding(.horizontal)
                 }
-                
+
                 if !conversationResults.isEmpty {
                     conversationSection
                 }
@@ -56,7 +56,7 @@ struct SessionManagementView: View {
         .navigationBarTitleDisplayMode(.large)
 #endif
     }
-    
+
     private var descriptionSection: some View {
         VStack(alignment: .leading, spacing: Spacing.medium) {
             CodeViewer(
@@ -79,13 +79,13 @@ let memory = try await session.respond(to: "What language did I first speak to y
         }
         .padding(.horizontal)
     }
-    
+
     private var conversationSection: some View {
         VStack(alignment: .leading, spacing: Spacing.medium) {
             Text("Conversation Flow")
                 .font(.headline)
                 .padding(.horizontal)
-            
+
             LazyVStack(spacing: Spacing.small) {
                 ForEach(conversationResults.indices, id: \.self) { index in
                     ConversationStepCard(
@@ -97,13 +97,13 @@ let memory = try await session.respond(to: "What language did I first speak to y
             .padding(.horizontal)
         }
     }
-    
+
     @MainActor
     private func startMultilingualConversation() async {
         isRunning = true
         errorMessage = nil
         conversationResults = []
-        
+
         let conversationSteps = [
             ("🌐 English", "Hello, how are you?"),
             ("🌐 Spanish", "Hola, ¿cómo estás?"),
@@ -113,24 +113,24 @@ let memory = try await session.respond(to: "What language did I first speak to y
             ("🌐 French", "Comment allez-vous aujourd'hui?"),
             ("🤝 Mixed", "Can you parler both English and French in your response?")
         ]
-        
+
         // Create single persistent session
         let session = LanguageModelSession(
             model: SystemLanguageModel.default,
             instructions: "You are a multilingual assistant who can naturally switch between languages and maintain conversational context."
         )
-        
+
         for (language, prompt) in conversationSteps {
             do {
                 let response = try await session.respond(to: prompt)
-                
+
                 let step = ConversationStep(
                     language: language,
                     prompt: prompt,
                     response: response.content,
                     isError: false
                 )
-                
+
                 conversationResults.append(step)
             } catch {
                 let errorStep = ConversationStep(
@@ -139,11 +139,11 @@ let memory = try await session.respond(to: "What language did I first speak to y
                     response: "Error: \(error.localizedDescription)",
                     isError: true
                 )
-                
+
                 conversationResults.append(errorStep)
             }
         }
-        
+
         isRunning = false
     }
 }
@@ -158,7 +158,7 @@ struct ConversationStep {
 struct ConversationStepCard: View {
     let step: ConversationStep
     let stepNumber: Int
-    
+
     var body: some View {
         VStack(spacing: Spacing.medium) {
             HStack {
@@ -168,19 +168,19 @@ struct ConversationStepCard: View {
                     .foregroundColor(.white)
                     .frame(width: 24, height: 24)
                     .background(Circle().fill(.blue))
-                
+
                 Text(step.language)
                     .font(.headline)
                     .fontWeight(.medium)
-                
+
                 Spacer()
-                
+
                 if step.isError {
                     Image(systemName: "exclamationmark.triangle")
                         .foregroundColor(.red)
                 }
             }
-            
+
             VStack(alignment: .leading, spacing: Spacing.medium) {
                 // User message
                 HStack {
@@ -190,7 +190,7 @@ struct ConversationStepCard: View {
                             .font(.caption)
                             .fontWeight(.medium)
                             .foregroundStyle(.secondary)
-                        
+
                         Text(step.prompt)
                             .font(.body)
                             .padding(.horizontal, Spacing.medium)
@@ -200,7 +200,7 @@ struct ConversationStepCard: View {
                             .cornerRadius(16)
                     }
                 }
-                
+
                 // AI response
                 HStack {
                     VStack(alignment: .leading, spacing: Spacing.small) {
@@ -208,7 +208,7 @@ struct ConversationStepCard: View {
                             .font(.caption)
                             .fontWeight(.medium)
                             .foregroundStyle(.secondary)
-                        
+
                         Text(step.response)
                             .font(.body)
                             .padding(.horizontal, Spacing.medium)

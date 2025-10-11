@@ -137,7 +137,7 @@ class ContentViewModel {
       setRequestResponse(RequestResponsePair(request: requestText, response: ""))
 
       var finalContent = ""
-      
+
       // Process streaming updates
       for try await partialResponse in stream {
           finalContent = partialResponse.content

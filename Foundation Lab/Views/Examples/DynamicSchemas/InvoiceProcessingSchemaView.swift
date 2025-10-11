@@ -14,40 +14,40 @@ struct InvoiceProcessingSchemaView: View {
     INVOICE #2025-001
     Date: January 15, 2025
     Due Date: February 14, 2025
-    
+
     From:
     TechCorp Solutions Inc.
     123 Innovation Drive
     San Francisco, CA 94105
     Tax ID: 87-1234567
-    
+
     Bill To:
     Acme Corporation
     456 Business Blvd
     New York, NY 10001
-    
+
     Description                          Qty    Unit Price    Amount
     ----------------------------------------------------------------
     Software Development Services         80     $150.00    $12,000.00
     Cloud Infrastructure Setup            1     $2,500.00    $2,500.00
     Monthly Support Package               3       $800.00    $2,400.00
     Security Audit                        1     $3,200.00    $3,200.00
-    
+
     Subtotal:                                              $20,100.00
     Tax (8.875%):                                           $1,783.88
     ----------------------------------------------------------------
     Total Due:                                             $21,883.88
-    
+
     Payment Terms: Net 30
     Please include invoice number with payment.
     """
-    
+
     @State private var extractionMode = 0
     @State private var includeLineItems = true
     @State private var calculateTotals = true
-    
+
     private let modes = ["Full Invoice", "Summary Only", "Line Items Focus"]
-    
+
     var body: some View {
         ExampleViewBase(
             title: "Invoice Processing",
@@ -65,7 +65,7 @@ struct InvoiceProcessingSchemaView: View {
                 VStack(alignment: .leading, spacing: Spacing.small) {
                     Text("Extraction Mode")
                         .font(.headline)
-                    
+
                     Picker("Mode", selection: $extractionMode) {
                         ForEach(0..<modes.count, id: \.self) { index in
                             Text(modes[index]).tag(index)
@@ -73,18 +73,18 @@ struct InvoiceProcessingSchemaView: View {
                     }
                     .pickerStyle(.segmented)
                 }
-                
+
                 // Options
                 VStack(alignment: .leading, spacing: Spacing.small) {
                     Toggle("Extract line items", isOn: $includeLineItems)
                         .disabled(extractionMode == 1) // Disabled for summary only
-                    
+
                     Toggle("Validate calculations", isOn: $calculateTotals)
                 }
                 .padding()
                 .background(Color.gray.opacity(0.05))
                 .cornerRadius(8)
-                
+
                 // Sample invoice loader
                 HStack {
                     Spacer()
@@ -94,13 +94,13 @@ struct InvoiceProcessingSchemaView: View {
                     .font(.caption)
                     .buttonStyle(.bordered)
                 }
-                
+
                 // Results
                 if !executor.results.isEmpty {
                     VStack(alignment: .leading, spacing: Spacing.small) {
                         Text("Extracted Invoice Data")
                             .font(.headline)
-                        
+
                         ScrollView {
                             Text(executor.results)
                                 .font(.system(.caption, design: .monospaced))
@@ -116,62 +116,62 @@ struct InvoiceProcessingSchemaView: View {
             .padding()
         }
     }
-    
+
     private func loadSampleInvoice() {
         invoiceText = """
         INVOICE
         Invoice Number: INV-2025-0042
         Date: March 1, 2025
-        
+
         Seller:
         Creative Agency LLC
         789 Design Street, Suite 200
         Los Angeles, CA 90028
         Email: billing@creativeagency.com
         Phone: (323) 555-0100
-        
+
         Buyer:
         StartUp Inc.
         321 Venture Ave
         Austin, TX 78701
         Contact: Sarah Johnson
-        
+
         Items:
         1. Logo Design and Branding Package
            Quantity: 1
            Rate: $5,000.00
            Amount: $5,000.00
-        
+
         2. Website Design (10 pages)
            Quantity: 10
            Rate: $500.00 per page
            Amount: $5,000.00
-        
+
         3. Social Media Templates
            Quantity: 20
            Rate: $75.00 each
            Amount: $1,500.00
-        
+
         4. Brand Guidelines Document
            Quantity: 1
            Rate: $1,200.00
            Amount: $1,200.00
-        
+
         Subtotal: $12,700.00
         Discount (10%): -$1,270.00
         Net Amount: $11,430.00
         Sales Tax (7.25%): $828.68
-        
+
         Total Amount Due: $12,258.68
-        
+
         Payment Due: March 31, 2025
         Late Fee: 1.5% per month after due date
         """
     }
-    
+
     private func runExample() async {
         let schema: DynamicGenerationSchema
-        
+
         switch extractionMode {
         case 0: // Full Invoice
             schema = createFullInvoiceSchema()
@@ -182,7 +182,7 @@ struct InvoiceProcessingSchemaView: View {
         default:
             return
         }
-        
+
         await executor.execute(
             withPrompt: invoiceText,
             schema: schema,
@@ -191,22 +191,22 @@ struct InvoiceProcessingSchemaView: View {
                    let json = try? JSONSerialization.jsonObject(with: data),
                    let formatted = try? JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys]),
                    let jsonString = String(data: formatted, encoding: .utf8) {
-                    
+
                     var result = jsonString
-                    
+
                     // Add validation results if enabled
                     if calculateTotals, let dict = json as? [String: Any] {
                         result += "\n\n=== Validation Results ==="
                         result += validateInvoiceTotals(dict)
                     }
-                    
+
                     return result
                 }
                 return output
             }
         )
     }
-    
+
     private func createFullInvoiceSchema() -> DynamicGenerationSchema {
         // Address schema for reuse
         let addressSchema = DynamicGenerationSchema(
@@ -259,7 +259,7 @@ struct InvoiceProcessingSchemaView: View {
                 )
             ]
         )
-        
+
         // Line item schema
         let lineItemSchema = DynamicGenerationSchema(
             name: "LineItem",
@@ -298,7 +298,7 @@ struct InvoiceProcessingSchemaView: View {
                 )
             ]
         )
-        
+
         // Payment terms schema
         let paymentTermsSchema = DynamicGenerationSchema(
             name: "PaymentTerms",
@@ -324,7 +324,7 @@ struct InvoiceProcessingSchemaView: View {
                 )
             ]
         )
-        
+
         // Main invoice schema
         return DynamicGenerationSchema(
             name: "Invoice",
@@ -442,7 +442,7 @@ struct InvoiceProcessingSchemaView: View {
             ]
         )
     }
-    
+
     private func createSummarySchema() -> DynamicGenerationSchema {
         return DynamicGenerationSchema(
             name: "InvoiceSummary",
@@ -497,7 +497,7 @@ struct InvoiceProcessingSchemaView: View {
             ]
         )
     }
-    
+
     private func createLineItemsSchema() -> DynamicGenerationSchema {
         let detailedLineItemSchema = DynamicGenerationSchema(
             name: "DetailedLineItem",
@@ -569,7 +569,7 @@ struct InvoiceProcessingSchemaView: View {
                 )
             ]
         )
-        
+
         return DynamicGenerationSchema(
             name: "LineItemsExtraction",
             description: "Line items extraction result",
@@ -612,16 +612,16 @@ struct InvoiceProcessingSchemaView: View {
             ]
         )
     }
-    
+
     private func validateInvoiceTotals(_ invoice: [String: Any]) -> String {
         var validationResults = [String]()
-        
+
         // Validate subtotal calculation
         if let lineItems = invoice["lineItems"] as? [[String: Any]] {
             let calculatedSubtotal = lineItems.reduce(0.0) { sum, item in
                 sum + (item["amount"] as? Double ?? 0)
             }
-            
+
             if let reportedSubtotal = invoice["subtotal"] as? Double {
                 let difference = abs(calculatedSubtotal - reportedSubtotal)
                 if difference < 0.01 {
@@ -631,13 +631,13 @@ struct InvoiceProcessingSchemaView: View {
                 }
             }
         }
-        
+
         // Validate tax calculation
         if let tax = invoice["tax"] as? [String: Any],
            let taxRate = tax["rate"] as? Double,
            let taxAmount = tax["amount"] as? Double,
            let subtotal = invoice["subtotal"] as? Double {
-            
+
             let calculatedTax = subtotal * (taxRate / 100)
             let difference = abs(calculatedTax - taxAmount)
             if difference < 0.01 {
@@ -646,20 +646,20 @@ struct InvoiceProcessingSchemaView: View {
                 validationResults.append("\nTax calculation mismatch: Expected $\(String(format: "%.2f", calculatedTax)), got $\(String(format: "%.2f", taxAmount))")
             }
         }
-        
+
         // Validate total
         if let total = invoice["totalAmount"] as? Double,
            let _ = invoice["subtotal"] as? Double {
             validationResults.append("\nTotal amount extracted: $\(String(format: "%.2f", total))")
         }
-        
+
         return validationResults.joined()
     }
-    
+
     private var exampleCode: String {
         """
         // Complex invoice processing with nested schemas
-        
+
         // Define reusable address schema
         let addressSchema = DynamicGenerationSchema(
             name: "Address",
@@ -672,7 +672,7 @@ struct InvoiceProcessingSchemaView: View {
                 "postalCode": .init(type: .string)
             ]
         )
-        
+
         // Line item schema with calculations
         let lineItemSchema = DynamicGenerationSchema(
             name: "LineItem",
@@ -684,7 +684,7 @@ struct InvoiceProcessingSchemaView: View {
                 "amount": .init(type: .number)
             ]
         )
-        
+
         // Main invoice schema composition
         let invoiceSchema = DynamicGenerationSchema(
             name: "Invoice",
@@ -706,7 +706,7 @@ struct InvoiceProcessingSchemaView: View {
             ],
             requiredProperties: ["invoiceNumber", "totalAmount"]
         )
-        
+
         // Extract and validate
         let invoice = try await model.respond(
             withSchema: invoiceSchema,
@@ -715,7 +715,6 @@ struct InvoiceProcessingSchemaView: View {
         """
     }
 }
-
 
 #Preview {
     NavigationStack {
