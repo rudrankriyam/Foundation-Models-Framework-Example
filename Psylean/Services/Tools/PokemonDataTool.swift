@@ -107,7 +107,7 @@ final class PokemonDataTool: Tool {
     private func formatEvolutionChain(_ evolution: EvolutionChain) -> String {
         var output = "Evolution Chain:\n"
 
-        func formatChainLink(_ link: EvolutionChain.ChainLink, level: Int = 0) -> String {
+        func formatChainLink(_ link: PokemonChainLink, level: Int = 0) -> String {
             let indent = String(repeating: "  ", count: level)
             var result = "\(indent)→ \(link.species.name.capitalized)\n"
 

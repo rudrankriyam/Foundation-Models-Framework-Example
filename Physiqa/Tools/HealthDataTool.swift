@@ -16,7 +16,12 @@ struct HealthDataTool: Tool {
 
     @Generable
     struct Arguments {
-        @Guide(description: "The type of health data to fetch: 'today', 'weekly', or specific metric like 'steps', 'heartRate', 'sleep', 'activeEnergy', 'distance'")
+        @Guide(
+            description: """
+            The type of health data to fetch: 'today', 'weekly', or specific metric like 'steps', 'heartRate',
+            'sleep', 'activeEnergy', 'distance'
+            """
+        )
         var dataType: String
 
         @Guide(description: "Whether to fetch from HealthKit (true) or SwiftData cache (false). Defaults to false.")
@@ -25,24 +30,48 @@ struct HealthDataTool: Tool {
 
     func call(arguments: Arguments) async throws -> some PromptRepresentable {
         let healthManager = await MainActor.run { HealthDataManager.shared }
+        let refreshFlag = arguments.refreshFromHealthKit ?? false
 
         switch arguments.dataType.lowercased() {
         case "today":
-            return await fetchTodayData(healthManager: healthManager, refresh: arguments.refreshFromHealthKit ?? false)
+            return await fetchTodayData(healthManager: healthManager, refresh: refreshFlag)
         case "weekly":
             return await fetchWeeklyData(healthManager: healthManager)
         case "steps":
-            return await fetchSpecificMetric(healthManager: healthManager, type: MetricType.steps, refresh: arguments.refreshFromHealthKit ?? false)
+            return await fetchSpecificMetric(
+                healthManager: healthManager,
+                type: .steps,
+                refresh: refreshFlag
+            )
         case "heartrate":
-            return await fetchSpecificMetric(healthManager: healthManager, type: MetricType.heartRate, refresh: arguments.refreshFromHealthKit ?? false)
+            return await fetchSpecificMetric(
+                healthManager: healthManager,
+                type: .heartRate,
+                refresh: refreshFlag
+            )
         case "sleep":
-            return await fetchSpecificMetric(healthManager: healthManager, type: MetricType.sleep, refresh: arguments.refreshFromHealthKit ?? false)
+            return await fetchSpecificMetric(
+                healthManager: healthManager,
+                type: .sleep,
+                refresh: refreshFlag
+            )
         case "activeenergy":
-            return await fetchSpecificMetric(healthManager: healthManager, type: MetricType.activeEnergy, refresh: arguments.refreshFromHealthKit ?? false)
+            return await fetchSpecificMetric(
+                healthManager: healthManager,
+                type: .activeEnergy,
+                refresh: refreshFlag
+            )
         case "distance":
-            return await fetchSpecificMetric(healthManager: healthManager, type: MetricType.distance, refresh: arguments.refreshFromHealthKit ?? false)
+            return await fetchSpecificMetric(
+                healthManager: healthManager,
+                type: .distance,
+                refresh: refreshFlag
+            )
         default:
-            return createErrorOutput(error: "Invalid data type. Use 'today', 'weekly', 'steps', 'heartRate', 'sleep', 'activeEnergy', or 'distance'.")
+            let message = """
+            Invalid data type. Use 'today', 'weekly', 'steps', 'heartRate', 'sleep', 'activeEnergy', or 'distance'.
+            """
+            return createErrorOutput(error: message)
         }
     }
 
@@ -102,7 +131,11 @@ struct HealthDataTool: Tool {
         ])
     }
 
-    private func fetchSpecificMetric(healthManager: HealthDataManager, type: MetricType, refresh: Bool) async -> GeneratedContent {
+    private func fetchSpecificMetric(
+        healthManager: HealthDataManager,
+        type: MetricType,
+        refresh: Bool
+    ) async -> GeneratedContent {
         if refresh {
             await healthManager.fetchTodayHealthData()
         }

@@ -21,7 +21,7 @@ struct GlassDropdown: View {
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                     isExpanded.toggle()
                 }
-            }) {
+            }, label: {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(title)
@@ -42,7 +42,7 @@ struct GlassDropdown: View {
                 }
                 .padding()
                 .contentShape(Rectangle())
-            }
+            })
             .buttonStyle(.plain)
 
             // Dropdown content
@@ -59,12 +59,11 @@ struct GlassDropdown: View {
                                     isExpanded = false
                                 }
 
-                                // Haptic feedback
                                 #if os(iOS)
                                 let impact = UIImpactFeedbackGenerator(style: .light)
                                 impact.impactOccurred()
                                 #endif
-                            }) {
+                            }, label: {
                                 HStack {
                                     Text(option)
                                         .font(.body)
@@ -80,7 +79,7 @@ struct GlassDropdown: View {
                                 }
                                 .padding()
                                 .contentShape(Rectangle())
-                            }
+                            })
                             .buttonStyle(.plain)
 
                             if option != options.last {

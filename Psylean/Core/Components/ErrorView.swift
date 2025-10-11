@@ -11,45 +11,51 @@ struct ErrorView: View {
     let error: Error
     let retry: () -> Void
 
-    private var errorDetails: (type: String, description: String, suggestion: String?) {
+    private struct ErrorDetails {
+        let type: String
+        let description: String
+        let suggestion: String?
+    }
+
+    private var errorDetails: ErrorDetails {
         // Check if it's a GenerationError
         let errorString = String(describing: error)
 
         if errorString.contains("assetsUnavailable") {
-            return (
-                "Assets Unavailable",
-                "The AI model assets are not available on this device.",
-                "Please ensure you have an internet connection and try again."
+            return ErrorDetails(
+                type: "Assets Unavailable",
+                description: "The AI model assets are not available on this device.",
+                suggestion: "Please ensure you have an internet connection and try again."
             )
         } else if errorString.contains("exceededContextWindowSize") {
-            return (
-                "Context Too Large",
-                "The request exceeded the model's context window size.",
-                "Try a shorter query or simpler Pokemon name."
+            return ErrorDetails(
+                type: "Context Too Large",
+                description: "The request exceeded the model's context window size.",
+                suggestion: "Try a shorter query or simpler Pokemon name."
             )
         } else if errorString.contains("rateLimited") {
-            return (
-                "Rate Limited",
-                "Too many requests. Please wait a moment.",
-                "Wait a few seconds before trying again."
+            return ErrorDetails(
+                type: "Rate Limited",
+                description: "Too many requests. Please wait a moment.",
+                suggestion: "Wait a few seconds before trying again."
             )
         } else if errorString.contains("decodingFailure") {
-            return (
-                "Response Error",
-                "Failed to process the AI response.",
-                "Try a different Pokemon or search term."
+            return ErrorDetails(
+                type: "Response Error",
+                description: "Failed to process the AI response.",
+                suggestion: "Try a different Pokemon or search term."
             )
         } else if errorString.contains("guardrailViolation") {
-            return (
-                "Content Filtered",
-                "The content was blocked by safety filters.",
-                "Try a different Pokemon name."
+            return ErrorDetails(
+                type: "Content Filtered",
+                description: "The content was blocked by safety filters.",
+                suggestion: "Try a different Pokemon name."
             )
         } else {
-            return (
-                "Unknown Error",
-                error.localizedDescription,
-                "Please try again or use a different search."
+            return ErrorDetails(
+                type: "Unknown Error",
+                description: error.localizedDescription,
+                suggestion: "Please try again or use a different search."
             )
         }
     }

@@ -242,7 +242,8 @@ final class PokemonAnalyzer {
             "name: 'Pikachu'"
             "number: 25"
             "types: ['Electric']"
-            "description: 'The beloved electric mouse Pokemon whose adorable appearance and loyal nature have made it the most iconic Pokemon in the world.'"
+            "description: 'The beloved electric mouse Pokemon whose adorable appearance and loyal nature have "
+            "made it the most iconic Pokemon in the world.'"
         }
 
         return result.content

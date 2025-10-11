@@ -160,7 +160,9 @@ struct InsightCardView: View {
     VStack(spacing: 16) {
         InsightCardView(insight: HealthInsight(
             title: "Great Progress!",
-            content: "You've exceeded your step goal for 5 days straight. Your cardiovascular health is improving!",
+            content: """
+            You've exceeded your step goal for 5 days straight. Your cardiovascular health is improving!
+            """,
             category: .achievement,
             priority: .high,
             relatedMetrics: [.steps],
@@ -169,7 +171,9 @@ struct InsightCardView: View {
 
         InsightCardView(insight: HealthInsight(
             title: "Sleep Pattern Alert",
-            content: "Your sleep duration has decreased by 15% this week. This might affect your recovery and energy levels.",
+            content: """
+            Your sleep duration has decreased by 15% this week. This might affect your recovery and energy levels.
+            """,
             category: .warning,
             priority: .urgent,
             relatedMetrics: [.sleep],

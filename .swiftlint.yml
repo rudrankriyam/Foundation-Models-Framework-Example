@@ -22,7 +22,7 @@ opt_in_rules:
   - collection_alignment
   - empty_count
   - contains_over_first_not_nil
-  - redundant_optional_initialization
+  - implicit_optional_initialization
 
 line_length:
   warning: 120
@@ -54,6 +54,7 @@ function_body_length:
   warning: 60
   error: 100
 
-nested_type_depth:
-  warning: 3
-  error: 5
+nesting:
+  type_level:
+    warning: 3
+    error: 5

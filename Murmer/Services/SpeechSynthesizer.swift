@@ -164,8 +164,9 @@ final class SpeechSynthesizer: NSObject, ObservableObject, SpeechSynthesisServic
             selectedVoice = avaVoice ?? englishVoices.first ?? AVSpeechSynthesisVoice(language: "en-US")
 
             if let voice = selectedVoice {
-                print("🎙️ Selected voice: \(voice.name) (\(voice.language)) - Quality: \(voice.quality.rawValue)")
-                print("🎙️ Available voices: \(englishVoices.map { "\($0.name) (Q:\($0.quality.rawValue))" }.joined(separator: ", "))")
+                print("Selected voice: \(voice.name) (\(voice.language)) - Quality: \(voice.quality.rawValue)")
+                let voiceSummaries = englishVoices.map { "\($0.name) (Q:\($0.quality.rawValue))" }
+                print("Available voices: \(voiceSummaries.joined(separator: ", "))")
             }
         }
     }
@@ -175,7 +176,11 @@ final class SpeechSynthesizer: NSObject, ObservableObject, SpeechSynthesisServic
         utterance.voice = selectedVoice ?? AVSpeechSynthesisVoice(language: "en-US")
         utterance.volume = max(0.0, min(1.0, volume))
 
-        print("🔊 Created utterance: text='\(text)', voice=\(utterance.voice?.name ?? "default"), rate=\(utterance.rate), pitch=\(utterance.pitchMultiplier), volume=\(utterance.volume)")
+        let voiceName = utterance.voice?.name ?? "default"
+        print(
+            "Created utterance: text='\(text)', voice=\(voiceName), rate=\(utterance.rate), " +
+            "pitch=\(utterance.pitchMultiplier), volume=\(utterance.volume)"
+        )
 
         return utterance
     }
@@ -185,7 +190,7 @@ final class SpeechSynthesizer: NSObject, ObservableObject, SpeechSynthesisServic
         isSpeaking = true
         error = nil
 
-        print("🔊 Starting speech synthesis: '\(utterance.speechString)'")
+        print("Starting speech synthesis: '\(utterance.speechString)'")
         synthesizer.speak(utterance)
     }
 
@@ -203,16 +208,16 @@ final class SpeechSynthesizer: NSObject, ObservableObject, SpeechSynthesisServic
     }
 
     private func handleSuccess() {
-        print("🔊 Speech synthesis completed successfully")
+        print("Speech synthesis completed successfully")
 
         #if os(iOS)
         Task.detached {
             do {
                 let audioSession = AVAudioSession.sharedInstance()
                 try audioSession.setActive(false, options: .notifyOthersOnDeactivation)
-                print("🔊 Deactivated audio session after speech synthesis")
+                print("Deactivated audio session after speech synthesis")
             } catch {
-                print("🔊 Failed to deactivate audio session: \(error.localizedDescription)")
+                print("Failed to deactivate audio session: \(error.localizedDescription)")
             }
         }
         #endif
@@ -237,9 +242,9 @@ final class SpeechSynthesizer: NSObject, ObservableObject, SpeechSynthesisServic
             do {
                 let audioSession = AVAudioSession.sharedInstance()
                 try audioSession.setActive(false, options: .notifyOthersOnDeactivation)
-                print("🔊 Deactivated audio session after speech synthesis error")
+                print("Deactivated audio session after speech synthesis error")
             } catch {
-                print("🔊 Failed to deactivate audio session: \(error.localizedDescription)")
+                print("Failed to deactivate audio session: \(error.localizedDescription)")
             }
         }
         #endif

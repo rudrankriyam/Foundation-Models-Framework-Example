@@ -83,24 +83,26 @@ struct HealthDashboardView: View {
         }
     }
 
-    // MARK: - Header Section
-    private var headerSection: some View {
+}
+
+private extension HealthDashboardView {
+    var headerSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Good \(timeOfDay)!")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                        Text("Your health score today")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    Spacer()
-
-                    HealthScoreRing(score: calculateHealthScore())
-                        .frame(width: 80, height: 80)
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Good \(timeOfDay)!")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                    Text("Your health score today")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
                 }
+
+                Spacer()
+
+                HealthScoreRing(score: calculateHealthScore())
+                    .frame(width: 80, height: 80)
+            }
 
             Text(encouragementMessage)
                 .font(.callout)
@@ -110,8 +112,7 @@ struct HealthDashboardView: View {
         .glassEffect(.regular, in: .rect(cornerRadius: 20))
     }
 
-    // MARK: - Daily Progress Section
-    private var dailyProgressSection: some View {
+    var dailyProgressSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Daily Progress")
                 .font(.headline)
@@ -133,8 +134,7 @@ struct HealthDashboardView: View {
         }
     }
 
-    // MARK: - Metrics Grid Section
-    private var metricsGridSection: some View {
+    var metricsGridSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Health Metrics")
                 .font(.headline)
@@ -157,8 +157,7 @@ struct HealthDashboardView: View {
         }
     }
 
-    // MARK: - Insights Section
-    private var insightsSection: some View {
+    var insightsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("AI Insights")
@@ -191,8 +190,7 @@ struct HealthDashboardView: View {
         }
     }
 
-    // MARK: - Helper Methods
-    private var timeOfDay: String {
+    var timeOfDay: String {
         let hour = Calendar.current.component(.hour, from: Date())
         switch hour {
         case 0..<12: return "morning"
@@ -201,8 +199,18 @@ struct HealthDashboardView: View {
         }
     }
 
-    @MainActor
-    private func generateEncouragementMessage() async {
+    func calculateHealthScore() -> Double {
+        let stepsScore = min((todayMetrics[.steps] ?? 0) / MetricType.steps.defaultGoal, 1.0)
+        let sleepScore = min((todayMetrics[.sleep] ?? 0) / MetricType.sleep.defaultGoal, 1.0)
+        let activityScore = min((todayMetrics[.activeEnergy] ?? 0) / MetricType.activeEnergy.defaultGoal, 1.0)
+
+        return (stepsScore + sleepScore + activityScore) / 3.0 * 100
+    }
+}
+
+@MainActor
+private extension HealthDashboardView {
+    func generateEncouragementMessage() async {
         guard !isGeneratingMessage else { return }
         isGeneratingMessage = true
 
@@ -214,7 +222,12 @@ struct HealthDashboardView: View {
         do {
             let session = LanguageModelSession(
                 instructions: Instructions(
-                    "You are a supportive health coach. Generate a brief, encouraging message (max 15 words) based on the user's health data. Do NOT use quotes, numbers, specific metrics, or emojis. Focus on general encouragement and motivation."
+                    """
+                    You are a supportive health coach.
+                    Generate a brief, encouraging message (max 15 words) based on the user's health data.
+                    Do NOT use quotes, numbers, specific metrics, or emojis.
+                    Focus on general encouragement and motivation.
+                    """
                 )
             )
 
@@ -230,49 +243,32 @@ struct HealthDashboardView: View {
 
             let response = try await session.respond(to: Prompt(prompt))
 
-            // Clean up the response: remove quotes and trim whitespace
             encouragementMessage = response.content
                 .trimmingCharacters(in: .whitespacesAndNewlines)
                 .replacingOccurrences(of: "\"", with: "")
-                .replacingOccurrences(of: "\u{201C}", with: "") // Left double quotation mark
-                .replacingOccurrences(of: "\u{201D}", with: "") // Right double quotation mark
+                .replacingOccurrences(of: "\u{201C}", with: "")
+                .replacingOccurrences(of: "\u{201D}", with: "")
         } catch {
-            // Fallback to simple message if AI generation fails
             encouragementMessage = score >= 75 ? "Great progress today!" : "Keep working towards your goals!"
         }
 
         isGeneratingMessage = false
     }
 
-    private func calculateHealthScore() -> Double {
-        // Simple health score calculation - will be improved with AI
-        let stepsScore = min((todayMetrics[.steps] ?? 0) / MetricType.steps.defaultGoal, 1.0)
-        let sleepScore = min((todayMetrics[.sleep] ?? 0) / MetricType.sleep.defaultGoal, 1.0)
-        let activityScore = min((todayMetrics[.activeEnergy] ?? 0) / MetricType.activeEnergy.defaultGoal, 1.0)
-
-        return (stepsScore + sleepScore + activityScore) / 3.0 * 100
-    }
-
-    // MARK: - Data Loading
-    @MainActor
-    private func loadHealthData() async {
+    func loadHealthData() async {
         healthDataManager.setModelContext(modelContext)
 
-        // Request authorization if needed
         if !healthDataManager.isAuthorized {
             do {
                 try await healthDataManager.requestAuthorization()
             } catch {
-                // Handle authorization error silently
                 isLoading = false
                 return
             }
         }
 
-        // Fetch today's health data
         await healthDataManager.fetchTodayHealthData()
 
-        // Update UI with fetched data
         todayMetrics = [
             .steps: healthDataManager.todaySteps,
             .heartRate: healthDataManager.currentHeartRate,
@@ -283,7 +279,6 @@ struct HealthDashboardView: View {
 
         isLoading = false
 
-        // Generate personalized encouragement message
         await generateEncouragementMessage()
     }
 }

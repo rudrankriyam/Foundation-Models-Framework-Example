@@ -52,9 +52,9 @@ struct CelebrationEffect: ViewModifier {
     }
 
     withAnimation(.easeOut(duration: 2)) {
-      for i in particles.indices {
-        particles[i].position.x += particles[i].velocity.dx
-        particles[i].position.y += particles[i].velocity.dy
+      for index in particles.indices {
+        particles[index].position.x += particles[index].velocity.dx
+        particles[index].position.y += particles[index].velocity.dy
       }
     }
 

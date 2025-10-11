@@ -125,85 +125,16 @@ final class PhysiqaChatViewModel {
         ]
     }
 
-    // MARK: - Private Methods
+}
 
-    @MainActor
-    private func saveMessageToSession(_ content: String, isFromUser: Bool) async {
-        guard let modelContext = modelContext else { return }
-
-        // Check if there's an active session or create a new one
-        let descriptor = FetchDescriptor<PhysiqaSession>(
-            sortBy: [SortDescriptor(\.startDate, order: .reverse)]
-        )
-
-        do {
-            let sessions = try modelContext.fetch(descriptor)
-            let activeSession: PhysiqaSession
-
-            if let existingSession = sessions.first,
-               existingSession.startDate.timeIntervalSinceNow > -3600 { // Within last hour
-                activeSession = existingSession
-            } else {
-                // Create new session
-                activeSession = PhysiqaSession(sessionType: .coaching)
-                modelContext.insert(activeSession)
-            }
-
-            // Add message to session
-            let message = BuddyMessage(content: content, isFromUser: isFromUser)
-            activeSession.messages.append(message)
-
-            try modelContext.save()
-        } catch {
-            // Handle save error silently
-        }
-    }
-
-    private func shouldGenerateInsight(from response: String) -> Bool {
+private extension PhysiqaChatViewModel {
+    func shouldGenerateInsight(from response: String) -> Bool {
         let insightKeywords = ["goal", "achieve", "progress", "improve", "recommend", "suggest", "tip", "advice"]
         return insightKeywords.contains { response.lowercased().contains($0) }
     }
 
-    @MainActor
-    private func generateHealthInsight(from response: String) async {
-        guard let modelContext = modelContext else { return }
-
-        // Create an insight based on the conversation
-        let insight = HealthInsight(
-            title: "AI Health Tip",
-            content: response,
-            category: .recommendation,
-            priority: .medium,
-            relatedMetrics: []
-        )
-
-        modelContext.insert(insight)
-
-        do {
-            try modelContext.save()
-        } catch {
-            // Handle save error silently
-        }
-    }
-
-    @MainActor
-    private func handleContextWindowExceeded(userMessage: String) async {
-        isSummarizing = true
-
-        do {
-            let summary = try await generateConversationSummary()
-            createNewSessionWithContext(summary: summary)
-            isSummarizing = false
-
-            try await respondWithNewSession(to: userMessage)
-        } catch {
-            isSummarizing = false
-            await saveMessageToSession("I need to start a fresh conversation. Please repeat your question.", isFromUser: false)
-        }
-    }
-
-    private func createConversationText() -> String {
-        return session.transcript.compactMap { entry in
+    func createConversationText() -> String {
+        session.transcript.compactMap { entry in
             switch entry {
             case .prompt(let prompt):
                 let text = prompt.segments.compactMap { segment in
@@ -227,30 +158,7 @@ final class PhysiqaChatViewModel {
         }.joined(separator: "\n\n")
     }
 
-    @MainActor
-    private func generateConversationSummary() async throws -> ConversationSummary {
-        let summarySession = LanguageModelSession(
-            instructions: Instructions(
-                "You are an expert at summarizing health coaching conversations. Create comprehensive summaries that preserve all health metrics discussed, goals set, and advice given."
-            )
-        )
-
-        let conversationText = createConversationText()
-        let summaryPrompt = """
-        Please summarize the following health coaching conversation. Include all health metrics discussed, goals mentioned, advice given, and user's health concerns:
-
-        \(conversationText)
-        """
-
-        let summaryResponse = try await summarySession.respond(
-            to: Prompt(summaryPrompt),
-            generating: ConversationSummary.self
-        )
-
-        return summaryResponse.content
-    }
-
-    private func createNewSessionWithContext(summary: ConversationSummary) {
+    func createNewSessionWithContext(summary: ConversationSummary) {
         let contextInstructions = """
         You are Physiqa, a friendly and knowledgeable health coach AI assistant.
         Based on the user's health data, provide personalized, encouraging responses.
@@ -276,9 +184,102 @@ final class PhysiqaChatViewModel {
         )
         sessionCount += 1
     }
+}
 
-    @MainActor
-    private func respondWithNewSession(to userMessage: String) async throws {
+@MainActor
+private extension PhysiqaChatViewModel {
+    func saveMessageToSession(_ content: String, isFromUser: Bool) async {
+        guard let modelContext = modelContext else { return }
+
+        let descriptor = FetchDescriptor<PhysiqaSession>(
+            sortBy: [SortDescriptor(\.startDate, order: .reverse)]
+        )
+
+        do {
+            let sessions = try modelContext.fetch(descriptor)
+            let activeSession: PhysiqaSession
+
+            if let existingSession = sessions.first,
+               existingSession.startDate.timeIntervalSinceNow > -3600 {
+                activeSession = existingSession
+            } else {
+                activeSession = PhysiqaSession(sessionType: .coaching)
+                modelContext.insert(activeSession)
+            }
+
+            let message = BuddyMessage(content: content, isFromUser: isFromUser)
+            activeSession.messages.append(message)
+
+            try modelContext.save()
+        } catch {
+            // Handle save error silently
+        }
+    }
+
+    func generateHealthInsight(from response: String) async {
+        guard let modelContext = modelContext else { return }
+
+        let insight = HealthInsight(
+            title: "AI Health Tip",
+            content: response,
+            category: .recommendation,
+            priority: .medium,
+            relatedMetrics: []
+        )
+
+        modelContext.insert(insight)
+
+        do {
+            try modelContext.save()
+        } catch {
+            // Handle save error silently
+        }
+    }
+
+    func handleContextWindowExceeded(userMessage: String) async {
+        isSummarizing = true
+
+        do {
+            let summary = try await generateConversationSummary()
+            createNewSessionWithContext(summary: summary)
+            isSummarizing = false
+
+            try await respondWithNewSession(to: userMessage)
+        } catch {
+            isSummarizing = false
+            let restartMessage = "I need to start a fresh conversation. Please repeat your question."
+            await saveMessageToSession(restartMessage, isFromUser: false)
+        }
+    }
+
+    func generateConversationSummary() async throws -> ConversationSummary {
+        let summarySession = LanguageModelSession(
+            instructions: Instructions(
+                """
+                You are an expert at summarizing health coaching conversations.
+                Create comprehensive summaries that preserve all health metrics discussed,
+                goals set, and advice given.
+                """
+            )
+        )
+
+        let conversationText = createConversationText()
+        let summaryPrompt = """
+        Please summarize the following health coaching conversation.
+        Include all health metrics discussed, goals mentioned, advice given, and user's health concerns:
+
+        \(conversationText)
+        """
+
+        let summaryResponse = try await summarySession.respond(
+            to: Prompt(summaryPrompt),
+            generating: ConversationSummary.self
+        )
+
+        return summaryResponse.content
+    }
+
+    func respondWithNewSession(to userMessage: String) async throws {
         await saveMessageToSession(userMessage, isFromUser: true)
 
         let responseStream = session.streamResponse(to: Prompt(userMessage))
@@ -288,7 +289,6 @@ final class PhysiqaChatViewModel {
             // The streaming automatically updates the session transcript
         }
 
-        // Extract the response text from the transcript
         if let lastEntry = session.transcript.last,
            case .response(let response) = lastEntry {
             responseText = response.segments.compactMap { segment in

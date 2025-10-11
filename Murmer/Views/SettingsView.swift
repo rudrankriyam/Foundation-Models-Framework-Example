@@ -48,9 +48,12 @@ struct SettingsView: View {
         }
     }
 
+}
+
+private extension SettingsView {
     // MARK: - View Components
 
-    private var headerSection: some View {
+    var headerSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 12) {
                 Image(systemName: "speaker.wave.3.fill")
@@ -94,7 +97,7 @@ struct SettingsView: View {
         }
     }
 
-    private var languageSection: some View {
+    var languageSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Languages")
                 .font(.headline)
@@ -114,7 +117,7 @@ struct SettingsView: View {
         }
     }
 
-    private var voiceSection: some View {
+    var voiceSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
                 Text("Voices")
@@ -146,7 +149,7 @@ struct SettingsView: View {
         }
     }
 
-    private var loadingSection: some View {
+    var loadingSection: some View {
         VStack(spacing: 16) {
             ProgressView()
                 .scaleEffect(1.2)
@@ -166,73 +169,79 @@ struct SettingsView: View {
 
     // MARK: - Helper Views
 
-    private func languageCard(language: String) -> some View {
-        Button(action: { selectedLanguage = language }) {
-            VStack(spacing: 8) {
-                Text(languageDisplayName(language))
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
-
-                if let voicesCount = speechSynthesizer.voicesByLanguage[language]?.count {
-                    Text("\(voicesCount) voices")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .frame(height: 80)
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, 8)
-            .background(selectedLanguage == language ? Color.indigo.opacity(0.1) : Color.gray.opacity(0.1))
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .overlay {
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(selectedLanguage == language ? .indigo : .clear, lineWidth: 2)
-            }
-        }
-        .buttonStyle(PlainButtonStyle())
-    }
-
-    private func voiceCard(voice: AVSpeechSynthesisVoice) -> some View {
-        Button(action: { speechSynthesizer.selectedVoice = voice }) {
-            HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(voice.name)
-                        .font(.body)
-                        .fontWeight(.medium)
-                        .foregroundStyle(.primary)
-
-                    Text(voice.language)
+    func languageCard(language: String) -> some View {
+        Button(
+            action: { selectedLanguage = language },
+            label: {
+                VStack(spacing: 8) {
+                    Text(languageDisplayName(language))
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .fontWeight(.medium)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+
+                    if let voicesCount = speechSynthesizer.voicesByLanguage[language]?.count {
+                        Text("\(voicesCount) voices")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
                 }
-
-                Spacer()
-
-                qualityBadge(voice.quality)
-
-                if speechSynthesizer.selectedVoice?.identifier == voice.identifier {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.indigo)
-                        .font(.title3)
+                .frame(height: 80)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 8)
+                .background(selectedLanguage == language ? Color.indigo.opacity(0.1) : Color.gray.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(selectedLanguage == language ? .indigo : .clear, lineWidth: 2)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(speechSynthesizer.selectedVoice?.identifier == voice.identifier ?
-                       Color.indigo.opacity(0.1) : Color.gray.opacity(0.1))
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .overlay {
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(speechSynthesizer.selectedVoice?.identifier == voice.identifier ?
-                           Color.indigo : Color.gray.opacity(0.3), lineWidth: 1)
-            }
-        }
+        )
         .buttonStyle(PlainButtonStyle())
     }
 
-    private func qualityBadge(_ quality: AVSpeechSynthesisVoiceQuality) -> some View {
+    func voiceCard(voice: AVSpeechSynthesisVoice) -> some View {
+        Button(
+            action: { speechSynthesizer.selectedVoice = voice },
+            label: {
+                HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(voice.name)
+                            .font(.body)
+                            .fontWeight(.medium)
+                            .foregroundStyle(.primary)
+
+                        Text(voice.language)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer()
+
+                    qualityBadge(voice.quality)
+
+                    if speechSynthesizer.selectedVoice?.identifier == voice.identifier {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.indigo)
+                            .font(.title3)
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(speechSynthesizer.selectedVoice?.identifier == voice.identifier ?
+                           Color.indigo.opacity(0.1) : Color.gray.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(speechSynthesizer.selectedVoice?.identifier == voice.identifier ?
+                               Color.indigo : Color.gray.opacity(0.3), lineWidth: 1)
+                }
+            }
+        )
+        .buttonStyle(PlainButtonStyle())
+    }
+
+    func qualityBadge(_ quality: AVSpeechSynthesisVoiceQuality) -> some View {
         Text(qualityString(quality))
             .font(.caption2)
             .fontWeight(.medium)
@@ -245,12 +254,12 @@ struct SettingsView: View {
 
     // MARK: - Helper Functions
 
-    private func languageDisplayName(_ languageCode: String) -> String {
+    func languageDisplayName(_ languageCode: String) -> String {
         let locale = Locale(identifier: languageCode)
         return locale.localizedString(forLanguageCode: languageCode)?.capitalized ?? languageCode
     }
 
-    private func qualityString(_ quality: AVSpeechSynthesisVoiceQuality) -> String {
+    func qualityString(_ quality: AVSpeechSynthesisVoiceQuality) -> String {
         switch quality {
         case .default:
             return "Standard"
@@ -263,7 +272,7 @@ struct SettingsView: View {
         }
     }
 
-    private func qualityColor(_ quality: AVSpeechSynthesisVoiceQuality) -> Color {
+    func qualityColor(_ quality: AVSpeechSynthesisVoiceQuality) -> Color {
         switch quality {
         case .default:
             return .gray

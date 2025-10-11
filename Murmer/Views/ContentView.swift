@@ -62,10 +62,16 @@ struct MurmerMainView: View {
                             .fill(Color.indigo.opacity(0.2))
                             .frame(width: 400, height: 400)
                             .blur(radius: 30)
-                            .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: viewModel.isListening)
+                            .animation(
+                                .easeInOut(duration: 2).repeatForever(autoreverses: true),
+                                value: viewModel.isListening
+                            )
                     }
 
-                    AudioReactiveBlobView(speechRecognizer: viewModel.speechRecognizer, listeningState: $viewModel.isListening)
+                    AudioReactiveBlobView(
+                        speechRecognizer: viewModel.speechRecognizer,
+                        listeningState: $viewModel.isListening
+                    )
                         .frame(width: 250, height: 250)
                         .scaleEffect(blobScale)
                         .onTapGesture {

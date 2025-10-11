@@ -80,8 +80,27 @@ class HealthDataManager {
         }
     }
 
-    // MARK: - Steps
-    private func fetchSteps(from startDate: Date, to endDate: Date) async {
+}
+
+extension HealthDataManager {
+    // MARK: - Weekly Data
+    func fetchWeeklyData() async -> [MetricType: [DailyMetricData]] {
+        let calendar = Calendar.current
+        let endDate = Date()
+        let startDate = calendar.date(byAdding: .day, value: -7, to: endDate)!
+
+        var weeklyData: [MetricType: [DailyMetricData]] = [:]
+
+        for metricType in [MetricType.steps, .activeEnergy, .sleep] {
+            weeklyData[metricType] = await fetchDailyData(for: metricType, from: startDate, to: endDate)
+        }
+
+        return weeklyData
+    }
+}
+
+private extension HealthDataManager {
+    func fetchSteps(from startDate: Date, to endDate: Date) async {
         guard let stepType = HKObjectType.quantityType(forIdentifier: .stepCount) else { return }
 
         let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
@@ -103,8 +122,7 @@ class HealthDataManager {
         }
     }
 
-    // MARK: - Active Energy
-    private func fetchActiveEnergy(from startDate: Date, to endDate: Date) async {
+    func fetchActiveEnergy(from startDate: Date, to endDate: Date) async {
         guard let energyType = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) else { return }
 
         let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
@@ -126,8 +144,7 @@ class HealthDataManager {
         }
     }
 
-    // MARK: - Distance
-    private func fetchDistance(from startDate: Date, to endDate: Date) async {
+    func fetchDistance(from startDate: Date, to endDate: Date) async {
         guard let distanceType = HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning) else { return }
 
         let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
@@ -142,7 +159,7 @@ class HealthDataManager {
             let result = try await descriptor.result(for: healthStore)
             if let sum = result?.sumQuantity() {
                 let meters = sum.doubleValue(for: .meter())
-                todayDistance = meters / 1000 // Convert to kilometers
+                todayDistance = meters / 1000
                 await saveMetric(type: .distance, value: todayDistance)
             }
         } catch {
@@ -150,8 +167,7 @@ class HealthDataManager {
         }
     }
 
-    // MARK: - Heart Rate
-    private func fetchLatestHeartRate() async {
+    func fetchLatestHeartRate() async {
         guard let heartRateType = HKObjectType.quantityType(forIdentifier: .heartRate) else { return }
 
         let descriptor = HKSampleQueryDescriptor(
@@ -171,8 +187,7 @@ class HealthDataManager {
         }
     }
 
-    // MARK: - Sleep
-    private func fetchLastNightSleep() async {
+    func fetchLastNightSleep() async {
         guard let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) else { return }
 
         let calendar = Calendar.current
@@ -196,7 +211,7 @@ class HealthDataManager {
                 totalSleepTime += duration
             }
 
-            lastNightSleep = totalSleepTime / 3600 // Convert to hours
+            lastNightSleep = totalSleepTime / 3600
             if lastNightSleep > 0 {
                 await saveMetric(type: .sleep, value: lastNightSleep)
             }
@@ -205,22 +220,11 @@ class HealthDataManager {
         }
     }
 
-    // MARK: - Weekly Data
-    func fetchWeeklyData() async -> [MetricType: [DailyMetricData]] {
-        let calendar = Calendar.current
-        let endDate = Date()
-        let startDate = calendar.date(byAdding: .day, value: -7, to: endDate)!
-
-        var weeklyData: [MetricType: [DailyMetricData]] = [:]
-
-        for metricType in [MetricType.steps, .activeEnergy, .sleep] {
-            weeklyData[metricType] = await fetchDailyData(for: metricType, from: startDate, to: endDate)
-        }
-
-        return weeklyData
-    }
-
-    private func fetchDailyData(for metricType: MetricType, from startDate: Date, to endDate: Date) async -> [DailyMetricData] {
+    func fetchDailyData(
+        for metricType: MetricType,
+        from startDate: Date,
+        to endDate: Date
+    ) async -> [DailyMetricData] {
         var dailyData: [DailyMetricData] = []
         let calendar = Calendar.current
 
@@ -248,7 +252,7 @@ class HealthDataManager {
         return dailyData
     }
 
-    private func fetchStepsValue(from startDate: Date, to endDate: Date) async -> Double {
+    func fetchStepsValue(from startDate: Date, to endDate: Date) async -> Double {
         guard let stepType = HKObjectType.quantityType(forIdentifier: .stepCount) else { return 0 }
 
         let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
@@ -271,7 +275,7 @@ class HealthDataManager {
         return 0
     }
 
-    private func fetchActiveEnergyValue(from startDate: Date, to endDate: Date) async -> Double {
+    func fetchActiveEnergyValue(from startDate: Date, to endDate: Date) async -> Double {
         guard let energyType = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) else { return 0 }
 
         let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
@@ -294,7 +298,7 @@ class HealthDataManager {
         return 0
     }
 
-    private func fetchSleepValue(for date: Date) async -> Double {
+    func fetchSleepValue(for date: Date) async -> Double {
         guard let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) else { return 0 }
 
         let calendar = Calendar.current
@@ -318,17 +322,18 @@ class HealthDataManager {
                 totalSleepTime += duration
             }
 
-            return totalSleepTime / 3600 // Convert to hours
+            return totalSleepTime / 3600
         } catch {
             // Handle sleep value fetch error silently
         }
 
         return 0
     }
+}
 
-    // MARK: - Save to SwiftData
-    @MainActor
-    private func saveMetric(type: MetricType, value: Double) async {
+@MainActor
+private extension HealthDataManager {
+    func saveMetric(type: MetricType, value: Double) async {
         guard let modelContext = modelContext else { return }
 
         let metric = HealthMetric(

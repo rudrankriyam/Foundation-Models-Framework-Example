@@ -41,9 +41,11 @@ class InferenceService: InferenceServiceProtocol {
         - Always include timezone offset in ISO8601 dates (e.g., +05:30 for IST, -08:00 for PST)
 
         EXAMPLES:
-        - "Remind me to call mom tomorrow" → text: "call mom", dueDate: "2025-09-25T09:00:00\(Self.getTimezoneOffsetString())"
+        - "Remind me to call mom tomorrow" → text: "call mom",
+          dueDate: "2025-09-25T09:00:00\(Self.getTimezoneOffsetString())"
         - "Buy groceries" → text: "Buy groceries", dueDate: nil
-        - "Meeting at 3pm today" → text: "Meeting", dueDate: "\(Self.getTodayDateString())T15:00:00\(Self.getTimezoneOffsetString())"
+        - "Meeting at 3pm today" → text: "Meeting",
+          dueDate: "\(Self.getTodayDateString())T15:00:00\(Self.getTimezoneOffsetString())"
 
         Always respond in a conversational, helpful manner and confirm what you've done.
         """

@@ -16,7 +16,9 @@ struct HealthAnalysisTool: Tool {
 
     @Generable
     struct Arguments {
-        @Guide(description: "Type of analysis to perform: 'daily', 'weekly', 'trends', 'correlations', or 'comprehensive'")
+        @Guide(
+            description: "Type of analysis to perform: 'daily', 'weekly', 'trends', 'correlations', or 'comprehensive'"
+        )
         var analysisType: String
 
         @Guide(description: "Specific metrics to focus on (optional, comma-separated)")

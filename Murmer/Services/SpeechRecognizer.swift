@@ -50,6 +50,279 @@ enum SpeechRecognitionState {
     }
 }
 
+@MainActor
+private extension SpeechRecognizer {
+    func validateAuthorization() throws {
+        let authStatus = SFSpeechRecognizer.authorizationStatus()
+        print(" Authorization status: \(authStatus.rawValue)")
+
+        guard authStatus == .authorized else {
+            hasPermission = false
+            let error = SpeechRecognitionError.notAuthorized
+            state = .error(error)
+            print(" Authorization failed")
+            throw error
+        }
+
+        hasPermission = true
+    }
+
+    func ensureRecognizerAvailable() throws {
+        let isAvailable = speechRecognizer?.isAvailable ?? false
+        print(" Speech recognizer available: \(isAvailable)")
+
+        guard isAvailable else {
+            let error = SpeechRecognitionError.recognizerNotAvailable
+            state = .error(error)
+            print(" Speech recognizer not available")
+            throw error
+        }
+    }
+
+    func cleanUpIfCurrentlyListening() {
+        guard case .listening = state else {
+            print(" Not currently listening, skipping cleanup")
+            return
+        }
+
+        print(" Currently listening, calling stopRecognition() to clean up")
+        stopRecognition()
+    }
+
+    func configureAudioSessionIfNeeded() throws {
+        print(" Configuring audio session for speech recognition")
+
+        #if os(iOS)
+        var lastError: Error?
+
+        for attempt in 1...2 {
+            do {
+                let audioSession = AVAudioSession.sharedInstance()
+                try audioSession.setCategory(
+                    .playAndRecord,
+                    mode: .measurement,
+                    options: [.duckOthers, .defaultToSpeaker]
+                )
+                try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+                print(" Audio session configured successfully")
+                lastError = nil
+                break
+
+            } catch {
+                lastError = error
+                print(" Audio session configuration failed (attempt \(attempt))")
+                print(" Error: \(error.localizedDescription)")
+
+                if attempt == 1 {
+                    usleep(100_000)
+                }
+            }
+        }
+
+        if lastError != nil {
+            print(" Audio session configuration failed after all attempts")
+            state = .error(.audioSessionFailed)
+            throw SpeechRecognitionError.audioSessionFailed
+        }
+        #endif
+    }
+
+    func prepareRecognitionRequest() -> SFSpeechAudioBufferRecognitionRequest {
+        let request = SFSpeechAudioBufferRecognitionRequest()
+
+        request.shouldReportPartialResults = true
+        request.requiresOnDeviceRecognition = false
+
+        if #available(iOS 16.0, *) {
+            request.addsPunctuation = true
+        }
+
+        if #available(iOS 13.0, *) {
+            request.taskHint = .dictation
+        }
+
+        print(" Recognition request prepared")
+        return request
+    }
+
+    func configureRecognitionTask(with request: SFSpeechAudioBufferRecognitionRequest) {
+        print(" Starting recognition task...")
+        recognitionTask = speechRecognizer?.recognitionTask(with: request) { [weak self] result, error in
+            guard let self else {
+                return
+            }
+
+            Task { @MainActor in
+                guard !self.hasProcessedFinalResult else {
+                    if let error {
+                        print(" CALLBACK IGNORED: Error - \(error.localizedDescription)")
+                    } else if let result {
+                        print(" CALLBACK IGNORED: Result - isFinal=\(result.isFinal)")
+                        print(" CALLBACK IGNORED TEXT: '\(result.bestTranscription.formattedString)'")
+                    } else {
+                        print(" CALLBACK IGNORED: Unknown callback")
+                    }
+                    return
+                }
+
+                if let error {
+                    print(" SPEECH ERROR: \(error.localizedDescription)")
+
+                    if case .listening(let partialText) = self.state,
+                       !partialText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        print(" Ignoring error; partial text available")
+                        print(" Partial text: '\(partialText)'")
+                        self.hasProcessedFinalResult = true
+                        self.state = .completed(finalText: partialText)
+                    } else {
+                        self.hasProcessedFinalResult = true
+                        self.state = .error(.recognitionFailed(error.localizedDescription))
+                    }
+                    return
+                }
+
+                if let result {
+                    let transcription = result.bestTranscription.formattedString
+
+                    if result.isFinal {
+                        print(" FINAL RESULT: '\(transcription)'")
+                        self.hasProcessedFinalResult = true
+                        self.state = .completed(finalText: transcription)
+                    } else if !self.hasProcessedFinalResult {
+                        print(" PARTIAL RESULT: '\(transcription)'")
+                        self.state = .listening(partialText: transcription)
+                    }
+                }
+            }
+        }
+    }
+
+    func prepareAudioEngine() throws {
+        if audioEngine.isRunning {
+            audioEngine.stop()
+        }
+        audioEngine.reset()
+
+        let inputNode = audioEngine.inputNode
+        let tapFormat = try determineTapFormat(for: inputNode)
+
+        if inputNode.numberOfInputs > 0 {
+            inputNode.removeTap(onBus: 0)
+        }
+
+        audioBufferCount = 0
+        inputNode.installTap(
+            onBus: 0,
+            bufferSize: 1024,
+            format: tapFormat
+        ) { [weak self] (buffer: AVAudioPCMBuffer, _: AVAudioTime) in
+            guard let self, !self.hasProcessedFinalResult else { return }
+
+            self.recognitionRequest?.append(buffer)
+
+            DispatchQueue.main.async {
+                self.processAudioBuffer(buffer)
+            }
+
+            self.audioBufferCount += 1
+            if self.audioBufferCount % 50 == 0 {
+                print(" Buffer \(self.audioBufferCount)")
+                print(" Frame length: \(buffer.frameLength)")
+            }
+        }
+
+        audioEngine.prepare()
+
+        do {
+            try audioEngine.start()
+            print(" Audio engine started successfully")
+        } catch {
+            print("Audio engine start failed: \(error.localizedDescription)")
+            state = .error(.audioSessionFailed)
+            throw SpeechRecognitionError.audioSessionFailed
+        }
+    }
+
+    func determineTapFormat(for inputNode: AVAudioInputNode) throws -> AVAudioFormat {
+        let recordingFormat = inputNode.outputFormat(forBus: 0)
+        let sampleRateMessage = " Hardware sampleRate=\(recordingFormat.sampleRate)"
+        let channelMessage = " Hardware channels=\(recordingFormat.channelCount)"
+        print(sampleRateMessage)
+        print(channelMessage)
+
+        guard recordingFormat.sampleRate > 0, recordingFormat.channelCount > 0 else {
+            guard let fallbackFormat = AVAudioFormat(standardFormatWithSampleRate: 16000, channels: 1) else {
+                state = .error(.audioSessionFailed)
+                throw SpeechRecognitionError.audioSessionFailed
+            }
+            print(" Installing tap with fallback sampleRate=16000")
+            print(" Installing tap with fallback channels=1")
+            return fallbackFormat
+        }
+
+        print(" Installing tap with hardware format")
+        return recordingFormat
+    }
+
+    func cleanupRecognition() {
+        print(" CLEANUP RECOGNITION")
+
+        if let task = recognitionTask {
+            task.cancel()
+            recognitionTask = nil
+        }
+
+        if let request = recognitionRequest {
+            request.endAudio()
+            recognitionRequest = nil
+        }
+
+        if audioEngine.isRunning {
+            audioEngine.stop()
+        }
+
+        let inputNode = audioEngine.inputNode
+        if inputNode.numberOfInputs > 0 {
+            inputNode.removeTap(onBus: 0)
+        }
+
+        hasProcessedFinalResult = true
+
+        print(" CLEANUP COMPLETED")
+    }
+
+    // MARK: - Amplitude Monitoring
+
+    func processAudioBuffer(_ buffer: AVAudioPCMBuffer) {
+        guard let channelData = buffer.floatChannelData?[0] else {
+            return
+        }
+        let frameLength = Int(buffer.frameLength)
+
+        var rms: Float = 0
+        vDSP_rmsqv(channelData, 1, &rms, vDSP_Length(frameLength))
+
+        let normalizedAmplitude = Double(min(log10(1 + rms * 9), 1.0))
+        let smoothedAmplitude = smoothAmplitude(normalizedAmplitude)
+
+        currentAmplitude = smoothedAmplitude
+    }
+
+    func smoothAmplitude(_ newAmplitude: Double) -> Double {
+        amplitudeHistory.append(newAmplitude)
+        if amplitudeHistory.count > historySize {
+            amplitudeHistory.removeFirst()
+        }
+
+        var smoothed = amplitudeHistory[0]
+        for index in 1..<amplitudeHistory.count {
+            smoothed = smoothed * smoothingFactor + amplitudeHistory[index] * (1 - smoothingFactor)
+        }
+
+        return smoothed
+    }
+}
+
 // MARK: - Recognition Errors
 
 enum SpeechRecognitionError: LocalizedError, Equatable {
@@ -153,234 +426,36 @@ class SpeechRecognizer: NSObject, ObservableObject, SpeechRecognitionService {
     }
 
     func startRecognition() throws {
-        print("🚀 START RECOGNITION CALLED")
+        print(" START RECOGNITION CALLED")
 
-        // Check current authorization status instead of cached value
-        let authStatus = SFSpeechRecognizer.authorizationStatus()
-        print("🚀 Authorization status: \(authStatus.rawValue)")
+        try validateAuthorization()
+        try ensureRecognizerAvailable()
+        cleanUpIfCurrentlyListening()
+        try configureAudioSessionIfNeeded()
 
-        guard authStatus == .authorized else {
-            hasPermission = false
-            let error = SpeechRecognitionError.notAuthorized
-            state = .error(error)
-            print("🚀 Authorization failed")
-            throw error
-        }
-
-        hasPermission = true
-
-        let isAvailable = speechRecognizer?.isAvailable ?? false
-        print("🚀 Speech recognizer available: \(isAvailable)")
-
-        guard isAvailable else {
-            let error = SpeechRecognitionError.recognizerNotAvailable
-            state = .error(error)
-            print("🚀 Speech recognizer not available")
-            throw error
-        }
-
-        // Cancel any ongoing recognition first, but only if we're currently listening
-        if case .listening = state {
-            print("🚀 Currently listening, calling stopRecognition() to clean up")
-            stopRecognition()
-        } else {
-            print("🚀 Not currently listening, skipping cleanup")
-        }
-
-        print("🚀 Configuring audio session for speech recognition")
-
-        // Configure audio session - simpler approach with single retry
-        #if os(iOS)
-        var lastError: Error?
-
-        for attempt in 1...2 {
-            do {
-                let audioSession = AVAudioSession.sharedInstance()
-                try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.duckOthers, .defaultToSpeaker])
-                try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
-                print("🚀 Audio session configured successfully")
-                break
-
-            } catch {
-                lastError = error
-                print("🚀 Audio session configuration failed (attempt \(attempt)): \(error.localizedDescription)")
-
-                if attempt == 1 {
-                    // Brief delay before retry - this is acceptable for a short operation
-                    usleep(100_000) // 100ms
-                }
-            }
-        }
-
-        if lastError != nil {
-            print("🚀 Audio session configuration failed after all attempts")
-            let recognitionError = SpeechRecognitionError.audioSessionFailed
-            state = .error(recognitionError)
-            throw recognitionError
-        }
-        #endif
-
-        // Create and configure recognition request
-        recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
-
-        guard let recognitionRequest = recognitionRequest else {
-            let error = SpeechRecognitionError.audioSessionFailed
-            state = .error(error)
-            throw error
-        }
-
-        // Configure request with better settings
-        recognitionRequest.shouldReportPartialResults = true
-        recognitionRequest.requiresOnDeviceRecognition = false
-
-        if #available(iOS 16.0, *) {
-            recognitionRequest.addsPunctuation = true
-        }
-
-        // Add timeout to prevent indefinite listening
-        if #available(iOS 13.0, *) {
-            recognitionRequest.taskHint = .dictation
-        }
-
-        // Reset flag when starting new recognition
+        let request = prepareRecognitionRequest()
+        recognitionRequest = request
         hasProcessedFinalResult = false
 
-        // Start recognition task
-        print("🚀 Starting recognition task...")
-        recognitionTask = speechRecognizer?.recognitionTask(with: recognitionRequest) { [weak self] result, error in
-            guard let self = self else {
-                return
-            }
+        configureRecognitionTask(with: request)
+        try prepareAudioEngine()
 
-            Task { @MainActor in
-                // Simple guard - if we already processed a final result, ignore everything else
-                guard !self.hasProcessedFinalResult else {
-                    if let error = error {
-                        print("🎤 CALLBACK IGNORED: Error - \(error.localizedDescription)")
-                    } else if let result = result {
-                        print("🎤 CALLBACK IGNORED: Result - isFinal=\(result.isFinal), text='\(result.bestTranscription.formattedString)'")
-                    } else {
-                        print("🎤 CALLBACK IGNORED: Unknown callback")
-                    }
-                    return
-                }
-
-                if let error = error {
-                    print("🔴 SPEECH ERROR: \(error.localizedDescription)")
-
-                    // If we have partial text already captured, don't treat this as an error
-                    // This can happen when recognition is cancelled but we already got speech
-                    if case .listening(let partialText) = self.state, !partialText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        print("🔄 Ignoring error since we have partial text: '\(partialText)'")
-                        self.hasProcessedFinalResult = true
-                        self.state = .completed(finalText: partialText)
-                    } else {
-                        self.hasProcessedFinalResult = true
-                        self.state = .error(.recognitionFailed(error.localizedDescription))
-                    }
-                    return
-                }
-
-                if let result = result {
-                    let transcription = result.bestTranscription.formattedString
-
-                    if result.isFinal {
-                        print("🎯 FINAL RESULT: '\(transcription)'")
-                        self.hasProcessedFinalResult = true
-                        self.state = .completed(finalText: transcription)
-                    } else {
-                        print("📝 PARTIAL RESULT: '\(transcription)'")
-                        // Only update state if we haven't processed final result yet
-                        if !self.hasProcessedFinalResult {
-                            self.state = .listening(partialText: transcription)
-                        }
-                    }
-                }
-            }
-        }
-
-        // Reset audio engine to ensure it picks up the new audio session configuration
-        if audioEngine.isRunning {
-            audioEngine.stop()
-        }
-        audioEngine.reset()
-
-        // Configure audio input with proper format
-        let inputNode = audioEngine.inputNode
-        let recordingFormat = inputNode.outputFormat(forBus: 0)
-        print("🎤 Hardware format after session config: sampleRate=\(recordingFormat.sampleRate), channels=\(recordingFormat.channelCount)")
-
-        // Remove any existing tap before installing new one
-        if inputNode.numberOfInputs > 0 {
-            inputNode.removeTap(onBus: 0)
-        }
-
-        // Use nil format to let AVAudioEngine handle format conversion automatically
-        print("🎤 Using automatic format conversion (nil format)")
-
-        // If we still need a specific format, use the recording format or fallback
-        let tapFormat: AVAudioFormat
-        if recordingFormat.sampleRate > 0 && recordingFormat.channelCount > 0 {
-            tapFormat = recordingFormat
-            print("🎤 Installing tap with hardware format")
-        } else {
-            guard let fallbackFormat = AVAudioFormat(standardFormatWithSampleRate: 16000, channels: 1) else {
-                let error = SpeechRecognitionError.audioSessionFailed
-                state = .error(error)
-                throw error
-            }
-            tapFormat = fallbackFormat
-            print("🎤 Installing tap with fallback format: sampleRate=16000, channels=1")
-        }
-
-        audioBufferCount = 0
-        inputNode.installTap(onBus: 0, bufferSize: 1024, format: tapFormat) { [weak self] (buffer: AVAudioPCMBuffer, _: AVAudioTime) in
-            guard let self = self, !self.hasProcessedFinalResult else { return }
-
-            // Send buffer to speech recognition
-            self.recognitionRequest?.append(buffer)
-
-            // Process amplitude for visual feedback on main thread
-            DispatchQueue.main.async {
-                self.processAudioBuffer(buffer)
-            }
-
-            // Log every 50th buffer to avoid spam
-            self.audioBufferCount += 1
-            if self.audioBufferCount % 50 == 0 {
-                print("🎤 Buffer \(self.audioBufferCount): frameLength=\(buffer.frameLength)")
-            }
-        }
-
-        audioEngine.prepare()
-
-        do {
-            try audioEngine.start()
-            print("🚀 Audio engine started successfully")
-        } catch {
-            print("Audio engine start failed: \(error.localizedDescription)")
-            let recognitionError = SpeechRecognitionError.audioSessionFailed
-            state = .error(recognitionError)
-            throw recognitionError
-        }
-
-        // Update state to listening
-        print("🚀 Setting state to .listening()")
         state = .listening()
         isRecording = true
-        print("🚀 START RECOGNITION COMPLETED SUCCESSFULLY")
+        print(" START RECOGNITION COMPLETED SUCCESSFULLY")
 
     }
 
     func stopRecognition() {
-        print("🛑 STOP RECOGNITION CALLED")
+        print(" STOP RECOGNITION CALLED")
 
         // If we're listening and have partial text, complete with that text
-        if case .listening(let partialText) = state, !partialText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            print("🛑 Completing with partial text: '\(partialText)'")
+        if case .listening(let partialText) = state,
+           !partialText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            print(" Completing with partial text: '\(partialText)'")
             state = .completed(finalText: partialText)
         } else {
-            print("🛑 No partial text to use, setting to idle")
+            print(" No partial text to use, setting to idle")
             state = .idle
         }
 
@@ -396,97 +471,38 @@ class SpeechRecognizer: NSObject, ObservableObject, SpeechRecognitionService {
             do {
                 let audioSession = AVAudioSession.sharedInstance()
                 try audioSession.setActive(false, options: .notifyOthersOnDeactivation)
-                print("🎤 Deactivated audio session after speech recognition")
+                print(" Deactivated audio session after speech recognition")
             } catch {
-                print("🎤 Failed to deactivate audio session: \(error.localizedDescription)")
+                print(" Failed to deactivate audio session")
+                print(" Deactivation error: \(error.localizedDescription)")
             }
         }
         #endif
     }
 
-    private func cleanupRecognition() {
-        print("🧹 CLEANUP RECOGNITION")
-
-        // Cancel any ongoing recognition task
-        if let task = recognitionTask {
-            task.cancel()
-            recognitionTask = nil
-        }
-
-        // End the recognition request
-        if let request = recognitionRequest {
-            request.endAudio()
-            recognitionRequest = nil
-        }
-
-        // Stop audio engine safely
-        if audioEngine.isRunning {
-            audioEngine.stop()
-        }
-
-        // Remove tap safely
-        let inputNode = audioEngine.inputNode
-        if inputNode.numberOfInputs > 0 {
-            inputNode.removeTap(onBus: 0)
-        }
-
-        hasProcessedFinalResult = true
-
-        print("🧹 CLEANUP COMPLETED")
-    }
-
-    // MARK: - Amplitude Monitoring
-
-    private func processAudioBuffer(_ buffer: AVAudioPCMBuffer) {
-        guard let channelData = buffer.floatChannelData?[0] else {
-            return
-        }
-        let frameLength = Int(buffer.frameLength)
-
-        // Calculate RMS amplitude
-        var rms: Float = 0
-        vDSP_rmsqv(channelData, 1, &rms, vDSP_Length(frameLength))
-
-        // Smooth the amplitude using logarithmic scale for better dynamic range
-        let normalizedAmplitude = Double(min(log10(1 + rms * 9), 1.0))
-        let smoothedAmplitude = smoothAmplitude(normalizedAmplitude)
-
-        // Update amplitude on main thread
-        currentAmplitude = smoothedAmplitude
-    }
-
-    private func smoothAmplitude(_ newAmplitude: Double) -> Double {
-        amplitudeHistory.append(newAmplitude)
-        if amplitudeHistory.count > historySize {
-            amplitudeHistory.removeFirst()
-        }
-
-        // Apply exponential smoothing
-        var smoothed = amplitudeHistory[0]
-        for i in 1..<amplitudeHistory.count {
-            smoothed = smoothed * smoothingFactor + amplitudeHistory[i] * (1 - smoothingFactor)
-        }
-
-        return smoothed
-    }
 }
 
 // MARK: - SFSpeechRecognitionTaskDelegate
 extension SpeechRecognizer: SFSpeechRecognitionTaskDelegate {
-    nonisolated func speechRecognitionTask(_ task: SFSpeechRecognitionTask, didFinishRecognition recognitionResult: SFSpeechRecognitionResult) {
-        print("🎯 TASK DELEGATE: Final recognition result - '\(recognitionResult.bestTranscription.formattedString)'")
+    nonisolated func speechRecognitionTask(
+        _ task: SFSpeechRecognitionTask,
+        didFinishRecognition recognitionResult: SFSpeechRecognitionResult
+    ) {
+        let transcript = recognitionResult.bestTranscription.formattedString
+        print(" TASK DELEGATE: Final recognition result received")
+        print(" TASK DELEGATE TEXT: '\(transcript)'")
     }
 
     nonisolated func speechRecognitionTaskFinishedReadingAudio(_ task: SFSpeechRecognitionTask) {
-        print("🎯 TASK DELEGATE: Finished reading audio")
+        print(" TASK DELEGATE: Finished reading audio")
     }
 
     nonisolated func speechRecognitionTaskWasCancelled(_ task: SFSpeechRecognitionTask) {
-        print("🎯 TASK DELEGATE: Task was cancelled")
+        print(" TASK DELEGATE: Task was cancelled")
     }
 
     nonisolated func speechRecognitionTask(_ task: SFSpeechRecognitionTask, didFinishSuccessfully successfully: Bool) {
-        print("🎯 TASK DELEGATE: Task finished successfully: \(successfully)")
+        print(" TASK DELEGATE: Task finished successfully: \(successfully)")
     }
 }
 

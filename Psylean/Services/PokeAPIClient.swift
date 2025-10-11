@@ -124,71 +124,71 @@ struct PokemonAPIData: Codable {
     let height: Int
     let weight: Int
     let baseExperience: Int?
-    let sprites: Sprites
-    let types: [TypeElement]
-    let abilities: [AbilityElement]
-    let stats: [StatElement]
-    let species: NamedResource
-
-    struct Sprites: Codable {
-        let frontDefault: String?
-        let other: Other?
-
-        struct Other: Codable {
-            let officialArtwork: OfficialArtwork?
-
-            enum CodingKeys: String, CodingKey {
-                case officialArtwork = "official-artwork"
-            }
-
-            struct OfficialArtwork: Codable {
-                let frontDefault: String?
-
-                enum CodingKeys: String, CodingKey {
-                    case frontDefault = "front_default"
-                }
-            }
-        }
-
-        enum CodingKeys: String, CodingKey {
-            case frontDefault = "front_default"
-            case other
-        }
-    }
-
-    struct TypeElement: Codable {
-        let type: NamedResource
-    }
-
-    struct AbilityElement: Codable {
-        let ability: NamedResource
-        let isHidden: Bool
-
-        enum CodingKeys: String, CodingKey {
-            case ability
-            case isHidden = "is_hidden"
-        }
-    }
-
-    struct StatElement: Codable {
-        let baseStat: Int
-        let stat: NamedResource
-
-        enum CodingKeys: String, CodingKey {
-            case baseStat = "base_stat"
-            case stat
-        }
-    }
-
-    struct NamedResource: Codable {
-        let name: String
-        let url: String
-    }
+    let sprites: PokemonSprites
+    let types: [PokemonTypeElement]
+    let abilities: [PokemonAbilityElement]
+    let stats: [PokemonStatElement]
+    let species: PokemonNamedResource
 
     enum CodingKeys: String, CodingKey {
         case id, name, height, weight, sprites, types, abilities, stats, species
         case baseExperience = "base_experience"
     }
+}
+
+struct PokemonSprites: Codable {
+    let frontDefault: String?
+    let other: PokemonSpritesOther?
+
+    enum CodingKeys: String, CodingKey {
+        case frontDefault = "front_default"
+        case other
+    }
+}
+
+struct PokemonSpritesOther: Codable {
+    let officialArtwork: PokemonOfficialArtwork?
+
+    enum CodingKeys: String, CodingKey {
+        case officialArtwork = "official-artwork"
+    }
+}
+
+struct PokemonOfficialArtwork: Codable {
+    let frontDefault: String?
+
+    enum CodingKeys: String, CodingKey {
+        case frontDefault = "front_default"
+    }
+}
+
+struct PokemonTypeElement: Codable {
+    let type: PokemonNamedResource
+}
+
+struct PokemonAbilityElement: Codable {
+    let ability: PokemonNamedResource
+    let isHidden: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case ability
+        case isHidden = "is_hidden"
+    }
+}
+
+struct PokemonStatElement: Codable {
+    let baseStat: Int
+    let stat: PokemonNamedResource
+
+    enum CodingKeys: String, CodingKey {
+        case baseStat = "base_stat"
+        case stat
+    }
+}
+
+struct PokemonNamedResource: Codable {
+    let name: String
+    let url: String
 }
 
 // MARK: - Evolution Models
@@ -206,21 +206,16 @@ struct PokemonSpecies: Codable {
 }
 
 struct EvolutionChain: Codable {
-    let chain: ChainLink
+    let chain: PokemonChainLink
+}
 
-    struct ChainLink: Codable {
-        let species: NamedResource
-        let evolvesTo: [ChainLink]
+struct PokemonChainLink: Codable {
+    let species: PokemonNamedResource
+    let evolvesTo: [PokemonChainLink]
 
-        struct NamedResource: Codable {
-            let name: String
-            let url: String
-        }
-
-        enum CodingKeys: String, CodingKey {
-            case species
-            case evolvesTo = "evolves_to"
-        }
+    enum CodingKeys: String, CodingKey {
+        case species
+        case evolvesTo = "evolves_to"
     }
 }
 
@@ -230,11 +225,6 @@ struct TypeData: Codable {
     let pokemon: [PokemonEntry]
 
     struct PokemonEntry: Codable {
-        let pokemon: NamedResource
-
-        struct NamedResource: Codable {
-            let name: String
-            let url: String
-        }
+        let pokemon: PokemonNamedResource
     }
 }

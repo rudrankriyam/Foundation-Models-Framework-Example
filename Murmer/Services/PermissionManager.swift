@@ -249,7 +249,8 @@ class PermissionService: ObservableObject, PermissionServiceProtocol {
         }
 
         if !deniedPermissions.isEmpty {
-            permissionAlertMessage = "Please enable \(deniedPermissions.joined(separator: ", ")) in Settings to use Murmer."
+            let permissionsList = deniedPermissions.joined(separator: ", ")
+            permissionAlertMessage = "Please enable \(permissionsList) in Settings to use Murmer."
             showPermissionAlert = true
         }
     }

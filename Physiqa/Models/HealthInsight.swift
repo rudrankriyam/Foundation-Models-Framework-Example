@@ -20,7 +20,14 @@ final class HealthInsight {
     var isRead: Bool
     var actionItems: [String]
 
-    init(title: String, content: String, category: InsightCategory, priority: InsightPriority = .medium, relatedMetrics: [MetricType] = [], actionItems: [String] = []) {
+    init(
+        title: String,
+        content: String,
+        category: InsightCategory,
+        priority: InsightPriority = .medium,
+        relatedMetrics: [MetricType] = [],
+        actionItems: [String] = []
+    ) {
         self.id = UUID()
         self.title = title
         self.content = content

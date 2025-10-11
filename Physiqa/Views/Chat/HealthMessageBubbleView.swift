@@ -74,7 +74,11 @@ struct HealthMessageBubbleView: View {
         )
 
         HealthMessageBubbleView(
-            content: "Of course! Let me fetch your health data for today. You've been doing great with 8,432 steps so far! That's 84% of your daily goal. Your sleep last night was also good at 7.2 hours. Keep up the excellent work!",
+            content: """
+            Of course! Let me fetch your health data for today. You've been doing great with 8,432 steps so far!
+            That's 84% of your daily goal. Your sleep last night was also good at 7.2 hours. Keep up the
+            excellent work!
+            """,
             isFromUser: false
         )
     }

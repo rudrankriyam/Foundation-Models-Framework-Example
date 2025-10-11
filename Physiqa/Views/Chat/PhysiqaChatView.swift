@@ -203,7 +203,10 @@ struct WelcomeMessageView: View {
                     .fontWeight(.semibold)
             }
 
-            Text("I'm your personal health coach, here to help you achieve your wellness goals. I can see you've been active today:")
+            Text("""
+            I'm your personal health coach, here to help you achieve your wellness goals.
+            I can see you've been active today:
+            """)
                 .font(.body)
                 .foregroundStyle(.secondary)
 
@@ -223,7 +226,10 @@ struct WelcomeMessageView: View {
                 }
             }
 
-            Text("How can I help you today? Ask me about your health data, get personalized tips, or set new wellness goals!")
+            Text("""
+            How can I help you today? Ask me about your health data, get personalized tips,
+            or set new wellness goals!
+            """)
                 .font(.body)
                 .foregroundStyle(.secondary)
         }

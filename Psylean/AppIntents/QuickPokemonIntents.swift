@@ -86,7 +86,10 @@ struct LegendaryPokemonIntent: AppIntent {
             let types = pokemonData.types.map { $0.type.name.capitalized }
 
             // Create description
-            let description = "The legendary \(types.joined(separator: "/")) type Pokemon, \(pokemonData.name.capitalized) stands at \(Double(pokemonData.height) / 10.0)m tall and possesses incredible power."
+            let description = """
+            The legendary \(types.joined(separator: "/")) type Pokemon, \(pokemonData.name.capitalized) stands at
+            \(Double(pokemonData.height) / 10.0)m tall and possesses incredible power.
+            """
 
             // Download image
             let imageURL = URL(string: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/\(pokemonData.id).png")!
