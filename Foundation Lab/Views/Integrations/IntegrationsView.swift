@@ -60,11 +60,15 @@ struct IntegrationsView: View {
             case .schemaReferences:
                 ReferencedSchemaView()
             case .optionalFields:
-                if #available(iOS 26.1, macOS 26.1, *) {
+#if compiler(>=6.2.1)
+                if #available(iOS 26.1, *) {
                     OptionalFieldsSchemaView()
                 } else {
                     Text("Optional fields example requires iOS/macOS 26.1")
                 }
+                    #else
+                    Text("Optional fields example requires iOS/macOS 26.1")
+                    #endif
             case .generationGuides:
                 GuidedDynamicSchemaView()
             case .generablePattern:

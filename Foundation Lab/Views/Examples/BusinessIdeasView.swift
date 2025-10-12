@@ -9,166 +9,174 @@ import FoundationModels
 import SwiftUI
 
 struct BusinessIdeasView: View {
-  @State private var currentPrompt = DefaultPrompts.businessIdeas
-  @State private var executor = ExampleExecutor()
-
-  var body: some View {
-    ExampleViewBase(
-      title: "Business Ideas",
-      description: "Generate innovative business concepts and strategies",
-      defaultPrompt: DefaultPrompts.businessIdeas,
-      currentPrompt: $currentPrompt,
-      isRunning: executor.isRunning,
-      errorMessage: executor.errorMessage,
-      codeExample: codeExample,
-      onRun: executeBusinessIdea,
-      onReset: resetToDefaults
-    ) {
-      VStack(spacing: 16) {
-        // Info Banner
-        HStack {
-          Image(systemName: "info.circle")
-            .foregroundColor(.orange)
-          Text(infoBannerText)
-            .font(.caption)
-            .foregroundColor(.secondary)
-          Spacer()
+    @State private var currentPrompt = DefaultPrompts.businessIdeas
+    @State private var executor = ExampleExecutor()
+    
+    var body: some View {
+        ExampleViewBase(
+            title: "Business Ideas",
+            description: "Generate innovative business concepts and strategies",
+            defaultPrompt: DefaultPrompts.businessIdeas,
+            currentPrompt: $currentPrompt,
+            isRunning: executor.isRunning,
+            errorMessage: executor.errorMessage,
+            codeExample: codeExample,
+            onRun: executeBusinessIdea,
+            onReset: resetToDefaults
+        ) {
+            VStack(spacing: 16) {
+                // Info Banner
+                HStack {
+                    Image(systemName: "info.circle")
+                        .foregroundColor(.orange)
+                    Text(infoBannerText)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+                .padding()
+                .background(Color.orange.opacity(0.1))
+                .cornerRadius(8)
+                
+                // Prompt Suggestions
+                PromptSuggestions(
+                    suggestions: DefaultPrompts.businessIdeasSuggestions,
+                    onSelect: { currentPrompt = $0 }
+                )
+                
+                if #available(iOS 26.1, macOS 26.1, *) {
+                    PromptSuggestions(
+                        suggestions: DefaultPrompts.optionalSemanticsSuggestions,
+                        onSelect: { currentPrompt = $0 }
+                    )
+                }
+                
+                // Prompt History
+                if !executor.promptHistory.isEmpty {
+                    PromptHistory(
+                        history: executor.promptHistory,
+                        onSelect: { currentPrompt = $0 }
+                    )
+                }
+                
+                // Result Display
+                if !executor.result.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Label("Generated Business Concept", systemImage: "briefcase")
+                            .font(.headline)
+                        
+                        ResultDisplay(
+                            result: executor.result,
+                            isSuccess: executor.errorMessage == nil
+                        )
+                    }
+                }
+            }
         }
-        .padding()
-        .background(Color.orange.opacity(0.1))
-        .cornerRadius(8)
-
-        // Prompt Suggestions
-        PromptSuggestions(
-          suggestions: DefaultPrompts.businessIdeasSuggestions,
-          onSelect: { currentPrompt = $0 }
-        )
-
-        if #available(iOS 26.1, macOS 26.1, *) {
-          PromptSuggestions(
-            suggestions: DefaultPrompts.optionalSemanticsSuggestions,
-            onSelect: { currentPrompt = $0 }
-          )
+    }
+    
+    private func executeBusinessIdea() {
+        Task {
+#if compiler(>=6.2.1)
+            if #available(iOS 26.1, *) {
+                await executor.executeStructured(
+                    prompt: currentPrompt,
+                    type: BusinessIdeaOptionalSemantics.self
+                ) { idea in
+                    formattedIdea(
+                        name: idea.name,
+                        description: idea.description,
+                        targetMarket: idea.targetMarket,
+                        advantages: idea.advantages,
+                        revenueModel: idea.revenueModel,
+                        estimatedStartupCost: idea.estimatedStartupCost,
+                        timeline: idea.timeline
+                    )
+                }
+            } else {
+               await executeBusinessIdeaWithoutSemantics()
+            }
+#else
+            await executeBusinessIdeaWithoutSemantics()
+#endif
         }
-
-        // Prompt History
-        if !executor.promptHistory.isEmpty {
-          PromptHistory(
-            history: executor.promptHistory,
-            onSelect: { currentPrompt = $0 }
-          )
-        }
-
-        // Result Display
-        if !executor.result.isEmpty {
-          VStack(alignment: .leading, spacing: 12) {
-            Label("Generated Business Concept", systemImage: "briefcase")
-              .font(.headline)
-
-            ResultDisplay(
-              result: executor.result,
-              isSuccess: executor.errorMessage == nil
+    }
+    
+    private func executeBusinessIdeaWithoutSemantics() async {
+        await executor.executeStructured(
+            prompt: currentPrompt,
+            type: BusinessIdea.self
+        ) { idea in
+            formattedIdea(
+                name: idea.name,
+                description: idea.description,
+                targetMarket: idea.targetMarket,
+                advantages: idea.advantages,
+                revenueModel: idea.revenueModel,
+                estimatedStartupCost: idea.estimatedStartupCost,
+                timeline: idea.timeline
             )
-          }
         }
-      }
     }
-  }
-
-  private func executeBusinessIdea() {
-    Task {
-      if #available(iOS 26.1, macOS 26.1, *) {
-        await executor.executeStructured(
-          prompt: currentPrompt,
-          type: BusinessIdeaOptionalSemantics.self
-        ) { idea in
-          formattedIdea(
-            name: idea.name,
-            description: idea.description,
-            targetMarket: idea.targetMarket,
-            advantages: idea.advantages,
-            revenueModel: idea.revenueModel,
-            estimatedStartupCost: idea.estimatedStartupCost,
-            timeline: idea.timeline
-          )
-        }
-      } else {
-        await executor.executeStructured(
-          prompt: currentPrompt,
-          type: BusinessIdea.self
-        ) { idea in
-          formattedIdea(
-            name: idea.name,
-            description: idea.description,
-            targetMarket: idea.targetMarket,
-            advantages: idea.advantages,
-            revenueModel: idea.revenueModel,
-            estimatedStartupCost: idea.estimatedStartupCost,
-            timeline: idea.timeline
-          )
-        }
-      }
+    
+    private func resetToDefaults() {
+        currentPrompt = "" // Clear the prompt completely
+        executor.clearAll() // Clear all results, errors, and history
     }
-  }
-
-  private func resetToDefaults() {
-    currentPrompt = "" // Clear the prompt completely
-    executor.clearAll() // Clear all results, errors, and history
-  }
 }
 
 private extension BusinessIdeasView {
-  var codeExample: String {
-    DefaultPrompts.optionalSemanticsCode(prompt: currentPrompt)
-  }
-
-  var infoBannerText: String {
-    if #available(iOS 26.1, macOS 26.1, *) {
-      return "Generates structured business ideas with market analysis and optional timeline semantics"
-    } else {
-      return "Generates structured business ideas with market analysis"
+    var codeExample: String {
+        DefaultPrompts.optionalSemanticsCode(prompt: currentPrompt)
     }
-  }
-
-  func formattedIdea(
-    name: String,
-    description: String,
-    targetMarket: String,
-    advantages: [String],
-    revenueModel: String,
-    estimatedStartupCost: String,
-    timeline: String?
-  ) -> String {
+    
+    var infoBannerText: String {
+        if #available(iOS 26.1, macOS 26.1, *) {
+            return "Generates structured business ideas with market analysis and optional timeline semantics"
+        } else {
+            return "Generates structured business ideas with market analysis"
+        }
+    }
+    
+    func formattedIdea(
+        name: String,
+        description: String,
+        targetMarket: String,
+        advantages: [String],
+        revenueModel: String,
+        estimatedStartupCost: String,
+        timeline: String?
+    ) -> String {
     """
     💡 Business Name: \(name)
-
+    
     📝 Description:
     \(description)
-
+    
     🎯 Target Market:
     \(targetMarket)
-
+    
     💪 Key Advantages:
     \(advantages.map { "• \($0)" }.joined(separator: "\n"))
-
+    
     💰 Revenue Model:
     \(revenueModel)
-
+    
     💵 Estimated Startup Cost:
     \(estimatedStartupCost)
-
+    
     ⏱️ Timeline:
     \(timelineSection(for: timeline))
     """
-  }
-
-  func timelineSection(for timeline: String?) -> String {
-    timeline ?? "To be determined"
-  }
+    }
+    
+    func timelineSection(for timeline: String?) -> String {
+        timeline ?? "To be determined"
+    }
 }
 
 #Preview {
-  NavigationStack {
-    BusinessIdeasView()
-  }
+    NavigationStack {
+        BusinessIdeasView()
+    }
 }

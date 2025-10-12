@@ -195,6 +195,7 @@ struct BusinessIdea {
   let timeline: String?
 }
 
+#if compiler(>=6.2.1)
 @available(iOS 26.1, macOS 26.1, *)
 @available(tvOS, unavailable)
 @available(watchOS, unavailable)
@@ -263,3 +264,4 @@ struct EnterpriseExpansionPlan {
   @Guide(description: "Dependencies that could delay launch", semantics: .possiblyNull)
   let launchDependencies: [String]?
 }
+#endif
