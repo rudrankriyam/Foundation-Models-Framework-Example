@@ -218,7 +218,7 @@ struct BusinessIdeaOptionalSemantics {
   @Guide(description: "Initial startup costs estimate")
   let estimatedStartupCost: String
 
-  @Guide(description: "Expected timeline or phases for launch and growth", semantics: .possiblyAbsent)
+  @Guide(description: "Expected timeline or phases for launch and growth")
   let timeline: String?
 }
 
@@ -227,39 +227,39 @@ struct BusinessIdeaOptionalSemantics {
 @available(watchOS, unavailable)
 @Generable
 struct EnterpriseExpansionPlan {
-  @Guide(description: "Primary region targeted for expansion", semantics: .possiblyNull)
+  @Guide(description: "Primary region targeted for expansion")
   let region: String?
 
-  @Guide(description: "Projected marketing investment in USD", semantics: .possiblyNull)
+  @Guide(description: "Projected marketing investment in USD")
   let marketingBudget: String?
 
-  @Guide(description: "Planned engineering headcount for the launch", semantics: .possiblyNull)
+  @Guide(description: "Planned engineering headcount for the launch")
   let engineeringHeadcount: String?
 
-  @Guide(description: "Quarterly revenue expectations", semantics: .possiblyNull)
+  @Guide(description: "Quarterly revenue expectations")
   let revenueTargets: String?
 
-  @Guide(description: "Strategic partnerships to secure", semantics: .possiblyNull)
+  @Guide(description: "Strategic partnerships to secure")
   let partnerships: [String]?
 
-  @Guide(description: "Key compliance milestones", semantics: .possiblyNull)
+  @Guide(description: "Key compliance milestones")
   let complianceStatus: [String]?
 
-  @Guide(description: "Identified risks and mitigation plans", semantics: .possiblyNull)
+  @Guide(description: "Identified risks and mitigation plans")
   let riskAssessment: [String]?
 
-  @Guide(description: "Infrastructure or tooling upgrades required", semantics: .possiblyNull)
+  @Guide(description: "Infrastructure or tooling upgrades required")
   let infrastructureNeeds: [String]?
 
-  @Guide(description: "Localization status for product and support", semantics: .possiblyNull)
+  @Guide(description: "Localization status for product and support")
   let localizationStatus: [String]?
 
-  @Guide(description: "Customer support readiness milestones", semantics: .possiblyNull)
+  @Guide(description: "Customer support readiness milestones")
   let supportStrategy: [String]?
 
-  @Guide(description: "Training material requirements", semantics: .possiblyNull)
+  @Guide(description: "Training material requirements")
   let trainingPlan: [String]?
 
-  @Guide(description: "Dependencies that could delay launch", semantics: .possiblyNull)
+  @Guide(description: "Dependencies that could delay launch")
   let launchDependencies: [String]?
 }

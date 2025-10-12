@@ -147,7 +147,7 @@ struct OptionalFieldsSchemaView: View {
         let type: String
         let description: String
         let schema: DynamicGenerationSchema
-        let optionality: DynamicGenerationSchema.Optionality
+        let isOptional: Bool
     }
 
     private var schemaFields: [SchemaField] {
@@ -174,42 +174,42 @@ struct OptionalFieldsSchemaView: View {
                     type: "String",
                     description: "The person's full name",
                     schema: .init(type: String.self),
-                    optionality: .required
+                    isOptional: false
                 ),
                 SchemaField(
                     name: "age",
                     type: "Int",
                     description: "The person's age",
                     schema: .init(type: Int.self),
-                    optionality: .required
+                    isOptional: false
                 ),
                 SchemaField(
                     name: "location",
                     type: "String",
                     description: "Where the person is from or lives",
                     schema: .init(type: String.self),
-                    optionality: .possiblyAbsent
+                    isOptional: true
                 ),
                 SchemaField(
                     name: "occupation",
                     type: "String",
                     description: "The person's job or profession",
                     schema: .init(type: String.self),
-                    optionality: .possiblyAbsent
+                    isOptional: true
                 ),
                 SchemaField(
                     name: "bio",
                     type: "String",
                     description: "Brief biographical information",
                     schema: .init(type: String.self),
-                    optionality: .possiblyNull
+                    isOptional: true
                 ),
                 SchemaField(
                     name: "interests",
                     type: "[String]",
                     description: "Hobbies or interests mentioned",
                     schema: .init(arrayOf: .init(type: String.self)),
-                    optionality: .possiblyAbsent
+                    isOptional: true
                 )
             ]
 
@@ -220,42 +220,42 @@ struct OptionalFieldsSchemaView: View {
                     type: "String",
                     description: "Product name",
                     schema: .init(type: String.self),
-                    optionality: .required
+                    isOptional: false
                 ),
                 SchemaField(
                     name: "price",
                     type: "Float",
                     description: "Product price",
                     schema: .init(type: Float.self),
-                    optionality: .required
+                    isOptional: false
                 ),
                 SchemaField(
                     name: "description",
                     type: "String",
                     description: "Product description",
                     schema: .init(type: String.self),
-                    optionality: .possiblyAbsent
+                    isOptional: true
                 ),
                 SchemaField(
                     name: "colors",
                     type: "[String]",
                     description: "Available colors",
                     schema: .init(arrayOf: .init(type: String.self)),
-                    optionality: .possiblyAbsent
+                    isOptional: true
                 ),
                 SchemaField(
                     name: "inStock",
                     type: "Bool",
                     description: "Whether the product is in stock",
                     schema: .init(type: Bool.self),
-                    optionality: .possiblyNull
+                    isOptional: true
                 ),
                 SchemaField(
                     name: "discount",
                     type: "Float",
                     description: "Discount percentage if any",
                     schema: .init(type: Float.self),
-                    optionality: .possiblyNull
+                    isOptional: true
                 )
             ]
 
@@ -266,42 +266,42 @@ struct OptionalFieldsSchemaView: View {
                     type: "String",
                     description: "Event title",
                     schema: .init(type: String.self),
-                    optionality: .required
+                    isOptional: false
                 ),
                 SchemaField(
                     name: "date",
                     type: "String",
                     description: "Event date",
                     schema: .init(type: String.self),
-                    optionality: .required
+                    isOptional: false
                 ),
                 SchemaField(
                     name: "venue",
                     type: "String",
                     description: "Event location or venue",
                     schema: .init(type: String.self),
-                    optionality: .possiblyAbsent
+                    isOptional: true
                 ),
                 SchemaField(
                     name: "capacity",
                     type: "Int",
                     description: "Maximum attendees",
                     schema: .init(type: Int.self),
-                    optionality: .possiblyAbsent
+                    isOptional: true
                 ),
                 SchemaField(
                     name: "registration",
                     type: "String",
                     description: "Registration requirements",
                     schema: .init(type: String.self),
-                    optionality: .possiblyNull
+                    isOptional: true
                 ),
                 SchemaField(
                     name: "earlyBird",
                     type: "Bool",
                     description: "Early bird discount available",
                     schema: .init(type: Bool.self),
-                    optionality: .possiblyNull
+                    isOptional: true
                 )
             ]
         }
@@ -362,7 +362,7 @@ struct OptionalFieldsSchemaView: View {
                 name: field.name,
                 description: field.description,
                 schema: field.schema,
-                optionality: field.optionality
+                isOptional: field.isOptional
             )
         }
 
@@ -421,35 +421,34 @@ struct OptionalFieldsSchemaView: View {
                     name: "name",
                     description: "Full name",
                     schema: .init(type: String.self),
-                    optionality: .required
+                    isOptional: false
                 ),
                 DynamicGenerationSchema.Property(
                     name: "email",
                     description: "Email address",
                     schema: .init(type: String.self),
-                    optionality: .possiblyAbsent
+                    isOptional: true
                 ),
                 DynamicGenerationSchema.Property(
                     name: "age",
                     description: "User age",
                     schema: .init(type: Int.self),
-                    optionality: .required
+                    isOptional: false
                 ),
                 DynamicGenerationSchema.Property(
                     name: "preferences",
                     description: "User preferences",
                     schema: .init(arrayOf: .init(type: String.self)),
-                    optionality: .possiblyNull
+                    isOptional: true
                 )
             ]
         )
 
-        // Optionality options (iOS 26.1+):
-        // • .required: model must emit the field
-        // • .possiblyAbsent: field may be omitted entirely
-        // • .possiblyNull: field may appear with a null value
+        // Optional field handling (iOS 26.1+):
+        // • isOptional: false - model must emit the field (required)
+        // • isOptional: true - field may be omitted or null
 
-        // Use the optionality parameter to control field requirements
+        // Use the isOptional parameter to control field requirements
         let response = try await session.respond(
             to: "Extract user information",
             schema: GenerationSchema(root: userSchema, dependencies: [])
