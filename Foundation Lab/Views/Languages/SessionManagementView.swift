@@ -54,6 +54,7 @@ struct SessionManagementView: View {
         .navigationTitle("Multiple Sessions")
 #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
+        .background(TopGradientView())
 #endif
     }
 

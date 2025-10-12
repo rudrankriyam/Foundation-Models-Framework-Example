@@ -76,6 +76,7 @@ struct ProductionLanguageExampleView: View {
         .navigationTitle("Insights Example")
 #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
+        .background(TopGradientView())
 #endif
         .onAppear {
             detectUserLanguage()

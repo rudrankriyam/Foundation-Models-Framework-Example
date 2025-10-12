@@ -56,6 +56,7 @@ struct MultilingualResponsesView: View {
         .navigationTitle("Multilingual Play")
 #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
+        .background(TopGradientView())
 #endif
     }
 

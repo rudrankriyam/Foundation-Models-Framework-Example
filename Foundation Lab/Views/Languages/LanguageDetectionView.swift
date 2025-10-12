@@ -53,6 +53,7 @@ struct LanguageDetectionView: View {
         .navigationTitle("Language Detection")
 #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
+        .background(TopGradientView())
 #endif
     }
 
