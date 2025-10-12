@@ -78,7 +78,7 @@ struct BusinessIdeasView: View {
     private func executeBusinessIdea() {
         Task {
 #if compiler(>=6.2.1)
-            if #available(iOS 26.1, *) {
+            if #available(iOS 26.1, macOS 26.1, *) {
                 await executor.executeStructured(
                     prompt: currentPrompt,
                     type: BusinessIdeaOptionalSemantics.self
