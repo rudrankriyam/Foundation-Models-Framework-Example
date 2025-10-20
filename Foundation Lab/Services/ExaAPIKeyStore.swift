@@ -2,7 +2,6 @@ import Foundation
 import KeychainAccess
 import Observation
 
-/// Wraps Keychain interactions for the Exa API key, providing a single access point.
 @Observable
 @MainActor
 final class ExaAPIKeyStore {
@@ -19,7 +18,6 @@ final class ExaAPIKeyStore {
 
     func load() throws -> String? {
         let value = try keychain.get(Self.apiKeyIdentifier)
-        // If key doesn't exist in keychain, returns nil; cache as empty string
         cachedKey = value ?? ""
         return value
     }
