@@ -7,15 +7,16 @@
 
 import SwiftUI
 import LiquidGlasKit
+import OSLog
 
 struct SettingsView: View {
     @State private var tempAPIKey: String = ""
-    @State private var storedAPIKey: String = ""
     @State private var showingAlert = false
     @State private var alertMessage = ""
     @State private var hasLoadedInitialKey = false
     @FocusState private var isAPIFieldFocused: Bool
     @Environment(ExaAPIKeyStore.self) private var apiKeyStore
+    private let logger = Logger(subsystem: "com.rudrankriyam.FoundationLab", category: "SettingsView")
 
     var body: some View {
         ScrollView {
@@ -59,7 +60,7 @@ struct SettingsView: View {
                 .buttonStyle(.glassProminent)
                 .disabled(tempAPIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
 
-                if !storedAPIKey.isEmpty {
+                if !apiKeyStore.cachedKey.isEmpty {
                     Button("Clear") {
                         clearAPIKey()
                     }
@@ -69,7 +70,7 @@ struct SettingsView: View {
                 }
             }
 
-            if !storedAPIKey.isEmpty {
+            if !apiKeyStore.cachedKey.isEmpty {
                 Text("API key configured")
                     .font(.caption)
                     .foregroundColor(.secondary)
@@ -138,11 +139,11 @@ struct SettingsView: View {
         dismissKeyboard()
         do {
             try apiKeyStore.save(trimmedKey)
-            storedAPIKey = trimmedKey
             tempAPIKey = trimmedKey
             alertMessage = "API key saved successfully!"
         } catch {
             alertMessage = "Could not save the API key. Please try again."
+            logger.error("Failed to save Exa API key: \(error.localizedDescription, privacy: .public)")
         }
         showingAlert = true
     }
@@ -151,11 +152,11 @@ struct SettingsView: View {
         dismissKeyboard()
         do {
             try apiKeyStore.clear()
-            storedAPIKey = ""
             tempAPIKey = ""
             alertMessage = "API key cleared"
         } catch {
             alertMessage = "Could not clear the API key. Please try again."
+            logger.error("Failed to clear Exa API key: \(error.localizedDescription, privacy: .public)")
         }
         showingAlert = true
     }
@@ -170,13 +171,12 @@ struct SettingsView: View {
 
         do {
             let currentKey = try apiKeyStore.load() ?? ""
-            storedAPIKey = currentKey
             tempAPIKey = currentKey
         } catch {
-            storedAPIKey = ""
             tempAPIKey = ""
             alertMessage = "Failed to load the stored API key."
             showingAlert = true
+            logger.error("Failed to load Exa API key: \(error.localizedDescription, privacy: .public)")
         }
     }
 }
