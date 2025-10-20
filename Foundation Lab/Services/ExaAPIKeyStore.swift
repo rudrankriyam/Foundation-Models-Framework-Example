@@ -19,6 +19,7 @@ final class ExaAPIKeyStore {
 
     func load() throws -> String? {
         let value = try keychain.get(Self.apiKeyIdentifier)
+        // If key doesn't exist in keychain, returns nil; cache as empty string
         cachedKey = value ?? ""
         return value
     }

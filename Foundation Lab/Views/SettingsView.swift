@@ -183,6 +183,7 @@ struct SettingsView: View {
 #Preview {
     NavigationStack {
         SettingsView()
+            .environment(ExaAPIKeyStore())
             .background(TopGradientView())
     }
 }
