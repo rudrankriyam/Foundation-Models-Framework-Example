@@ -15,7 +15,7 @@ struct SettingsView: View {
     @State private var alertMessage = ""
     @State private var hasLoadedInitialKey = false
     @FocusState private var isAPIFieldFocused: Bool
-    private let apiKeyStore = ExaAPIKeyStore.shared
+    @Environment(ExaAPIKeyStore.self) private var apiKeyStore
 
     var body: some View {
         ScrollView {

@@ -1,10 +1,11 @@
 import Foundation
 import KeychainAccess
+import Observation
 
 /// Wraps Keychain interactions for the Exa API key, providing a single access point.
+@Observable
+@MainActor
 final class ExaAPIKeyStore {
-    static let shared = ExaAPIKeyStore()
-
     private let keychain: Keychain
     private let apiKeyIdentifier = "exa_api_key"
 

@@ -14,6 +14,7 @@ struct FoundationLabApp: App {
     @State private var isModelAvailable = true
     @State private var unavailabilityReason: SystemLanguageModel.Availability.UnavailableReason?
     @State private var showModelUnavailableWarning = false
+    @State private var apiKeyStore = ExaAPIKeyStore()
 
     var body: some Scene {
         WindowGroup {
@@ -21,6 +22,7 @@ struct FoundationLabApp: App {
 #if os(macOS)
                 .frame(minWidth: 800, minHeight: 600)
 #endif
+                .environment(apiKeyStore)
                 .onAppear {
                     FoundationLabAppShortcuts.updateAppShortcutParameters()
                     checkModelAvailability()
