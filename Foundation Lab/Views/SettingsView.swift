@@ -16,7 +16,7 @@ struct SettingsView: View {
     @State private var hasLoadedInitialKey = false
     @FocusState private var isAPIFieldFocused: Bool
     @Environment(ExaAPIKeyStore.self) private var apiKeyStore
-    private let logger = Logger(subsystem: "com.rudrankriyam.FoundationLab", category: "SettingsView")
+    private let logger = Logger(subsystem: ExaAPIKeyStore.defaultServiceIdentifier, category: "SettingsView")
 
     var body: some View {
         ScrollView {
@@ -173,7 +173,6 @@ struct SettingsView: View {
             let currentKey = try apiKeyStore.load() ?? ""
             tempAPIKey = currentKey
         } catch {
-            tempAPIKey = ""
             alertMessage = "Failed to load the stored API key."
             showingAlert = true
             logger.error("Failed to load Exa API key: \(error.localizedDescription, privacy: .public)")
