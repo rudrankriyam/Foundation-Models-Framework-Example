@@ -17,19 +17,25 @@ final class ExaAPIKeyStore {
         self.keychain = baseKeychain.accessibility(.afterFirstUnlock)
     }
 
-    func load() throws -> String? {
-        let value = try keychain.get(Self.apiKeyIdentifier)
+    func load() async throws -> String? {
+        let value = try await Task.detached(priority: .utility) { [keychain] in
+            try keychain.get(Self.apiKeyIdentifier)
+        }.value
         cachedKey = value ?? ""
         return value
     }
 
-    func save(_ value: String) throws {
-        try keychain.set(value, key: Self.apiKeyIdentifier)
+    func save(_ value: String) async throws {
+        try await Task.detached(priority: .utility) { [keychain] in
+            try keychain.set(value, key: Self.apiKeyIdentifier)
+        }.value
         cachedKey = value
     }
 
-    func clear() throws {
-        try keychain.remove(Self.apiKeyIdentifier)
+    func clear() async throws {
+        try await Task.detached(priority: .utility) { [keychain] in
+            try keychain.remove(Self.apiKeyIdentifier)
+        }.value
         cachedKey = ""
     }
 }

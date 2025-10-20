@@ -37,7 +37,9 @@ struct SettingsView: View {
                     .focused($isAPIFieldFocused)
                     .submitLabel(.done)
                     .onSubmit {
-                        saveAPIKey()
+                        Task {
+                            await saveAPIKey()
+                        }
                     }
 
                 Text("Get your free Exa API key:")
@@ -54,7 +56,9 @@ struct SettingsView: View {
 
             HStack {
                 Button("Save") {
-                    saveAPIKey()
+                    Task {
+                        await saveAPIKey()
+                    }
                 }
                 .controlSize(.large)
                 .buttonStyle(.glassProminent)
@@ -62,7 +66,9 @@ struct SettingsView: View {
 
                 if !apiKeyStore.cachedKey.isEmpty {
                     Button("Clear") {
-                        clearAPIKey()
+                        Task {
+                            await clearAPIKey()
+                        }
                     }
                     .buttonStyle(.glassProminent)
                     .tint(.secondary)
@@ -122,12 +128,13 @@ struct SettingsView: View {
         } message: {
             Text(alertMessage)
         }
-        .onAppear {
-            loadStoredAPIKeyIfNeeded()
+        .task {
+            await loadStoredAPIKeyIfNeeded()
         }
     }
 
-    private func saveAPIKey() {
+    @MainActor
+    private func saveAPIKey() async {
         let trimmedKey = tempAPIKey.trimmingCharacters(in: .whitespacesAndNewlines)
 
         guard !trimmedKey.isEmpty else {
@@ -138,7 +145,7 @@ struct SettingsView: View {
 
         dismissKeyboard()
         do {
-            try apiKeyStore.save(trimmedKey)
+            try await apiKeyStore.save(trimmedKey)
             tempAPIKey = trimmedKey
             alertMessage = "API key saved successfully!"
         } catch {
@@ -148,10 +155,11 @@ struct SettingsView: View {
         showingAlert = true
     }
 
-    private func clearAPIKey() {
+    @MainActor
+    private func clearAPIKey() async {
         dismissKeyboard()
         do {
-            try apiKeyStore.clear()
+            try await apiKeyStore.clear()
             tempAPIKey = ""
             alertMessage = "API key cleared"
         } catch {
@@ -165,14 +173,15 @@ struct SettingsView: View {
         isAPIFieldFocused = false
     }
 
-    private func loadStoredAPIKeyIfNeeded() {
+    @MainActor
+    private func loadStoredAPIKeyIfNeeded() async {
         guard !hasLoadedInitialKey else { return }
         hasLoadedInitialKey = true
 
-        migrateLegacyAPIKeyIfNeeded()
+        await migrateLegacyAPIKeyIfNeeded()
 
         do {
-            let currentKey = try apiKeyStore.load() ?? ""
+            let currentKey = try await apiKeyStore.load() ?? ""
             tempAPIKey = currentKey
         } catch {
             alertMessage = "Failed to load the stored API key."
@@ -181,7 +190,8 @@ struct SettingsView: View {
         }
     }
 
-    private func migrateLegacyAPIKeyIfNeeded() {
+    @MainActor
+    private func migrateLegacyAPIKeyIfNeeded() async {
         let defaults = UserDefaults.standard
 
         guard let legacyKey = defaults.string(forKey: ExaAPIKeyStore.legacyUserDefaultsKey) else {
@@ -196,7 +206,7 @@ struct SettingsView: View {
         }
 
         do {
-            try apiKeyStore.save(trimmedLegacyKey)
+            try await apiKeyStore.save(trimmedLegacyKey)
             defaults.removeObject(forKey: ExaAPIKeyStore.legacyUserDefaultsKey)
             logger.info("Migrated legacy Exa API key from UserDefaults to Keychain.")
         } catch {
