@@ -13,6 +13,7 @@ struct SettingsView: View {
     @State private var tempAPIKey: String = ""
     @State private var showingAlert = false
     @State private var alertMessage = ""
+    @FocusState private var isAPIFieldFocused: Bool
 
     var body: some View {
         ScrollView {
@@ -30,8 +31,13 @@ struct SettingsView: View {
 
                 SecureField("Enter your Exa API key", text: $tempAPIKey)
                     .textFieldStyle(.roundedBorder)
+                    .focused($isAPIFieldFocused)
                     .onAppear {
                         tempAPIKey = exaAPIKey
+                    }
+                    .submitLabel(.done)
+                    .onSubmit {
+                        saveAPIKey()
                     }
 
                 Text("Get your free Exa API key:")
@@ -127,16 +133,22 @@ struct SettingsView: View {
             return
         }
 
+        dismissKeyboard()
         exaAPIKey = trimmedKey
         alertMessage = "API key saved successfully!"
         showingAlert = true
     }
 
     private func clearAPIKey() {
+        dismissKeyboard()
         exaAPIKey = ""
         tempAPIKey = ""
         alertMessage = "API key cleared"
         showingAlert = true
+    }
+
+    private func dismissKeyboard() {
+        isAPIFieldFocused = false
     }
 }
 
