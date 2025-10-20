@@ -9,11 +9,13 @@ import SwiftUI
 import LiquidGlasKit
 
 struct SettingsView: View {
-    @AppStorage("exaAPIKey") private var exaAPIKey: String = ""
     @State private var tempAPIKey: String = ""
+    @State private var storedAPIKey: String = ""
     @State private var showingAlert = false
     @State private var alertMessage = ""
+    @State private var hasLoadedInitialKey = false
     @FocusState private var isAPIFieldFocused: Bool
+    private let apiKeyStore = ExaAPIKeyStore.shared
 
     var body: some View {
         ScrollView {
@@ -32,9 +34,6 @@ struct SettingsView: View {
                 SecureField("Enter your Exa API key", text: $tempAPIKey)
                     .textFieldStyle(.roundedBorder)
                     .focused($isAPIFieldFocused)
-                    .onAppear {
-                        tempAPIKey = exaAPIKey
-                    }
                     .submitLabel(.done)
                     .onSubmit {
                         saveAPIKey()
@@ -60,7 +59,7 @@ struct SettingsView: View {
                 .buttonStyle(.glassProminent)
                 .disabled(tempAPIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
 
-                if !exaAPIKey.isEmpty {
+                if !storedAPIKey.isEmpty {
                     Button("Clear") {
                         clearAPIKey()
                     }
@@ -70,7 +69,7 @@ struct SettingsView: View {
                 }
             }
 
-            if !exaAPIKey.isEmpty {
+            if !storedAPIKey.isEmpty {
                 Text("API key configured")
                     .font(.caption)
                     .foregroundColor(.secondary)
@@ -122,6 +121,9 @@ struct SettingsView: View {
         } message: {
             Text(alertMessage)
         }
+        .onAppear {
+            loadStoredAPIKeyIfNeeded()
+        }
     }
 
     private func saveAPIKey() {
@@ -134,21 +136,48 @@ struct SettingsView: View {
         }
 
         dismissKeyboard()
-        exaAPIKey = trimmedKey
-        alertMessage = "API key saved successfully!"
+        do {
+            try apiKeyStore.save(trimmedKey)
+            storedAPIKey = trimmedKey
+            tempAPIKey = trimmedKey
+            alertMessage = "API key saved successfully!"
+        } catch {
+            alertMessage = "Could not save the API key. Please try again."
+        }
         showingAlert = true
     }
 
     private func clearAPIKey() {
         dismissKeyboard()
-        exaAPIKey = ""
-        tempAPIKey = ""
-        alertMessage = "API key cleared"
+        do {
+            try apiKeyStore.clear()
+            storedAPIKey = ""
+            tempAPIKey = ""
+            alertMessage = "API key cleared"
+        } catch {
+            alertMessage = "Could not clear the API key. Please try again."
+        }
         showingAlert = true
     }
 
     private func dismissKeyboard() {
         isAPIFieldFocused = false
+    }
+
+    private func loadStoredAPIKeyIfNeeded() {
+        guard !hasLoadedInitialKey else { return }
+        hasLoadedInitialKey = true
+
+        do {
+            let currentKey = try apiKeyStore.load() ?? ""
+            storedAPIKey = currentKey
+            tempAPIKey = currentKey
+        } catch {
+            storedAPIKey = ""
+            tempAPIKey = ""
+            alertMessage = "Failed to load the stored API key."
+            showingAlert = true
+        }
     }
 }
 
