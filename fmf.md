@@ -150,43 +150,6 @@ public struct DynamicGenerationSchema : Sendable {
         ///   - schema: A schema representing the type this property contains.
         ///   - isOptional: Determines if this property is required or not.
         public init(name: String, description: String? = nil, schema: DynamicGenerationSchema, isOptional: Bool = false)
-
-        /// Creates a property referencing a dynamic schema.
-        ///
-        /// - Parameters:
-        ///   - name: A name for this property.
-        ///   - description: An optional natural language description of this
-        ///     property's contents.
-        ///   - schema: A schema representing the type this property contains.
-        ///   - optionality: Determines if this property is required or not and how nil values are represented.
-        @available(iOS 26.1, macOS 26.1, *)
-        @available(tvOS, unavailable)
-        @available(watchOS, unavailable)
-        public init(name: String, description: String? = nil, schema: DynamicGenerationSchema, optionality: DynamicGenerationSchema.Optionality)
-    }
-
-    /// Controls whether a property or type is required, possibly null, or possibly absent in textual representations.
-    @available(iOS 26.1, macOS 26.1, *)
-    @available(tvOS, unavailable)
-    @available(watchOS, unavailable)
-    public struct Optionality {
-
-        /// A type or property that is required will always be present in the model's response.
-        public static var required: DynamicGenerationSchema.Optionality { get }
-
-        /// A type or property that is optional and may be completely absent from the model's response.
-        ///
-        /// Prefer using possibly absent for types that have a small to medium number (less than 10) of
-        /// optional properties because it results in more token-efficient output.
-        public static var possiblyAbsent: DynamicGenerationSchema.Optionality { get }
-
-        /// A type or property that is optional and will always be present in the model's response, but may have
-        /// an empty value.
-        ///
-        /// Prefer using possibly empty for types that have a large number (more than 10) of optional properties
-        /// because the computational cost of tracking all the possible permutations of present fields grows
-        /// exponentionally with possibly absent properties.
-        public static var possiblyNull: DynamicGenerationSchema.Optionality { get }
     }
 }
 
@@ -1150,19 +1113,6 @@ public struct GenerationSchema : Sendable, Codable, CustomDebugStringConvertible
         ///   - guides: A list of guides to apply to this property.
         public init<Value>(name: String, description: String? = nil, type: Value?.Type, guides: [GenerationGuide<Value>] = []) where Value : Generable
 
-        /// Create an optional property that contains a generable type.
-        ///
-        /// - Parameters:
-        ///   - name: The property's name.
-        ///   - description: A natural language description of what content should be generated for this property.
-        ///   - type: The type this property represents.
-        ///   - semantics: Controls how this property will be represented if it is nil.
-        ///   - guides: A list of guides to apply to this property.
-        @available(iOS 26.1, macOS 26.1, *)
-        @available(tvOS, unavailable)
-        @available(watchOS, unavailable)
-        public init<Value>(name: String, description: String? = nil, type: Value?.Type, semantics: GenerationSchema.OptionalSemantics, guides: [GenerationGuide<Value>] = []) where Value : Generable
-
         /// Create a property that contains a string type.
         ///
         /// - Parameters:
@@ -1177,81 +1127,11 @@ public struct GenerationSchema : Sendable, Codable, CustomDebugStringConvertible
         ///
         /// - Parameters:
         ///   - name: The property's name.
-        ///   - description: A natural language description of what content should be generated for this property.
-        ///   - type: The type this property represents.
-        ///   - semantics: Controls how this property will be represented if it is nil.
-        ///   - guides: An array of regexes to be applied to this string. If there're multiple regexes in the array, only the last one will be applied.
-        @available(iOS 26.1, macOS 26.1, *)
-        @available(tvOS, unavailable)
-        @available(watchOS, unavailable)
-        public init<RegexOutput>(name: String, description: String? = nil, type: String?.Type, semantics: GenerationSchema.OptionalSemantics, guides: [Regex<RegexOutput>] = [])
-
-        /// Create an optional property that contains a generable type.
-        ///
-        /// - Parameters:
-        ///   - name: The property's name.
         ///   - description: A natural language description of what content
         ///     should be generated for this property.
         ///   - type: The type this property represents.
         ///   - guides: An array of regexes to be applied to this string. If there're multiple regexes in the array, only the last one will be applied.
         public init<RegexOutput>(name: String, description: String? = nil, type: String?.Type, guides: [Regex<RegexOutput>] = [])
-    }
-
-    /// Controls the how optional types are represented when generated by a language model.
-    ///
-    /// You should prefer `.possiblyAbsent` semantics for structs with fewer than ~10 optional properties.
-    /// You should prefer `.possiblyNull` semantics for structs with more than ~10 optional properties.
-    @available(iOS 26.1, macOS 26.1, *)
-    @available(tvOS, unavailable)
-    @available(watchOS, unavailable)
-    public struct OptionalSemantics : Equatable {
-
-        /// Optional properties may be entirely absent.
-        ///
-        /// For example, for a struct defined like this:
-        ///
-        ///     @Generable
-        ///     struct Person {
-        ///         @Guide(semantics: .possiblyAbsent)
-        ///         var name: String?
-        ///     }
-        ///
-        /// the model can produce `GeneratedContent` equivalent to this:
-        ///
-        ///     GeneratedContent(properties: [])
-        ///
-        /// - Important: You should prefer absent semantics when your type has a small
-        /// number of optional properties because it results in generating a token efficient representation.
-        public static var possiblyAbsent: GenerationSchema.OptionalSemantics { get }
-
-        /// Optional properties may have an empty value.
-        ///
-        /// For example, for a struct defined like this:
-        ///
-        ///     @Generable
-        ///     struct Person {
-        ///         @Guide(semantics: .possiblyNull)
-        ///         var name: String?
-        ///     }
-        ///
-        /// the model can produce `GeneratedContent` equivality to this:
-        ///
-        ///     GeneratedContent(properties: ["name": nil])
-        ///
-        /// - Important: You should prefer empty semantics when your type has a large
-        /// number of optional properties because the combinatorial explosion of legal combinations of
-        /// properties can result in slow responses.
-        public static var possiblyNull: GenerationSchema.OptionalSemantics { get }
-
-        /// Returns a Boolean value indicating whether two values are equal.
-        ///
-        /// Equality is the inverse of inequality. For any values `a` and `b`,
-        /// `a == b` implies that `a != b` is `false`.
-        ///
-        /// - Parameters:
-        ///   - lhs: A value to compare.
-        ///   - rhs: Another value to compare.
-        public static func == (a: GenerationSchema.OptionalSemantics, b: GenerationSchema.OptionalSemantics) -> Bool
     }
 
     /// A string representation of the debug description.
@@ -1375,21 +1255,6 @@ public struct GenerationSchema : Sendable, Codable, CustomDebugStringConvertible
 @available(tvOS, unavailable)
 @available(watchOS, unavailable)
 @attached(peer) public macro Guide(description: String) = #externalMacro(module: "FoundationModelsMacros", type: "GuideMacro")
-
-@available(iOS 26.1, macOS 26.1, *)
-@available(tvOS, unavailable)
-@available(watchOS, unavailable)
-@attached(peer) public macro Guide(description: String? = nil, semantics: GenerationSchema.OptionalSemantics) = #externalMacro(module: "FoundationModelsMacros", type: "GuideMacro")
-
-@available(iOS 26.1, macOS 26.1, *)
-@available(tvOS, unavailable)
-@available(watchOS, unavailable)
-@attached(peer) public macro Guide<T>(description: String? = nil, semantics: GenerationSchema.OptionalSemantics, _ guides: GenerationGuide<T>...) = #externalMacro(module: "FoundationModelsMacros", type: "GuideMacro") where T : Generable
-
-@available(iOS 26.1, macOS 26.1, *)
-@available(tvOS, unavailable)
-@available(watchOS, unavailable)
-@attached(peer) public macro Guide<RegexOutput>(description: String? = nil, semantics: GenerationSchema.OptionalSemantics, _ guides: Regex<RegexOutput>) = #externalMacro(module: "FoundationModelsMacros", type: "GuideMacro")
 
 /// Instructions define the model's intended behavior on prompts.
 ///
