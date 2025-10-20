@@ -7,6 +7,7 @@ import Observation
 final class ExaAPIKeyStore {
     static let defaultServiceIdentifier = "com.rudrankriyam.FoundationLab"
     private static let apiKeyIdentifier = "exa_api_key"
+    static let legacyUserDefaultsKey = "exaAPIKey"
 
     private let keychain: Keychain
     private(set) var cachedKey: String = ""

@@ -169,6 +169,8 @@ struct SettingsView: View {
         guard !hasLoadedInitialKey else { return }
         hasLoadedInitialKey = true
 
+        migrateLegacyAPIKeyIfNeeded()
+
         do {
             let currentKey = try apiKeyStore.load() ?? ""
             tempAPIKey = currentKey
@@ -176,6 +178,29 @@ struct SettingsView: View {
             alertMessage = "Failed to load the stored API key."
             showingAlert = true
             logger.error("Failed to load Exa API key: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    private func migrateLegacyAPIKeyIfNeeded() {
+        let defaults = UserDefaults.standard
+
+        guard let legacyKey = defaults.string(forKey: ExaAPIKeyStore.legacyUserDefaultsKey) else {
+            return
+        }
+
+        let trimmedLegacyKey = legacyKey.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !trimmedLegacyKey.isEmpty else {
+            defaults.removeObject(forKey: ExaAPIKeyStore.legacyUserDefaultsKey)
+            return
+        }
+
+        do {
+            try apiKeyStore.save(trimmedLegacyKey)
+            defaults.removeObject(forKey: ExaAPIKeyStore.legacyUserDefaultsKey)
+            logger.info("Migrated legacy Exa API key from UserDefaults to Keychain.")
+        } catch {
+            logger.error("Failed to migrate legacy Exa API key: \(error.localizedDescription, privacy: .public)")
         }
     }
 }
