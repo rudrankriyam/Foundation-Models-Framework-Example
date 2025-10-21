@@ -176,7 +176,7 @@ class MurmerViewModel: ObservableObject {
 
         // Hide after delay
         Task { [weak self] in
-            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            try? await Task.sleep(for: .seconds(2))
             await MainActor.run {
                 withAnimation(.easeInOut(duration: 0.3)) {
                     self?.showError = false
