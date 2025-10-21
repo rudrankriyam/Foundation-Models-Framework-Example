@@ -172,10 +172,11 @@ class MurmerViewModel: ObservableObject {
 
 #if os(iOS)
         provideHapticFeedback(.error)
-#endif
+        #endif
 
         // Hide after delay
         Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
             await MainActor.run {
                 withAnimation(.easeInOut(duration: 0.3)) {
                     self?.showError = false

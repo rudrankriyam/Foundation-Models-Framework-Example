@@ -24,9 +24,6 @@ protocol SpeechRecognitionService: AnyObject, ObservableObject {
     /// Current audio amplitude for visual feedback
     var currentAmplitude: Double { get }
 
-    /// Whether recording is currently active
-    var isRecording: Bool { get }
-
     /// Request microphone permission for speech recognition
     /// - Returns: True if permission granted, false otherwise
     func requestPermission() async -> Bool
@@ -63,11 +60,6 @@ protocol SpeechSynthesisService: AnyObject, ObservableObject {
     /// - Throws: SpeechSynthesizerError if synthesis fails
     func synthesizeAndSpeak(text: String) async throws
 
-    /// Generate speech audio file and return URL
-    /// - Parameter text: The text to synthesize
-    /// - Returns: URL to the generated audio file
-    /// - Throws: SpeechSynthesizerError if synthesis fails
-    func generateAudioFile(text: String) async throws -> URL
 }
 
 // MARK: - AI Inference Protocols

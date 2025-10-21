@@ -14,7 +14,6 @@ class LanguageService {
     static let shared = LanguageService()
 
     private(set) var supportedLanguages: [Locale.Language] = []
-    private(set) var languageMapping: [String: String] = [:]
     private(set) var isLoading = false
     private(set) var errorMessage: String?
 
@@ -30,17 +29,6 @@ class LanguageService {
 
         let model = SystemLanguageModel.default
         supportedLanguages = Array(model.supportedLanguages)
-
-        // Create dynamic language mapping
-        var mapping: [String: String] = [:]
-        for language in supportedLanguages {
-            let code = language.languageCode?.identifier ?? ""
-            if !code.isEmpty {
-                let displayName = getDisplayName(for: language)
-                mapping[code] = displayName
-            }
-        }
-        languageMapping = mapping
 
         isLoading = false
     }
@@ -65,16 +53,6 @@ class LanguageService {
     func getSupportedLanguageNames() -> [String] {
         // Return display names for all supported languages directly
         return supportedLanguages.map { getDisplayName(for: $0) }.sorted()
-    }
-
-    func getLanguageCodeForDisplayName(_ displayName: String) -> String? {
-        // Find the language code for a given display name
-        for language in supportedLanguages {
-            if getDisplayName(for: language) == displayName {
-                return language.languageCode?.identifier ?? ""
-            }
-        }
-        return nil
     }
 
     func getCurrentUserLanguageDisplayName() -> String {

@@ -25,10 +25,8 @@ final class SpeechSynthesizer: NSObject, ObservableObject, SpeechSynthesisServic
 
     private let synthesizer = AVSpeechSynthesizer()
     private var currentUtterance: AVSpeechUtterance?
-    private var currentAudioURL: URL?
     private var audioSessionConfigured = false
     private var pendingContinuation: CheckedContinuation<Void, Error>?
-    private var pendingFileContinuation: CheckedContinuation<URL, Error>?
 
     @Published var selectedVoice: AVSpeechSynthesisVoice?
     @Published var availableVoices: [AVSpeechSynthesisVoice] = []
@@ -61,29 +59,6 @@ final class SpeechSynthesizer: NSObject, ObservableObject, SpeechSynthesisServic
 
             let utterance = self.createUtterance(from: text)
             self.startSynthesis(utterance: utterance)
-        }
-    }
-
-    func generateAudioFile(text: String) async throws -> URL {
-        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw SpeechSynthesizerError.invalidInput
-        }
-
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<URL, Error>) in
-            guard let outputURL = createAudioFile() else {
-                continuation.resume(throwing: SpeechSynthesizerError.audioFileCreationFailed)
-                return
-            }
-
-            self.currentAudioURL = outputURL
-            self.pendingFileContinuation = continuation
-
-            let utterance = self.createUtterance(from: text)
-
-            // For now, we'll use the same synthesis but mark that we want to save to file
-            // In a full implementation, you'd use AVAudioEngine or similar to capture the output
-            // For this demo, we'll just speak and assume the file is created
-            startSynthesis(utterance: utterance)
         }
     }
 
@@ -194,17 +169,10 @@ final class SpeechSynthesizer: NSObject, ObservableObject, SpeechSynthesisServic
         synthesizer.speak(utterance)
     }
 
-    private func createAudioFile() -> URL? {
-        let tempDirectory = FileManager.default.temporaryDirectory
-        let fileName = "speech_\(UUID().uuidString).caf"
-        return tempDirectory.appendingPathComponent(fileName)
-    }
-
     private func resetState() {
         isSpeaking = false
         currentUtterance = nil
         pendingContinuation = nil
-        pendingFileContinuation = nil
     }
 
     private func handleSuccess() {
@@ -225,10 +193,6 @@ final class SpeechSynthesizer: NSObject, ObservableObject, SpeechSynthesisServic
         if let continuation = pendingContinuation {
             continuation.resume()
             pendingContinuation = nil
-        } else if let fileContinuation = pendingFileContinuation,
-                  let audioURL = currentAudioURL {
-            fileContinuation.resume(returning: audioURL)
-            pendingFileContinuation = nil
         }
 
         resetState()
@@ -252,9 +216,6 @@ final class SpeechSynthesizer: NSObject, ObservableObject, SpeechSynthesisServic
         if let continuation = pendingContinuation {
             continuation.resume(throwing: synthError)
             pendingContinuation = nil
-        } else if let fileContinuation = pendingFileContinuation {
-            fileContinuation.resume(throwing: synthError)
-            pendingFileContinuation = nil
         }
 
         resetState()
@@ -289,15 +250,12 @@ extension SpeechSynthesizer: AVSpeechSynthesizerDelegate {
 enum SpeechSynthesizerError: LocalizedError {
     case invalidInput
     case alreadySpeaking
-    case audioFileCreationFailed
     case cancelled
 
     var errorDescription: String? {
         switch self {
         case .invalidInput:
             return "Invalid input text"
-        case .audioFileCreationFailed:
-            return "Failed to create audio file"
         case .alreadySpeaking:
             return "Speech synthesis already in progress"
         case .cancelled:

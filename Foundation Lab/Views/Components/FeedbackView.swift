@@ -10,7 +10,6 @@ import FoundationModels
 
 struct FeedbackView: View {
     let viewModel: ChatViewModel
-    @Binding var selectedEntry: Transcript.Entry?
     @Binding var isPresented: Bool
 
     private var assistantEntries: [Transcript.Entry] {
@@ -152,7 +151,6 @@ struct FeedbackRowView: View {
 #Preview("Feedback View") {
     FeedbackView(
         viewModel: ChatViewModel(),
-        selectedEntry: .constant(nil),
         isPresented: .constant(true)
     )
 }

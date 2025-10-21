@@ -11,7 +11,6 @@ import FoundationModels
 
 @main
 struct FoundationLabApp: App {
-    @State private var isModelAvailable = true
     @State private var unavailabilityReason: SystemLanguageModel.Availability.UnavailableReason?
     @State private var showModelUnavailableWarning = false
 
@@ -39,10 +38,8 @@ struct FoundationLabApp: App {
         let model = SystemLanguageModel.default
         switch model.availability {
         case .available:
-            isModelAvailable = true
             showModelUnavailableWarning = false
         case .unavailable(let reason):
-            isModelAvailable = false
             unavailabilityReason = reason
             showModelUnavailableWarning = true
         }

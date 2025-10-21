@@ -18,20 +18,6 @@ struct ProductionLanguageExampleView: View {
 
     private let languageService = LanguageService.shared
 
-    private let supportedLanguages = [
-        "English (en-US)",
-        "Spanish (es)",
-        "French (fr)",
-        "German (de)",
-        "Italian (it)",
-        "Portuguese (pt)",
-        "Dutch (nl)",
-        "Russian (ru)",
-        "Japanese (ja)",
-        "Korean (ko)",
-        "Chinese Simplified (zh-CN)"
-    ]
-
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.large) {
@@ -250,9 +236,6 @@ struct NutritionAnalysisService {
             \"\"\")
     }
 
-    // The language mapping is now dynamic:
-    // let supportedLanguages = SystemLanguageModel.default.supportedLanguages
-    // let mapping = languageService.languageMapping
 }
 """
             )
