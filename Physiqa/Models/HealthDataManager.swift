@@ -24,17 +24,10 @@ class HealthDataManager {
     var currentHeartRate: Double = 0
     var lastNightSleep: Double = 0
 
-    init() {
-        checkHealthKitAvailability()
-    }
+    init() {}
 
     func setModelContext(_ context: ModelContext) {
         self.modelContext = context
-    }
-
-    private func checkHealthKitAvailability() {
-        if !HKHealthStore.isHealthDataAvailable() {
-        }
     }
 
     // MARK: - Authorization
