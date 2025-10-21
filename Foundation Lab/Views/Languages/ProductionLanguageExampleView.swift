@@ -17,10 +17,9 @@ struct ProductionLanguageExampleView: View {
     @State private var isRunning = false
     @State private var errorMessage: String?
 
-    @State private var languageService = LanguageService.shared
+    @Environment(LanguageService.self) private var languageService
 
     var body: some View {
-        @Bindable var languageService = self.languageService
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.large) {
                 languageSelectionSection
@@ -214,18 +213,11 @@ struct ProductionLanguageExampleView: View {
             CodeViewer(
                 code: """
 struct NutritionAnalysisService {
-    private let nutritionSession: LanguageModelSession
-    private let userLanguage: String
-
-    init() {
-        // Dynamic language detection using LanguageService
-        let languageService = LanguageService.shared
-        self.userLanguage = languageService.getCurrentUserLanguage()
-
-        self.nutritionSession = LanguageModelSession(instructions: \"\"\"
+    func analyze(_ description: String, language: String) async throws -> NutritionResult {
+        let session = LanguageModelSession(instructions: \"\"\"
             You are a nutrition expert specializing in food analysis.
 
-            IMPORTANT: Respond in \\(userLanguage). All responses must be in: \\(userLanguage)
+            IMPORTANT: Respond in \\(language). All responses must be in: \\(language)
 
             When parsing food descriptions:
             - Estimate realistic portions for typical adults
@@ -234,10 +226,14 @@ struct NutritionAnalysisService {
             - Round to reasonable numbers
 
             Tone: Supportive, knowledgeable, practical, encouraging.
-            Language: \\(userLanguage)
+            Language: \\(language)
             \"\"\")
-    }
 
+        return try await session.respond(
+            to: description,
+            generating: NutritionResult.self
+        ).content
+    }
 }
 """
             )
@@ -386,4 +382,5 @@ struct NutritionCard: View {
         ProductionLanguageExampleView()
             .background(TopGradientView())
     }
+    .environment(LanguageService())
 }

@@ -10,16 +10,16 @@ import FoundationModels
 
 @MainActor
 @Observable
-class LanguageService {
-    static let shared = LanguageService()
-
+final class LanguageService {
     private(set) var supportedLanguages: [Locale.Language] = []
     private(set) var isLoading = false
     private(set) var errorMessage: String?
 
-    private init() {
-        Task {
-            await loadSupportedLanguages()
+    init(autoLoad: Bool = true) {
+        if autoLoad {
+            Task {
+                await loadSupportedLanguages()
+            }
         }
     }
 

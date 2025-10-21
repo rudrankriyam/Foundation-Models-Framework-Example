@@ -2,14 +2,14 @@
 //  LanguageDetectionView.swift
 //  FoundationLab
 //
-//  Created by Assistant on 12/30/25.
+//  Created by Rudrank Riyam on 21/10/2025.
 //
 
 import SwiftUI
 import FoundationModels
 
 struct LanguageDetectionView: View {
-    private let languageService = LanguageService.shared
+    @Environment(LanguageService.self) private var languageService
     @State private var errorMessage: String?
 
     var body: some View {
@@ -126,4 +126,5 @@ struct LanguageCard: View {
         LanguageDetectionView()
             .background(TopGradientView())
     }
+    .environment(LanguageService())
 }

@@ -13,7 +13,7 @@ struct MultilingualResponsesView: View {
     @State private var results: [LanguagePromptResult] = []
     @State private var errorMessage: String?
 
-    private let languageService = LanguageService.shared
+    @Environment(LanguageService.self) private var languageService
 
     var body: some View {
         ScrollView {
@@ -240,4 +240,5 @@ struct LanguageResponseCard: View {
         MultilingualResponsesView()
             .background(TopGradientView())
     }
+    .environment(LanguageService())
 }
