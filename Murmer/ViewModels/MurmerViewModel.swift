@@ -172,7 +172,7 @@ class MurmerViewModel: ObservableObject {
 
 #if os(iOS)
         provideHapticFeedback(.error)
-        #endif
+#endif
 
         // Hide after delay
         Task { [weak self] in
