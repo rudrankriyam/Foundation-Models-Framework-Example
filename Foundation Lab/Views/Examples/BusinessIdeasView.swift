@@ -77,45 +77,20 @@ struct BusinessIdeasView: View {
     
     private func executeBusinessIdea() {
         Task {
-#if compiler(>=6.2.1)
-            if #available(iOS 26.1, macOS 26.1, *) {
-                await executor.executeStructured(
-                    prompt: currentPrompt,
-                    type: BusinessIdeaOptionalSemantics.self
-                ) { idea in
-                    formattedIdea(
-                        name: idea.name,
-                        description: idea.description,
-                        targetMarket: idea.targetMarket,
-                        advantages: idea.advantages,
-                        revenueModel: idea.revenueModel,
-                        estimatedStartupCost: idea.estimatedStartupCost,
-                        timeline: idea.timeline
-                    )
-                }
-            } else {
-               await executeBusinessIdeaWithoutSemantics()
+            await executor.executeStructured(
+                prompt: currentPrompt,
+                type: BusinessIdea.self
+            ) { idea in
+                formattedIdea(
+                    name: idea.name,
+                    description: idea.description,
+                    targetMarket: idea.targetMarket,
+                    advantages: idea.advantages,
+                    revenueModel: idea.revenueModel,
+                    estimatedStartupCost: idea.estimatedStartupCost,
+                    timeline: idea.timeline
+                )
             }
-#else
-            await executeBusinessIdeaWithoutSemantics()
-#endif
-        }
-    }
-    
-    private func executeBusinessIdeaWithoutSemantics() async {
-        await executor.executeStructured(
-            prompt: currentPrompt,
-            type: BusinessIdea.self
-        ) { idea in
-            formattedIdea(
-                name: idea.name,
-                description: idea.description,
-                targetMarket: idea.targetMarket,
-                advantages: idea.advantages,
-                revenueModel: idea.revenueModel,
-                estimatedStartupCost: idea.estimatedStartupCost,
-                timeline: idea.timeline
-            )
         }
     }
     

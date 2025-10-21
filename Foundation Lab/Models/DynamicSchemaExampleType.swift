@@ -14,16 +14,15 @@ enum DynamicSchemaExampleType: String, CaseIterable, Identifiable {
     case enumSchema = "enum_schema"
     case nestedObjects = "nested_objects"
     case schemaReferences = "schema_references"
-    case optionalFields = "optional_fields"
     case generationGuides = "generation_guides"
     case generablePattern = "generable_pattern"
     case unionTypes = "union_types"
     case formBuilder = "form_builder"
     case errorHandling = "error_handling"
     case invoiceProcessing = "invoice_processing"
-
+    
     var id: String { rawValue }
-
+    
     var title: String {
         switch self {
         case .basicObject:
@@ -36,8 +35,6 @@ enum DynamicSchemaExampleType: String, CaseIterable, Identifiable {
             return "Nested Objects"
         case .schemaReferences:
             return "Schema References"
-        case .optionalFields:
-            return "Optional vs Required"
         case .generationGuides:
             return "Generation Guides"
         case .generablePattern:
@@ -52,7 +49,7 @@ enum DynamicSchemaExampleType: String, CaseIterable, Identifiable {
             return "Invoice Processing"
         }
     }
-
+    
     var subtitle: String {
         switch self {
         case .basicObject:
@@ -65,8 +62,6 @@ enum DynamicSchemaExampleType: String, CaseIterable, Identifiable {
             return "Complex nested object structures"
         case .schemaReferences:
             return "Schemas referencing other schemas"
-        case .optionalFields:
-            return "Handle optional and required fields"
         case .generationGuides:
             return "Apply constraints to generated values"
         case .generablePattern:
@@ -81,7 +76,7 @@ enum DynamicSchemaExampleType: String, CaseIterable, Identifiable {
             return "Real-world invoice data extraction"
         }
     }
-
+    
     var icon: String {
         switch self {
         case .basicObject:
@@ -94,8 +89,6 @@ enum DynamicSchemaExampleType: String, CaseIterable, Identifiable {
             return "folder.fill"
         case .schemaReferences:
             return "link"
-        case .optionalFields:
-            return "questionmark.circle"
         case .generationGuides:
             return "ruler"
         case .generablePattern:
@@ -110,12 +103,12 @@ enum DynamicSchemaExampleType: String, CaseIterable, Identifiable {
             return "doc.richtext"
         }
     }
-
+    
     var complexity: Complexity {
         switch self {
         case .basicObject, .arraySchema, .enumSchema:
             return .beginner
-        case .nestedObjects, .optionalFields, .generationGuides, .generablePattern:
+        case .nestedObjects, .generationGuides, .generablePattern:
             return .intermediate
         case .schemaReferences, .unionTypes, .errorHandling:
             return .advanced
@@ -123,13 +116,13 @@ enum DynamicSchemaExampleType: String, CaseIterable, Identifiable {
             return .expert
         }
     }
-
+    
     enum Complexity {
         case beginner
         case intermediate
         case advanced
         case expert
-
+        
         var color: Color {
             switch self {
             case .beginner:
@@ -142,7 +135,7 @@ enum DynamicSchemaExampleType: String, CaseIterable, Identifiable {
                 return .purple
             }
         }
-
+        
         var label: String {
             switch self {
             case .beginner:
