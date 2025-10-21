@@ -14,7 +14,6 @@ struct ChatView: View {
     @State private var messageText = ""
     @State private var showInstructionsSheet = false
     @State private var showFeedbackSheet = false
-    @State private var selectedEntryForFeedback: Transcript.Entry?
     @FocusState private var isTextFieldFocused: Bool
 
     var body: some View {
@@ -70,7 +69,6 @@ struct ChatView: View {
         .sheet(isPresented: $showFeedbackSheet) {
             FeedbackView(
                 viewModel: viewModel,
-                selectedEntry: $selectedEntryForFeedback,
                 isPresented: $showFeedbackSheet
             )
 #if os(macOS)

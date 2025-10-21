@@ -10,7 +10,6 @@ import FoundationModels
 
 struct ExamplesView: View {
     @Binding var viewModel: ContentViewModel
-    @Namespace private var glassNamespace
 
     var body: some View {
         ScrollView {

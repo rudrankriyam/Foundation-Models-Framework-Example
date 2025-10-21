@@ -49,7 +49,8 @@ final class ChatViewModel {
 
     @MainActor
     func sendMessage(_ content: String) async {
-        isLoading = session.isResponding
+        isLoading = true
+        defer { isLoading = session.isResponding }
 
         do {
             // Check if we need to apply sliding window BEFORE sending
@@ -73,8 +74,6 @@ final class ChatViewModel {
             errorMessage = handleFoundationModelsError(error)
             showError = true
         }
-
-        isLoading = session.isResponding
     }
 
     @MainActor

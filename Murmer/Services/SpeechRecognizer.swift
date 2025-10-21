@@ -365,7 +365,6 @@ class SpeechRecognizer: NSObject, ObservableObject, SpeechRecognitionService {
     @Published var state: SpeechRecognitionState = .idle
     @Published var hasPermission = false
     @Published var currentAmplitude: Double = 0
-    @Published var isRecording = false
 
     private let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
@@ -441,7 +440,6 @@ class SpeechRecognizer: NSObject, ObservableObject, SpeechRecognitionService {
         try prepareAudioEngine()
 
         state = .listening()
-        isRecording = true
         print(" START RECOGNITION COMPLETED SUCCESSFULLY")
 
     }
@@ -459,7 +457,6 @@ class SpeechRecognizer: NSObject, ObservableObject, SpeechRecognitionService {
             state = .idle
         }
 
-        isRecording = false
         currentAmplitude = 0
 
         // Clean up resources

@@ -10,7 +10,6 @@ import SwiftUI
 struct AudioReactiveBlobView: View {
     @ObservedObject var speechRecognizer: SpeechRecognizer
     @State private var pulseScale: CGFloat = 1.0
-    @State private var isListening = false
 
     // External binding to sync with view model
     @Binding var listeningState: Bool
@@ -49,10 +48,6 @@ struct AudioReactiveBlobView: View {
             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                 pulseScale = min(targetScale, maxScale)
             }
-        }
-        .onChange(of: listeningState) { _, newState in
-            // Sync internal state with external binding
-            isListening = newState
         }
         .onAppear {
             // Gentle breathing animation when idle

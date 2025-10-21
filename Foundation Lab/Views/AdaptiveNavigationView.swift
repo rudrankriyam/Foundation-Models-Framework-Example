@@ -11,6 +11,7 @@ import FoundationModels
 struct AdaptiveNavigationView: View {
     @State private var contentViewModel = ContentViewModel()
     @State private var chatViewModel = ChatViewModel()
+    @State private var languageService = LanguageService()
     @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     private let navigationCoordinator = NavigationCoordinator.shared
@@ -77,6 +78,7 @@ struct AdaptiveNavigationView: View {
         .onChange(of: navigationCoordinator.tabSelection) { _, newValue in
             navigationCoordinator.splitViewSelection = newValue
         }
+        .environment(languageService)
     }
 
     private var splitViewNavigation: some View {
@@ -96,6 +98,7 @@ struct AdaptiveNavigationView: View {
                 navigationCoordinator.tabSelection = newValue
             }
         }
+        .environment(languageService)
     }
 
     @ViewBuilder

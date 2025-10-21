@@ -132,7 +132,17 @@ struct MurmerMainView: View {
         }
         .padding()
         .background(SimpleTopGradientView())
-        .alert("Reminder Created", isPresented: .constant(!viewModel.lastCreatedReminder.isEmpty)) {
+        .alert(
+            "Reminder Created",
+            isPresented: Binding(
+                get: { !viewModel.lastCreatedReminder.isEmpty },
+                set: { newValue in
+                    if !newValue {
+                        viewModel.lastCreatedReminder = ""
+                    }
+                }
+            )
+        ) {
             Button("OK", role: .cancel) {
                 viewModel.lastCreatedReminder = ""
             }

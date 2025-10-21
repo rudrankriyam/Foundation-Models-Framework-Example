@@ -16,7 +16,6 @@ class HealthDataManager {
     private var modelContext: ModelContext?
 
     var isAuthorized = false
-    var authorizationStatus: String = "Not Determined"
 
     // Current health data
     var todaySteps: Double = 0
@@ -25,18 +24,10 @@ class HealthDataManager {
     var currentHeartRate: Double = 0
     var lastNightSleep: Double = 0
 
-    init() {
-        checkHealthKitAvailability()
-    }
+    init() {}
 
     func setModelContext(_ context: ModelContext) {
         self.modelContext = context
-    }
-
-    private func checkHealthKitAvailability() {
-        if !HKHealthStore.isHealthDataAvailable() {
-            authorizationStatus = "HealthKit Not Available"
-        }
     }
 
     // MARK: - Authorization
@@ -52,7 +43,6 @@ class HealthDataManager {
 
         try await healthStore.requestAuthorization(toShare: [], read: readTypes)
         isAuthorized = true
-        authorizationStatus = "Authorized"
     }
 
     // MARK: - Fetch Today's Data
@@ -114,8 +104,11 @@ private extension HealthDataManager {
         do {
             let result = try await descriptor.result(for: healthStore)
             if let sum = result?.sumQuantity() {
-                todaySteps = sum.doubleValue(for: HKUnit.count())
-                await saveMetric(type: .steps, value: todaySteps)
+                let value = sum.doubleValue(for: HKUnit.count())
+                await MainActor.run {
+                    self.todaySteps = value
+                }
+                await saveMetric(type: .steps, value: value)
             }
         } catch {
             // Handle steps fetch error silently
@@ -136,8 +129,11 @@ private extension HealthDataManager {
         do {
             let result = try await descriptor.result(for: healthStore)
             if let sum = result?.sumQuantity() {
-                todayActiveEnergy = sum.doubleValue(for: .kilocalorie())
-                await saveMetric(type: .activeEnergy, value: todayActiveEnergy)
+                let value = sum.doubleValue(for: .kilocalorie())
+                await MainActor.run {
+                    self.todayActiveEnergy = value
+                }
+                await saveMetric(type: .activeEnergy, value: value)
             }
         } catch {
             // Handle active energy fetch error silently
@@ -159,8 +155,11 @@ private extension HealthDataManager {
             let result = try await descriptor.result(for: healthStore)
             if let sum = result?.sumQuantity() {
                 let meters = sum.doubleValue(for: .meter())
-                todayDistance = meters / 1000
-                await saveMetric(type: .distance, value: todayDistance)
+                let value = meters / 1000
+                await MainActor.run {
+                    self.todayDistance = value
+                }
+                await saveMetric(type: .distance, value: value)
             }
         } catch {
             // Handle distance fetch error silently
@@ -179,8 +178,11 @@ private extension HealthDataManager {
         do {
             let samples = try await descriptor.result(for: healthStore)
             if let sample = samples.first {
-                currentHeartRate = sample.quantity.doubleValue(for: HKUnit(from: "count/min"))
-                await saveMetric(type: .heartRate, value: currentHeartRate)
+                let value = sample.quantity.doubleValue(for: HKUnit(from: "count/min"))
+                await MainActor.run {
+                    self.currentHeartRate = value
+                }
+                await saveMetric(type: .heartRate, value: value)
             }
         } catch {
             // Handle heart rate fetch error silently
@@ -211,9 +213,12 @@ private extension HealthDataManager {
                 totalSleepTime += duration
             }
 
-            lastNightSleep = totalSleepTime / 3600
-            if lastNightSleep > 0 {
-                await saveMetric(type: .sleep, value: lastNightSleep)
+            let value = totalSleepTime / 3600
+            await MainActor.run {
+                self.lastNightSleep = value
+            }
+            if value > 0 {
+                await saveMetric(type: .sleep, value: value)
             }
         } catch {
             // Handle sleep fetch error silently
