@@ -20,7 +20,7 @@
 
 ## 4. High-Level Architecture
 - [ ] **AdapterStudioApp** (new target):
-  - [ ] `AppDelegate` or `@main` entry.
+  - [x] `AppDelegate` or `@main` entry.
   - [ ] Injects shared services via environment.
   - [ ] Maintains strict module isolation from existing production targets (no shared code for initial delivery).
 - [ ] **Services**
