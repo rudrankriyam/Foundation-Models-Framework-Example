@@ -67,12 +67,26 @@ struct CalendarToolView: View {
 
   private func executeCalendarQuery() {
     Task {
-      await executor.execute(
+      await executor.executeWithPromptBuilder(
         tool: CalendarTool(),
-        prompt: query,
         successMessage: "Calendar query completed successfully!"
-      )
+      ) {
+        """
+The user's current time zone is \(TimeZone.current.identifier).
+The user's current locale identifier is \(Locale.current.identifier).
+The current local date and time is \(formattedCurrentDate()).
+Use this information when interpreting relative dates like "today" or "tomorrow".
+"""
+        query
+      }
     }
+  }
+
+  private func formattedCurrentDate() -> String {
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withFullDate, .withFullTime, .withTimeZone]
+    formatter.timeZone = .current
+    return formatter.string(from: Date())
   }
 }
 
