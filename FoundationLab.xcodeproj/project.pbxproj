@@ -11,6 +11,7 @@
 		0A5454AB2E1148A8002C2152 /* Foundation Lab.icon in Resources */ = {isa = PBXBuildFile; fileRef = 0A5454A72E1148A8002C2152 /* Foundation Lab.icon */; };
 		0A6316F32E1291E900E13A6D /* Murmer.icon in Resources */ = {isa = PBXBuildFile; fileRef = 0A6316F22E1291E900E13A6D /* Murmer.icon */; };
 		0A979E842E1E5921008CFA37 /* FoundationModelsTools in Frameworks */ = {isa = PBXBuildFile; productRef = 0A979E832E1E5921008CFA37 /* FoundationModelsTools */; };
+		1A8D4C002F1A5F8A001C4A35 /* KeychainAccess in Frameworks */ = {isa = PBXBuildFile; productRef = 1A8D4C012F1A5F8A001C4A35 /* KeychainAccess */; };
 		FA43F9412E13A16E00F24BCC /* HighlightSwift in Frameworks */ = {isa = PBXBuildFile; productRef = FA43F9402E13A16E00F24BCC /* HighlightSwift */; };
 /* End PBXBuildFile section */
 
@@ -77,6 +78,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1A8D4C002F1A5F8A001C4A35 /* KeychainAccess in Frameworks */,
 				FA43F9412E13A16E00F24BCC /* HighlightSwift in Frameworks */,
 				0A979E842E1E5921008CFA37 /* FoundationModelsTools in Frameworks */,
 				0A21D7F12E518858004E8806 /* LiquidGlasKit in Frameworks */,
@@ -162,6 +164,7 @@
 				FA43F9402E13A16E00F24BCC /* HighlightSwift */,
 				0A979E832E1E5921008CFA37 /* FoundationModelsTools */,
 				0A21D7F02E518858004E8806 /* LiquidGlasKit */,
+				1A8D4C012F1A5F8A001C4A35 /* KeychainAccess */,
 			);
 			productName = FoundationLab;
 			productReference = 0AAE4FFF2DF76E6600838F13 /* Foundation Lab.app */;
@@ -267,6 +270,7 @@
 			mainGroup = 0AAE4FF62DF76E6600838F13;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				1A8D4C022F1A5F8A001C4A35 /* XCRemoteSwiftPackageReference "KeychainAccess" */,
 				0AC6037E2E1D5288002106F9 /* XCRemoteSwiftPackageReference "HighlightSwift" */,
 				0A979E822E1E5921008CFA37 /* XCRemoteSwiftPackageReference "FoundationModelsTools" */,
 				0A21D7EF2E518858004E8806 /* XCRemoteSwiftPackageReference "LiquidGlasKit" */,
@@ -1041,6 +1045,14 @@
 				minimumVersion = 1.0.9;
 			};
 		};
+		1A8D4C022F1A5F8A001C4A35 /* XCRemoteSwiftPackageReference "KeychainAccess" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/kishikawakatsumi/KeychainAccess.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.2.2;
+			};
+		};
 		FA43F93F2E13A16E00F24BCC /* XCRemoteSwiftPackageReference "HighlightSwift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/appstefan/HighlightSwift";
@@ -1061,6 +1073,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 0A979E822E1E5921008CFA37 /* XCRemoteSwiftPackageReference "FoundationModelsTools" */;
 			productName = FoundationModelsTools;
+		};
+		1A8D4C012F1A5F8A001C4A35 /* KeychainAccess */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1A8D4C022F1A5F8A001C4A35 /* XCRemoteSwiftPackageReference "KeychainAccess" */;
+			productName = KeychainAccess;
 		};
 		FA43F9402E13A16E00F24BCC /* HighlightSwift */ = {
 			isa = XCSwiftPackageProductDependency;

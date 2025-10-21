@@ -7,13 +7,16 @@
 
 import SwiftUI
 import LiquidGlasKit
+import OSLog
 
 struct SettingsView: View {
-    @AppStorage("exaAPIKey") private var exaAPIKey: String = ""
     @State private var tempAPIKey: String = ""
     @State private var showingAlert = false
     @State private var alertMessage = ""
+    @State private var hasLoadedInitialKey = false
     @FocusState private var isAPIFieldFocused: Bool
+    @Environment(ExaAPIKeyStore.self) private var apiKeyStore
+    private let logger = Logger(subsystem: ExaAPIKeyStore.defaultServiceIdentifier, category: "SettingsView")
 
     var body: some View {
         ScrollView {
@@ -32,12 +35,11 @@ struct SettingsView: View {
                 SecureField("Enter your Exa API key", text: $tempAPIKey)
                     .textFieldStyle(.roundedBorder)
                     .focused($isAPIFieldFocused)
-                    .onAppear {
-                        tempAPIKey = exaAPIKey
-                    }
                     .submitLabel(.done)
                     .onSubmit {
-                        saveAPIKey()
+                        Task {
+                            await saveAPIKey()
+                        }
                     }
 
                 Text("Get your free Exa API key:")
@@ -54,15 +56,19 @@ struct SettingsView: View {
 
             HStack {
                 Button("Save") {
-                    saveAPIKey()
+                    Task {
+                        await saveAPIKey()
+                    }
                 }
                 .controlSize(.large)
                 .buttonStyle(.glassProminent)
                 .disabled(tempAPIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
 
-                if !exaAPIKey.isEmpty {
+                if !apiKeyStore.cachedKey.isEmpty {
                     Button("Clear") {
-                        clearAPIKey()
+                        Task {
+                            await clearAPIKey()
+                        }
                     }
                     .buttonStyle(.glassProminent)
                     .tint(.secondary)
@@ -70,7 +76,7 @@ struct SettingsView: View {
                 }
             }
 
-            if !exaAPIKey.isEmpty {
+            if !apiKeyStore.cachedKey.isEmpty {
                 Text("API key configured")
                     .font(.caption)
                     .foregroundColor(.secondary)
@@ -122,9 +128,13 @@ struct SettingsView: View {
         } message: {
             Text(alertMessage)
         }
+        .task {
+            await loadStoredAPIKeyIfNeeded()
+        }
     }
 
-    private func saveAPIKey() {
+    @MainActor
+    private func saveAPIKey() async {
         let trimmedKey = tempAPIKey.trimmingCharacters(in: .whitespacesAndNewlines)
 
         guard !trimmedKey.isEmpty else {
@@ -134,27 +144,76 @@ struct SettingsView: View {
         }
 
         dismissKeyboard()
-        exaAPIKey = trimmedKey
-        alertMessage = "API key saved successfully!"
+        do {
+            try await apiKeyStore.save(trimmedKey)
+            tempAPIKey = trimmedKey
+            alertMessage = "API key saved successfully!"
+        } catch {
+            alertMessage = "Could not save the API key. Please try again."
+            logger.error("Failed to save Exa API key: \(error.localizedDescription, privacy: .public)")
+        }
         showingAlert = true
     }
 
-    private func clearAPIKey() {
+    @MainActor
+    private func clearAPIKey() async {
         dismissKeyboard()
-        exaAPIKey = ""
-        tempAPIKey = ""
-        alertMessage = "API key cleared"
+        do {
+            try await apiKeyStore.clear()
+            tempAPIKey = ""
+            alertMessage = "API key cleared"
+        } catch {
+            alertMessage = "Could not clear the API key. Please try again."
+            logger.error("Failed to clear Exa API key: \(error.localizedDescription, privacy: .public)")
+        }
         showingAlert = true
     }
 
     private func dismissKeyboard() {
         isAPIFieldFocused = false
     }
+
+    @MainActor
+    private func loadStoredAPIKeyIfNeeded() async {
+        guard !hasLoadedInitialKey else { return }
+        hasLoadedInitialKey = true
+
+        do {
+            if let keychainKey = try await apiKeyStore.load(), !keychainKey.isEmpty {
+                tempAPIKey = keychainKey
+                UserDefaults.standard.removeObject(forKey: ExaAPIKeyStore.legacyUserDefaultsKey)
+                return
+            }
+
+            let defaults = UserDefaults.standard
+            guard let legacyKey = defaults.string(forKey: ExaAPIKeyStore.legacyUserDefaultsKey) else {
+                tempAPIKey = ""
+                return
+            }
+
+            let trimmedLegacyKey = legacyKey.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmedLegacyKey.isEmpty else {
+                defaults.removeObject(forKey: ExaAPIKeyStore.legacyUserDefaultsKey)
+                tempAPIKey = ""
+                return
+            }
+
+            try await apiKeyStore.save(trimmedLegacyKey)
+            tempAPIKey = trimmedLegacyKey
+            defaults.removeObject(forKey: ExaAPIKeyStore.legacyUserDefaultsKey)
+            logger.info("Migrated legacy Exa API key from UserDefaults to Keychain.")
+        } catch {
+            alertMessage = "Failed to load or migrate the API key."
+            showingAlert = true
+            logger.error("Failed to load or migrate Exa API key: \(error.localizedDescription, privacy: .public)")
+        }
+    }
 }
 
 #Preview {
     NavigationStack {
         SettingsView()
+            .environment(ExaAPIKeyStore())
             .background(TopGradientView())
     }
 }
