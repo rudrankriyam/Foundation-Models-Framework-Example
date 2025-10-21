@@ -7,6 +7,7 @@
 
 import FoundationModels
 import FoundationModelsTools
+import MusicKit
 import SwiftUI
 
 struct MusicToolView: View {
@@ -75,6 +76,25 @@ struct MusicToolView: View {
     errorMessage = nil
     result = ""
 
+    if let authorizationError = await musicAuthorizationIssueDescription() {
+      errorMessage = authorizationError
+      isRunning = false
+      return
+    }
+
+    do {
+      let subscription = try await MusicSubscription.current
+      guard subscription.canPlayCatalogContent else {
+        errorMessage = "An active Apple Music subscription is required to search the catalog."
+        isRunning = false
+        return
+      }
+    } catch {
+      errorMessage = "Unable to verify Apple Music subscription: \(error.localizedDescription)"
+      isRunning = false
+      return
+    }
+
     do {
       let session = LanguageModelSession(tools: [MusicTool()])
       let response = try await session.respond(to: Prompt(query))
@@ -84,6 +104,31 @@ struct MusicToolView: View {
     }
 
     isRunning = false
+  }
+
+  @MainActor
+  private func musicAuthorizationIssueDescription() async -> String? {
+    let currentStatus = MusicAuthorization.currentStatus
+    switch currentStatus {
+    case .authorized:
+      return nil
+    case .notDetermined:
+      let status = await MusicAuthorization.request()
+      return status == .authorized ? nil : authorizationMessage(for: status)
+    default:
+      return authorizationMessage(for: currentStatus)
+    }
+  }
+
+  private func authorizationMessage(for status: MusicAuthorization.Status) -> String {
+    switch status {
+    case .denied:
+      return "Apple Music access is denied. Please enable Music access for FoundationLab in Settings."
+    case .restricted:
+      return "Apple Music access is restricted on this device."
+    default:
+      return "Apple Music authorization is required to use this tool."
+    }
   }
 }
 
