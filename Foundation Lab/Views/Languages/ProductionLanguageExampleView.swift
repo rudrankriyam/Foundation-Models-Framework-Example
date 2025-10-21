@@ -7,6 +7,7 @@
 
 import SwiftUI
 import FoundationModels
+import Observation
 
 struct ProductionLanguageExampleView: View {
     @State private var detectedLanguage = ""
@@ -16,9 +17,10 @@ struct ProductionLanguageExampleView: View {
     @State private var isRunning = false
     @State private var errorMessage: String?
 
-    private let languageService = LanguageService.shared
+    @State private var languageService = LanguageService.shared
 
     var body: some View {
+        @Bindable var languageService = self.languageService
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.large) {
                 languageSelectionSection
