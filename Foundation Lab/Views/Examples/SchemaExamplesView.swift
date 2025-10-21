@@ -29,7 +29,7 @@ struct SchemaExamplesView: View {
             .padding(.top)
         }
         .padding(.horizontal, Spacing.medium)
-        .navigationTitle("Schema Examples")
+        .navigationTitle("Dynamic Schemas")
 #if os(iOS) || os(visionOS)
         .navigationBarTitleDisplayMode(.large)
 #endif

@@ -130,6 +130,7 @@ struct ToolButton: View {
     }
     .padding()
     .frame(maxWidth: .infinity, minHeight: 140)
+    .contentShape(.rect)
     #if os(iOS) || os(macOS)
       .glassEffect(
         isSelected ? .regular.tint(.main).interactive(true) : .regular.interactive(true),

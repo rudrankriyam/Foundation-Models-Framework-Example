@@ -26,7 +26,7 @@ import Playgrounds
     let multiToolSession = LanguageModelSession(
         tools: [
             CalculatorTool(),
-            WeatherTool(),
+            MockWeatherTool(),
             SearchTool(),
             HealthDataTool()
         ],
@@ -58,7 +58,7 @@ import Playgrounds
     let smartSession = LanguageModelSession(
         tools: [
             CalculatorTool(),
-            WeatherTool(),
+            MockWeatherTool(),
             HealthDataTool()
         ],
         instructions: smartSelectionInstructions
