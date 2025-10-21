@@ -83,7 +83,8 @@ Use this information when interpreting relative dates like "today" or "tomorrow"
   }
 
   private func formattedCurrentDate() -> String {
-    Date.now.formatted(.iso8601.timeZone(.current))
+    let formatter = Date.ISO8601FormatStyle(includingFractionalSeconds: false, timeZone: TimeZone.current)
+    return Date.now.formatted(formatter)
   }
 }
 
