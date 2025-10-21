@@ -10,7 +10,7 @@ import FoundationModels
 import CoreLocation
 import Playgrounds
 
-struct LocationTool: Tool {
+struct MockLocationTool: Tool {
     let name = "getUserLocation"
     let description = "Gets the user's current location coordinates"
 
@@ -53,9 +53,9 @@ struct LocationTool: Tool {
 }
 
 #Playground {
-    let locationTool = LocationTool()
+    let locationTool = MockLocationTool()
 
-    let arguments = LocationTool.Arguments(includeAddress: true)
+    let arguments = MockLocationTool.Arguments(includeAddress: true)
 
     let result = try await locationTool.call(arguments: arguments)
     debugPrint("Location result: \(result)")

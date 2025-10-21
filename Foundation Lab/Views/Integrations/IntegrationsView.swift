@@ -26,19 +26,12 @@ struct IntegrationsView: View {
             segmentedPicker
 
             // Content based on selection
-            TabView(selection: $selectedSection) {
-                // Tools Section - reuse existing ToolsView
+            switch selectedSection {
+            case .tools:
                 ToolsView()
-                    .tag(IntegrationSection.tools)
-
-                // Schemas Section - reuse existing SchemaExamplesView
+            case .schemas:
                 SchemaExamplesView()
-                    .tag(IntegrationSection.schemas)
             }
-#if os(iOS)
-            .tabViewStyle(.page(indexDisplayMode: .never))
-#endif
-            .animation(.easeInOut(duration: 0.3), value: selectedSection)
         }
         .navigationTitle("Integrations")
 #if os(iOS)
@@ -86,7 +79,7 @@ struct IntegrationsView: View {
     }
 
     private var segmentedPicker: some View {
-        Picker("Integration Section", selection: $selectedSection) {
+        Picker("", selection: $selectedSection) {
             ForEach(IntegrationSection.allCases, id: \.self) { section in
                 Text(section.displayName)
                     .tag(section)
