@@ -140,10 +140,9 @@ private extension AdapterProvider {
     /// - Returns: The URL chosen by the user, or `nil` if the panel is dismissed.
     func presentOpenPanel() -> URL? {
         let panel = NSOpenPanel()
-        panel.canChooseDirectories = false
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = true
         panel.allowsMultipleSelection = false
-        let adapterType = UTType(filenameExtension: Self.adapterExtension) ?? .data
-        panel.allowedContentTypes = [adapterType]
         panel.prompt = "Import Adapter"
         panel.title = "Select a Custom Adapter"
         
