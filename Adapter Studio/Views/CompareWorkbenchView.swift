@@ -27,9 +27,6 @@ struct CompareWorkbenchView: View {
             let provider = try AdapterProvider()
             _adapterProvider = State(initialValue: provider)
             _adapterInitializationError = State(initialValue: nil)
-        } catch let error as AdapterProviderError {
-            _adapterProvider = State(initialValue: nil)
-            _adapterInitializationError = State(initialValue: error.localizedDescription)
         } catch {
             _adapterProvider = State(initialValue: nil)
             _adapterInitializationError = State(initialValue: error.localizedDescription)
