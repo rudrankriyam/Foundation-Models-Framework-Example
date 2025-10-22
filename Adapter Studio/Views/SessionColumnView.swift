@@ -13,10 +13,9 @@ struct SessionColumnView: View {
     let subtitle: String
     let column: CompareViewModel.ColumnState
     let isActive: Bool
-    let accentColor: Color
-
+    
     private let cornerRadius: CGFloat = 18
-
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             header
@@ -30,22 +29,22 @@ struct SessionColumnView: View {
                 .fill(Color.white.opacity(0.035))
                 .overlay(
                     RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .stroke(accentColor.opacity(0.35), lineWidth: 1)
+                        .stroke(.primary, lineWidth: 1)
                 )
         )
     }
-
+    
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title.uppercased())
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(accentColor.opacity(0.9))
+            
             Text(subtitle)
                 .font(.headline)
                 .foregroundStyle(.white.opacity(0.9))
         }
     }
-
+    
     @ViewBuilder
     private var responseBody: some View {
         ScrollView {
@@ -65,28 +64,27 @@ struct SessionColumnView: View {
         .frame(minHeight: 220)
         .scrollContentBackground(.hidden)
     }
-
+    
     @ViewBuilder
     private var metricsSection: some View {
         if let metrics = column.metrics {
             HStack(spacing: 8) {
                 if let ttf = metrics.timeToFirstToken {
-                    MetricBadge(icon: "bolt.fill", title: "First token", value: formattedDuration(ttf), accentColor: accentColor)
+                    MetricBadge(icon: "bolt.fill", title: "First token", value: formattedDuration(ttf))
                 }
-
+                
                 if let duration = metrics.totalDuration {
-                    MetricBadge(icon: "clock", title: "Total", value: formattedDuration(duration), accentColor: accentColor)
+                    MetricBadge(icon: "clock", title: "Total", value: formattedDuration(duration))
                 }
-
-                MetricBadge(icon: "calendar", title: "Started", value: metrics.startedAt.formatted(date: .omitted, time: .standard), accentColor: accentColor.opacity(0.75))
+                
+                MetricBadge(icon: "calendar", title: "Started", value: metrics.startedAt.formatted(date: .omitted, time: .standard))
             }
         } else if isActive {
             ProgressView()
                 .progressViewStyle(.circular)
-                .tint(accentColor)
         }
     }
-
+    
     private var placeholder: some View {
         VStack(alignment: .leading, spacing: 10) {
             if isActive {
@@ -94,7 +92,7 @@ struct SessionColumnView: View {
                     ProgressView()
                         .progressViewStyle(.circular)
                         .scaleEffect(0.9)
-                        .tint(accentColor)
+                    
                     Text("Streaming response…")
                         .font(.callout)
                         .foregroundStyle(.white.opacity(0.65))
@@ -106,7 +104,7 @@ struct SessionColumnView: View {
             }
         }
     }
-
+    
     private func formattedDuration(_ value: TimeInterval) -> String {
         let formatted = value.formatted(.number.precision(.fractionLength(2)))
         return "\(formatted)s"
@@ -117,8 +115,7 @@ private struct MetricBadge: View {
     let icon: String
     let title: String
     let value: String
-    let accentColor: Color
-
+    
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: icon)
@@ -127,9 +124,9 @@ private struct MetricBadge: View {
                 .padding(6)
                 .background(
                     Circle()
-                        .fill(accentColor.opacity(0.35))
+                        .fill(.primary.opacity(0.35))
                 )
-
+            
             VStack(alignment: .leading, spacing: 2) {
                 Text(title.uppercased())
                     .font(.caption2.weight(.semibold))
@@ -153,8 +150,7 @@ private struct MetricBadge: View {
         title: "Base",
         subtitle: "System Language Model",
         column: .init(text: "Example streaming output", metrics: .init(startedAt: .now)),
-        isActive: false,
-        accentColor: .blue
+        isActive: false
     )
     .frame(width: 420)
     .padding()

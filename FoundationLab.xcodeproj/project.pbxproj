@@ -11,6 +11,8 @@
 		0A5454AB2E1148A8002C2152 /* Foundation Lab.icon in Resources */ = {isa = PBXBuildFile; fileRef = 0A5454A72E1148A8002C2152 /* Foundation Lab.icon */; };
 		0A6316F32E1291E900E13A6D /* Murmer.icon in Resources */ = {isa = PBXBuildFile; fileRef = 0A6316F22E1291E900E13A6D /* Murmer.icon */; };
 		0A979E842E1E5921008CFA37 /* FoundationModelsTools in Frameworks */ = {isa = PBXBuildFile; productRef = 0A979E832E1E5921008CFA37 /* FoundationModelsTools */; };
+		0AFDF8412EA8C3670071BEA5 /* Adapter Studio.icon in Resources */ = {isa = PBXBuildFile; fileRef = 0AFDF8402EA8C3670071BEA5 /* Adapter Studio.icon */; };
+		0AFDF8442EA8C3F80071BEA5 /* LiquidGlasKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0AFDF8432EA8C3F80071BEA5 /* LiquidGlasKit */; };
 		FA43F9412E13A16E00F24BCC /* HighlightSwift in Frameworks */ = {isa = PBXBuildFile; productRef = FA43F9402E13A16E00F24BCC /* HighlightSwift */; };
 /* End PBXBuildFile section */
 
@@ -23,6 +25,7 @@
 		0ABC0C9B2E09AB5300A09018 /* Physiqa.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Physiqa.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0ADB46DC2E0CE81900C29293 /* Psylean.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Psylean.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0ADB48272E0D84EE00C29293 /* Murmer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Murmer.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0AFDF8402EA8C3670071BEA5 /* Adapter Studio.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "Adapter Studio.icon"; sourceTree = "<group>"; };
 		6C9AECE22E728F6D00F4C37F /* SampleCode.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = SampleCode.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -83,6 +86,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0AFDF8442EA8C3F80071BEA5 /* LiquidGlasKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -130,6 +134,7 @@
 		0AAE4FF62DF76E6600838F13 = {
 			isa = PBXGroup;
 			children = (
+				0AFDF8402EA8C3670071BEA5 /* Adapter Studio.icon */,
 				6C9AECE22E728F6D00F4C37F /* SampleCode.xcconfig */,
 				0ADB46AD2E0CE6C100C29293 /* Foundation Lab */,
 				0ABC0C9C2E09AB5300A09018 /* Physiqa */,
@@ -139,6 +144,7 @@
 				0AAE50002DF76E6600838F13 /* Products */,
 				0A5454A72E1148A8002C2152 /* Foundation Lab.icon */,
 				0A6316F22E1291E900E13A6D /* Murmer.icon */,
+				0AFDF8422EA8C3F80071BEA5 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -152,6 +158,13 @@
 				0A90927D2EA8361C0062F02B /* Adapter Studio.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		0AFDF8422EA8C3F80071BEA5 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -174,6 +187,7 @@
 			);
 			name = "Adapter Studio";
 			packageProductDependencies = (
+				0AFDF8432EA8C3F80071BEA5 /* LiquidGlasKit */,
 			);
 			productName = "Adapter Studio";
 			productReference = 0A90927D2EA8361C0062F02B /* Adapter Studio.app */;
@@ -336,6 +350,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0AFDF8412EA8C3670071BEA5 /* Adapter Studio.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -413,7 +428,7 @@
 		0A9092852EA8361D0062F02B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "Adapter Studio";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -457,7 +472,7 @@
 		0A9092862EA8361D0062F02B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "Adapter Studio";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -1213,6 +1228,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 0A979E822E1E5921008CFA37 /* XCRemoteSwiftPackageReference "FoundationModelsTools" */;
 			productName = FoundationModelsTools;
+		};
+		0AFDF8432EA8C3F80071BEA5 /* LiquidGlasKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0A21D7EF2E518858004E8806 /* XCRemoteSwiftPackageReference "LiquidGlasKit" */;
+			productName = LiquidGlasKit;
 		};
 		FA43F9402E13A16E00F24BCC /* HighlightSwift */ = {
 			isa = XCSwiftPackageProductDependency;
