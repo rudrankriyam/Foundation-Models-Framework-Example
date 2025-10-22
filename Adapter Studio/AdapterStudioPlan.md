@@ -83,13 +83,13 @@
 - [x] Show adapter status (loaded version, file timestamp) in UI header.
 - [x] Add toast/alert system for load failures or compatibility issues.
 
-### Phase 3 – History & Persistence
+### Phase 3 – History & Persistence *(Deferred until post-MVP)*
 - [ ] Design `Transcript` model (prompt, base text, adapter text, metrics, adapter metadata).
 - [ ] Implement `TranscriptStore` (JSON file under `Application Support/AdapterStudio`).
 - [ ] Create `HistoryViewModel` + `HistorySidebarView` to list transcripts, with selection displaying detail overlay.
 - [ ] Support exporting transcripts as Markdown/JSON for sharing.
 
-### Phase 4 – Advanced Features (Optional Stretch)
+### Phase 4 – Advanced Features (Optional Stretch, Deferred)
 - [ ] Token diff highlighting – compute diff using `CollectionDifference`.
 - [ ] Batch prompt runner – load `.jsonl` dataset and iterate prompts automatically, summarizing metrics.
 - [ ] Draft model compilation toggle using `BackgroundTasks` to call `adapter.compile()` asynchronously.
