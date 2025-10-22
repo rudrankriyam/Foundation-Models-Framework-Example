@@ -169,9 +169,6 @@ private extension AdapterProvider {
         } else {
             destinationURL = uniqueDestinationURL(for: url.lastPathComponent)
             do {
-                if fileManager.fileExists(atPath: destinationURL.path) {
-                    try fileManager.removeItem(at: destinationURL)
-                }
                 try fileManager.copyItem(at: url, to: destinationURL)
             } catch {
                 throw AdapterProviderError.copyFailed(error.localizedDescription)

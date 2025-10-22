@@ -16,7 +16,6 @@ struct CompareWorkbenchView: View {
     @State private var compareViewModel: CompareViewModel
     @State private var adapterProvider: AdapterProvider?
     @State private var adapterInitializationError: String?
-    @State private var activeAdapterContext: AdapterContext?
     @State private var toast: ToastPayload?
     @State private var toastWorkItem: DispatchWorkItem?
     @FocusState private var promptIsFocused: Bool
@@ -28,15 +27,12 @@ struct CompareWorkbenchView: View {
             let provider = try AdapterProvider()
             _adapterProvider = State(initialValue: provider)
             _adapterInitializationError = State(initialValue: nil)
-            _activeAdapterContext = State(initialValue: provider.context)
         } catch let error as AdapterProviderError {
             _adapterProvider = State(initialValue: nil)
             _adapterInitializationError = State(initialValue: error.localizedDescription)
-            _activeAdapterContext = State(initialValue: nil)
         } catch {
             _adapterProvider = State(initialValue: nil)
             _adapterInitializationError = State(initialValue: error.localizedDescription)
-            _activeAdapterContext = State(initialValue: nil)
         }
     }
     
@@ -49,9 +45,9 @@ struct CompareWorkbenchView: View {
                 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 24) {
-                        header(viewModel: viewModel)
+                        header(viewModel: viewModel, context: currentAdapterContext)
                         promptSection(prompt: $viewModel.prompt, isRunning: viewModel.isRunning)
-                        comparisonColumns(viewModel: viewModel)
+                        comparisonColumns(viewModel: viewModel, context: currentAdapterContext)
                     }
                     .padding()
                     .frame(maxWidth: .infinity)
@@ -68,7 +64,7 @@ struct CompareWorkbenchView: View {
         .onAppear {
             configureEngineIfNeeded()
         }
-        .onChange(of: activeAdapterContext?.metadata.location) { _, _ in
+        .onChange(of: adapterProvider?.context?.metadata.location) { _, _ in
             configureEngineIfNeeded()
         }
         .alert("Adapter Provider Error", isPresented: Binding(
@@ -99,10 +95,23 @@ private extension CompareWorkbenchView {
         LinearGradient(colors: [Color(red: 0.08, green: 0.09, blue: 0.12), Color(red: 0.05, green: 0.05, blue: 0.07)], startPoint: .topLeading, endPoint: .bottomTrailing)
             .ignoresSafeArea()
     }
+
+    var currentAdapterContext: AdapterContext? {
+        adapterProvider?.context
+    }
     
-    func header(viewModel: CompareViewModel) -> some View {
+    func header(viewModel: CompareViewModel, context: AdapterContext?) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .firstTextBaseline, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Adapter Studio")
+                        .font(.title.bold())
+                        .foregroundStyle(.white)
+                    Text(statusDescription(for: viewModel.state))
+                        .font(.subheadline)
+                        .foregroundStyle(.white.opacity(0.7))
+                }
+
                 Spacer()
                 
                 if viewModel.isRunning {
@@ -114,7 +123,7 @@ private extension CompareWorkbenchView {
                 }
             }
             
-            adapterStatusView
+            adapterStatusView(context: context)
         }
     }
     
@@ -157,7 +166,7 @@ private extension CompareWorkbenchView {
         .glassCard(radius: 24)
     }
     
-    func comparisonColumns(viewModel: CompareViewModel) -> some View {
+    func comparisonColumns(viewModel: CompareViewModel, context: AdapterContext?) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Responses")
                 .font(.headline)
@@ -173,7 +182,7 @@ private extension CompareWorkbenchView {
                 
                 SessionColumnView(
                     title: "Adapter",
-                    subtitle: activeAdapterContext?.metadata.fileName ?? "No Adapter Selected",
+                    subtitle: context?.metadata.fileName ?? "No Adapter Selected",
                     column: viewModel.adapterColumn,
                     isActive: viewModel.isRunning
                 )
@@ -182,10 +191,10 @@ private extension CompareWorkbenchView {
         .padding()
         .glassCard(radius: 24)
     }
-    
+
     @ViewBuilder
-    var adapterStatusView: some View {
-        if let context = activeAdapterContext {
+    func adapterStatusView(context: AdapterContext?) -> some View {
+        if let context {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(alignment: .center, spacing: 12) {
                     Label("Adapter Loaded", systemImage: "checkmark.seal.fill")
@@ -262,7 +271,7 @@ private extension CompareWorkbenchView {
                     }
                     Divider()
                     Button("Reload Active Adapter") {
-                        if let current = activeAdapterContext?.metadata.location {
+                        if let current = provider.context?.metadata.location {
                             loadAdapter(at: current)
                         }
                     }
@@ -299,28 +308,26 @@ private extension CompareWorkbenchView {
     func importAdapter() {
         guard let provider = adapterProvider else { return }
         provider.selectAndLoadAdapter()
-        activeAdapterContext = provider.context
-        compareViewModel.configureAdapter(activeAdapterContext)
+        compareViewModel.configureAdapter(provider.context)
         if let error = provider.lastError {
             adapterInitializationError = error.localizedDescription
         } else {
             adapterInitializationError = nil
-            if let fileName = activeAdapterContext?.metadata.fileName {
+            if let fileName = provider.context?.metadata.fileName {
                 showToast(message: "Loaded adapter \(fileName)", style: .info)
             }
         }
     }
-    
+
     func loadAdapter(at url: URL) {
         guard let provider = adapterProvider else { return }
         provider.loadExistingAdapter(at: url)
-        activeAdapterContext = provider.context
-        compareViewModel.configureAdapter(activeAdapterContext)
+        compareViewModel.configureAdapter(provider.context)
         if let error = provider.lastError {
             adapterInitializationError = error.localizedDescription
         } else {
             adapterInitializationError = nil
-            if let fileName = activeAdapterContext?.metadata.fileName {
+            if let fileName = provider.context?.metadata.fileName {
                 showToast(message: "Switched to \(fileName)", style: .info)
             }
         }
@@ -333,7 +340,7 @@ private extension CompareWorkbenchView {
     }
     
     func configureEngineIfNeeded() {
-        compareViewModel.configureAdapter(activeAdapterContext)
+        compareViewModel.configureAdapter(adapterProvider?.context)
     }
     
     func modifiedFormatted(_ date: Date) -> String {

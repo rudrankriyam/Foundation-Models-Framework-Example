@@ -34,6 +34,7 @@ final class ModelCompareEngine {
     private var adapterSession: LanguageModelSession?
     
     private var currentRunTask: Task<Void, Never>?
+    private var activeStreamTasks: [Task<RunOutcome, Never>] = []
     
     /// Context describing the currently configured adapter, if any.
     private(set) var adapterContext: AdapterContext?
@@ -50,6 +51,8 @@ final class ModelCompareEngine {
     func cancelCurrentRun() {
         currentRunTask?.cancel()
         currentRunTask = nil
+        activeStreamTasks.forEach { $0.cancel() }
+        activeStreamTasks.removeAll()
     }
     
     /// Configures the engine to use the supplied adapter for subsequent comparisons.
@@ -105,6 +108,9 @@ private extension ModelCompareEngine {
         options: GenerationOptions,
         continuation: AsyncStream<ModelCompareEvent>.Continuation
     ) async {
+        activeStreamTasks.forEach { $0.cancel() }
+        activeStreamTasks.removeAll()
+
         let baseTask = Task { [weak self] () -> RunOutcome in
             guard let self else { return .cancelled }
             return await self.streamSession(
@@ -116,10 +122,11 @@ private extension ModelCompareEngine {
                 continuation: continuation
             )
         }
-        
+        activeStreamTasks.append(baseTask)
+
         let adapterTask: Task<RunOutcome, Never>?
         if let adapterModel, let adapterSession {
-            adapterTask = Task { [weak self] () -> RunOutcome in
+            let task = Task { [weak self] () -> RunOutcome in
                 guard let self else { return .cancelled }
                 return await self.streamSession(
                     source: .adapter,
@@ -130,12 +137,16 @@ private extension ModelCompareEngine {
                     continuation: continuation
                 )
             }
+            activeStreamTasks.append(task)
+            adapterTask = task
         } else {
             adapterTask = nil
         }
-        
+
         let baseOutcome = await baseTask.value
         let adapterOutcome = await adapterTask?.value ?? .skipped
+
+        activeStreamTasks.removeAll()
         
         guard !Task.isCancelled else {
             continuation.finish()
@@ -195,7 +206,8 @@ private extension ModelCompareEngine {
         
         do {
             let stream = session.streamResponse(to: prompt, options: options)
-            
+            var latestContent = ""
+
             for try await snapshot in stream {
                 guard !Task.isCancelled else {
                     return .cancelled
@@ -203,6 +215,7 @@ private extension ModelCompareEngine {
                 
                 metrics.markFirstToken()
                 let partial = renderPartialText(from: snapshot)
+                latestContent = partial
                 continuation.yield(.token(source: source, text: partial, metrics: metrics))
             }
             
@@ -210,14 +223,13 @@ private extension ModelCompareEngine {
                 return .cancelled
             }
             
-            let response = try await stream.collect()
             metrics.markCompleted()
             
             let summary = ModelCompareResponseSummary(
                 source: source,
-                text: response.content,
+                text: latestContent,
                 metrics: metrics,
-                transcript: Array(response.transcriptEntries)
+                transcript: []
             )
             
             return .success(summary)
@@ -239,9 +251,9 @@ private extension ModelCompareEngine {
         }
         
         let json = snapshot.rawContent.jsonString
-        if json.hasPrefix("\""), json.hasSuffix("\""), json.count >= 2 {
-            let trimmed = json.dropFirst().dropLast()
-            return trimmed.replacingOccurrences(of: "\\\"", with: "\"")
+        if let data = json.data(using: .utf8),
+           let decoded = try? JSONDecoder().decode(String.self, from: data) {
+            return decoded
         }
         
         return json
