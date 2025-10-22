@@ -196,6 +196,12 @@ private extension CompareViewModel {
             adapterColumn.metrics = adapterSummary.metrics
         }
         
+        // Guard against overwriting failed state: if already failed, don't transition to completed
+        if case .failed = state {
+            logger.debug("Comparison completion received but state is already failed, preserving error state")
+            return
+        }
+        
         state = .completed(result: result)
     }
 }

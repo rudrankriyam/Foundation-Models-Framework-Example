@@ -16,8 +16,7 @@ struct CompareWorkbenchView: View {
     @State private var compareViewModel: CompareViewModel
     @State private var adapterProvider: AdapterProvider?
     @State private var adapterInitializationError: String?
-    @State private var toast: ToastPayload?
-    @State private var toastWorkItem: DispatchWorkItem?
+
     @FocusState private var promptIsFocused: Bool
     
     init() {
@@ -49,12 +48,7 @@ struct CompareWorkbenchView: View {
                     .padding()
                     .frame(maxWidth: .infinity)
                 }
-                if let toast {
-                    ToastView(payload: toast)
-                        .padding(.horizontal)
-                        .padding(.top)
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                }
+
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
@@ -77,12 +71,6 @@ struct CompareWorkbenchView: View {
             }
         } message: {
             Text(adapterInitializationError ?? "")
-        }
-        .task(id: stateIdentifier(for: viewModel.state)) {
-            handleStateChange(viewModel.state)
-        }
-        .onDisappear {
-            toastWorkItem?.cancel()
         }
     }
 }
@@ -310,9 +298,6 @@ private extension CompareWorkbenchView {
             adapterInitializationError = error.localizedDescription
         } else {
             adapterInitializationError = nil
-            if let fileName = provider.context?.metadata.fileName {
-                showToast(message: "Loaded adapter \(fileName)", style: .info)
-            }
         }
     }
 
@@ -324,9 +309,6 @@ private extension CompareWorkbenchView {
             adapterInitializationError = error.localizedDescription
         } else {
             adapterInitializationError = nil
-            if let fileName = provider.context?.metadata.fileName {
-                showToast(message: "Switched to \(fileName)", style: .info)
-            }
         }
     }
     
@@ -353,23 +335,7 @@ private extension CompareWorkbenchView {
         return "\(prefix)…"
     }
     
-    func showToast(message: String, style: ToastStyle, duration: TimeInterval = 4) {
-        toastWorkItem?.cancel()
-        
-        let newPayload = ToastPayload(message: message, style: style)
-        withAnimation(.spring(response: 0.4, dampingFraction: 0.9)) {
-            toast = newPayload
-        }
-        
-        let workItem = DispatchWorkItem {
-            withAnimation(.spring(response: 0.5, dampingFraction: 0.9)) {
-                toast = nil
-            }
-        }
-        toastWorkItem = workItem
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + duration, execute: workItem)
-    }
+
     
     func stateIdentifier(for state: CompareViewModel.State) -> String {
         switch state {
@@ -384,18 +350,7 @@ private extension CompareWorkbenchView {
         }
     }
     
-    func handleStateChange(_ state: CompareViewModel.State) {
-        switch state {
-        case .failed(let message):
-            showToast(message: message, style: .error)
-        case .completed(let result):
-            showToast(message: "Comparison finished for \(truncatedPrompt(result.prompt))", style: .success)
-        case .running:
-            break
-        case .idle:
-            break
-        }
-    }
+
 }
 
 private let byteCountFormatter: ByteCountFormatter = {
@@ -405,62 +360,7 @@ private let byteCountFormatter: ByteCountFormatter = {
     return formatter
 }()
 
-private enum ToastStyle: Equatable {
-    case info
-    case success
-    case error
-    
-    var iconName: String {
-        switch self {
-        case .info: return "info.circle"
-        case .success: return "checkmark.circle.fill"
-        case .error: return "exclamationmark.triangle.fill"
-        }
-    }
-    
-    var tint: Color {
-        switch self {
-        case .info: return Color.blue
-        case .success: return Color.green
-        case .error: return Color.orange
-        }
-    }
-}
 
-private struct ToastPayload: Identifiable {
-    let id = UUID()
-    let message: String
-    let style: ToastStyle
-}
-
-private struct ToastView: View {
-    let payload: ToastPayload
-    
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: payload.style.iconName)
-                .font(.title3)
-                .foregroundStyle(payload.style.tint)
-            
-            Text(payload.message)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.white)
-            
-            Spacer(minLength: 0)
-        }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 14)
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color.black.opacity(0.65))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(payload.style.tint.opacity(0.35))
-                )
-        )
-        .shadow(radius: 12, y: 4)
-    }
-}
 
 #if DEBUG
 #Preview {

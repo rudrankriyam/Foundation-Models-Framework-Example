@@ -238,6 +238,15 @@ private extension AdapterProvider {
         let resourceKeys: Set<URLResourceKey> = [.fileSizeKey, .creationDateKey, .contentModificationDateKey]
         let resourceValues = try url.resourceValues(forKeys: resourceKeys)
         
+        // For packages (.fmadapter bundles), fileSizeKey returns 0, so calculate total recursively
+        let fileSize: UInt64
+        if let resourceFileSize = resourceValues.fileSize, resourceFileSize > 0 {
+            fileSize = UInt64(resourceFileSize)
+        } else {
+            // Package/bundle: sum all files recursively
+            fileSize = calculateDirectorySize(url)
+        }
+        
         let creatorMetadata = adapter.creatorDefinedMetadata.reduce(into: [String: String]()) { partialResult, entry in
             partialResult[entry.key] = String(describing: entry.value)
         }
@@ -245,10 +254,34 @@ private extension AdapterProvider {
         return AdapterMetadata(
             location: url,
             fileName: url.lastPathComponent,
-            fileSize: UInt64(resourceValues.fileSize ?? 0),
+            fileSize: fileSize,
             createdAt: resourceValues.creationDate,
             modifiedAt: resourceValues.contentModificationDate,
             creatorDefinedMetadata: creatorMetadata
         )
+    }
+    
+    /// Recursively calculates total size of all files in a directory.
+    /// Used for packages/bundles where `.fileSizeKey` returns 0.
+    private func calculateDirectorySize(_ url: URL) -> UInt64 {
+        var totalSize: UInt64 = 0
+        
+        guard let enumerator = fileManager.enumerator(at: url, includingPropertiesForKeys: [.fileSizeKey]) else {
+            return 0
+        }
+        
+        for case let fileURL as URL in enumerator {
+            do {
+                let resourceValues = try fileURL.resourceValues(forKeys: [.fileSizeKey])
+                if let fileSize = resourceValues.fileSize {
+                    totalSize += UInt64(fileSize)
+                }
+            } catch {
+                // Skip files we can't access
+                continue
+            }
+        }
+        
+        return totalSize
     }
 }
