@@ -10,6 +10,7 @@ import Foundation
 import FoundationModels
 import Observation
 import OSLog
+import UniformTypeIdentifiers
 
 /// Manages the lifecycle of custom `.fmadapter` packages for the Adapter Studio target.
 ///
@@ -18,17 +19,17 @@ import OSLog
 @MainActor
 @Observable
 final class AdapterProvider {
-
+    
     /// The adapter currently active in the studio, paired with metadata describing the package on disk.
     var context: AdapterContext?
-
+    
     /// The most recent error encountered while importing or loading an adapter, suitable for UI presentation.
     var lastError: AdapterProviderError?
-
+    
     @ObservationIgnored private let fileManager: FileManager
     @ObservationIgnored private let logger = Logger(subsystem: "com.rudrankriyam.foundation-model-adapterstudio", category: "AdapterProvider")
     @ObservationIgnored private let adaptersDirectory: URL
-
+    
     /// Creates a provider configured to manage adapters inside the Application Support directory.
     ///
     /// - Parameter fileManager: An optional file manager dependency that simplifies testing.
@@ -37,7 +38,7 @@ final class AdapterProvider {
         self.fileManager = fileManager
         self.adaptersDirectory = try Self.defaultAdaptersDirectory(using: fileManager)
     }
-
+    
     /// Prompts the user to select an adapter file, then imports and loads the selection.
     ///
     /// Successful imports assign to ``context`` and clear ``lastError``. Any recoverable failure is stored
@@ -47,7 +48,7 @@ final class AdapterProvider {
             guard let fileURL = presentOpenPanel() else {
                 throw AdapterProviderError.userCancelled
             }
-
+            
             let result = try importAndLoadAdapter(at: fileURL)
             context = result
             lastError = nil
@@ -59,7 +60,7 @@ final class AdapterProvider {
             lastError = .loadFailed(error.localizedDescription)
         }
     }
-
+    
     /// Loads an adapter already located inside the managed directory.
     ///
     /// Use this helper when presenting results returned by ``availableAdapterURLs()``.
@@ -76,7 +77,7 @@ final class AdapterProvider {
             lastError = .loadFailed(error.localizedDescription)
         }
     }
-
+    
     /// Returns every adapter package currently available inside the managed directory.
     ///
     /// The results are sorted by filename for stable presentation. Non-`.fmadapter` files are ignored.
@@ -84,7 +85,7 @@ final class AdapterProvider {
         guard let enumerator = fileManager.enumerator(at: adaptersDirectory, includingPropertiesForKeys: nil) else {
             return []
         }
-
+        
         return enumerator.compactMap { element in
             guard
                 let url = element as? URL,
@@ -92,17 +93,17 @@ final class AdapterProvider {
             else {
                 return nil
             }
-
+            
             return url
         }.sorted(by: { $0.lastPathComponent < $1.lastPathComponent })
     }
 }
 
 extension AdapterProvider {
-
+    
     /// File extension expected for adapter packages produced by the training toolkit.
     static let adapterExtension = "fmadapter"
-
+    
     /// Resolves or creates the directory where Adapter Studio stores imported adapters.
     ///
     /// The location is `~/Library/Application Support/AdapterStudio/Adapters`, matching the local workflow
@@ -115,11 +116,11 @@ extension AdapterProvider {
         guard let baseDirectory = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
             throw AdapterProviderError.directoryCreationFailed("Unable to resolve Application Support directory.")
         }
-
+        
         let adapterStudioDirectory = baseDirectory
             .appendingPathComponent("AdapterStudio", isDirectory: true)
             .appendingPathComponent("Adapters", isDirectory: true)
-
+        
         if fileManager.fileExists(atPath: adapterStudioDirectory.path) == false {
             do {
                 try fileManager.createDirectory(at: adapterStudioDirectory, withIntermediateDirectories: true)
@@ -127,13 +128,13 @@ extension AdapterProvider {
                 throw AdapterProviderError.directoryCreationFailed(error.localizedDescription)
             }
         }
-
+        
         return adapterStudioDirectory
     }
 }
 
 private extension AdapterProvider {
-
+    
     /// Displays an open panel configured to select a single adapter package.
     ///
     /// - Returns: The URL chosen by the user, or `nil` if the panel is dismissed.
@@ -141,13 +142,14 @@ private extension AdapterProvider {
         let panel = NSOpenPanel()
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = false
-        panel.allowedFileTypes = [Self.adapterExtension]
+        let adapterType = UTType(filenameExtension: Self.adapterExtension) ?? .data
+        panel.allowedContentTypes = [adapterType]
         panel.prompt = "Import Adapter"
         panel.title = "Select a Custom Adapter"
-
+        
         return panel.runModal() == .OK ? panel.url : nil
     }
-
+    
     /// Imports an adapter located outside the managed directory and loads it into memory.
     ///
     /// When the incoming adapter already resides in the managed directory the existing file is reused.
@@ -160,7 +162,7 @@ private extension AdapterProvider {
         guard url.pathExtension.lowercased() == Self.adapterExtension else {
             throw AdapterProviderError.invalidFileExtension(url)
         }
-
+        
         let destinationURL: URL
         if url.deletingLastPathComponent().standardizedFileURL == adaptersDirectory.standardizedFileURL {
             destinationURL = url
@@ -175,10 +177,10 @@ private extension AdapterProvider {
                 throw AdapterProviderError.copyFailed(error.localizedDescription)
             }
         }
-
+        
         return try loadAdapter(from: destinationURL)
     }
-
+    
     /// Loads an adapter from disk and gathers file metadata for UI surfacing.
     ///
     /// - Parameter url: Location of the adapter package on disk.
@@ -196,22 +198,22 @@ private extension AdapterProvider {
             throw AdapterProviderError.loadFailed(error.localizedDescription)
         }
     }
-
+    
     /// Generates a unique destination URL by appending a numeric suffix when a filename collision occurs.
     ///
     /// - Parameter fileName: The desired file name for the adapter copy.
     /// - Returns: A destination URL guaranteed not to overwrite an existing file.
     func uniqueDestinationURL(for fileName: String) -> URL {
         var destination = adaptersDirectory.appendingPathComponent(fileName, isDirectory: false)
-
+        
         guard fileManager.fileExists(atPath: destination.path) else {
             return destination
         }
-
+        
         let fileBase = (fileName as NSString).deletingPathExtension
         let fileExtension = (fileName as NSString).pathExtension
         var counter = 2
-
+        
         while fileManager.fileExists(atPath: destination.path) {
             let candidateName: String
             if fileExtension.isEmpty {
@@ -222,10 +224,10 @@ private extension AdapterProvider {
             destination = adaptersDirectory.appendingPathComponent(candidateName, isDirectory: false)
             counter += 1
         }
-
+        
         return destination
     }
-
+    
     /// Builds rich metadata for the supplied adapter and backing file URL.
     ///
     /// The metadata includes file-system attributes and any custom metadata saved during export, with values
@@ -239,11 +241,11 @@ private extension AdapterProvider {
     func buildMetadata(for adapter: SystemLanguageModel.Adapter, at url: URL) throws -> AdapterMetadata {
         let resourceKeys: Set<URLResourceKey> = [.fileSizeKey, .creationDateKey, .contentModificationDateKey]
         let resourceValues = try url.resourceValues(forKeys: resourceKeys)
-
+        
         let creatorMetadata = adapter.creatorDefinedMetadata.reduce(into: [String: String]()) { partialResult, entry in
             partialResult[entry.key] = String(describing: entry.value)
         }
-
+        
         return AdapterMetadata(
             location: url,
             fileName: url.lastPathComponent,

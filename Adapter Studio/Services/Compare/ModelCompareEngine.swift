@@ -16,7 +16,7 @@ import OSLog
 /// containing partial tokens, availability issues, and final summaries for persistence.
 @MainActor
 final class ModelCompareEngine {
-
+    
     /// Internal representation of a model run outcome.
     private enum RunOutcome {
         case success(ModelCompareResponseSummary)
@@ -25,19 +25,19 @@ final class ModelCompareEngine {
         case skipped
         case cancelled
     }
-
+    
     private let logger = Logger(subsystem: "com.rudrankriyam.foundation-model-adapterstudio", category: "ModelCompareEngine")
     private let baseModel: SystemLanguageModel
     private var baseSession: LanguageModelSession
-
+    
     private var adapterModel: SystemLanguageModel?
     private var adapterSession: LanguageModelSession?
-
+    
     private var currentRunTask: Task<Void, Never>?
-
+    
     /// Context describing the currently configured adapter, if any.
     private(set) var adapterContext: AdapterContext?
-
+    
     /// Creates an engine backed by the supplied base system model.
     ///
     /// - Parameter model: The system model to use for baseline responses. Defaults to `.default`.
@@ -45,48 +45,48 @@ final class ModelCompareEngine {
         self.baseModel = model
         self.baseSession = LanguageModelSession(model: model)
     }
-
+    
     /// Cancels the active comparison, if any.
     func cancelCurrentRun() {
         currentRunTask?.cancel()
         currentRunTask = nil
     }
-
+    
     /// Configures the engine to use the supplied adapter for subsequent comparisons.
     ///
     /// Passing `nil` clears any previously loaded adapter and terminates in-flight runs.
     func configureAdapter(_ context: AdapterContext?) {
         cancelCurrentRun()
         adapterContext = context
-
+        
         guard let context else {
             adapterModel = nil
             adapterSession = nil
             return
         }
-
+        
         let model = SystemLanguageModel(adapter: context.adapter)
         adapterModel = model
         adapterSession = LanguageModelSession(model: model)
     }
-
+    
     /// Starts a comparison run and returns an async stream describing progress.
     ///
     /// The returned stream begins with a `.started` event, followed by zero or more `.token`
     /// updates, and terminates with `.finished` or `.failed` events before completing.
     func submit(prompt: String, options: GenerationOptions = GenerationOptions()) -> AsyncStream<ModelCompareEvent> {
         cancelCurrentRun()
-
+        
         return AsyncStream { continuation in
             continuation.yield(.started(prompt: prompt))
-
+            
             let runTask = Task { [weak self] in
                 guard let self else { return }
                 await self.runComparison(prompt: prompt, options: options, continuation: continuation)
             }
-
+            
             self.currentRunTask = runTask
-
+            
             continuation.onTermination = { @Sendable _ in
                 runTask.cancel()
                 Task { @MainActor [weak self] in
@@ -98,7 +98,7 @@ final class ModelCompareEngine {
 }
 
 private extension ModelCompareEngine {
-
+    
     /// Executes a comparison run and pushes events into the provided continuation.
     private func runComparison(
         prompt: String,
@@ -116,7 +116,7 @@ private extension ModelCompareEngine {
                 continuation: continuation
             )
         }
-
+        
         let adapterTask: Task<RunOutcome, Never>?
         if let adapterModel, let adapterSession {
             adapterTask = Task { [weak self] () -> RunOutcome in
@@ -133,27 +133,27 @@ private extension ModelCompareEngine {
         } else {
             adapterTask = nil
         }
-
+        
         let baseOutcome = await baseTask.value
         let adapterOutcome = await adapterTask?.value ?? .skipped
-
+        
         guard !Task.isCancelled else {
             continuation.finish()
             return
         }
-
+        
         let baseSummary = processOutcome(baseOutcome, for: .base, continuation: continuation)
         let adapterSummary = processOutcome(adapterOutcome, for: .adapter, continuation: continuation)
-
+        
         if baseSummary != nil || adapterSummary != nil {
             let result = ModelCompareResult(prompt: prompt, base: baseSummary, adapter: adapterSummary)
             continuation.yield(.finished(result))
         }
-
+        
         continuation.finish()
         currentRunTask = nil
     }
-
+    
     /// Converts a run outcome into a response summary and emits side-effect events when needed.
     private func processOutcome(
         _ outcome: RunOutcome,
@@ -174,7 +174,7 @@ private extension ModelCompareEngine {
         }
         return nil
     }
-
+    
     /// Streams a single model response and reports partial tokens back to the caller.
     private func streamSession(
         source: ModelCompareSource,
@@ -190,60 +190,60 @@ private extension ModelCompareEngine {
             logger.error("Model unavailable for \(source.displayName, privacy: .public): \(statusDescription, privacy: .public)")
             return .availability(model.availability)
         }
-
+        
         var metrics = ModelCompareResponseMetrics(startedAt: Date())
-
+        
         do {
             let stream = session.streamResponse(to: prompt, options: options)
-
+            
             for try await snapshot in stream {
                 guard !Task.isCancelled else {
                     return .cancelled
                 }
-
+                
                 metrics.markFirstToken()
                 let partial = renderPartialText(from: snapshot)
                 continuation.yield(.token(source: source, text: partial, metrics: metrics))
             }
-
+            
             guard !Task.isCancelled else {
                 return .cancelled
             }
-
+            
             let response = try await stream.collect()
             metrics.markCompleted()
-
+            
             let summary = ModelCompareResponseSummary(
                 source: source,
                 text: response.content,
                 metrics: metrics,
                 transcript: Array(response.transcriptEntries)
             )
-
+            
             return .success(summary)
         } catch {
             if Task.isCancelled {
                 return .cancelled
             }
-
+            
             let compareError = ModelCompareError(message: error.localizedDescription)
             logger.error("Streaming failure for \(source.displayName, privacy: .public): \(error.localizedDescription, privacy: .public)")
             return .failure(compareError)
         }
     }
-
+    
     /// Normalizes the partial snapshot into a user-friendly string.
     private func renderPartialText(from snapshot: LanguageModelSession.ResponseStream<String>.Snapshot) -> String {
         if let value = try? snapshot.rawContent.value(String.self) {
             return value
         }
-
+        
         let json = snapshot.rawContent.jsonString
         if json.hasPrefix("\""), json.hasSuffix("\""), json.count >= 2 {
             let trimmed = json.dropFirst().dropLast()
             return trimmed.replacingOccurrences(of: "\\\"", with: "\"")
         }
-
+        
         return json
     }
 }

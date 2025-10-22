@@ -9,34 +9,34 @@ import Foundation
 
 /// Errors thrown or emitted by ``AdapterProvider`` when managing adapter files.
 enum AdapterProviderError: LocalizedError {
-
+    
     /// The user dismissed the file selection panel without choosing an adapter.
     ///
     /// This case allows the provider to communicate cancellation to the UI without conflating it with failures that
     /// should be surfaced as actionable alerts.
     case userCancelled
-
+    
     /// The provider failed to create or access the managed adapters directory.
     ///
     /// The associated message contains the underlying file-system error for diagnostic purposes.
     case directoryCreationFailed(String)
-
+    
     /// The selected file did not have the expected `.fmadapter` file extension.
     ///
     /// The associated `URL` identifies the mistaken file so the UI can reference it in an alert.
     case invalidFileExtension(URL)
-
+    
     /// The provider could not copy the selected adapter into the managed directory.
     ///
     /// The message contains the file manager error that triggered the failure.
     case copyFailed(String)
-
+    
     /// Loading the adapter into memory failed.
     ///
     /// The message is built from the localized description of `SystemLanguageModel.Adapter.AssetError`
     /// or any other underlying error encountered during initialization.
     case loadFailed(String)
-
+    
     var errorDescription: String? {
         switch self {
         case .userCancelled:

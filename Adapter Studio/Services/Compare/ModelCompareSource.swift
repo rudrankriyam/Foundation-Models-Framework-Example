@@ -15,7 +15,7 @@ enum ModelCompareSource: String, Sendable {
     
     /// The adapter-backed `SystemLanguageModel`.
     case adapter
-
+    
     /// Human-friendly name for UI presentation.
     var displayName: String {
         switch self {
