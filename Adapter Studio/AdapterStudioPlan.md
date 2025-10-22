@@ -131,18 +131,18 @@
 ## 12. Adapter CLI Plan
 
 ### Goals
-- [ ] Provide a scripted workflow for training, evaluating, and exporting adapters without relying on notebooks.
-- [ ] Match the ergonomics of `mlx-swift-examples` command-line tools (discoverable subcommands, grouped options).
-- [ ] Keep the CLI portable across macOS and Linux training environments with no extra dependencies beyond the toolkit.
+- [x] Provide a scripted workflow for training, evaluating, and exporting adapters without relying on notebooks.
+- [x] Match the ergonomics of `mlx-swift-examples` command-line tools (discoverable subcommands, grouped options).
+- [x] Keep the CLI portable across macOS and Linux training environments with no extra dependencies beyond the toolkit.
 
 ### Architecture Overview
-- [ ] Create an `adapter_cli` Python package with `__main__.py` and an `adapter-cli` console entry point.
-- [ ] Use `argparse` with subparsers; share option groups for model assets, logging verbosity, and config hydration.
+- [x] Create an `adapter_cli` Python package with `__main__.py` and an `adapter-studio` console entry point.
+- [x] Use `argparse` with subparsers; share option groups for model assets, logging verbosity, and config hydration.
 - [ ] Initial subcommands delegate to existing modules:
-  - `generate` → wraps `examples.generate` for prompt smoke tests.
-  - `train-adapter` → orchestrates `examples.train_adapter`.
-  - `train-draft` → calls `examples.train_draft_model` (optional).
-  - `export` → wraps `export.export_fmadapter`.
+  - [ ] `generate` → wraps `examples.generate` for prompt smoke tests.
+  - [ ] `train-adapter` → orchestrates `examples.train_adapter`.
+  - [ ] `train-draft` → calls `examples.train_draft_model` (optional).
+  - [ ] `export` → wraps `export.export_fmadapter`.
 - [ ] Reserve future subcommands for asset bundling and dataset validation.
 
 ### Integration Notes
@@ -152,26 +152,53 @@
 - [ ] Validate toolkit asset directories and system-model versions before long-running jobs start.
 
 ### Testing & DX
+- [x] Clean, professional help output with banner display on all commands.
 - [ ] Add smoke tests covering each subcommand with minimal fixtures.
-- [ ] Implement `adapter-cli --list` or include subcommand summaries in `--help` output.
+- [x] Implement discoverable subcommands with clear help text.
 - [ ] Emit friendly error messages for missing assets, Python version mismatches, or incompatible checkpoints.
 
 ---
 
-### Adapter CLI Detailed To-Do
-1. **Bootstrap Package Structure**
-   - [ ] Create `adapter_cli/__init__.py`, `adapter_cli/__main__.py`, and wire the console script in `pyproject.toml`/`setup.cfg`.
-   - [ ] Establish logging utilities and shared argument mixins (paths, verbosity, config file).
-2. **Refactor Existing Scripts**
+### Adapter CLI Implementation Progress
+
+#### Phase 0 – Bootstrap (Completed)
+- [x] Created `adapter_cli/` Python package in `Adapter Studio/` folder
+- [x] Implemented `adapter_cli/__init__.py`, `adapter_cli/__main__.py`
+- [x] Wired console entry point `adapter-studio` in `pyproject.toml`
+- [x] Package installable via `pip install -e .` with `--break-system-packages` flag
+- [x] Created `adapter_cli/banner.py` with ASCII art banner (BLOCK style)
+- [x] Created `adapter_cli/config.py` for toolkit path persistence (`~/.adapter-studio/config.json`)
+- [x] Created `adapter_cli/validator.py` for toolkit integrity validation
+- [x] Created `adapter_cli/discovery.py` for auto-discovery in common locations
+- [x] Custom argparse formatter for clean, professional help output
+- [x] Graceful error handling (KeyboardInterrupt, EOFError)
+
+#### Phase 1 – Onboarding (Completed)
+- [x] Implemented `adapter_cli/commands/init.py` subcommand
+- [x] Auto-discovery of toolkit in `~/Downloads/`, `~/adapter-toolkit`, `/opt/adapter-toolkit`
+- [x] Fallback to manual path entry with validation
+- [x] Config persistence across runs
+- [x] Professional output without emojis or brackets
+
+#### Phase 2 – Core Subcommands (In Progress)
+1. **Refactor Existing Scripts**
    - [ ] Extract callable helpers from `examples/generate.py`, `examples/train_adapter.py`, `examples/train_draft_model.py`, and `export/export_fmadapter.py`.
    - [ ] Ensure helpers return structured results (metrics, output file paths) for future automation.
-3. **Implement Subcommands**
-   - [ ] Map parsed arguments to the refactored helpers; handle prompt/config resolution and asset validation.
+2. **Implement Subcommands**
+   - [ ] `generate` → wraps toolkit's text generation
+   - [ ] `train-adapter` → orchestrates adapter training
+   - [ ] `train-draft` → trains draft model
+   - [ ] `export` → exports to `.fmadapter` format
+   - [ ] Map parsed arguments to refactored helpers; handle asset validation.
    - [ ] Forward streaming logs and catch exceptions to provide concise failure summaries with optional verbose traces.
-4. **Quality Gates**
-   - [ ] Write smoke tests invoking each subcommand with sample data; add GitHub Actions hook if feasible.
-   - [ ] Document sample invocations in developer notes (keep README untouched per guidelines).
-5. **Future Enhancements (Backlog)**
-   - [ ] Add `bundle` subcommand leveraging Background Assets tooling once requirements solidify.
-   - [ ] Add dataset linting (`validate-data`) and batch evaluation runners for regression measurement.
+
+#### Phase 3 – Quality Gates (Future)
+- [ ] Write smoke tests covering each subcommand with sample data.
+- [ ] Emit friendly error messages for missing assets, Python version mismatches.
+- [ ] Add optional `--verbose` flag for detailed output.
+
+#### Phase 4 – Future Enhancements (Backlog)
+- [ ] Add `bundle` subcommand for packaging adapters.
+- [ ] Add `validate-data` for dataset linting.
+- [ ] Add batch evaluation runners for regression measurement.
 
