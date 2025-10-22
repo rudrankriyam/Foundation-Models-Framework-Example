@@ -5,7 +5,6 @@
 //  Created by Rudrank Riyam on 6/23/25.
 //
 
-import Foundation
 import FoundationModels
 import Observation
 import SwiftData

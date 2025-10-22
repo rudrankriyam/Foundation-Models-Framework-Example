@@ -67,3 +67,11 @@ fastlane/test_output
 # Xcode build artifacts
 build/
 DerivedData/
+
+# Python packaging
+*.egg-info/
+dist/
+*.egg
+__pycache__/
+*.pyc
+.Python
