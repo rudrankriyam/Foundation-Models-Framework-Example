@@ -1,8 +1,8 @@
 """Train draft model command - Train draft model for speculative decoding"""
 
+import os
 import shutil
 import subprocess
-import sys
 from pathlib import Path
 
 from ..config import get_toolkit_path
@@ -16,8 +16,8 @@ def run_train_draft(args):
     if args.epochs < 1 or args.epochs > 100:
         print("Error: --epochs must be between 1 and 100\n")
         return
-    if args.learning_rate <= 0 or args.learning_rate > 1:
-        print("Error: --learning-rate must be between 0 and 1\n")
+    if args.learning_rate <= 0:
+        print("Error: --learning-rate must be greater than 0\n")
         return
     if args.batch_size < 1 or args.batch_size > 128:
         print("Error: --batch-size must be between 1 and 128\n")
@@ -40,10 +40,6 @@ def run_train_draft(args):
         return
     
     # Validate required arguments
-    if not args.checkpoint:
-        print("Error: --checkpoint (trained adapter) is required\n")
-        return
-    
     if not args.train_data:
         print("Error: --train-data is required\n")
         return
@@ -52,35 +48,33 @@ def run_train_draft(args):
         print("Error: --checkpoint-dir is required\n")
         return
     
-    checkpoint = Path(args.checkpoint)
-    if not checkpoint.exists():
+    checkpoint = Path(args.checkpoint).expanduser().resolve() if args.checkpoint else None
+    if checkpoint and not checkpoint.exists():
         print(f"Error: Checkpoint not found at {checkpoint}\n")
         return
     
-    train_data = Path(args.train_data)
+    train_data = Path(args.train_data).expanduser().resolve()
     if not train_data.exists():
         print(f"Error: Train data not found at {train_data}\n")
         return
-    if not train_data.is_file() or not train_data.stat().st_mode & 0o400:
+    if not train_data.is_file() or not os.access(train_data, os.R_OK):
         print(f"Error: Train data is not readable: {train_data}\n")
         return
     
-    checkpoint_dir = Path(args.checkpoint_dir).resolve()
-    toolkit_path_resolved = toolkit_path.resolve()
-    
-    # Validate checkpoint_dir is within toolkit (prevent path traversal)
-    try:
-        checkpoint_dir.relative_to(toolkit_path_resolved)
-    except ValueError:
-        print(f"Error: Checkpoint directory must be within toolkit: {toolkit_path}\n")
-        return
-    
+    created_checkpoint_dir = False
+
+    checkpoint_dir = Path(args.checkpoint_dir).expanduser().resolve()
+    checkpoint_dir_existed = checkpoint_dir.exists()
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    created_checkpoint_dir = not checkpoint_dir_existed
     
-    eval_data = Path(args.eval_data) if args.eval_data else None
+    eval_data = Path(args.eval_data).expanduser().resolve() if args.eval_data else None
     
     print("Training draft model for speculative decoding...\n")
-    print(f"Adapter checkpoint: {checkpoint}")
+    if checkpoint:
+        print(f"Adapter checkpoint: {checkpoint}")
+    else:
+        print("Adapter checkpoint: base model (no fine-tuned checkpoint provided)")
     print(f"Train data: {train_data}")
     if eval_data:
         print(f"Eval data: {eval_data}")
@@ -89,7 +83,8 @@ def run_train_draft(args):
     # Build command to run examples.train_draft_model
     cmd = [str(venv_python), "-m", "examples.train_draft_model"]
     
-    cmd.extend(["--checkpoint", str(checkpoint)])
+    if checkpoint:
+        cmd.extend(["--checkpoint", str(checkpoint)])
     cmd.extend(["--train-data", str(train_data)])
     if eval_data:
         cmd.extend(["--eval-data", str(eval_data)])
@@ -113,6 +108,8 @@ def run_train_draft(args):
         cmd.extend(["--clip-grad-norm", str(args.clip_grad_norm)])
     if args.max_sequence_length is not None:
         cmd.extend(["--max-sequence-length", str(args.max_sequence_length)])
+    if args.loss_update_frequency is not None:
+        cmd.extend(["--loss-update-frequency", str(args.loss_update_frequency)])
     if args.checkpoint_frequency is not None:
         cmd.extend(["--checkpoint-frequency", str(args.checkpoint_frequency)])
     
@@ -124,7 +121,7 @@ def run_train_draft(args):
     if args.compile_draft_model:
         cmd.append("--compile-draft-model")
     if args.fixed_sized_sequences:
-        cmd.append("--fixed_sized_sequences")
+        cmd.append("--fixed-sized-sequences")
     if args.pack_sequences:
         cmd.append("--pack-sequences")
     
@@ -143,27 +140,30 @@ def run_train_draft(args):
         else:
             print(f"\nDraft training failed with exit code {result.returncode}. Cleaning up checkpoint directory.\n")
             # Clean up on failure to avoid leaving incomplete checkpoints
-            try:
-                shutil.rmtree(checkpoint_dir)
-            except Exception as cleanup_error:
-                print(f"Warning: Could not clean up checkpoint directory: {cleanup_error}\n")
-        
+            if created_checkpoint_dir:
+                try:
+                    shutil.rmtree(checkpoint_dir)
+                except Exception as cleanup_error:
+                    print(f"Warning: Could not clean up checkpoint directory: {cleanup_error}\n")
+
         return result.returncode
     except subprocess.TimeoutExpired:
         print("\n\nDraft training timed out (exceeded 24 hours). Consider reducing epochs or batch size.\n")
         print("Cleaning up checkpoint directory.\n")
-        try:
-            shutil.rmtree(checkpoint_dir)
-        except Exception as cleanup_error:
-            print(f"Warning: Could not clean up checkpoint directory: {cleanup_error}\n")
+        if created_checkpoint_dir:
+            try:
+                shutil.rmtree(checkpoint_dir)
+            except Exception as cleanup_error:
+                print(f"Warning: Could not clean up checkpoint directory: {cleanup_error}\n")
         return 1
     except KeyboardInterrupt:
         print("\n\nDraft training cancelled.\n")
         print("Cleaning up checkpoint directory.\n")
-        try:
-            shutil.rmtree(checkpoint_dir)
-        except Exception as cleanup_error:
-            print(f"Warning: Could not clean up checkpoint directory: {cleanup_error}\n")
+        if created_checkpoint_dir:
+            try:
+                shutil.rmtree(checkpoint_dir)
+            except Exception as cleanup_error:
+                print(f"Warning: Could not clean up checkpoint directory: {cleanup_error}\n")
         return 1
     except FileNotFoundError as e:
         print(f"Error: File not found: {e}\n")

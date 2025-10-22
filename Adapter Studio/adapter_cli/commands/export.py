@@ -2,18 +2,16 @@
 
 import re
 import subprocess
-import sys
 from pathlib import Path
 
 from ..config import get_toolkit_path
 
 
 def _validate_adapter_name(name: str) -> bool:
-    """Validate adapter name format: alphanumeric, underscore, dash (not at edges)"""
+    """Validate adapter name format to align with toolkit expectations"""
     if not name or len(name) > 255:
         return False
-    # Allow: alphanumeric, underscore, dash (not starting/ending with dash)
-    return bool(re.match(r'^[a-zA-Z0-9_][a-zA-Z0-9_-]*[a-zA-Z0-9_]$|^[a-zA-Z0-9_]$', name))
+    return bool(re.match(r"^\w+$", name))
 
 
 def run_export(args):
@@ -39,7 +37,7 @@ def run_export(args):
         return
     
     if not _validate_adapter_name(args.adapter_name):
-        print("Error: --adapter-name must be alphanumeric with underscores and dashes (1-255 chars, not starting/ending with dash)\n")
+        print("Error: --adapter-name must contain only letters, numbers, and underscores (1-255 chars)\n")
         return
     
     if not args.checkpoint:
@@ -50,24 +48,16 @@ def run_export(args):
         print("Error: --output-dir is required\n")
         return
     
-    checkpoint = Path(args.checkpoint)
+    checkpoint = Path(args.checkpoint).expanduser().resolve()
     if not checkpoint.exists():
         print(f"Error: Checkpoint not found at {checkpoint}\n")
         return
-    
-    output_dir = Path(args.output_dir).resolve()
-    toolkit_path_resolved = toolkit_path.resolve()
-    
-    # Validate output_dir is within toolkit (prevent path traversal)
-    try:
-        output_dir.relative_to(toolkit_path_resolved)
-    except ValueError:
-        print(f"Error: Output directory must be within toolkit: {toolkit_path}\n")
-        return
-    
+
+    output_dir = Path(args.output_dir).expanduser().resolve()
+
     output_dir.mkdir(parents=True, exist_ok=True)
-    
-    draft_checkpoint = Path(args.draft_checkpoint) if args.draft_checkpoint else None
+
+    draft_checkpoint = Path(args.draft_checkpoint).expanduser().resolve() if args.draft_checkpoint else None
     if draft_checkpoint and not draft_checkpoint.exists():
         print(f"Error: Draft checkpoint not found at {draft_checkpoint}\n")
         return

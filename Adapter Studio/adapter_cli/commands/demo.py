@@ -1,7 +1,6 @@
 """Demo command - Test generation with the base model"""
 
 import subprocess
-import sys
 from pathlib import Path
 
 from ..config import get_toolkit_path
@@ -47,6 +46,8 @@ def run_demo(args):
         cmd.extend(["--batch-size", str(args.batch_size)])
     if args.compile_model:
         cmd.append("--compile-model")
+    if args.num_draft_tokens is not None:
+        cmd.extend(["--num_draft_tokens", str(args.num_draft_tokens)])
     
     # Run the command (let subprocess inherit stdout/stderr for live output)
     print("Generating text with base model...\n")

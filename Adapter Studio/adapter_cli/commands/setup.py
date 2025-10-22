@@ -37,7 +37,6 @@ def run_setup():
         subprocess.run(
             [sys.executable, "-m", "venv", str(venv_path)],
             check=True,
-            capture_output=True,
         )
         print("  Virtual environment created.\n")
     except subprocess.CalledProcessError as e:
@@ -60,7 +59,6 @@ def run_setup():
         subprocess.run(
             [str(python_path), "-m", "pip", "install", "-r", str(requirements_file)],
             check=True,
-            capture_output=True,
         )
         print("  Dependencies installed.\n")
     except subprocess.CalledProcessError as e:
@@ -70,15 +68,17 @@ def run_setup():
     # Step 3: Validate installation
     print("Validating installation...")
     try:
-        result = subprocess.run(
+        subprocess.run(
             [str(python_path), "-c", "import torch; import tamm; import sentencepiece"],
             check=True,
-            capture_output=True,
             text=True,
+            capture_output=True,
         )
         print("  All packages validated.\n")
     except subprocess.CalledProcessError as e:
-        print(f"  Warning: Some packages may not be installed correctly\n")
+        print("  Warning: Some packages may not be installed correctly\n")
+        if e.stderr:
+            print(e.stderr)
     
     # Success message
     print("Setup complete!\n")

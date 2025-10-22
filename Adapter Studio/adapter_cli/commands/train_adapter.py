@@ -1,8 +1,8 @@
 """Train adapter command - Train adapter with toy dataset or custom data"""
 
+import os
 import shutil
 import subprocess
-import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -17,8 +17,8 @@ def run_train_adapter(args):
     if args.epochs < 1 or args.epochs > 100:
         print("Error: --epochs must be between 1 and 100\n")
         return
-    if args.learning_rate <= 0 or args.learning_rate > 1:
-        print("Error: --learning-rate must be between 0 and 1\n")
+    if args.learning_rate <= 0:
+        print("Error: --learning-rate must be greater than 0\n")
         return
     if args.batch_size < 1 or args.batch_size > 128:
         print("Error: --batch-size must be between 1 and 128\n")
@@ -41,6 +41,8 @@ def run_train_adapter(args):
         return
     
     # Determine mode: demo or custom
+    created_checkpoint_dir = False
+
     if args.demo:
         print("Training adapter with toy dataset (demo mode)...\n")
         
@@ -57,6 +59,7 @@ def run_train_adapter(args):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         checkpoint_dir = toolkit_path / "checkpoints" / f"demo_{timestamp}"
         checkpoint_dir.mkdir(parents=True, exist_ok=True)
+        created_checkpoint_dir = True
         
         print(f"Train data: {train_data}")
         print(f"Eval data: {eval_data}")
@@ -73,31 +76,24 @@ def run_train_adapter(args):
             print("Error: --checkpoint-dir is required (or use --demo)\n")
             return
         
-        train_data = Path(args.train_data)
+        train_data = Path(args.train_data).expanduser().resolve()
         if not train_data.exists():
             print(f"Error: Train data not found at {train_data}\n")
             return
-        if not train_data.is_file() or not train_data.stat().st_mode & 0o400:
+        if not train_data.is_file() or not os.access(train_data, os.R_OK):
             print(f"Error: Train data is not readable: {train_data}\n")
             return
-        
-        checkpoint_dir = Path(args.checkpoint_dir).resolve()
-        toolkit_path_resolved = toolkit_path.resolve()
-        
-        # Validate checkpoint_dir is within toolkit (prevent path traversal)
-        try:
-            checkpoint_dir.relative_to(toolkit_path_resolved)
-        except ValueError:
-            print(f"Error: Checkpoint directory must be within toolkit: {toolkit_path}\n")
-            return
-        
+
+        checkpoint_dir = Path(args.checkpoint_dir).expanduser().resolve()
+        checkpoint_dir_existed = checkpoint_dir.exists()
         checkpoint_dir.mkdir(parents=True, exist_ok=True)
-        
-        eval_data = Path(args.eval_data) if args.eval_data else None
+        created_checkpoint_dir = not checkpoint_dir_existed
+
+        eval_data = Path(args.eval_data).expanduser().resolve() if args.eval_data else None
         if eval_data and not eval_data.exists():
             print(f"Error: Eval data not found at {eval_data}\n")
             return
-        if eval_data and (not eval_data.is_file() or not eval_data.stat().st_mode & 0o400):
+        if eval_data and (not eval_data.is_file() or not os.access(eval_data, os.R_OK)):
             print(f"Error: Eval data is not readable: {eval_data}\n")
             return
         
@@ -131,16 +127,18 @@ def run_train_adapter(args):
         cmd.extend(["--clip-grad-norm", str(args.clip_grad_norm)])
     if args.max_sequence_length is not None:
         cmd.extend(["--max-sequence-length", str(args.max_sequence_length)])
+    if args.loss_update_frequency is not None:
+        cmd.extend(["--loss-update-frequency", str(args.loss_update_frequency)])
     if args.checkpoint_frequency is not None:
         cmd.extend(["--checkpoint-frequency", str(args.checkpoint_frequency)])
-    
+
     # Flags
     if args.activation_checkpointing:
         cmd.append("--activation-checkpointing")
     if args.compile_model:
         cmd.append("--compile-model")
     if args.fixed_sized_sequences:
-        cmd.append("--fixed_sized_sequences")
+        cmd.append("--fixed-sized-sequences")
     if args.pack_sequences:
         cmd.append("--pack-sequences")
     
@@ -159,27 +157,30 @@ def run_train_adapter(args):
         else:
             print(f"\nTraining failed with exit code {result.returncode}. Cleaning up checkpoint directory.\n")
             # Clean up on failure to avoid leaving incomplete checkpoints
-            try:
-                shutil.rmtree(checkpoint_dir)
-            except Exception as cleanup_error:
-                print(f"Warning: Could not clean up checkpoint directory: {cleanup_error}\n")
-        
+            if created_checkpoint_dir:
+                try:
+                    shutil.rmtree(checkpoint_dir)
+                except Exception as cleanup_error:
+                    print(f"Warning: Could not clean up checkpoint directory: {cleanup_error}\n")
+
         return result.returncode
     except subprocess.TimeoutExpired:
         print("\n\nTraining timed out (exceeded 24 hours). Consider reducing epochs or batch size.\n")
         print("Cleaning up checkpoint directory.\n")
-        try:
-            shutil.rmtree(checkpoint_dir)
-        except Exception as cleanup_error:
-            print(f"Warning: Could not clean up checkpoint directory: {cleanup_error}\n")
+        if created_checkpoint_dir:
+            try:
+                shutil.rmtree(checkpoint_dir)
+            except Exception as cleanup_error:
+                print(f"Warning: Could not clean up checkpoint directory: {cleanup_error}\n")
         return 1
     except KeyboardInterrupt:
         print("\n\nTraining cancelled.\n")
         print("Cleaning up checkpoint directory.\n")
-        try:
-            shutil.rmtree(checkpoint_dir)
-        except Exception as cleanup_error:
-            print(f"Warning: Could not clean up checkpoint directory: {cleanup_error}\n")
+        if created_checkpoint_dir:
+            try:
+                shutil.rmtree(checkpoint_dir)
+            except Exception as cleanup_error:
+                print(f"Warning: Could not clean up checkpoint directory: {cleanup_error}\n")
         return 1
     except FileNotFoundError as e:
         print(f"Error: File not found: {e}\n")
