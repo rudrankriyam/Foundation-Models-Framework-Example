@@ -73,8 +73,8 @@
 
 ### Phase 1 – Core Infrastructure
 - [ ] Implement `AdapterProvider` protocol with:
-  - [ ] manual file picker (using `NSOpenPanel`).
-  - [ ] default directory path management and validation.
+  - [x] manual file picker (using `NSOpenPanel`).
+  - [x] default directory path management and validation.
 - [ ] Build `ModelCompareEngine`:
   - [ ] instantiate base model session (`SystemLanguageModel.default` or `useCase`).
   - [ ] instantiate adapter session lazily after provider returns `URL`.
