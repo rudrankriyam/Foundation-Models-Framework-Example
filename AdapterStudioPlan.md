@@ -77,11 +77,11 @@
 - [x] Integrate `OSLog` logging for lifecycle events.
 
 ### Phase 2 – UI & Interaction
-- [ ] Construct `CompareWorkbenchView` with shared prompt input and run button.
+- [x] Construct `CompareWorkbenchView` with shared prompt input and run button.
 - [x] Wire `CompareViewModel` to `ModelCompareEngine`, handling streaming updates and cancellation.
-- [ ] Implement `SessionColumnView` to render incremental tokens, progress bar, metadata, and error states.
-- [ ] Show adapter status (loaded version, file timestamp) in UI header.
-- [ ] Add toast/alert system for load failures or compatibility issues.
+- [x] Implement `SessionColumnView` to render incremental tokens, progress bar, metadata, and error states.
+- [x] Show adapter status (loaded version, file timestamp) in UI header.
+- [x] Add toast/alert system for load failures or compatibility issues.
 
 ### Phase 3 – History & Persistence
 - [ ] Design `Transcript` model (prompt, base text, adapter text, metrics, adapter metadata).
