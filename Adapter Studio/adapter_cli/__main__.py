@@ -14,6 +14,118 @@ from .commands.train_draft import run_train_draft
 from .commands.export import run_export
 
 
+def add_generation_args(parser):
+    """Add common generation arguments to a parser"""
+    parser.add_argument(
+        "--precision",
+        choices=["f32", "bf16", "bf16-mixed", "f16-mixed"],
+        default="bf16-mixed",
+        help="Model precision (default: bf16-mixed)"
+    )
+    parser.add_argument(
+        "--temperature",
+        type=float,
+        default=None,
+        help="Sampling temperature (default: 1.0)"
+    )
+    parser.add_argument(
+        "--top-k",
+        type=int,
+        default=None,
+        help="Limit sampling to top-k tokens (default: 50)"
+    )
+    parser.add_argument(
+        "--max-new-tokens",
+        type=int,
+        default=None,
+        help="Maximum tokens to generate (default: 50)"
+    )
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=None,
+        help="Batch size for processing (default: 1)"
+    )
+    parser.add_argument(
+        "--compile-model",
+        action="store_true",
+        help="Compile model before inference"
+    )
+
+
+def add_training_args(parser):
+    """Add common training arguments to a parser"""
+    parser.add_argument(
+        "--epochs",
+        type=int,
+        default=2,
+        help="Number of training epochs (default: 2)"
+    )
+    parser.add_argument(
+        "--learning-rate",
+        type=float,
+        default=1e-3,
+        help="Learning rate (default: 1e-3)"
+    )
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=4,
+        help="Batch size (default: 4)"
+    )
+    parser.add_argument(
+        "--warmup-epochs",
+        type=int,
+        default=1,
+        help="Warmup epochs (default: 1)"
+    )
+    parser.add_argument(
+        "--gradient-accumulation-steps",
+        type=int,
+        default=None,
+        help="Gradient accumulation steps"
+    )
+    parser.add_argument(
+        "--weight-decay",
+        type=float,
+        default=None,
+        help="Weight decay coefficient"
+    )
+    parser.add_argument(
+        "--clip-grad-norm",
+        type=float,
+        default=None,
+        help="Gradient clipping norm"
+    )
+    parser.add_argument(
+        "--max-sequence-length",
+        type=int,
+        default=None,
+        help="Maximum sequence length"
+    )
+    parser.add_argument(
+        "--checkpoint-frequency",
+        type=int,
+        default=None,
+        help="Save checkpoint every N epochs"
+    )
+    parser.add_argument(
+        "--activation-checkpointing",
+        action="store_true",
+        help="Enable activation checkpointing (reduces memory)"
+    )
+    parser.add_argument(
+        "--fixed-sized-sequences",
+        action="store_true",
+        help="Pad sequences to fixed size"
+    )
+    parser.add_argument(
+        "--pack-sequences",
+        action="store_true",
+        help="Pack multiple sequences together"
+    )
+
+
 def create_parser():
     """Create and configure argument parser"""
     # Custom formatter to replace "positional arguments" with "Available commands"
@@ -67,41 +179,7 @@ def create_parser():
         required=True,
         help="Text prompt to generate from"
     )
-    demo_parser.add_argument(
-        "--precision",
-        choices=["f32", "bf16", "bf16-mixed", "f16-mixed"],
-        default="bf16-mixed",
-        help="Model precision (default: bf16-mixed)"
-    )
-    demo_parser.add_argument(
-        "--temperature",
-        type=float,
-        default=None,
-        help="Sampling temperature (default: 1.0)"
-    )
-    demo_parser.add_argument(
-        "--top-k",
-        type=int,
-        default=None,
-        help="Limit sampling to top-k tokens (default: 50)"
-    )
-    demo_parser.add_argument(
-        "--max-new-tokens",
-        type=int,
-        default=None,
-        help="Maximum tokens to generate (default: 50)"
-    )
-    demo_parser.add_argument(
-        "--batch-size",
-        type=int,
-        default=None,
-        help="Batch size for processing (default: 1)"
-    )
-    demo_parser.add_argument(
-        "--compile-model",
-        action="store_true",
-        help="Compile model before inference"
-    )
+    add_generation_args(demo_parser)
     
     # Generate command
     generate_parser = subparsers.add_parser(
@@ -124,41 +202,7 @@ def create_parser():
         type=str,
         help="Path to trained draft model checkpoint (optional)"
     )
-    generate_parser.add_argument(
-        "--precision",
-        choices=["f32", "bf16", "bf16-mixed", "f16-mixed"],
-        default="bf16-mixed",
-        help="Model precision (default: bf16-mixed)"
-    )
-    generate_parser.add_argument(
-        "--temperature",
-        type=float,
-        default=None,
-        help="Sampling temperature (default: 1.0)"
-    )
-    generate_parser.add_argument(
-        "--top-k",
-        type=int,
-        default=None,
-        help="Limit sampling to top-k tokens (default: 50)"
-    )
-    generate_parser.add_argument(
-        "--max-new-tokens",
-        type=int,
-        default=None,
-        help="Maximum tokens to generate (default: 50)"
-    )
-    generate_parser.add_argument(
-        "--batch-size",
-        type=int,
-        default=None,
-        help="Batch size for processing (default: 1)"
-    )
-    generate_parser.add_argument(
-        "--compile-model",
-        action="store_true",
-        help="Compile model before inference"
-    )
+    add_generation_args(generate_parser)
     
     # Train adapter command
     train_adapter_parser = subparsers.add_parser(
@@ -185,85 +229,11 @@ def create_parser():
         type=str,
         help="Directory to save checkpoints"
     )
-    train_adapter_parser.add_argument(
-        "--epochs",
-        type=int,
-        default=2,
-        help="Number of training epochs (default: 2)"
-    )
-    train_adapter_parser.add_argument(
-        "--learning-rate",
-        type=float,
-        default=1e-3,
-        help="Learning rate (default: 1e-3)"
-    )
-    train_adapter_parser.add_argument(
-        "--batch-size",
-        type=int,
-        default=4,
-        help="Batch size (default: 4)"
-    )
-    train_adapter_parser.add_argument(
-        "--precision",
-        choices=["f32", "bf16", "bf16-mixed", "f16-mixed"],
-        default="bf16-mixed",
-        help="Model precision (default: bf16-mixed)"
-    )
-    train_adapter_parser.add_argument(
-        "--warmup-epochs",
-        type=int,
-        default=1,
-        help="Warmup epochs (default: 1)"
-    )
-    train_adapter_parser.add_argument(
-        "--gradient-accumulation-steps",
-        type=int,
-        default=None,
-        help="Gradient accumulation steps"
-    )
-    train_adapter_parser.add_argument(
-        "--weight-decay",
-        type=float,
-        default=None,
-        help="Weight decay coefficient"
-    )
-    train_adapter_parser.add_argument(
-        "--clip-grad-norm",
-        type=float,
-        default=None,
-        help="Gradient clipping norm"
-    )
-    train_adapter_parser.add_argument(
-        "--max-sequence-length",
-        type=int,
-        default=None,
-        help="Maximum sequence length"
-    )
-    train_adapter_parser.add_argument(
-        "--checkpoint-frequency",
-        type=int,
-        default=None,
-        help="Save checkpoint every N epochs"
-    )
-    train_adapter_parser.add_argument(
-        "--activation-checkpointing",
-        action="store_true",
-        help="Enable activation checkpointing (reduces memory)"
-    )
+    add_training_args(train_adapter_parser)
     train_adapter_parser.add_argument(
         "--compile-model",
         action="store_true",
         help="Compile model before training"
-    )
-    train_adapter_parser.add_argument(
-        "--fixed-sized-sequences",
-        action="store_true",
-        help="Pad sequences to fixed size"
-    )
-    train_adapter_parser.add_argument(
-        "--pack-sequences",
-        action="store_true",
-        help="Pack multiple sequences together"
     )
     
     # Train draft command
@@ -294,24 +264,7 @@ def create_parser():
         required=True,
         help="Directory to save draft model checkpoints"
     )
-    train_draft_parser.add_argument(
-        "--epochs",
-        type=int,
-        default=2,
-        help="Number of training epochs (default: 2)"
-    )
-    train_draft_parser.add_argument(
-        "--learning-rate",
-        type=float,
-        default=1e-3,
-        help="Learning rate (default: 1e-3)"
-    )
-    train_draft_parser.add_argument(
-        "--batch-size",
-        type=int,
-        default=4,
-        help="Batch size (default: 4)"
-    )
+    add_training_args(train_draft_parser)
     train_draft_parser.add_argument(
         "--target-precision",
         choices=["f32", "bf16", "bf16-mixed", "f16-mixed"],
@@ -325,47 +278,6 @@ def create_parser():
         help="Draft model precision (default: bf16-mixed)"
     )
     train_draft_parser.add_argument(
-        "--warmup-epochs",
-        type=int,
-        default=None,
-        help="Warmup epochs"
-    )
-    train_draft_parser.add_argument(
-        "--gradient-accumulation-steps",
-        type=int,
-        default=None,
-        help="Gradient accumulation steps"
-    )
-    train_draft_parser.add_argument(
-        "--weight-decay",
-        type=float,
-        default=None,
-        help="Weight decay coefficient"
-    )
-    train_draft_parser.add_argument(
-        "--clip-grad-norm",
-        type=float,
-        default=None,
-        help="Gradient clipping norm"
-    )
-    train_draft_parser.add_argument(
-        "--max-sequence-length",
-        type=int,
-        default=None,
-        help="Maximum sequence length"
-    )
-    train_draft_parser.add_argument(
-        "--checkpoint-frequency",
-        type=int,
-        default=None,
-        help="Save checkpoint every N epochs"
-    )
-    train_draft_parser.add_argument(
-        "--activation-checkpointing",
-        action="store_true",
-        help="Enable activation checkpointing"
-    )
-    train_draft_parser.add_argument(
         "--compile-target-model",
         action="store_true",
         help="Compile target model before training"
@@ -374,16 +286,6 @@ def create_parser():
         "--compile-draft-model",
         action="store_true",
         help="Compile draft model before training"
-    )
-    train_draft_parser.add_argument(
-        "--fixed-sized-sequences",
-        action="store_true",
-        help="Pad sequences to fixed size"
-    )
-    train_draft_parser.add_argument(
-        "--pack-sequences",
-        action="store_true",
-        help="Pack multiple sequences together"
     )
     
     # Export command
