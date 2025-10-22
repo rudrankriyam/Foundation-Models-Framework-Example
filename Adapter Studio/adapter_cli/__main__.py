@@ -103,10 +103,61 @@ def create_parser():
         help="Compile model before inference"
     )
     
-    # Generate command (placeholder)
-    subparsers.add_parser(
+    # Generate command
+    generate_parser = subparsers.add_parser(
         "generate",
         help="Generate text using the base or adapted model"
+    )
+    generate_parser.add_argument(
+        "--prompt",
+        type=str,
+        required=True,
+        help="Text prompt to generate from"
+    )
+    generate_parser.add_argument(
+        "--checkpoint",
+        type=str,
+        help="Path to trained adapter checkpoint (optional)"
+    )
+    generate_parser.add_argument(
+        "--draft-checkpoint",
+        type=str,
+        help="Path to trained draft model checkpoint (optional)"
+    )
+    generate_parser.add_argument(
+        "--precision",
+        choices=["f32", "bf16", "bf16-mixed", "f16-mixed"],
+        default="bf16-mixed",
+        help="Model precision (default: bf16-mixed)"
+    )
+    generate_parser.add_argument(
+        "--temperature",
+        type=float,
+        default=None,
+        help="Sampling temperature (default: 1.0)"
+    )
+    generate_parser.add_argument(
+        "--top-k",
+        type=int,
+        default=None,
+        help="Limit sampling to top-k tokens (default: 50)"
+    )
+    generate_parser.add_argument(
+        "--max-new-tokens",
+        type=int,
+        default=None,
+        help="Maximum tokens to generate (default: 50)"
+    )
+    generate_parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=None,
+        help="Batch size for processing (default: 1)"
+    )
+    generate_parser.add_argument(
+        "--compile-model",
+        action="store_true",
+        help="Compile model before inference"
     )
     
     # Train adapter command
@@ -394,14 +445,14 @@ def main():
         run_setup()
     elif args.command == "demo":
         run_demo(args)
+    elif args.command == "generate":
+        run_generate(args)
     elif args.command == "train-adapter":
         run_train_adapter(args)
     elif args.command == "train-draft":
         run_train_draft(args)
     elif args.command == "export":
         run_export(args)
-    elif args.command == "generate":
-        print("\nGenerate command (coming soon)")
     else:
         # No command specified, show help
         parser.print_help()
