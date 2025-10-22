@@ -8,6 +8,7 @@ from .banner import print_banner
 from .commands.init import run_init
 from .commands.setup import run_setup
 from .commands.demo import run_demo
+from .commands.train_adapter import run_train_adapter
 
 
 def create_parser():
@@ -105,10 +106,110 @@ def create_parser():
         help="Generate text using the base or adapted model"
     )
     
-    # Train adapter command (placeholder)
-    subparsers.add_parser(
+    # Train adapter command
+    train_adapter_parser = subparsers.add_parser(
         "train-adapter",
         help="Train a custom adapter"
+    )
+    train_adapter_parser.add_argument(
+        "--demo",
+        action="store_true",
+        help="Train with toy dataset (quick demo)"
+    )
+    train_adapter_parser.add_argument(
+        "--train-data",
+        type=str,
+        help="Path to training dataset (JSONL)"
+    )
+    train_adapter_parser.add_argument(
+        "--eval-data",
+        type=str,
+        help="Path to evaluation dataset (JSONL)"
+    )
+    train_adapter_parser.add_argument(
+        "--checkpoint-dir",
+        type=str,
+        help="Directory to save checkpoints"
+    )
+    train_adapter_parser.add_argument(
+        "--epochs",
+        type=int,
+        default=2,
+        help="Number of training epochs (default: 2)"
+    )
+    train_adapter_parser.add_argument(
+        "--learning-rate",
+        type=float,
+        default=1e-3,
+        help="Learning rate (default: 1e-3)"
+    )
+    train_adapter_parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=4,
+        help="Batch size (default: 4)"
+    )
+    train_adapter_parser.add_argument(
+        "--precision",
+        choices=["f32", "bf16", "bf16-mixed", "f16-mixed"],
+        default="bf16-mixed",
+        help="Model precision (default: bf16-mixed)"
+    )
+    train_adapter_parser.add_argument(
+        "--warmup-epochs",
+        type=int,
+        default=1,
+        help="Warmup epochs (default: 1)"
+    )
+    train_adapter_parser.add_argument(
+        "--gradient-accumulation-steps",
+        type=int,
+        default=None,
+        help="Gradient accumulation steps"
+    )
+    train_adapter_parser.add_argument(
+        "--weight-decay",
+        type=float,
+        default=None,
+        help="Weight decay coefficient"
+    )
+    train_adapter_parser.add_argument(
+        "--clip-grad-norm",
+        type=float,
+        default=None,
+        help="Gradient clipping norm"
+    )
+    train_adapter_parser.add_argument(
+        "--max-sequence-length",
+        type=int,
+        default=None,
+        help="Maximum sequence length"
+    )
+    train_adapter_parser.add_argument(
+        "--checkpoint-frequency",
+        type=int,
+        default=None,
+        help="Save checkpoint every N epochs"
+    )
+    train_adapter_parser.add_argument(
+        "--activation-checkpointing",
+        action="store_true",
+        help="Enable activation checkpointing (reduces memory)"
+    )
+    train_adapter_parser.add_argument(
+        "--compile-model",
+        action="store_true",
+        help="Compile model before training"
+    )
+    train_adapter_parser.add_argument(
+        "--fixed-sized-sequences",
+        action="store_true",
+        help="Pad sequences to fixed size"
+    )
+    train_adapter_parser.add_argument(
+        "--pack-sequences",
+        action="store_true",
+        help="Pack multiple sequences together"
     )
     
     # Train draft command (placeholder)
@@ -144,7 +245,7 @@ def main():
     elif args.command == "generate":
         print("\nGenerate command (coming soon)")
     elif args.command == "train-adapter":
-        print("\nTrain adapter command (coming soon)")
+        run_train_adapter(args)
     elif args.command == "train-draft":
         print("\nTrain draft command (coming soon)")
     elif args.command == "export":
