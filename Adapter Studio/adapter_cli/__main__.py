@@ -7,6 +7,7 @@ import sys
 from .banner import print_banner
 from .commands.init import run_init
 from .commands.setup import run_setup
+from .commands.demo import run_demo
 
 
 def create_parser():
@@ -51,6 +52,53 @@ def create_parser():
         help="Create Python venv and install dependencies"
     )
     
+    # Demo command
+    demo_parser = subparsers.add_parser(
+        "demo",
+        help="Test generation with the base model"
+    )
+    demo_parser.add_argument(
+        "--prompt",
+        type=str,
+        required=True,
+        help="Text prompt to generate from"
+    )
+    demo_parser.add_argument(
+        "--precision",
+        choices=["f32", "bf16", "bf16-mixed", "f16-mixed"],
+        default="bf16-mixed",
+        help="Model precision (default: bf16-mixed)"
+    )
+    demo_parser.add_argument(
+        "--temperature",
+        type=float,
+        default=None,
+        help="Sampling temperature (default: 1.0)"
+    )
+    demo_parser.add_argument(
+        "--top-k",
+        type=int,
+        default=None,
+        help="Limit sampling to top-k tokens (default: 50)"
+    )
+    demo_parser.add_argument(
+        "--max-new-tokens",
+        type=int,
+        default=None,
+        help="Maximum tokens to generate (default: 50)"
+    )
+    demo_parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=None,
+        help="Batch size for processing (default: 1)"
+    )
+    demo_parser.add_argument(
+        "--compile-model",
+        action="store_true",
+        help="Compile model before inference"
+    )
+    
     # Generate command (placeholder)
     subparsers.add_parser(
         "generate",
@@ -91,6 +139,8 @@ def main():
         run_init()
     elif args.command == "setup":
         run_setup()
+    elif args.command == "demo":
+        run_demo(args)
     elif args.command == "generate":
         print("\nGenerate command (coming soon)")
     elif args.command == "train-adapter":
