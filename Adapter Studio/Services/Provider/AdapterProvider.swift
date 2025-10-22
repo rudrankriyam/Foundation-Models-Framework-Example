@@ -44,20 +44,11 @@ final class AdapterProvider {
     /// Successful imports assign to ``context`` and clear ``lastError``. Any recoverable failure is stored
     /// in ``lastError`` so the UI can present a helpful message.
     func selectAndLoadAdapter() {
-        do {
+        performAdapterOperation {
             guard let fileURL = presentOpenPanel() else {
                 throw AdapterProviderError.userCancelled
             }
-            
-            let result = try importAndLoadAdapter(at: fileURL)
-            context = result
-            lastError = nil
-        } catch let error as AdapterProviderError {
-            logger.error("Adapter selection error: \(error.localizedDescription)")
-            lastError = error
-        } catch {
-            logger.error("Unexpected adapter selection error: \(error.localizedDescription, privacy: .public)")
-            lastError = .loadFailed(error.localizedDescription)
+            return try importAndLoadAdapter(at: fileURL)
         }
     }
     
@@ -65,16 +56,8 @@ final class AdapterProvider {
     ///
     /// Use this helper when presenting results returned by ``availableAdapterURLs()``.
     func loadExistingAdapter(at url: URL) {
-        do {
-            let result = try loadAdapter(from: url)
-            context = result
-            lastError = nil
-        } catch let error as AdapterProviderError {
-            logger.error("Adapter load error: \(error.localizedDescription)")
-            lastError = error
-        } catch {
-            logger.error("Unexpected adapter load error: \(error.localizedDescription, privacy: .public)")
-            lastError = .loadFailed(error.localizedDescription)
+        performAdapterOperation {
+            try loadAdapter(from: url)
         }
     }
     
@@ -134,6 +117,23 @@ extension AdapterProvider {
 }
 
 private extension AdapterProvider {
+    
+    /// Handles common error patterns for adapter operations.
+    ///
+    /// Executes a throwing operation and handles errors consistently by logging and updating state.
+    /// - Parameter operation: A throwing closure that produces an AdapterContext.
+    func performAdapterOperation(_ operation: () throws -> AdapterContext) {
+        do {
+            context = try operation()
+            lastError = nil
+        } catch let error as AdapterProviderError {
+            logger.error("Adapter operation error: \(error.localizedDescription)")
+            lastError = error
+        } catch {
+            logger.error("Unexpected adapter operation error: \(error.localizedDescription, privacy: .public)")
+            lastError = .loadFailed(error.localizedDescription)
+        }
+    }
     
     /// Displays an open panel configured to select a single adapter package.
     ///
