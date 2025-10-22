@@ -27,7 +27,7 @@
   - [ ] `ModelCompareEngine`: Manages two `LanguageModelSession`s (base + adapter), coordinates prompts, aggregates telemetry.
   - [ ] `AdapterProvider`: Locates adapters via manual picker and exposes the active selection.
 - [ ] **View Models**
-  - [ ] `CompareViewModel`: Handles prompt submission, streaming updates, request queueing.
+  - [x] `CompareViewModel`: Handles prompt submission, streaming updates, request queueing.
   - [ ] `HistoryViewModel`: Surfaces saved transcripts.
 - [ ] **Views**
   - [ ] `CompareWorkbenchView`: main split view with shared prompt input.
@@ -74,11 +74,11 @@
   - [x] instantiate adapter session lazily after provider returns `URL`.
   - [x] expose `async` API `submit(prompt:)` returning structured responses including timing.
   - [x] support streaming via `AsyncStream`.
-- [ ] Integrate `OSLog` logging for lifecycle events.
+- [x] Integrate `OSLog` logging for lifecycle events.
 
 ### Phase 2 – UI & Interaction
 - [ ] Construct `CompareWorkbenchView` with shared prompt input and run button.
-- [ ] Wire `CompareViewModel` to `ModelCompareEngine`, handling streaming updates and cancellation.
+- [x] Wire `CompareViewModel` to `ModelCompareEngine`, handling streaming updates and cancellation.
 - [ ] Implement `SessionColumnView` to render incremental tokens, progress bar, metadata, and error states.
 - [ ] Show adapter status (loaded version, file timestamp) in UI header.
 - [ ] Add toast/alert system for load failures or compatibility issues.

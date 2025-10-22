@@ -8,6 +8,7 @@
 import Foundation
 import FoundationModels
 import Observation
+import OSLog
 
 /// Bridges ``ModelCompareEngine`` events into observable state for SwiftUI views.
 @MainActor
@@ -61,6 +62,7 @@ final class CompareViewModel {
     
     @ObservationIgnored private let engine: ModelCompareEngine
     @ObservationIgnored private var streamTask: Task<Void, Never>?
+    @ObservationIgnored private let logger = Logger(subsystem: "com.rudrankriyam.foundation-model-adapterstudio", category: "CompareViewModel")
     
     init(engine: ModelCompareEngine? = nil) {
         if let engine {
@@ -129,12 +131,14 @@ private extension CompareViewModel {
         lastResult = nil
         lastErrorMessage = nil
         state = .running(prompt: prompt)
+        logger.log("Started comparison run for prompt: \(prompt, privacy: .public)")
     }
     
     func streamDidComplete() {
         streamTask = nil
         if case .running = state {
             state = .idle
+            logger.debug("Comparison run completed without terminal result.")
         }
     }
     
@@ -142,22 +146,23 @@ private extension CompareViewModel {
         switch event {
         case .started(let prompt):
             state = .running(prompt: prompt)
-            
+            logger.debug("Engine emitted started event for prompt: \(prompt, privacy: .public)")
+
         case .availabilityIssue(let source, let status):
             let message = "Model unavailable (\(source.displayName)): \(String(describing: status))"
             registerFailure(message: message)
-            
+
         case .token(let source, let text, let metrics):
             updateColumn(for: source, text: text, metrics: metrics)
-            
+
         case .failed(_, let error):
             registerFailure(message: error.message)
-            
+
         case .finished(let result):
             applyCompletion(result)
         }
     }
-    
+
     func updateColumn(for source: ModelCompareSource, text: String, metrics: ModelCompareResponseMetrics) {
         switch source {
         case .base:
@@ -167,17 +172,20 @@ private extension CompareViewModel {
             adapterColumn.text = text
             adapterColumn.metrics = metrics
         }
+        logger.debug("Received token update for \(source.displayName, privacy: .public) column. Characters: \(text.count)")
     }
-    
+
     func registerFailure(message: String) {
         lastErrorMessage = message
         state = .failed(message: message)
+        logger.error("Comparison run failed: \(message, privacy: .public)")
         cancel()
     }
-    
+
     func applyCompletion(_ result: ModelCompareResult) {
         lastResult = result
-        
+        logger.log("Comparison run finished with result for prompt: \(result.prompt, privacy: .public)")
+
         if let baseSummary = result.base {
             baseColumn.text = baseSummary.text
             baseColumn.metrics = baseSummary.metrics
