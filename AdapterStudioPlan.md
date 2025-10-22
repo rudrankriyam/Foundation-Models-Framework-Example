@@ -25,9 +25,7 @@
   - [ ] Maintains strict module isolation from existing production targets (no shared code for initial delivery).
 - [ ] **Services**
   - [ ] `ModelCompareEngine`: Manages two `LanguageModelSession`s (base + adapter), coordinates prompts, aggregates telemetry.
-  - [ ] `AdapterProvider`: Locates adapters (manual picker + auto-watch). Abstract protocol with implementations for local filesystem and (future) Background Assets.
-  - [ ] `TranscriptStore`: Persists comparison runs to disk (JSON/SQLite-lite).
-  - [ ] `DraftCompilationManager` (optional advanced feature): orchestrates `adapter.compile()` in background.
+  - [ ] `AdapterProvider`: Locates adapters via manual picker and exposes the active selection.
 - [ ] **View Models**
   - [ ] `CompareViewModel`: Handles prompt submission, streaming updates, request queueing.
   - [ ] `HistoryViewModel`: Surfaces saved transcripts.
@@ -35,18 +33,15 @@
   - [ ] `CompareWorkbenchView`: main split view with shared prompt input.
   - [ ] `SessionColumnView`: renders streaming tokens, latency, toggles.
   - [ ] `HistorySidebarView`: lists prior runs and adapter metadata.
-  - [ ] `SettingsSheet`: choose adapter folder, manage watch status, toggle auto-compile, etc.
+  - [ ] `SettingsSheet`: choose adapter folder and manage adapter selection.
 - [ ] **Utilities**
-  - [ ] `AdapterFileWatcher`: wraps `DispatchSourceFileSystemObject` or `FSEvents`.
   - [ ] `LatencyTimer`, `TokenStreamAggregator` helpers.
 
 ## 5. Adapter Handling Strategy (Local-Only MVP)
 - [ ] **Default Location:** Define a default directory (e.g., `~/Library/Application Support/AdapterStudio/Adapters`) configurable via Settings.
 - [ ] **Manifest Support:** Optional JSON manifest describing `adapterName`, `version`, `systemModelVersion`, `checksum`.
 - [ ] **Hot Reload Flow:**
-  - [ ] File watcher detects new `.fmadapter`.
-  - [ ] Validate compatibility via `SystemLanguageModel.Adapter.isCompatible`.
-  - [ ] Tear down existing adapter session gracefully; instantiate new session and broadcast to UI.
+  - [ ] Manual selection reloads the active adapter.
 - [ ] **Error Handling:** Provide surfaced alerts for incompatible versions, missing entitlements, or load errors.
 
 ## 6. UI/UX Detailed Layout
@@ -66,21 +61,19 @@
 ## 7. Implementation Phases & Tasks
 
 ### Phase 0 – Project Setup
-- [ ] Create new SwiftUI macOS app target `AdapterStudio` with separate bundle ID and Info.plist.
-- [ ] Configure signing, entitlements (if draft compilation requires background tasks), and ensure target builds.
-- [ ] Establish shared code groups (`AdapterStudio/App`, `AdapterStudio/Services`, etc.).
-- [ ] Add unit test target `AdapterStudioTests` for service-layer coverage.
+- [x] Create new SwiftUI macOS app target `AdapterStudio` with separate bundle ID and Info.plist.
+- [x] Configure signing, entitlements (if draft compilation requires background tasks), and ensure target builds.
+- [x] Establish shared code groups (`AdapterStudio/App`, `AdapterStudio/Services`, etc.) with distinct Provider and Compare subfolders.
 
 ### Phase 1 – Core Infrastructure
-- [ ] Implement `AdapterProvider` protocol with:
+- [x] Implement `AdapterProvider` protocol with:
   - [x] manual file picker (using `NSOpenPanel`).
   - [x] default directory path management and validation.
-- [ ] Build `ModelCompareEngine`:
-  - [ ] instantiate base model session (`SystemLanguageModel.default` or `useCase`).
-  - [ ] instantiate adapter session lazily after provider returns `URL`.
-  - [ ] expose `async` API `submit(prompt:)` returning structured responses including timing.
-  - [ ] support streaming via `AsyncThrowingStream`.
-- [ ] Add `AdapterFileWatcher` to monitor directory and raise events.
+- [x] Build `ModelCompareEngine`:
+  - [x] instantiate base model session (`SystemLanguageModel.default` or `useCase`).
+  - [x] instantiate adapter session lazily after provider returns `URL`.
+  - [x] expose `async` API `submit(prompt:)` returning structured responses including timing.
+  - [x] support streaming via `AsyncStream`.
 - [ ] Integrate `OSLog` logging for lifecycle events.
 
 ### Phase 2 – UI & Interaction
@@ -103,36 +96,26 @@
 - [ ] Telemetry dashboard (charts for latency over time) using `Charts` framework.
 - [ ] Quick compare shortcuts (hotkeys, command palette).
 
-## 8. Testing & QA
-- [ ] **Unit Tests:** Focus on `ModelCompareEngine` (prompt dispatch, error propagation), `AdapterProvider`, `TranscriptStore`.
-- [ ] **Integration Tests:** UI preview tests for layout; manual scenario to ensure streaming renders correctly.
-- [ ] **Manual QA Cases:**
-  - [ ] No adapter present → base model only with prompts (should warn gracefully).
-  - [ ] Incompatible adapter file → show alert, revert to base model.
-  - [ ] Adapter replaced while session active → gracefully reload for next prompt.
-  - [ ] Transcript saved and reopened after relaunch.
-  - [ ] Draft compile success/failure handling.
-
-## 9. Tooling & Automation
+## 8. Tooling & Automation
 - [ ] (Future) Add a dedicated scheme `AdapterStudio` once core scaffolding is ready.
 - [ ] Create a fastlane or shell script to package the app with latest adapters for distribution to teammates.
 - [ ] Add linting rules to prevent accidental imports from production app targets where not intended.
 - [ ] Optional: Pre-commit hook verifying no `.fmadapter` files are committed.
 
-## 10. Documentation & Onboarding
+## 9. Documentation & Onboarding
 - [ ] README section or `docs/AdapterStudio.md` covering:
   - [ ] Setup steps (target selection, folder structure).
   - [ ] How to drop adapters for hot reload.
   - [ ] Known limitations and entitlement notes.
 - [ ] Screenshots or screen recordings once UI stabilizes.
 
-## 11. Risks & Mitigations
+## 10. Risks & Mitigations
 - [ ] **Foundation Models availability** – ensure running machine has macOS version with supported models; provide fallback messaging.
 - [ ] **Large file handling** – guard memory usage when loading adapters; consider streaming load or progress indication.
 - [ ] **API evolution** – wrap Foundation Models APIs (still beta) behind lightweight abstraction for future-proofing.
 - [ ] **File watcher reliability** – test with network drives vs. local disk; provide manual reload button as backup.
 
-## 12. Open Questions
+## 11. Open Questions
 - [ ] Should Adapter Studio share code (models/services) with production app via Swift Package, or remain isolated to avoid coupling?
 - [ ] Do we need entitlements or special provisioning for draft compilation on macOS builds distributed internally?
 - [ ] Is there a need for multi-language prompt datasets or evaluation metrics beyond simple diffing?
@@ -143,4 +126,4 @@
 **Next Step Checklist**
 - [ ] Align with team on macOS-only scope and directory conventions.
 - [ ] Confirm adapter directory location and manifest structure expectations.
-- [ ] Start Phase 0 tasks to scaffold the target and baseline services.
+- [ ] Focus Phase 1 efforts on `ModelCompareEngine` scaffolding and streaming pipeline.
