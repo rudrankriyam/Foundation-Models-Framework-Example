@@ -127,3 +127,51 @@
 - [ ] Align with team on macOS-only scope and directory conventions.
 - [ ] Confirm adapter directory location and manifest structure expectations.
 - [ ] Focus Phase 1 efforts on `ModelCompareEngine` scaffolding and streaming pipeline.
+
+## 12. Adapter CLI Plan
+
+### Goals
+- [ ] Provide a scripted workflow for training, evaluating, and exporting adapters without relying on notebooks.
+- [ ] Match the ergonomics of `mlx-swift-examples` command-line tools (discoverable subcommands, grouped options).
+- [ ] Keep the CLI portable across macOS and Linux training environments with no extra dependencies beyond the toolkit.
+
+### Architecture Overview
+- [ ] Create an `adapter_cli` Python package with `__main__.py` and an `adapter-cli` console entry point.
+- [ ] Use `argparse` with subparsers; share option groups for model assets, logging verbosity, and config hydration.
+- [ ] Initial subcommands delegate to existing modules:
+  - `generate` → wraps `examples.generate` for prompt smoke tests.
+  - `train-adapter` → orchestrates `examples.train_adapter`.
+  - `train-draft` → calls `examples.train_draft_model` (optional).
+  - `export` → wraps `export.export_fmadapter`.
+- [ ] Reserve future subcommands for asset bundling and dataset validation.
+
+### Integration Notes
+- [ ] Refactor sample scripts to expose reusable `run_*` functions that accept explicit parameters (no reliance on `argparse.Namespace`).
+- [ ] Preserve streaming stdout/stderr so progress bars and loss metrics surface naturally.
+- [ ] Support prompt file resolution (`@/path/prompt.txt`) and TOML/JSON config preload (`--config training.toml`).
+- [ ] Validate toolkit asset directories and system-model versions before long-running jobs start.
+
+### Testing & DX
+- [ ] Add smoke tests covering each subcommand with minimal fixtures.
+- [ ] Implement `adapter-cli --list` or include subcommand summaries in `--help` output.
+- [ ] Emit friendly error messages for missing assets, Python version mismatches, or incompatible checkpoints.
+
+---
+
+### Adapter CLI Detailed To-Do
+1. **Bootstrap Package Structure**
+   - [ ] Create `adapter_cli/__init__.py`, `adapter_cli/__main__.py`, and wire the console script in `pyproject.toml`/`setup.cfg`.
+   - [ ] Establish logging utilities and shared argument mixins (paths, verbosity, config file).
+2. **Refactor Existing Scripts**
+   - [ ] Extract callable helpers from `examples/generate.py`, `examples/train_adapter.py`, `examples/train_draft_model.py`, and `export/export_fmadapter.py`.
+   - [ ] Ensure helpers return structured results (metrics, output file paths) for future automation.
+3. **Implement Subcommands**
+   - [ ] Map parsed arguments to the refactored helpers; handle prompt/config resolution and asset validation.
+   - [ ] Forward streaming logs and catch exceptions to provide concise failure summaries with optional verbose traces.
+4. **Quality Gates**
+   - [ ] Write smoke tests invoking each subcommand with sample data; add GitHub Actions hook if feasible.
+   - [ ] Document sample invocations in developer notes (keep README untouched per guidelines).
+5. **Future Enhancements (Backlog)**
+   - [ ] Add `bundle` subcommand leveraging Background Assets tooling once requirements solidify.
+   - [ ] Add dataset linting (`validate-data`) and batch evaluation runners for regression measurement.
+
