@@ -1,5 +1,6 @@
 """Train adapter command - Train adapter with toy dataset or custom data"""
 
+import shutil
 import subprocess
 import sys
 from datetime import datetime
@@ -155,13 +156,30 @@ def run_train_adapter(args):
         
         if result.returncode == 0:
             print(f"\nTraining complete! Checkpoints saved to: {checkpoint_dir}\n")
+        else:
+            print(f"\nTraining failed with exit code {result.returncode}. Cleaning up checkpoint directory.\n")
+            # Clean up on failure to avoid leaving incomplete checkpoints
+            try:
+                shutil.rmtree(checkpoint_dir)
+            except Exception as cleanup_error:
+                print(f"Warning: Could not clean up checkpoint directory: {cleanup_error}\n")
         
         return result.returncode
     except subprocess.TimeoutExpired:
         print("\n\nTraining timed out (exceeded 24 hours). Consider reducing epochs or batch size.\n")
+        print("Cleaning up checkpoint directory.\n")
+        try:
+            shutil.rmtree(checkpoint_dir)
+        except Exception as cleanup_error:
+            print(f"Warning: Could not clean up checkpoint directory: {cleanup_error}\n")
         return 1
     except KeyboardInterrupt:
         print("\n\nTraining cancelled.\n")
+        print("Cleaning up checkpoint directory.\n")
+        try:
+            shutil.rmtree(checkpoint_dir)
+        except Exception as cleanup_error:
+            print(f"Warning: Could not clean up checkpoint directory: {cleanup_error}\n")
         return 1
     except FileNotFoundError as e:
         print(f"Error: File not found: {e}\n")
