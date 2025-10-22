@@ -1,5 +1,6 @@
 """Setup command - Create venv and install dependencies"""
 
+import platform
 import subprocess
 import sys
 from pathlib import Path
@@ -45,11 +46,19 @@ def run_setup():
     
     # Step 2: Install dependencies
     print("Installing dependencies...")
-    pip_path = venv_path / "bin" / "pip"
+    
+    # Determine pip path based on OS
+    if platform.system() == "Windows":
+        pip_path = venv_path / "Scripts" / "pip.exe"
+        python_path = venv_path / "Scripts" / "python.exe"
+    else:
+        pip_path = venv_path / "bin" / "pip"
+        python_path = venv_path / "bin" / "python"
     
     try:
+        # Use python -m pip for better compatibility
         subprocess.run(
-            [str(pip_path), "install", "-r", str(requirements_file)],
+            [str(python_path), "-m", "pip", "install", "-r", str(requirements_file)],
             check=True,
             capture_output=True,
         )
@@ -62,7 +71,7 @@ def run_setup():
     print("Validating installation...")
     try:
         result = subprocess.run(
-            [str(venv_path / "bin" / "python"), "-c", "import torch; import tamm; import sentencepiece"],
+            [str(python_path), "-c", "import torch; import tamm; import sentencepiece"],
             check=True,
             capture_output=True,
             text=True,

@@ -48,19 +48,31 @@ def run_demo(args):
     if args.compile_model:
         cmd.append("--compile-model")
     
-    # Run the command
+    # Run the command (let subprocess inherit stdout/stderr for live output)
     print("Generating text with base model...\n")
     
     try:
         result = subprocess.run(
             cmd,
             cwd=str(toolkit_path),
-            check=False,
+            timeout=300,  # 5 minutes for generation
         )
-        sys.exit(result.returncode)
+        return result.returncode
+    except subprocess.TimeoutExpired:
+        print("\n\nGeneration timed out (exceeded 5 minutes). Check model size or system resources.\n")
+        return 1
     except KeyboardInterrupt:
         print("\n\nGeneration cancelled.\n")
-        sys.exit(1)
+        return 1
+    except FileNotFoundError as e:
+        print(f"Error: File not found: {e}\n")
+        return 1
+    except PermissionError as e:
+        print(f"Error: Permission denied: {e}\n")
+        return 1
+    except OSError as e:
+        print(f"OS error: {e}\n")
+        return 1
     except Exception as e:
-        print(f"Error: {e}\n")
-        sys.exit(1)
+        print(f"Unexpected error: {type(e).__name__}: {e}\n")
+        return 1

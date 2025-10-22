@@ -11,6 +11,20 @@ def run_train_draft(args):
     """Run draft model training using toolkit's train_draft_model module"""
     print()
     
+    # Validate numeric ranges
+    if args.epochs < 1 or args.epochs > 100:
+        print("Error: --epochs must be between 1 and 100\n")
+        return
+    if args.learning_rate <= 0 or args.learning_rate > 1:
+        print("Error: --learning-rate must be between 0 and 1\n")
+        return
+    if args.batch_size < 1 or args.batch_size > 128:
+        print("Error: --batch-size must be between 1 and 128\n")
+        return
+    if args.warmup_epochs < 0 or args.warmup_epochs > args.epochs:
+        print("Error: --warmup-epochs must be between 0 and number of epochs\n")
+        return
+    
     # Get toolkit path
     toolkit_path = get_toolkit_path()
     if not toolkit_path:
@@ -46,8 +60,20 @@ def run_train_draft(args):
     if not train_data.exists():
         print(f"Error: Train data not found at {train_data}\n")
         return
+    if not train_data.is_file() or not train_data.stat().st_mode & 0o400:
+        print(f"Error: Train data is not readable: {train_data}\n")
+        return
     
-    checkpoint_dir = Path(args.checkpoint_dir)
+    checkpoint_dir = Path(args.checkpoint_dir).resolve()
+    toolkit_path_resolved = toolkit_path.resolve()
+    
+    # Validate checkpoint_dir is within toolkit (prevent path traversal)
+    try:
+        checkpoint_dir.relative_to(toolkit_path_resolved)
+    except ValueError:
+        print(f"Error: Checkpoint directory must be within toolkit: {toolkit_path}\n")
+        return
+    
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
     
     eval_data = Path(args.eval_data) if args.eval_data else None
@@ -101,23 +127,35 @@ def run_train_draft(args):
     if args.pack_sequences:
         cmd.append("--pack-sequences")
     
-    # Run the command
+    # Run the command (let subprocess inherit stdout/stderr for live output)
     print("Starting draft model training...\n")
     
     try:
         result = subprocess.run(
             cmd,
             cwd=str(toolkit_path),
-            check=False,
+            timeout=86400,  # 24 hours for training
         )
         
         if result.returncode == 0:
             print(f"\nDraft training complete! Checkpoints saved to: {checkpoint_dir}\n")
         
-        sys.exit(result.returncode)
+        return result.returncode
+    except subprocess.TimeoutExpired:
+        print("\n\nDraft training timed out (exceeded 24 hours). Consider reducing epochs or batch size.\n")
+        return 1
     except KeyboardInterrupt:
         print("\n\nDraft training cancelled.\n")
-        sys.exit(1)
+        return 1
+    except FileNotFoundError as e:
+        print(f"Error: File not found: {e}\n")
+        return 1
+    except PermissionError as e:
+        print(f"Error: Permission denied: {e}\n")
+        return 1
+    except OSError as e:
+        print(f"OS error: {e}\n")
+        return 1
     except Exception as e:
-        print(f"Error: {e}\n")
-        sys.exit(1)
+        print(f"Unexpected error: {type(e).__name__}: {e}\n")
+        return 1

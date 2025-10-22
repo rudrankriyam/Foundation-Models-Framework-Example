@@ -1,10 +1,19 @@
 """Export adapter command - Export trained adapter to .fmadapter format"""
 
+import re
 import subprocess
 import sys
 from pathlib import Path
 
 from ..config import get_toolkit_path
+
+
+def _validate_adapter_name(name: str) -> bool:
+    """Validate adapter name format: alphanumeric, underscore, dash (not at edges)"""
+    if not name or len(name) > 255:
+        return False
+    # Allow: alphanumeric, underscore, dash (not starting/ending with dash)
+    return bool(re.match(r'^[a-zA-Z0-9_][a-zA-Z0-9_-]*[a-zA-Z0-9_]$|^[a-zA-Z0-9_]$', name))
 
 
 def run_export(args):
@@ -29,6 +38,10 @@ def run_export(args):
         print("Error: --adapter-name is required\n")
         return
     
+    if not _validate_adapter_name(args.adapter_name):
+        print("Error: --adapter-name must be alphanumeric with underscores and dashes (1-255 chars, not starting/ending with dash)\n")
+        return
+    
     if not args.checkpoint:
         print("Error: --checkpoint is required\n")
         return
@@ -42,7 +55,16 @@ def run_export(args):
         print(f"Error: Checkpoint not found at {checkpoint}\n")
         return
     
-    output_dir = Path(args.output_dir)
+    output_dir = Path(args.output_dir).resolve()
+    toolkit_path_resolved = toolkit_path.resolve()
+    
+    # Validate output_dir is within toolkit (prevent path traversal)
+    try:
+        output_dir.relative_to(toolkit_path_resolved)
+    except ValueError:
+        print(f"Error: Output directory must be within toolkit: {toolkit_path}\n")
+        return
+    
     output_dir.mkdir(parents=True, exist_ok=True)
     
     draft_checkpoint = Path(args.draft_checkpoint) if args.draft_checkpoint else None
@@ -73,14 +95,14 @@ def run_export(args):
     if args.description:
         cmd.extend(["--description", args.description])
     
-    # Run the command
+    # Run the command (let subprocess inherit stdout/stderr for live output)
     print("Starting export...\n")
     
     try:
         result = subprocess.run(
             cmd,
             cwd=str(toolkit_path),
-            check=False,
+            timeout=1800,  # 30 minutes for export
         )
         
         if result.returncode == 0:
@@ -92,10 +114,22 @@ def run_export(args):
             print("  2. Deploy via Background Assets framework")
             print("  3. Use it in your app with Foundation Models framework\n")
         
-        sys.exit(result.returncode)
+        return result.returncode
+    except subprocess.TimeoutExpired:
+        print("\n\nExport timed out (exceeded 30 minutes). The adapter may be very large.\n")
+        return 1
     except KeyboardInterrupt:
         print("\n\nExport cancelled.\n")
-        sys.exit(1)
+        return 1
+    except FileNotFoundError as e:
+        print(f"Error: File not found: {e}\n")
+        return 1
+    except PermissionError as e:
+        print(f"Error: Permission denied: {e}\n")
+        return 1
+    except OSError as e:
+        print(f"OS error: {e}\n")
+        return 1
     except Exception as e:
-        print(f"Error: {e}\n")
-        sys.exit(1)
+        print(f"Unexpected error: {type(e).__name__}: {e}\n")
+        return 1

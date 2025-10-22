@@ -340,24 +340,29 @@ def main():
     parser = create_parser()
     args = parser.parse_args()
     
+    exit_code = 0
+    
     # Route to commands
     if args.command == "init":
         run_init()
     elif args.command == "setup":
         run_setup()
     elif args.command == "demo":
-        run_demo(args)
+        exit_code = run_demo(args)
     elif args.command == "generate":
-        run_generate(args)
+        exit_code = run_generate(args)
     elif args.command == "train-adapter":
-        run_train_adapter(args)
+        exit_code = run_train_adapter(args)
     elif args.command == "train-draft":
-        run_train_draft(args)
+        exit_code = run_train_draft(args)
     elif args.command == "export":
-        run_export(args)
+        exit_code = run_export(args)
     else:
         # No command specified, show help
         parser.print_help()
+    
+    if exit_code != 0:
+        sys.exit(exit_code)
 
 
 if __name__ == "__main__":
