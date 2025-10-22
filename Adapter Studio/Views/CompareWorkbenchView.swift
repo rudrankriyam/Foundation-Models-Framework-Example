@@ -53,18 +53,17 @@ struct CompareWorkbenchView: View {
                         promptSection(prompt: $viewModel.prompt, isRunning: viewModel.isRunning)
                         comparisonColumns(viewModel: viewModel)
                     }
-                    .padding(24)
+                    .padding()
                     .frame(maxWidth: .infinity)
                 }
                 if let toast {
                     ToastView(payload: toast)
-                        .padding(.horizontal, 24)
-                        .padding(.top, 20)
+                        .padding(.horizontal)
+                        .padding(.top)
                         .transition(.move(edge: .top).combined(with: .opacity))
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .toolbar { toolbarContent(viewModel: viewModel) }
         }
         .onAppear {
             configureEngineIfNeeded()
@@ -104,11 +103,6 @@ private extension CompareWorkbenchView {
     func header(viewModel: CompareViewModel) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .firstTextBaseline, spacing: 12) {
-                Text(statusDescription(for: viewModel.state))
-                    .font(.subheadline)
-                    .foregroundStyle(.white.opacity(0.7))
-                
-                
                 Spacer()
                 
                 if viewModel.isRunning {
@@ -117,18 +111,11 @@ private extension CompareWorkbenchView {
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(.red)
-                } else {
-                    Button(action: runCurrentPrompt) {
-                        Label("Run Compare", systemImage: "play.fill")
-                    }
-                    .buttonStyle(.borderedProminent)
                 }
             }
             
             adapterStatusView
         }
-        .padding()
-        .glassCard()
     }
     
     func promptSection(prompt: Binding<String>, isRunning: Bool) -> some View {
@@ -161,13 +148,13 @@ private extension CompareWorkbenchView {
                 Spacer()
                 
                 Button(action: runCurrentPrompt) {
-                    Label("Run", systemImage: "paperplane")
+                    Label(isRunning ? "Running" : "Run", systemImage: isRunning ? "hourglass" : "play.fill")
                 }
                 .disabled(prompt.wrappedValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isRunning)
             }
         }
         .padding()
-        .glassCard()
+        .glassCard(radius: 24)
     }
     
     func comparisonColumns(viewModel: CompareViewModel) -> some View {
@@ -193,7 +180,7 @@ private extension CompareWorkbenchView {
             }
         }
         .padding()
-        .glassCard()
+        .glassCard(radius: 24)
     }
     
     @ViewBuilder
@@ -209,10 +196,13 @@ private extension CompareWorkbenchView {
                         Label("Show in Finder", systemImage: "folder")
                     }
                     
-                    Button(action: importAdapter) {
-                        Label("Import Adapter", systemImage: "tray.and.arrow.down")
+                    VStack(alignment: .trailing) {
+                        Button(action: importAdapter) {
+                            Label("Import Adapter", systemImage: "tray.and.arrow.down")
+                        }
+                        
+                        existingAdaptersMenu
                     }
-                    existingAdaptersMenu
                 }
                 
                 metadataGrid(for: context.metadata)
@@ -223,10 +213,13 @@ private extension CompareWorkbenchView {
                 
                 Spacer()
                 
-                Button(action: importAdapter) {
-                    Label("Import Adapter", systemImage: "tray.and.arrow.down")
+                VStack(alignment: .trailing) {
+                    Button(action: importAdapter) {
+                        Label("Import Adapter", systemImage: "tray.and.arrow.down")
+                    }
+                    
+                    existingAdaptersMenu
                 }
-                existingAdaptersMenu
             }
         }
     }
@@ -279,26 +272,6 @@ private extension CompareWorkbenchView {
             }
         } label: {
             Label("Adapters", systemImage: "arrow.2.circlepath")
-        }
-    }
-    
-    func toolbarContent(viewModel: CompareViewModel) -> some ToolbarContent {
-        ToolbarItemGroup(placement: .primaryAction) {
-            Button(action: importAdapter) {
-                Label("Import", systemImage: "tray.and.arrow.down")
-            }
-            .disabled(adapterProvider == nil)
-            
-            if viewModel.isRunning {
-                Button(role: .destructive, action: cancelRun) {
-                    Label("Stop", systemImage: "stop.circle")
-                }
-            } else {
-                Button(action: runCurrentPrompt) {
-                    Label("Run", systemImage: "play.fill")
-                }
-                .disabled(viewModel.prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            }
         }
     }
     
