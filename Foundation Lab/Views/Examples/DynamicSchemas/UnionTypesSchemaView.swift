@@ -27,9 +27,9 @@ struct UnionTypesSchemaView: View {
             errorMessage: executor.errorMessage,
             codeExample: exampleCode,
             onRun: { Task { await runExample() } },
-            onReset: { executor.reset() }
-        ) {
-            VStack(alignment: .leading, spacing: Spacing.medium) {
+            onReset: { executor.reset() },
+            content: {
+                VStack(alignment: .leading, spacing: Spacing.medium) {
                 // Example selector
                 Picker("Example", selection: $selectedExample) {
                     ForEach(0..<examples.count, id: \.self) { index in

@@ -36,14 +36,14 @@ struct ChatView: View {
 #endif
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
-                Button(action: { showInstructionsSheet = true }) {
+                Button(action: { showInstructionsSheet = true }, label: {
                     Label("Instructions", systemImage: "doc.text")
-                }
+                })
                 .help("Customize AI behavior")
 
-                Button(action: { showFeedbackSheet = true }) {
+                Button(action: { showFeedbackSheet = true }, label: {
                     Label("Feedback", systemImage: "bubble.left.and.exclamationmark.bubble.right")
-                }
+                })
                 .disabled(viewModel.session.transcript.isEmpty)
                 .help("Provide feedback on responses")
 

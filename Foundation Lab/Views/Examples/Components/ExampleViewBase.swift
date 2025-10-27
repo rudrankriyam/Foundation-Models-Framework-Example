@@ -147,7 +147,7 @@ struct PromptSuggestions: View {
       ScrollView(.horizontal, showsIndicators: false) {
         HStack(spacing: Spacing.small) {
           ForEach(suggestions, id: \.self) { suggestion in
-            Button(action: { onSelect(suggestion) }) {
+            Button(action: { onSelect(suggestion) }, label: {
               Text(suggestion)
                 .font(.callout)
                 .padding(.horizontal, Spacing.medium)
@@ -159,7 +159,7 @@ struct PromptSuggestions: View {
                     .strokeBorder(Color.gray.opacity(0.2), lineWidth: 1)
                 )
                 .cornerRadius(12)
-            }
+            })
             .buttonStyle(.plain)
           }
         }

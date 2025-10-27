@@ -164,7 +164,6 @@ class SpeechRecognizer: NSObject, SpeechRecognitionService {
         stateHandlers[token] = nil
     }
 
-    
     func requestPermission() async -> Bool {
         return await withCheckedContinuation { continuation in
             SFSpeechRecognizer.requestAuthorization { authStatus in

@@ -112,26 +112,26 @@ struct FeedbackRowView: View {
             HStack(spacing: Spacing.medium) {
                 Button(action: {
                     viewModel.submitFeedback(for: entry.id, sentiment: .positive)
-                }) {
+                }, label: {
                     HStack(spacing: Spacing.xSmall) {
                         Image(systemName: "hand.thumbsup.fill")
                         Text("Good")
                             .font(.caption)
                     }
-                }
+                })
                 .buttonStyle(.borderedProminent)
                 .tint(.green)
                 .disabled(existingFeedback != nil)
 
                 Button(action: {
                     viewModel.submitFeedback(for: entry.id, sentiment: .negative)
-                }) {
+                }, label: {
                     HStack(spacing: Spacing.xSmall) {
                         Image(systemName: "hand.thumbsdown.fill")
                         Text("Bad")
                             .font(.caption)
                     }
-                }
+                })
                 .buttonStyle(.borderedProminent)
                 .tint(.red)
                 .disabled(existingFeedback != nil)

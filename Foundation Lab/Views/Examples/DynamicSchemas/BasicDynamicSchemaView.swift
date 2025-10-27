@@ -32,9 +32,9 @@ struct BasicDynamicSchemaView: View {
                 personInput = "John Doe is 32 years old, works as a software engineer and loves hiking."
                 productInput = "The iPhone 15 Pro costs $999 and has a 6.1 inch display"
                 customInput = ""
-            }
-        ) {
-            VStack(alignment: .leading, spacing: Spacing.medium) {
+            },
+            content: {
+                VStack(alignment: .leading, spacing: Spacing.medium) {
                 // Example selector
                 Picker("Example", selection: $selectedExample) {
                     ForEach(0..<examples.count, id: \.self) { index in
@@ -179,6 +179,7 @@ struct BasicDynamicSchemaView: View {
             \(selectedExample == 0 ? "Person" : selectedExample == 1 ? "Product" : "CustomObject")
             """
         }
+            }
     }
 
     private func createSchema(for index: Int) throws -> GenerationSchema {

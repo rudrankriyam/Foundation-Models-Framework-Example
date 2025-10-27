@@ -98,7 +98,7 @@ struct CodeDisclosure: View {
     VStack(alignment: .leading, spacing: 0) {
       Button(action: {
         isExpanded.toggle()
-      }) {
+      }, label: {
         HStack(spacing: Spacing.small) {
           Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
             .font(.caption2)
@@ -110,7 +110,7 @@ struct CodeDisclosure: View {
 
           Spacer()
         }
-      }
+      })
       .buttonStyle(.plain)
 
       if isExpanded {

@@ -45,7 +45,11 @@ class ContentViewModel {
 
       setRequestResponse(RequestResponsePair(request: requestText, response: response.content))
     } catch {
-      setRequestResponse(RequestResponsePair(request: requestText, response: handleFoundationModelsError(error), isError: true))
+      setRequestResponse(RequestResponsePair(
+          request: requestText,
+          response: handleFoundationModelsError(error),
+          isError: true
+      ))
     }
 
     setLoading(false)
@@ -78,7 +82,11 @@ class ContentViewModel {
 
       setRequestResponse(RequestResponsePair(request: requestText, response: responseText))
     } catch {
-      setRequestResponse(RequestResponsePair(request: requestText, response: handleFoundationModelsError(error), isError: true))
+      setRequestResponse(RequestResponsePair(
+          request: requestText,
+          response: handleFoundationModelsError(error),
+          isError: true
+      ))
     }
 
     setLoading(false)
@@ -114,7 +122,11 @@ class ContentViewModel {
 
       setRequestResponse(RequestResponsePair(request: requestText, response: responseText))
     } catch {
-      setRequestResponse(RequestResponsePair(request: requestText, response: handleFoundationModelsError(error), isError: true))
+      setRequestResponse(RequestResponsePair(
+          request: requestText,
+          response: handleFoundationModelsError(error),
+          isError: true
+      ))
     }
 
     setLoading(false)
@@ -148,7 +160,11 @@ class ContentViewModel {
       setRequestResponse(RequestResponsePair(request: requestText, response: finalContent))
       setLoading(false)
     } catch {
-      setRequestResponse(RequestResponsePair(request: requestText, response: handleFoundationModelsError(error), isError: true))
+      setRequestResponse(RequestResponsePair(
+          request: requestText,
+          response: handleFoundationModelsError(error),
+          isError: true
+      ))
       setLoading(false)
     }
   }
@@ -209,7 +225,11 @@ class ContentViewModel {
       let responseText = "Weather Comparison:\n\(response.content)\n\n"
       setRequestResponse(RequestResponsePair(request: requestText, response: responseText))
     } catch {
-      setRequestResponse(RequestResponsePair(request: requestText, response: handleFoundationModelsError(error), isError: true))
+      setRequestResponse(RequestResponsePair(
+          request: requestText,
+          response: handleFoundationModelsError(error),
+          isError: true
+      ))
     }
 
     setLoading(false)
@@ -235,7 +255,11 @@ class ContentViewModel {
       let responseText = "Web Search Results:\n\(response.content)\n\n"
       setRequestResponse(RequestResponsePair(request: requestText, response: responseText))
     } catch {
-      setRequestResponse(RequestResponsePair(request: requestText, response: handleFoundationModelsError(error), isError: true))
+      setRequestResponse(RequestResponsePair(
+          request: requestText,
+          response: handleFoundationModelsError(error),
+          isError: true
+      ))
     }
 
     setLoading(false)
@@ -272,7 +296,11 @@ class ContentViewModel {
 
       setRequestResponse(RequestResponsePair(request: requestText, response: responseText))
     } catch {
-      setRequestResponse(RequestResponsePair(request: requestText, response: handleFoundationModelsError(error), isError: true))
+      setRequestResponse(RequestResponsePair(
+          request: requestText,
+          response: handleFoundationModelsError(error),
+          isError: true
+      ))
     }
 
     setLoading(false)
@@ -312,7 +340,11 @@ class ContentViewModel {
 
       setRequestResponse(RequestResponsePair(request: requestText, response: responseText))
     } catch {
-      setRequestResponse(RequestResponsePair(request: requestText, response: handleFoundationModelsError(error), isError: true))
+      setRequestResponse(RequestResponsePair(
+          request: requestText,
+          response: handleFoundationModelsError(error),
+          isError: true
+      ))
     }
 
     setLoading(false)
