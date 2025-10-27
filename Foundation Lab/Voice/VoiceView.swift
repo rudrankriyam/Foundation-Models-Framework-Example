@@ -120,13 +120,6 @@ struct VoiceView: View {
                         removal: .scale(scale: 0.8).combined(with: .opacity)
                     ))
                 }
-                
-                // Instructions
-                if !viewModel.isListening && viewModel.recognizedText.isEmpty {
-                    Text(String(localized: "Tap the microphone to start"))
-                        .font(.headline)
-                        .foregroundStyle(.secondary)
-                }
             }
             
             Spacer()

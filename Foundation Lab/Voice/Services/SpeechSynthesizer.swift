@@ -45,6 +45,9 @@ protocol SpeechSynthesisService: AnyObject {
     /// - Parameter text: The text to synthesize and speak
     /// - Throws: SpeechSynthesizerError if synthesis fails
     func synthesizeAndSpeak(text: String) async throws
+
+    /// Cancel any in-flight speech ASAP
+    func cancelSpeaking()
 }
 
 // MARK: - Error Types
@@ -291,6 +294,11 @@ final class SpeechSynthesizer: NSObject, SpeechSynthesisService {
 
         resetState()
         speakingStateHandler?(false)
+    }
+
+    func cancelSpeaking() {
+        guard synthesizer.isSpeaking else { return }
+        synthesizer.stopSpeaking(at: .immediate)
     }
 }
 

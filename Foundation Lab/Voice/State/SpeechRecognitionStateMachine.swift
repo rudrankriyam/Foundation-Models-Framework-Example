@@ -40,7 +40,7 @@ final class SpeechRecognitionStateMachine {
 
         var canStartListening: Bool {
             switch self {
-            case .idle, .permissionGranted:
+            case .idle, .permissionGranted, .completed:
                 return true
             default:
                 return false
@@ -118,6 +118,14 @@ final class SpeechRecognitionStateMachine {
     // MARK: - Public Interface
 
     func startWorkflow() async {
+        if case .synthesizingResponse = state {
+            logger.info("Interrupting synthesis to restart workflow")
+            speechSynthesisService.cancelSpeaking()
+            state = .idle
+        } else if case .completed = state {
+            state = .idle
+        }
+
         guard state.canStartListening else {
             logger.warning("Cannot start listening from current state: \(String(describing: self.state))")
             return
