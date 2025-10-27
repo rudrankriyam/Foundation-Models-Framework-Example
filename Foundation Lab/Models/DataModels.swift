@@ -32,11 +32,13 @@ struct ChatMessage: Identifiable, Equatable {
     }
     
     init(content: AttributedString, isFromUser: Bool, isContextSummary: Bool = false) {
-        self.init(id: UUID(), content: content, isFromUser: isFromUser, timestamp: Date(), isContextSummary: isContextSummary)
+        self.init(id: UUID(), content: content, isFromUser: isFromUser,
+                 timestamp: Date(), isContextSummary: isContextSummary)
     }
     
     init(id: UUID, content: String, isFromUser: Bool, timestamp: Date, isContextSummary: Bool = false) {
-        self.init(id: id, content: AttributedString(content), isFromUser: isFromUser, timestamp: timestamp, isContextSummary: isContextSummary)
+        self.init(id: id, content: AttributedString(content), isFromUser: isFromUser,
+                 timestamp: timestamp, isContextSummary: isContextSummary)
     }
     
     init(id: UUID, content: AttributedString, isFromUser: Bool, timestamp: Date, isContextSummary: Bool = false) {
@@ -53,7 +55,9 @@ struct ChatMessage: Identifiable, Equatable {
 struct ConversationSummary {
     @Guide(
         description:
-            "A comprehensive summary of the entire conversation including all key points, topics discussed, questions asked, and responses provided. Include important context and details that would help continue the conversation naturally."
+            "A comprehensive summary of the entire conversation including all key points, topics discussed, " +
+            "questions asked, and responses provided. Include important context and details that would help " +
+            "continue the conversation naturally."
     )
     let summary: String
     
