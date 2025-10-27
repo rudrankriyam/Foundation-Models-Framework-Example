@@ -117,7 +117,8 @@ let memory = try await session.respond(to: "What language did I first speak to y
         // Create single persistent session
         let session = LanguageModelSession(
             model: SystemLanguageModel.default,
-            instructions: "You are a multilingual assistant who can naturally switch between languages and maintain conversational context."
+            instructions: "You are a multilingual assistant who can naturally switch between languages and maintain " +
+                         "conversational context."
         )
 
         for (language, prompt) in conversationSteps {

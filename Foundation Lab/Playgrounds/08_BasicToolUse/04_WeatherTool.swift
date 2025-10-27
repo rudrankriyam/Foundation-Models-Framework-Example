@@ -11,7 +11,8 @@ import Playgrounds
 
 struct MockWeatherTool: Tool {
     let name = "getCurrentWeather"
-    let description = "Gets current weather conditions for a specific city including temperature, humidity, and conditions"
+    let description = "Gets current weather conditions for a specific city including temperature, humidity, and " +
+                      "conditions"
     
     @Generable
     struct Arguments {

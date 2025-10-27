@@ -117,7 +117,8 @@ struct BasicChatView: View {
 
     private func executeChat() {
         Task {
-            let guardrails: SystemLanguageModel.Guardrails = usePermissiveGuardrails ? .permissiveContentTransformations : .default
+            let guardrails: SystemLanguageModel.Guardrails = usePermissiveGuardrails ?
+                .permissiveContentTransformations : .default
 
             await executor.executeBasic(
                 prompt: currentPrompt,

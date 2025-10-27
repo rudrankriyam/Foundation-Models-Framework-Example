@@ -178,12 +178,13 @@ struct PromptSuggestions: View {
       isRunning: false,
       errorMessage: nil,
       onRun: {},
-      onReset: {}
-    ) {
+      onReset: {},
+      content: {
       ResultDisplay(
         result: "Why don't scientists trust atoms? Because they make up everything!",
         isSuccess: true
       )
     }
+    )
   }
 }

@@ -16,9 +16,9 @@ struct EnumDynamicSchemaView: View {
     @State private var selectedExample = 0
     @State private var customChoices = "excellent, good, average, poor"
     @State private var useCustomChoices = false
-
+    
     private let examples = ["Sentiment Analysis", "Task Priority", "Weather Condition"]
-
+    
     var body: some View {
         ExampleViewBase(
             title: "Enum Schemas",
@@ -32,80 +32,80 @@ struct EnumDynamicSchemaView: View {
             onReset: { selectedExample = 0; useCustomChoices = false },
             content: {
                 VStack(alignment: .leading, spacing: Spacing.medium) {
-                // Example selector
-                Picker("Example", selection: $selectedExample) {
-                    ForEach(0..<examples.count, id: \.self) { index in
-                        Text(examples[index]).tag(index)
+                    // Example selector
+                    Picker("Example", selection: $selectedExample) {
+                        ForEach(0..<examples.count, id: \.self) { index in
+                            Text(examples[index]).tag(index)
+                        }
                     }
-                }
-                .pickerStyle(.segmented)
-
-                // Current choices display
-                VStack(alignment: .leading, spacing: Spacing.small) {
-                    Text("Available Choices")
-                        .font(.headline)
-
-                    Text(currentChoices.joined(separator: ", "))
-                        .font(.system(.body, design: .monospaced))
-                        .padding(8)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.blue.opacity(0.1))
-                        .cornerRadius(8)
-                }
-
-                // Custom choices option
-                VStack(alignment: .leading, spacing: Spacing.small) {
-                    Toggle("Use Custom Choices", isOn: $useCustomChoices)
-                        .font(.caption)
-
-                    if useCustomChoices {
-                        TextField("Comma-separated choices", text: $customChoices)
-                            .textFieldStyle(.roundedBorder)
+                    .pickerStyle(.segmented)
+                    
+                    // Current choices display
+                    VStack(alignment: .leading, spacing: Spacing.small) {
+                        Text("Available Choices")
+                            .font(.headline)
+                        
+                        Text(currentChoices.joined(separator: ", "))
+                            .font(.system(.body, design: .monospaced))
+                            .padding(8)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color.blue.opacity(0.1))
+                            .cornerRadius(8)
+                    }
+                    
+                    // Custom choices option
+                    VStack(alignment: .leading, spacing: Spacing.small) {
+                        Toggle("Use Custom Choices", isOn: $useCustomChoices)
                             .font(.caption)
+                        
+                        if useCustomChoices {
+                            TextField("Comma-separated choices", text: $customChoices)
+                                .textFieldStyle(.roundedBorder)
+                                .font(.caption)
+                        }
+                    }
+                    .padding()
+                    .background(Color.gray.opacity(0.1))
+                    .cornerRadius(8)
+                    
+                    HStack {
+                        Button("Classify") {
+                            Task {
+                                await runExample()
+                            }
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(executor.isRunning || currentInput.isEmpty)
+                        
+                        if executor.isRunning {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        }
+                    }
+                    
+                    // Results section
+                    if !executor.results.isEmpty {
+                        VStack(alignment: .leading, spacing: Spacing.small) {
+                            Text("Generated Data")
+                                .font(.headline)
+                            
+                            ScrollView {
+                                Text(executor.results)
+                                    .font(.system(.caption, design: .monospaced))
+                                    .padding()
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(Color.gray.opacity(0.1))
+                                    .cornerRadius(8)
+                            }
+                            .frame(maxHeight: 250)
+                        }
                     }
                 }
                 .padding()
-                .background(Color.gray.opacity(0.1))
-                .cornerRadius(8)
-
-                HStack {
-                    Button("Classify") {
-                        Task {
-                            await runExample()
-                        }
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(executor.isRunning || currentInput.isEmpty)
-
-                    if executor.isRunning {
-                        ProgressView()
-                            .scaleEffect(0.8)
-                    }
-                }
-
-                // Results section
-                if !executor.results.isEmpty {
-                    VStack(alignment: .leading, spacing: Spacing.small) {
-                        Text("Generated Data")
-                            .font(.headline)
-
-                        ScrollView {
-                            Text(executor.results)
-                                .font(.system(.caption, design: .monospaced))
-                                .padding()
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(Color.gray.opacity(0.1))
-                                .cornerRadius(8)
-                        }
-                        .frame(maxHeight: 250)
-                    }
-                }
             }
-            .padding()
-            }
-        }
+        )
     }
-
+    
     private var bindingForSelectedExample: Binding<String> {
         switch selectedExample {
         case 0: return $customerInput
@@ -113,7 +113,7 @@ struct EnumDynamicSchemaView: View {
         default: return $weatherInput
         }
     }
-
+    
     private var currentInput: String {
         switch selectedExample {
         case 0: return customerInput
@@ -121,12 +121,12 @@ struct EnumDynamicSchemaView: View {
         default: return weatherInput
         }
     }
-
+    
     private var currentChoices: [String] {
         if useCustomChoices {
             return customChoices.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
         }
-
+        
         switch selectedExample {
         case 0:
             return ["positive", "negative", "neutral", "mixed"]
@@ -136,133 +136,120 @@ struct EnumDynamicSchemaView: View {
             return ["sunny", "cloudy", "rainy", "snowy", "foggy", "stormy"]
         }
     }
-
+    
     private func runExample() async {
         await executor.execute {
             let schema = try createSchema(for: selectedExample)
             let session = LanguageModelSession()
-
+            
             let fieldName = selectedExample == 0 ? "sentiment" : selectedExample == 1 ? "priority" : "condition"
             let prompt = """
             Analyze the following text and classify it into one of the available categories.
-
+            
             Text: \(currentInput)
             """
-
+            
             let response = try await session.respond(
                 to: Prompt(prompt),
                 schema: schema,
                 options: .init(temperature: 0.1)
             )
-
+            
             let classification: String
             let confidence: Float?
             let reasoning: String?
-
-            switch response.content.kind {
-            case .structure(let properties, _):
-                classification = {
-                    if let value = properties[fieldName] {
-                        switch value.kind {
-                        case .string(let str):
-                            return str
-                        default:
-                            return "unknown"
-                        }
-                    }
-                    return "unknown"
-                }()
-
-                confidence = {
-                    if let value = properties["confidence"] {
-                        switch value.kind {
-                        case .number(let num):
-                            return Float(num)
-                        default:
-                            return nil
-                        }
-                    }
-                    return nil
-                }()
-
-                reasoning = {
-                    if let value = properties["reasoning"] {
-                        switch value.kind {
-                        case .string(let str):
-                            return str
-                        default:
-                            return nil
-                        }
-                    }
-                    return nil
-                }()
-            default:
-                classification = "unknown"
-                confidence = nil
-                reasoning = nil
-            }
-
+            
+            (classification, confidence, reasoning) = extractClassificationData(from: response.content, fieldName: fieldName)
+            
             return """
             📝 Input:
             \(currentInput)
-
+            
             🏷️ Classification: \(classification)
-
+            
             📊 Available Choices:
             \(currentChoices.map { "• \($0)" }.joined(separator: "\n"))
-
+            
             \(confidence != nil ? "🎯 Confidence: \(String(format: "%.1f%%", (confidence ?? 0) * 100))" : "")
-
+            
             \(reasoning != nil ? "💭 Reasoning: \(reasoning ?? "")" : "")
-
+            
             ✅ Valid Choice: \(currentChoices.contains(classification) ? "Yes" : "No (Invalid!)")
             """
         }
+    }
+
+    private func extractClassificationData(from content: GeneratedContent, fieldName: String) -> (String, Float?, String?) {
+        switch content.kind {
+        case .structure(let properties, _):
+            let classification = extractStringValue(from: properties[fieldName])
+            let confidence = extractFloatValue(from: properties["confidence"])
+            let reasoning = extractStringValue(from: properties["reasoning"])
+            return (classification, confidence, reasoning)
+        default:
+            return ("unknown", nil, nil)
+        }
+    }
+
+    private func extractStringValue(from content: GeneratedContent?) -> String {
+        guard let content = content else { return "unknown" }
+        if case .string(let str) = content.kind {
+            return str
+        }
+        return "unknown"
+    }
+
+    private func extractFloatValue(from content: GeneratedContent?) -> Float? {
+        guard let content = content else { return nil }
+        if case .number(let num) = content.kind {
+            return Float(num)
+        }
+        return nil
     }
 
     private func createSchema(for index: Int) throws -> GenerationSchema {
         let choices = currentChoices
         let fieldName = index == 0 ? "sentiment" : index == 1 ? "priority" : "condition"
         let description = index == 0 ? "The sentiment of the text" : index == 1 ? "The priority level" : "The weather condition"
-
+        
         // Create enum schema
         let enumSchema = DynamicGenerationSchema(
             name: "\(fieldName.capitalized)Type",
             description: description,
             anyOf: choices
         )
-
+        
         // Create properties for the result
         let classificationProperty = DynamicGenerationSchema.Property(
             name: fieldName,
             description: description,
             schema: enumSchema
         )
-
+        
         let confidenceProperty = DynamicGenerationSchema.Property(
             name: "confidence",
             description: "Confidence score between 0 and 1",
             schema: .init(type: Float.self),
             isOptional: true
         )
-
+        
         let reasoningProperty = DynamicGenerationSchema.Property(
             name: "reasoning",
             description: "Brief explanation for the classification",
             schema: .init(type: String.self),
             isOptional: true
         )
-
+        
         // Create the main schema
         let resultSchema = DynamicGenerationSchema(
             name: "ClassificationResult",
             description: "Classification result with optional confidence and reasoning",
             properties: [classificationProperty, confidenceProperty, reasoningProperty]
         )
-
+        
         return try GenerationSchema(root: resultSchema, dependencies: [enumSchema])
     }
-
+    
     private var exampleCode: String {
         """
         // Creating an enum schema with string choices
@@ -271,24 +258,24 @@ struct EnumDynamicSchemaView: View {
             description: "Sentiment classification",
             anyOf: ["positive", "negative", "neutral", "mixed"]
         )
-
+        
         // Use the enum in a property
         let sentimentProperty = DynamicGenerationSchema.Property(
             name: "sentiment",
             description: "The sentiment of the text",
             schema: sentimentSchema
         )
-
+        
         let resultSchema = DynamicGenerationSchema(
             name: "Result",
             properties: [sentimentProperty]
         )
-
+        
         let schema = try GenerationSchema(
             root: resultSchema,
             dependencies: [sentimentSchema]
         )
-
+        
         // The model will only choose from the provided options
         // Edge cases:
         // - Empty choices array (will throw error)

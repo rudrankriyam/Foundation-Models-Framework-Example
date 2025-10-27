@@ -142,7 +142,8 @@ final class SpeechSynthesizer: NSObject, SpeechSynthesisService {
             audioSessionConfigured = true
             logger.debug("Configured audio session for speech synthesis playback")
         } catch {
-            logger.error("Failed to configure audio session for playback: \(error.localizedDescription, privacy: .public)")
+            logger.error("Failed to configure audio session for playback: " +
+                        "\(error.localizedDescription, privacy: .public)")
         }
         #endif
     }
@@ -225,7 +226,10 @@ final class SpeechSynthesizer: NSObject, SpeechSynthesisService {
 
         if VoiceLogging.isVerboseEnabled {
             let voiceName = utterance.voice?.name ?? "default"
-            logger.debug("Created utterance voice=\(voiceName, privacy: .public) rate=\(utterance.rate, format: .fixed(precision: 2)) pitch=\(utterance.pitchMultiplier, format: .fixed(precision: 2)) volume=\(utterance.volume, format: .fixed(precision: 2))")
+            let rate = String(format: "%.2f", utterance.rate)
+            let pitch = String(format: "%.2f", utterance.pitchMultiplier)
+            let volume = String(format: "%.2f", utterance.volume)
+            logger.debug("Created utterance voice=\(voiceName, privacy: .public) rate=\(rate) pitch=\(pitch) volume=\(volume)")
         }
 
         return utterance
@@ -282,7 +286,8 @@ final class SpeechSynthesizer: NSObject, SpeechSynthesisService {
                 try audioSession.setActive(false, options: .notifyOthersOnDeactivation)
                 logger.debug("Deactivated audio session after speech synthesis error")
             } catch {
-                logger.error("Failed to deactivate audio session after error: \(error.localizedDescription, privacy: .public)")
+                logger.error("Failed to deactivate audio session after error: " +
+                            "\(error.localizedDescription, privacy: .public)")
             }
         }
 #endif

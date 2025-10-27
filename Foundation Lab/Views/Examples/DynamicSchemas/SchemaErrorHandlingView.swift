@@ -34,13 +34,13 @@ struct SchemaErrorHandlingView: View {
             onReset: {
                 executor.reset()
                 selectedScenario = 0
-            }
-        ) {
-            VStack(alignment: .leading, spacing: Spacing.medium) {
-                // Scenario selector
-                VStack(alignment: .leading, spacing: Spacing.small) {
-                    Text("Error Scenario")
-                        .font(.headline)
+            },
+            content: {
+                VStack(alignment: .leading, spacing: Spacing.medium) {
+                    // Scenario selector
+                    VStack(alignment: .leading, spacing: Spacing.small) {
+                        Text("Error Scenario")
+                            .font(.headline)
 
                     Picker("Scenario", selection: $selectedScenario) {
                         ForEach(0..<scenarios.count, id: \.self) { index in
@@ -90,6 +90,7 @@ struct SchemaErrorHandlingView: View {
             }
             .padding()
         }
+        )
     }
 
     private var scenarioDescription: String {

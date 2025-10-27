@@ -11,7 +11,8 @@ import Playgrounds
 
 struct CalculatorTool: Tool {
     let name = "calculate"
-    let description = "Perform basic mathematical calculations including addition, subtraction, multiplication, and division"
+    let description = "Perform basic mathematical calculations including addition, subtraction, multiplication, and " +
+                      "division"
 
     @Generable
     struct Arguments {

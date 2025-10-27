@@ -15,7 +15,8 @@ struct HealthDataTool: Tool {
 
     @Generable
     struct Arguments {
-        @Guide(description: "The type of health data to fetch: 'today', 'weekly', or specific metric like 'steps', 'heartRate', 'sleep', 'activeEnergy', 'distance'")
+        @Guide(description: "The type of health data to fetch: 'today', 'weekly', or specific metric like 'steps', " +
+                            "'heartRate', 'sleep', 'activeEnergy', 'distance'")
         var dataType: String
     }
 
@@ -161,7 +162,8 @@ struct HealthDataTool: Tool {
         var errorDescription: String? {
             switch self {
             case .invalidDataType(let type):
-                return "Invalid data type: '\(type)'. Use 'today', 'weekly', 'steps', 'heartRate', 'sleep', 'activeEnergy', or 'distance'."
+                return "Invalid data type: '\(type)'. Use 'today', 'weekly', 'steps', 'heartRate', 'sleep', " +
+                       "'activeEnergy', or 'distance'."
             case .healthKitUnavailable:
                 return "HealthKit is not available on this device"
             case .permissionDenied:

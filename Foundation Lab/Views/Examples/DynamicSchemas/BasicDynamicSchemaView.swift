@@ -92,9 +92,10 @@ struct BasicDynamicSchemaView: View {
             }
             .padding()
         }
-    }
+    )
+}
 
-    private var bindingForSelectedExample: Binding<String> {
+private var bindingForSelectedExample: Binding<String> {
         switch selectedExample {
         case 0: return $personInput
         case 1: return $productInput
@@ -369,7 +370,6 @@ struct BasicDynamicSchemaView: View {
         )
         """
     }
-}
 
 #Preview {
     NavigationStack {

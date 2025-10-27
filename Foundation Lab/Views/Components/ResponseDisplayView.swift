@@ -121,7 +121,8 @@ struct ResponseDisplayView: View {
     ResponseDisplayView(
       requestResponse: RequestResponsePair(
         request: "Suggest a catchy name for a new coffee shop.",
-        response: "Here are some catchy coffee shop names:\n\n• Bean There, Done That\n• Grounds for Celebration\n• The Daily Grind\n• Espresso Yourself\n• Caffeine & Company"
+        response: "Here are some catchy coffee shop names:\n\n• Bean There, Done That\n• Grounds for Celebration\n• " +
+                 "The Daily Grind\n• Espresso Yourself\n• Caffeine & Company"
       ),
       onClear: {}
     )

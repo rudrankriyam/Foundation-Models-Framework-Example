@@ -329,7 +329,8 @@ class SpeechRecognizer: NSObject, SpeechRecognitionService {
 
             } catch {
                 lastError = error
-                logger.error("Audio session configuration failed (attempt \(attempt)): \(error.localizedDescription, privacy: .public)")
+                logger.error("Audio session configuration failed (attempt \(attempt)): " +
+                    "\(error.localizedDescription, privacy: .public)")
 
                 if attempt == 1 {
                     usleep(100_000)
@@ -385,39 +386,47 @@ class SpeechRecognizer: NSObject, SpeechRecognitionService {
                 }
 
                 if let error {
-                    self.logger.error("Speech recognition error: \(error.localizedDescription, privacy: .public)")
-
-                    if case .listening(let partialText) = self.state,
-                       !partialText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        if VoiceLogging.isVerboseEnabled {
-                            self.logger.debug("Ignoring error due to partial text: \(partialText, privacy: .public)")
-                        }
-                        self.hasProcessedFinalResult = true
-                        self.state = .completed(finalText: partialText)
-                    } else {
-                        self.hasProcessedFinalResult = true
-                        self.state = .error(.recognitionFailed(error.localizedDescription))
-                    }
+                    self.handleRecognitionError(error)
                     return
                 }
 
                 if let result {
-                    let transcription = result.bestTranscription.formattedString
-
-                    if result.isFinal {
-                        if VoiceLogging.isVerboseEnabled {
-                            self.logger.debug("Final result: \(transcription, privacy: .public)")
-                        }
-                        self.hasProcessedFinalResult = true
-                        self.state = .completed(finalText: transcription)
-                    } else if !self.hasProcessedFinalResult {
-                        if VoiceLogging.isVerboseEnabled {
-                            self.logger.debug("Partial result: \(transcription, privacy: .public)")
-                        }
-                        self.state = .listening(partialText: transcription)
-                    }
+                    self.processRecognitionResult(result)
                 }
             }
+        }
+    }
+
+    private func handleRecognitionError(_ error: Error) {
+        logger.error("Speech recognition error: \(error.localizedDescription, privacy: .public)")
+
+        if case .listening(let partialText) = state,
+           !partialText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            if VoiceLogging.isVerboseEnabled {
+                logger.debug("Ignoring error due to partial text: \(partialText, privacy: .public)")
+            }
+            hasProcessedFinalResult = true
+            state = .completed(finalText: partialText)
+        } else {
+            hasProcessedFinalResult = true
+            state = .error(.recognitionFailed(error.localizedDescription))
+        }
+    }
+
+    private func processRecognitionResult(_ result: SFSpeechRecognitionResult) {
+        let transcription = result.bestTranscription.formattedString
+
+        if result.isFinal {
+            if VoiceLogging.isVerboseEnabled {
+                logger.debug("Final result: \(transcription, privacy: .public)")
+            }
+            hasProcessedFinalResult = true
+            state = .completed(finalText: transcription)
+        } else if !hasProcessedFinalResult {
+            if VoiceLogging.isVerboseEnabled {
+                logger.debug("Partial result: \(transcription, privacy: .public)")
+            }
+            state = .listening(partialText: transcription)
         }
     }
 

@@ -81,15 +81,7 @@ struct BusinessIdeasView: View {
                 prompt: currentPrompt,
                 type: BusinessIdea.self
             ) { idea in
-                formattedIdea(
-                    name: idea.name,
-                    description: idea.description,
-                    targetMarket: idea.targetMarket,
-                    advantages: idea.advantages,
-                    revenueModel: idea.revenueModel,
-                    estimatedStartupCost: idea.estimatedStartupCost,
-                    timeline: idea.timeline
-                )
+                formattedIdea(idea)
             }
         }
     }
@@ -113,35 +105,27 @@ private extension BusinessIdeasView {
         }
     }
     
-    func formattedIdea(
-        name: String,
-        description: String,
-        targetMarket: String,
-        advantages: [String],
-        revenueModel: String,
-        estimatedStartupCost: String,
-        timeline: String?
-    ) -> String {
+    func formattedIdea(_ idea: BusinessIdea) -> String {
     """
-    💡 Business Name: \(name)
-    
+    💡 Business Name: \(idea.name)
+
     📝 Description:
-    \(description)
-    
+    \(idea.description)
+
     🎯 Target Market:
-    \(targetMarket)
-    
+    \(idea.targetMarket)
+
     💪 Key Advantages:
-    \(advantages.map { "• \($0)" }.joined(separator: "\n"))
-    
+    \(idea.advantages.map { "• \($0)" }.joined(separator: "\n"))
+
     💰 Revenue Model:
-    \(revenueModel)
-    
+    \(idea.revenueModel)
+
     💵 Estimated Startup Cost:
-    \(estimatedStartupCost)
-    
+    \(idea.estimatedStartupCost)
+
     ⏱️ Timeline:
-    \(timelineSection(for: timeline))
+    \(timelineSection(for: idea.timeline))
     """
     }
     

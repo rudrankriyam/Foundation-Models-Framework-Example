@@ -252,7 +252,8 @@ struct NutritionAnalysisService {
             let session = LanguageModelSession(instructions: """
                 You are a nutrition expert specializing in food analysis and macro tracking.
                 
-                IMPORTANT: Respond in \(selectedLanguage). All your responses must be in the user's language: \(selectedLanguage)
+                IMPORTANT: Respond in \(selectedLanguage). All your responses must be in the user's language: " +
+                "\(selectedLanguage)"
                 
                 When parsing food descriptions:
                 - Estimate realistic portions for typical adults
@@ -276,7 +277,8 @@ struct NutritionAnalysisService {
                 RESPOND IN \(selectedLanguage). Parse this food description into nutritional data: "\(foodDescription)"
                 
                 Examples of good parsing:
-                "I had 2 scrambled eggs with toast" → Consider: 2 large eggs (~140 cal), 1 slice toast (~80 cal), cooking butter (~30 cal)
+                "I had 2 scrambled eggs with toast" → Consider: 2 large eggs (~140 cal), 1 slice toast (~80 cal), " +
+                "cooking butter (~30 cal)"
                 "protein shake after workout" → Consider: 1 scoop protein powder (~120 cal) + milk/water
                 "pizza slice for lunch" → Consider: 1 slice medium pizza (~280 cal)
                 
@@ -293,7 +295,10 @@ struct NutritionAnalysisService {
             
             // Generate insights
             let insightsPrompt = """
-                RESPOND IN \(selectedLanguage). Provide brief, encouraging nutritional insights about this meal: \(response.content.foodName) with \(response.content.calories) calories, \(response.content.proteinGrams)g protein, \(response.content.carbsGrams)g carbs, \(response.content.fatGrams)g fat.
+                RESPOND IN \(selectedLanguage). Provide brief, encouraging nutritional insights about this meal:
+                \(response.content.foodName) with \(response.content.calories) calories,
+                \(response.content.proteinGrams)g protein, \(response.content.carbsGrams)g carbs,
+                \(response.content.fatGrams)g fat.
                 
                 Be supportive and focus on the positive aspects. Keep it brief (2-3 sentences).
                 Language: \(selectedLanguage)

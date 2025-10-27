@@ -59,7 +59,8 @@ struct FeedbackView: View {
             }
         }
 #if os(macOS)
-        .frame(minWidth: 500, idealWidth: 600, maxWidth: .infinity, minHeight: 400, idealHeight: 500, maxHeight: .infinity)
+        .frame(minWidth: 500, idealWidth: 600, maxWidth: .infinity,
+               minHeight: 400, idealHeight: 500, maxHeight: .infinity)
 #endif
     }
 }

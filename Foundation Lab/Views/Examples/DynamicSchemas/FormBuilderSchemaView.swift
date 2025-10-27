@@ -37,8 +37,8 @@ struct FormBuilderSchemaView: View {
             errorMessage: executor.errorMessage,
             codeExample: exampleCode,
             onRun: { Task { await runExample() } },
-            onReset: { executor.reset() }
-        ) {
+            onReset: { executor.reset() },
+            content: {
             VStack(alignment: .leading, spacing: Spacing.medium) {
                 // Mode selector
                 VStack(alignment: .leading, spacing: Spacing.small) {
@@ -90,7 +90,8 @@ struct FormBuilderSchemaView: View {
             }
             .padding()
         }
-    }
+    )
+}
 
     private func runExample() async {
         await executor.execute {

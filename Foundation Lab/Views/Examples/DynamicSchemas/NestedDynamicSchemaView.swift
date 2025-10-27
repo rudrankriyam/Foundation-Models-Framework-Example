@@ -45,9 +45,9 @@ struct NestedDynamicSchemaView: View {
             errorMessage: executor.errorMessage,
             codeExample: exampleCode,
             onRun: { Task { await runExample() } },
-            onReset: { selectedExample = 0 }
-        ) {
-            VStack(alignment: .leading, spacing: Spacing.medium) {
+            onReset: { selectedExample = 0 },
+            content: {
+                VStack(alignment: .leading, spacing: Spacing.medium) {
                 // Example selector
                 Picker("Example", selection: $selectedExample) {
                     ForEach(0..<examples.count, id: \.self) { index in
@@ -104,6 +104,7 @@ struct NestedDynamicSchemaView: View {
             }
             .padding()
         }
+        )
     }
 
     private var bindingForSelectedExample: Binding<String> {
@@ -192,9 +193,9 @@ struct NestedDynamicSchemaView: View {
             \(currentInput)
 
             📊 Extracted Nested Structure:
-            \(formatNestedContent(response.content, indent: 0))
+            \(NestedSchemaFormatter.formatNestedContent(response.content, indent: 0))
 
-            🔍 Nesting Levels Found: \(countNestingLevels(response.content))
+            🔍 Nesting Levels Found: \(NestedSchemaFormatter.countNestingLevels(response.content))
             """
         }
     }
@@ -514,98 +515,6 @@ struct NestedDynamicSchemaView: View {
         }
     }
 
-    private func formatNestedContent(_ content: GeneratedContent, indent: Int) -> String {
-        let indentString = String(repeating: "  ", count: indent)
-        var result = ""
-
-        switch content.kind {
-        case .structure(let properties, let orderedKeys):
-            for key in orderedKeys {
-                if let value = properties[key] {
-                    result += "\n\(indentString)\(key): "
-
-                    switch value.kind {
-                    case .structure:
-                        // Nested object
-                        result += formatNestedContent(value, indent: indent + 1)
-                    case .array(let elements):
-                        // Array
-                        result += "["
-                        for (index, element) in elements.enumerated() {
-                            result += formatNestedContent(element, indent: indent + 1)
-                            if index < elements.count - 1 {
-                                result += ","
-                            }
-                        }
-                        result += "\n\(indentString)]"
-                    case .string(let stringValue):
-                        result += "\"\(stringValue)\""
-                    case .number(let numberValue):
-                        result += String(numberValue)
-                    case .bool(let boolValue):
-                        result += String(boolValue)
-                    case .null:
-                        result += "null"
-                    @unknown default:
-                        result += "unknown"
-                    }
-                }
-            }
-        case .array(let elements):
-            result += "["
-            for (index, element) in elements.enumerated() {
-                result += formatNestedContent(element, indent: indent + 1)
-                if index < elements.count - 1 {
-                    result += ","
-                }
-            }
-            result += "\n\(indentString)]"
-        case .string(let stringValue):
-            result += "\"\(stringValue)\""
-        case .number(let numberValue):
-            result += String(numberValue)
-        case .bool(let boolValue):
-            result += String(boolValue)
-        case .null:
-            result += "null"
-        @unknown default:
-            result += "unknown"
-        }
-
-        return result
-    }
-
-    private func countNestingLevels(_ content: GeneratedContent, currentLevel: Int = 0) -> Int {
-        var maxLevel = currentLevel
-
-        switch content.kind {
-        case .structure(let properties, _):
-            for (_, value) in properties {
-                switch value.kind {
-                case .structure:
-                    maxLevel = max(maxLevel, countNestingLevels(value, currentLevel: currentLevel + 1))
-                case .array(let elements):
-                    for element in elements {
-                        maxLevel = max(maxLevel, countNestingLevels(element, currentLevel: currentLevel + 1))
-                    }
-                case .string, .number, .bool, .null:
-                    break
-                @unknown default:
-                    break
-                }
-            }
-        case .array(let elements):
-            for element in elements {
-                maxLevel = max(maxLevel, countNestingLevels(element, currentLevel: currentLevel + 1))
-            }
-        case .string, .number, .bool, .null:
-            break
-        @unknown default:
-            break
-        }
-
-        return maxLevel
-    }
 
     private var exampleCode: String {
         """

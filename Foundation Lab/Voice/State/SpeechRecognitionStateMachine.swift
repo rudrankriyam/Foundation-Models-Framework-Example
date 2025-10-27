@@ -14,71 +14,6 @@ import OSLog
 @MainActor
 final class SpeechRecognitionStateMachine {
 
-    // MARK: - State Definition
-
-    enum State {
-        case idle
-        case requestingPermission
-        case permissionGranted
-        case permissionDenied
-        case initializingRecognition
-        case listening
-        case processingSpeech(String) // Contains recognized text
-        case synthesizingResponse(String) // Contains response text
-        case completed
-        case error(SpeechRecognitionStateMachineError)
-
-        var isActive: Bool {
-            switch self {
-            case .idle, .completed, .error:
-                return false
-            case .requestingPermission, .permissionGranted, .permissionDenied,
-                 .initializingRecognition, .listening, .processingSpeech, .synthesizingResponse:
-                return true
-            }
-        }
-
-        var canStartListening: Bool {
-            switch self {
-            case .idle, .permissionGranted, .completed:
-                return true
-            default:
-                return false
-            }
-        }
-
-        var shouldStopListening: Bool {
-            switch self {
-            case .listening, .processingSpeech:
-                return true
-            default:
-                return false
-            }
-        }
-    }
-
-    // MARK: - Errors
-
-    enum SpeechRecognitionStateMachineError: LocalizedError {
-        case permissionDenied
-        case recognitionFailed(String)
-        case processingFailed(String)
-        case synthesisFailed(String)
-
-        var errorDescription: String? {
-            switch self {
-            case .permissionDenied:
-                return "Microphone or speech recognition permission denied"
-            case .recognitionFailed(let message):
-                return "Speech recognition failed: \(message)"
-            case .processingFailed(let message):
-                return "Text processing failed: \(message)"
-            case .synthesisFailed(let message):
-                return "Speech synthesis failed: \(message)"
-            }
-        }
-    }
-
     // MARK: - Observable Properties
 
     private(set) var state: State = .idle {
@@ -175,31 +110,44 @@ final class SpeechRecognitionStateMachine {
     private func handleSpeechRecognitionStateChange(from recognitionState: SpeechRecognitionState) {
         switch recognitionState {
         case .idle:
-            // Recognition stopped, check if we should transition
-            if case .listening = state {
-                state = .idle
-            }
-
+            handleRecognitionIdleState()
         case .listening:
-            if case .initializingRecognition = state {
-                logger.info("State machine: initializingRecognition → listening")
-                state = .listening
-            }
-
+            handleRecognitionListeningState()
         case .completed(let finalText):
-            if !finalText.isEmpty {
-                logger.info("State machine: listening → processingSpeech with text: \(finalText)")
-                state = .processingSpeech(finalText)
-                processRecognizedText(finalText)
-            } else {
-                state = .idle
-            }
-
+            handleRecognitionCompletedState(finalText)
         case .error(let error):
-            logger.error("State machine: speech recognition error: \(error.localizedDescription)")
-            state = .error(.recognitionFailed(error.localizedDescription))
-            scheduleIdleReset()
+            handleRecognitionErrorState(error)
         }
+    }
+
+    private func handleRecognitionIdleState() {
+        // Recognition stopped, check if we should transition
+        if case .listening = state {
+            state = .idle
+        }
+    }
+
+    private func handleRecognitionListeningState() {
+        if case .initializingRecognition = state {
+            logger.info("State machine: initializingRecognition → listening")
+            state = .listening
+        }
+    }
+
+    private func handleRecognitionCompletedState(_ finalText: String) {
+        if !finalText.isEmpty {
+            logger.info("State machine: listening → processingSpeech with text: \(finalText)")
+            state = .processingSpeech(finalText)
+            processRecognizedText(finalText)
+        } else {
+            state = .idle
+        }
+    }
+
+    private func handleRecognitionErrorState(_ error: SpeechRecognitionError) {
+        logger.error("State machine: speech recognition error: \(error.localizedDescription)")
+        state = .error(.recognitionFailed(error.localizedDescription))
+        scheduleIdleReset()
     }
 
     private func handleSpeechSynthesisStateChange(isSpeaking: Bool) {
@@ -223,17 +171,26 @@ final class SpeechRecognitionStateMachine {
         }
 
         state = .requestingPermission
+        await performPermissionRequest()
+    }
 
+    private func performPermissionRequest() async {
         let granted = await permissionService.requestAllPermissions()
 
         if granted {
             state = .permissionGranted
         } else {
-            state = .permissionDenied
-            state = .error(.permissionDenied)
-            scheduleIdleReset()
+            handlePermissionDenied()
         }
     }
+
+    private func handlePermissionDenied() {
+        state = .permissionDenied
+        state = .error(.permissionDenied)
+        scheduleIdleReset()
+    }
+
+    // MARK: - Speech Recognition Coordination
 
     private func startRecognition() async {
         state = .initializingRecognition
@@ -242,9 +199,13 @@ final class SpeechRecognitionStateMachine {
             try speechRecognitionService.startRecognition()
             // State will be updated via binding when recognition actually starts
         } catch {
-            state = .error(.recognitionFailed(error.localizedDescription))
-            scheduleIdleReset()
+            handleRecognitionStartError(error)
         }
+    }
+
+    private func handleRecognitionStartError(_ error: Error) {
+        state = .error(.recognitionFailed(error.localizedDescription))
+        scheduleIdleReset()
     }
 
     private func processRecognizedText(_ text: String) {
@@ -252,18 +213,36 @@ final class SpeechRecognitionStateMachine {
             guard let self = self else { return }
 
             do {
-                // Process text with AI
-                let response = try await self.inferenceService.processText(text)
-
-                // Synthesize response
-                self.state = .synthesizingResponse(response)
-                try await self.speechSynthesisService.synthesizeAndSpeak(text: response)
-
+                let response = try await self.performTextProcessing(text)
+                await self.startResponseSynthesis(response)
             } catch {
-                self.state = .error(.processingFailed(error.localizedDescription))
-                self.scheduleIdleReset()
+                self.handleTextProcessingError(error)
             }
         }
+    }
+
+    private func performTextProcessing(_ text: String) async throws -> String {
+        // Process text with AI
+        return try await inferenceService.processText(text)
+    }
+
+    private func startResponseSynthesis(_ response: String) async {
+        do {
+            state = .synthesizingResponse(response)
+            try await speechSynthesisService.synthesizeAndSpeak(text: response)
+        } catch {
+            handleSynthesisStartError(error)
+        }
+    }
+
+    private func handleTextProcessingError(_ error: Error) {
+        state = .error(.processingFailed(error.localizedDescription))
+        scheduleIdleReset()
+    }
+
+    private func handleSynthesisStartError(_ error: Error) {
+        state = .error(.synthesisFailed(error.localizedDescription))
+        scheduleIdleReset()
     }
 
     // MARK: - Cleanup
@@ -290,6 +269,75 @@ final class SpeechRecognitionStateMachine {
         idleResetTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(0.5))
             self?.state = .idle
+        }
+    }
+}
+
+// MARK: - State Definition
+
+extension SpeechRecognitionStateMachine {
+    enum State {
+        case idle
+        case requestingPermission
+        case permissionGranted
+        case permissionDenied
+        case initializingRecognition
+        case listening
+        case processingSpeech(String) // Contains recognized text
+        case synthesizingResponse(String) // Contains response text
+        case completed
+        case error(SpeechRecognitionStateMachineError)
+
+        var isActive: Bool {
+            switch self {
+            case .idle, .completed, .error:
+                return false
+            case .requestingPermission, .permissionGranted, .permissionDenied,
+                 .initializingRecognition, .listening, .processingSpeech, .synthesizingResponse:
+                return true
+            }
+        }
+
+        var canStartListening: Bool {
+            switch self {
+            case .idle, .permissionGranted, .completed:
+                return true
+            default:
+                return false
+            }
+        }
+
+        var shouldStopListening: Bool {
+            switch self {
+            case .listening, .processingSpeech:
+                return true
+            default:
+                return false
+            }
+        }
+    }
+}
+
+// MARK: - Errors
+
+extension SpeechRecognitionStateMachine {
+    enum SpeechRecognitionStateMachineError: LocalizedError {
+        case permissionDenied
+        case recognitionFailed(String)
+        case processingFailed(String)
+        case synthesisFailed(String)
+
+        var errorDescription: String? {
+            switch self {
+            case .permissionDenied:
+                return "Microphone or speech recognition permission denied"
+            case .recognitionFailed(let message):
+                return "Speech recognition failed: \(message)"
+            case .processingFailed(let message):
+                return "Text processing failed: \(message)"
+            case .synthesisFailed(let message):
+                return "Speech synthesis failed: \(message)"
+            }
         }
     }
 }

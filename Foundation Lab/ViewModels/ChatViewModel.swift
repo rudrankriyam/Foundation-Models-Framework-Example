@@ -18,8 +18,10 @@ final class ChatViewModel {
     var isSummarizing: Bool = false
     var isApplyingWindow: Bool = false
     var sessionCount: Int = 1
-    var instructions: String =
-        "You are a helpful, friendly AI assistant. Engage in natural conversation and provide thoughtful, detailed responses."
+    var instructions: String = """
+        You are a helpful, friendly AI assistant. Engage in natural conversation and provide
+        thoughtful, detailed responses.
+        """
     var errorMessage: String?
     var showError: Bool = false
 
@@ -213,7 +215,8 @@ final class ChatViewModel {
 
         let conversationText = createConversationText()
         let summaryPrompt = """
-      Please summarize the following entire conversation comprehensively. Include all key points, topics discussed, user preferences, and important context that would help continue the conversation naturally:
+      Please summarize the following entire conversation comprehensively. Include all key points, topics discussed, \
+      user preferences, and important context that would help continue the conversation naturally:
 
       \(conversationText)
       """
@@ -242,7 +245,8 @@ final class ChatViewModel {
       \(summary.userPreferences.map { "• \($0)" }
         .joined(separator: "\n"))
 
-      Continue the conversation naturally, referencing this context when relevant. The user's next message is a continuation of your previous discussion.
+      Continue the conversation naturally, referencing this context when relevant. \
+      The user's next message is a continuation of your previous discussion.
       """
 
         session = LanguageModelSession(instructions: Instructions(contextInstructions))

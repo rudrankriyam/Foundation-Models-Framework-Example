@@ -29,9 +29,9 @@ struct ArrayDynamicSchemaView: View {
             errorMessage: executor.errorMessage,
             codeExample: exampleCode,
             onRun: { Task { await runExample() } },
-            onReset: { selectedExample = 0; minItems = 2; maxItems = 5 }
-        ) {
-            VStack(alignment: .leading, spacing: Spacing.medium) {
+            onReset: { selectedExample = 0; minItems = 2; maxItems = 5 },
+            content: {
+                VStack(alignment: .leading, spacing: Spacing.medium) {
                 // Example selector
                 Picker("Example", selection: $selectedExample) {
                     ForEach(0..<examples.count, id: \.self) { index in
@@ -116,6 +116,7 @@ struct ArrayDynamicSchemaView: View {
             }
             .padding()
         }
+        )
     }
 
     private var bindingForSelectedExample: Binding<String> {

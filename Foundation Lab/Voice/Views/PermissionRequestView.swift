@@ -52,7 +52,9 @@ struct PermissionRequestView: View {
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
                             .scaleEffect(0.8)
                     } else {
-                        Text(viewModel.allPermissionsGranted ? String(localized: "Continue") : String(localized: "Grant Permissions"))
+                        Text(viewModel.allPermissionsGranted ?
+                             String(localized: "Continue") :
+                             String(localized: "Grant Permissions"))
                             .fontWeight(.semibold)
                     }
                 }

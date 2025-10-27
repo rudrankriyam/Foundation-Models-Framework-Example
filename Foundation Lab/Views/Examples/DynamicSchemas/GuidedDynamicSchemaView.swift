@@ -33,8 +33,8 @@ struct GuidedDynamicSchemaView: View {
             errorMessage: executor.errorMessage,
             codeExample: exampleCode,
             onRun: { Task { await runExample() } },
-            onReset: { executor.reset() }
-        ) {
+            onReset: { executor.reset() },
+            content: {
             VStack(alignment: .leading, spacing: Spacing.medium) {
                 // Guide Type Selector
                 VStack(alignment: .leading, spacing: Spacing.small) {
@@ -83,7 +83,8 @@ struct GuidedDynamicSchemaView: View {
             }
             .padding()
         }
-    }
+    )
+}
 
     private var currentInput: String {
         switch selectedGuideType {
@@ -139,277 +140,210 @@ struct GuidedDynamicSchemaView: View {
         )
     }
 
-    private func createSchema(for index: Int) -> DynamicGenerationSchema {
-        let schema: DynamicGenerationSchema
+    private func createPhoneDirectorySchema() -> DynamicGenerationSchema {
+        let phoneEntrySchema = DynamicGenerationSchema(
+            name: "PhoneEntry",
+            description: "Phone directory entry",
+            properties: [
+                DynamicGenerationSchema.Property(
+                    name: "name",
+                    description: "Person's name",
+                    schema: DynamicGenerationSchema(type: String.self)
+                ),
+                DynamicGenerationSchema.Property(
+                    name: "phoneNumber",
+                    description: "US phone number",
+                    schema: DynamicGenerationSchema(
+                        type: String.self,
+                        guides: [.pattern(/\(\d{3}\) \d{3}-\d{4}/)]
+                    )
+                ),
+                DynamicGenerationSchema.Property(
+                    name: "extension",
+                    description: "Extension",
+                    schema: DynamicGenerationSchema(
+                        type: String.self,
+                        guides: [.pattern(/x\d{3,4}/)]
+                    ),
+                    isOptional: true
+                )
+            ]
+        )
 
+        return DynamicGenerationSchema(
+            name: "PhoneDirectory",
+            description: "Phone directory",
+            properties: [
+                DynamicGenerationSchema.Property(
+                    name: "entries",
+                    description: "Phone directory entries",
+                    schema: DynamicGenerationSchema(
+                        arrayOf: phoneEntrySchema,
+                        minimumElements: 3,
+                        maximumElements: 7
+                    )
+                )
+            ]
+        )
+    }
+
+    private func createProductCatalogSchema() -> DynamicGenerationSchema {
+        let productSchema = DynamicGenerationSchema(
+            name: "Product",
+            description: "Product information",
+            properties: [
+                DynamicGenerationSchema.Property(
+                    name: "name",
+                    description: "Product name",
+                    schema: DynamicGenerationSchema(type: String.self)
+                ),
+                DynamicGenerationSchema.Property(
+                    name: "price",
+                    description: "Price in USD",
+                    schema: DynamicGenerationSchema(
+                        type: Double.self,
+                        guides: [.range(10.0...100.0)]
+                    )
+                ),
+                DynamicGenerationSchema.Property(
+                    name: "stock",
+                    description: "Stock quantity",
+                    schema: DynamicGenerationSchema(
+                        type: Int.self,
+                        guides: [.minimum(0), .maximum(500)]
+                    )
+                ),
+                DynamicGenerationSchema.Property(
+                    name: "discount",
+                    description: "Discount percentage",
+                    schema: DynamicGenerationSchema(
+                        type: Double.self,
+                        guides: [.range(0...50)]
+                    ),
+                    isOptional: true
+                )
+            ]
+        )
+
+        return DynamicGenerationSchema(
+            name: "ProductCatalog",
+            description: "Product catalog",
+            properties: [
+                DynamicGenerationSchema.Property(
+                    name: "products",
+                    description: "Product list",
+                    schema: DynamicGenerationSchema(
+                        arrayOf: productSchema,
+                        minimumElements: 3,
+                        maximumElements: 8
+                    )
+                )
+            ]
+        )
+    }
+
+    private func createSchema(for index: Int) -> DynamicGenerationSchema {
         switch index {
         case 0: // Pattern Matching
-            let phoneEntrySchema = DynamicGenerationSchema(
-                name: "PhoneEntry",
-                description: "Phone directory entry",
-                properties: [
-                    DynamicGenerationSchema.Property(
-                        name: "name",
-                        description: "Person's name",
-                        schema: DynamicGenerationSchema(type: String.self)
-                    ),
-                    DynamicGenerationSchema.Property(
-                        name: "phoneNumber",
-                        description: "US phone number",
-                        schema: DynamicGenerationSchema(
-                            type: String.self,
-                            guides: [.pattern(/\(\d{3}\) \d{3}-\d{4}/)]
-                        )
-                    ),
-                    DynamicGenerationSchema.Property(
-                        name: "extension",
-                        description: "Extension",
-                        schema: DynamicGenerationSchema(
-                            type: String.self,
-                            guides: [.pattern(/x\d{3,4}/)]
-                        ),
-                        isOptional: true
-                    )
-                ]
-            )
-
-            schema = DynamicGenerationSchema(
-                name: "PhoneDirectory",
-                description: "Phone directory",
-                properties: [
-                    DynamicGenerationSchema.Property(
-                        name: "entries",
-                        description: "Phone directory entries",
-                        schema: DynamicGenerationSchema(
-                            arrayOf: phoneEntrySchema,
-                            minimumElements: 3,
-                            maximumElements: 7
-                        )
-                    )
-                ]
-            )
+            return createPhoneDirectorySchema()
 
         case 1: // Number Ranges
-            let productSchema = DynamicGenerationSchema(
-                name: "Product",
-                description: "Product information",
+            return createProductCatalogSchema()
+
+        case 2: // Array Constraints
+            // Create shopping item schema
+            let shoppingItemSchema = DynamicGenerationSchema(
+                name: "ShoppingItem",
+                description: "Individual shopping item",
                 properties: [
                     DynamicGenerationSchema.Property(
                         name: "name",
-                        description: "Product name",
-                        schema: DynamicGenerationSchema(type: String.self)
-                    ),
-                    DynamicGenerationSchema.Property(
-                        name: "price",
-                        description: "Price in USD",
-                        schema: DynamicGenerationSchema(
-                            type: Double.self,
-                            guides: [.range(10.0...100.0)]
-                        )
-                    ),
-                    DynamicGenerationSchema.Property(
-                        name: "stock",
-                        description: "Stock quantity",
-                        schema: DynamicGenerationSchema(
-                            type: Int.self,
-                            guides: [.minimum(0), .maximum(500)]
-                        )
-                    ),
-                    DynamicGenerationSchema.Property(
-                        name: "discount",
-                        description: "Discount percentage",
-                        schema: DynamicGenerationSchema(
-                            type: Double.self,
-                            guides: [.range(0...50)]
-                        ),
-                        isOptional: true
-                    )
-                ]
-            )
-
-            schema = DynamicGenerationSchema(
-                name: "ProductCatalog",
-                description: "Product catalog",
-                properties: [
-                    DynamicGenerationSchema.Property(
-                        name: "products",
-                        description: "Product list",
-                        schema: DynamicGenerationSchema(
-                            arrayOf: productSchema,
-                            minimumElements: 3,
-                            maximumElements: 8
-                        )
-                    )
-                ]
-            )
-
-        case 2: // Array Constraints
-            let attributeSchema = DynamicGenerationSchema(
-                type: String.self,
-                guides: [.anyOf(["organic", "gluten-free", "vegan", "non-GMO", "local", "fair-trade"])]
-            )
-
-            let shoppingItemSchema = DynamicGenerationSchema(
-                name: "ShoppingItem",
-                description: "Shopping list item",
-                properties: [
-                    DynamicGenerationSchema.Property(
-                        name: "itemName",
-                        description: "Item to buy",
-                        schema: DynamicGenerationSchema(type: String.self)
+                        description: "Item name",
+                        schema: .init(type: String.self)
                     ),
                     DynamicGenerationSchema.Property(
                         name: "quantity",
-                        description: "Quantity to buy",
-                        schema: DynamicGenerationSchema(
-                            type: Int.self,
-                            guides: [.range(1...20)]
-                        ),
-                        isOptional: true
+                        description: "Quantity needed",
+                        schema: .init(type: Int.self)
                     ),
                     DynamicGenerationSchema.Property(
-                        name: "attributes",
-                        description: "Item attributes",
-                        schema: DynamicGenerationSchema(
-                            arrayOf: attributeSchema,
-                            minimumElements: 2,
-                            maximumElements: 4
-                        )
+                        name: "category",
+                        description: "Item category",
+                        schema: .init(type: String.self)
                     ),
                     DynamicGenerationSchema.Property(
-                        name: "alternatives",
-                        description: "Alternative products",
-                        schema: DynamicGenerationSchema(
-                            arrayOf: DynamicGenerationSchema(type: String.self),
-                            maximumElements: 3
-                        ),
-                        isOptional: true
+                        name: "estimatedPrice",
+                        description: "Estimated price",
+                        schema: .init(type: Double.self)
                     )
                 ]
             )
 
-            schema = DynamicGenerationSchema(
+            let storeNameProperty = DynamicGenerationSchema.Property(
+                name: "storeName",
+                description: "Store name",
+                schema: .init(type: String.self)
+            )
+            let itemsProperty = DynamicGenerationSchema.Property(
+                name: "items",
+                description: "Shopping list items",
+                schema: .init(arrayOf: shoppingItemSchema)
+            )
+            let categoriesProperty = DynamicGenerationSchema.Property(
+                name: "categories",
+                description: "Item categories",
+                schema: .init(arrayOf: .init(type: String.self)),
+                isOptional: true
+            )
+
+            return DynamicGenerationSchema(
                 name: "ShoppingList",
-                description: "Shopping list",
-                properties: [
-                    DynamicGenerationSchema.Property(
-                        name: "storeName",
-                        description: "Store name",
-                        schema: DynamicGenerationSchema(type: String.self)
-                    ),
-                    DynamicGenerationSchema.Property(
-                        name: "items",
-                        description: "Shopping list items",
-                        schema: DynamicGenerationSchema(
-                            arrayOf: shoppingItemSchema,
-                            minimumElements: 3,
-                            maximumElements: 5
-                        )
-                    ),
-                    DynamicGenerationSchema.Property(
-                        name: "categories",
-                        description: "Item categories",
-                        schema: DynamicGenerationSchema(
-                            arrayOf: DynamicGenerationSchema(
-                                type: String.self,
-                                guides: [.anyOf(["produce", "dairy", "meat", "bakery", "frozen", "other"])]
-                            ),
-                            minimumElements: 2
-                        ),
-                        isOptional: true
-                    )
-                ]
+                description: "Shopping list with constraints",
+                properties: [storeNameProperty, itemsProperty, categoriesProperty]
             )
 
-        case 3: // Complex Validation
+        default: // Complex Validation
+            let firstNameProperty = DynamicGenerationSchema.Property(
+                name: "firstName",
+                description: "First name (capitalized)",
+                schema: .init(type: String.self)
+            )
+            let lastNameProperty = DynamicGenerationSchema.Property(
+                name: "lastName",
+                description: "Last name (capitalized)",
+                schema: .init(type: String.self)
+            )
+            let emailProperty = DynamicGenerationSchema.Property(
+                name: "email",
+                description: "Company email address",
+                schema: .init(type: String.self)
+            )
+            let departmentProperty = DynamicGenerationSchema.Property(
+                name: "department",
+                description: "Department name",
+                schema: .init(type: String.self)
+            )
+
             let employeeSchema = DynamicGenerationSchema(
                 name: "Employee",
                 description: "Employee information",
-                properties: [
-                    DynamicGenerationSchema.Property(
-                        name: "firstName",
-                        description: "First name",
-                        schema: DynamicGenerationSchema(
-                            type: String.self,
-                            guides: [.pattern(/^[A-Z][a-z]+$/)]
-                        )
-                    ),
-                    DynamicGenerationSchema.Property(
-                        name: "lastName",
-                        description: "Last name",
-                        schema: DynamicGenerationSchema(
-                            type: String.self,
-                            guides: [.pattern(/^[A-Z][a-z]+$/)]
-                        )
-                    ),
-                    DynamicGenerationSchema.Property(
-                        name: "email",
-                        description: "Company email",
-                        schema: DynamicGenerationSchema(
-                            type: String.self,
-                            guides: [.pattern(/^[a-z]+\.[a-z]+@techcorp\.com$/)]
-                        )
-                    ),
-                    DynamicGenerationSchema.Property(
-                        name: "employeeId",
-                        description: "Employee ID",
-                        schema: DynamicGenerationSchema(
-                            type: String.self,
-                            guides: [.pattern(/^EMP-\d{6}$/)]
-                        )
-                    ),
-                    DynamicGenerationSchema.Property(
-                        name: "department",
-                        description: "Department",
-                        schema: DynamicGenerationSchema(
-                            type: String.self,
-                            guides: [.anyOf(["Engineering", "Sales", "Marketing", "HR", "Finance"])]
-                        )
-                    ),
-                    DynamicGenerationSchema.Property(
-                        name: "yearsOfService",
-                        description: "Years with company",
-                        schema: DynamicGenerationSchema(
-                            type: Int.self,
-                            guides: [.range(0...40)]
-                        ),
-                        isOptional: true
-                    )
-                ]
+                properties: [firstNameProperty, lastNameProperty, emailProperty, departmentProperty]
             )
 
-            schema = DynamicGenerationSchema(
-                name: "EmployeeDirectory",
-                description: "Employee directory",
-                properties: [
-                    DynamicGenerationSchema.Property(
-                        name: "company",
-                        description: "Company domain",
-                        schema: DynamicGenerationSchema(
-                            type: String.self,
-                            guides: [.constant("techcorp.com")]
-                        )
-                    ),
-                    DynamicGenerationSchema.Property(
-                        name: "employees",
-                        description: "Employee records",
-                        schema: DynamicGenerationSchema(
-                            arrayOf: employeeSchema,
-                            minimumElements: 4,
-                            maximumElements: 6
-                        )
-                    )
-                ]
+            let employeesProperty = DynamicGenerationSchema.Property(
+                name: "employees",
+                description: "Employee records",
+                schema: .init(arrayOf: employeeSchema)
             )
 
-        default:
-            return DynamicGenerationSchema(
-                name: "Default",
-                properties: []
+            let companySchema = DynamicGenerationSchema(
+                name: "CompanyDirectory",
+                description: "Company employee directory",
+                properties: [employeesProperty]
             )
+
+            return companySchema
         }
-
-        return schema
     }
 
     private func validateConstraints(_ json: Any, for guideType: Int) -> String {
@@ -443,26 +377,11 @@ struct GuidedDynamicSchemaView: View {
 
         case 2: // Array constraints
             if let items = dict["items"] as? [[String: Any]] {
-                validations.append("\nShopping list has \(items.count) items (constraint: 3-5)")
-                let validAttributes = items.filter { item in
-                    if let attrs = item["attributes"] as? [String] {
-                        return attrs.count >= 2 && attrs.count <= 4
-                    }
-                    return false
+                validations.append("\nShopping list has \(items.count) items")
+                let itemsWithCategories = items.filter { item in
+                    return item["category"] != nil
                 }.count
-                validations.append("\nAll \(validAttributes) items have 2-4 attributes")
-            }
-
-        case 3: // Complex validation
-            if let employees = dict["employees"] as? [[String: Any]] {
-                validations.append("\nGenerated \(employees.count) employee records")
-                let validEmails = employees.filter { emp in
-                    if let email = emp["email"] as? String {
-                        return email.hasSuffix("@techcorp.com")
-                    }
-                    return false
-                }.count
-                validations.append("\nAll \(validEmails) emails use @techcorp.com domain")
+                validations.append("\n\(itemsWithCategories) items have categories")
             }
 
         default:
