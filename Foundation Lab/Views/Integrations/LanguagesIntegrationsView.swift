@@ -1,14 +1,14 @@
 //
-//  LanguagesView.swift
+//  LanguagesIntegrationsView.swift
 //  FoundationLab
 //
-//  Created by Assistant on 12/30/25.
+//  Created by Assistant on 10/27/25.
 //
 
 import SwiftUI
 import FoundationModels
 
-struct LanguagesView: View {
+struct LanguagesIntegrationsView: View {
     @Namespace private var glassNamespace
 
     var body: some View {
@@ -31,13 +31,10 @@ struct LanguagesView: View {
             }
             .padding(.vertical)
         }
-        .navigationTitle("Supported Languages")
+        .navigationTitle("Languages")
 #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
 #endif
-        .navigationDestination(for: LanguageExample.self) { languageExample in
-            languageExample.createView()
-        }
     }
 
     private var adaptiveGridColumns: [GridItem] {
@@ -62,6 +59,6 @@ struct LanguagesView: View {
 
 #Preview {
     NavigationStack {
-        LanguagesView()
+        LanguagesIntegrationsView()
     }
 }

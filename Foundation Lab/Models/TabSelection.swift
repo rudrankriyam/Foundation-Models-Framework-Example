@@ -10,7 +10,6 @@ import Foundation
 enum TabSelection: String, CaseIterable, Hashable {
   case examples
   case integrations
-  case languages
   case chat
   case settings
 
@@ -18,8 +17,6 @@ enum TabSelection: String, CaseIterable, Hashable {
     switch self {
     case .integrations:
       return "Integrations"
-    case .languages:
-      return "Languages"
     default:
       return rawValue.capitalized
     }

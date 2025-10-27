@@ -111,6 +111,10 @@ struct MusicToolView: View {
     case .notDetermined:
       let status = await MusicAuthorization.request()
       return status == .authorized ? nil : authorizationMessage(for: status)
+    case .denied:
+      return authorizationMessage(for: currentStatus)
+    case .restricted:
+      return authorizationMessage(for: currentStatus)
     @unknown default:
       return authorizationMessage(for: currentStatus)
     }
@@ -118,6 +122,10 @@ struct MusicToolView: View {
 
   private func authorizationMessage(for status: MusicAuthorization.Status) -> String {
     switch status {
+    case .authorized:
+      return ""
+    case .notDetermined:
+      return "Apple Music authorization is not determined."
     case .denied:
       return "Apple Music access is denied. Please enable Music access for FoundationLab in Settings."
     case .restricted:

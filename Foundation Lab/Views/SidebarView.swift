@@ -35,8 +35,6 @@ extension TabSelection {
             return "sparkles"
         case .integrations:
             return "wrench.and.screwdriver"
-        case .languages:
-            return "globe"
         case .chat:
             return "bubble.left.and.bubble.right"
         case .settings:
@@ -49,9 +47,8 @@ extension TabSelection {
         switch self {
         case .examples: return "1"
         case .integrations: return "2"
-        case .languages: return "3"
-        case .chat: return "4"
-        case .settings: return "5"
+        case .chat: return "3"
+        case .settings: return "4"
         }
     }
 #endif

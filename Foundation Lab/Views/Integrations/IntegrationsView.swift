@@ -9,11 +9,12 @@ import SwiftUI
 import FoundationModels
 
 enum IntegrationSection: String, CaseIterable {
-    case tools = "Tools"
-    case schemas = "Schemas"
+    case tools
+    case schemas
+    case languages
 
-    var displayName: String {
-        return rawValue
+    var name: String {
+        rawValue.capitalized
     }
 }
 
@@ -31,6 +32,8 @@ struct IntegrationsView: View {
                 ToolsView()
             case .schemas:
                 SchemaExamplesView()
+            case .languages:
+                LanguagesIntegrationsView()
             }
         }
         .navigationTitle("Integrations")
@@ -66,12 +69,15 @@ struct IntegrationsView: View {
                 InvoiceProcessingSchemaView()
             }
         }
+        .navigationDestination(for: LanguageExample.self) { languageExample in
+            languageExample.createView()
+        }
     }
 
     private var segmentedPicker: some View {
         Picker("", selection: $selectedSection) {
             ForEach(IntegrationSection.allCases, id: \.self) { section in
-                Text(section.displayName)
+                Text(section.name)
                     .tag(section)
             }
         }
