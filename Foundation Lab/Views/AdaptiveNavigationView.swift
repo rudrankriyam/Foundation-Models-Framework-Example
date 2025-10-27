@@ -56,7 +56,7 @@ struct AdaptiveNavigationView: View {
 
             Tab(TabSelection.voice.displayName, systemImage: "mic", value: .voice) {
                 NavigationStack {
-                    Text("Voice Tab")
+                    VoiceView()
                         .navigationTitle("Voice")
                 }
             }
@@ -114,7 +114,7 @@ struct AdaptiveNavigationView: View {
             }
         case .voice:
             NavigationStack {
-                Text("Voice Tab")
+                VoiceView()
                     .navigationTitle("Voice")
             }
         case .settings:
