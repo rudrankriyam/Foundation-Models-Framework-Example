@@ -39,35 +39,30 @@ struct AdaptiveNavigationView: View {
             Tab(TabSelection.examples.displayName, systemImage: "sparkles", value: .examples) {
                 NavigationStack {
                     ExamplesView(viewModel: $contentViewModel)
-                        .background(TopGradientView())
                 }
             }
 
             Tab(TabSelection.integrations.displayName, systemImage: "wrench.and.screwdriver", value: .integrations) {
                 NavigationStack {
                     IntegrationsView()
-                        .background(TopGradientView())
                 }
             }
 
             Tab(TabSelection.languages.displayName, systemImage: "globe", value: .languages) {
                 NavigationStack {
                     LanguagesView()
-                        .background(TopGradientView())
                 }
             }
 
             Tab(TabSelection.chat.displayName, systemImage: "bubble.left.and.bubble.right", value: .chat) {
                 NavigationStack {
                     ChatView(viewModel: $chatViewModel)
-                        .background(TopGradientView())
                 }
             }
 
             Tab(TabSelection.settings.displayName, systemImage: "gear", value: .settings) {
                 NavigationStack {
                     SettingsView()
-                        .background(TopGradientView())
                 }
             }
         }

@@ -50,7 +50,8 @@
       "Bash(gh pr:*)",
       "Bash(xcrun xcodebuild build:*)",
       "WebSearch",
-      "WebFetch(domain:brave.com)"
+      "WebFetch(domain:brave.com)",
+      "Bash(xcrun xcodebuild:*)"
     ],
     "deny": [],
     "includeCoAuthoredBy": false

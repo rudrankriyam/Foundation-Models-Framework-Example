@@ -63,7 +63,6 @@ struct ProductionLanguageExampleView: View {
         .navigationTitle("Insights Example")
 #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
-        .background(TopGradientView())
 #endif
         .onAppear {
             detectUserLanguage()
@@ -380,7 +379,6 @@ struct NutritionCard: View {
 #Preview {
     NavigationStack {
         ProductionLanguageExampleView()
-            .background(TopGradientView())
     }
     .environment(LanguageService())
 }

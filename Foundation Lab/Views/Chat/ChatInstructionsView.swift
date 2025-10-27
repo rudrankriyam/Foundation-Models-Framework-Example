@@ -39,7 +39,6 @@ struct ChatInstructionsView: View {
                 Spacer()
             }
             .padding(Spacing.medium)
-            .background(TopGradientView())
             .navigationTitle("Instructions")
 #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)

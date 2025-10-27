@@ -90,7 +90,6 @@ struct PermissionRequestView: View {
             Text(permissionService.permissionAlertMessage)
         }
         .frame(maxHeight: .infinity)
-        .background(SimpleTopGradientView())
     }
 
     func requestPermissions() {

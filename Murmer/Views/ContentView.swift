@@ -131,7 +131,6 @@ struct MurmerMainView: View {
             Spacer()
         }
         .padding()
-        .background(SimpleTopGradientView())
         .alert(
             "Reminder Created",
             isPresented: Binding(
