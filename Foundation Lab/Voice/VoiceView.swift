@@ -70,19 +70,18 @@ struct VoiceView: View {
                             )
                     }
 
-                    // Placeholder for AudioReactiveBlobView
-                    Circle()
-                        .fill(.indigo.gradient)
-                        .frame(width: 250, height: 250)
-                        .scaleEffect(blobScale)
-                        .overlay {
-                            Image(systemName: viewModel.isListening ? "mic.fill" : "mic")
-                                .font(.system(size: 60))
-                                .foregroundStyle(.white)
-                        }
-                        .onTapGesture {
-                            toggleListening()
-                        }
+                    AudioReactiveBlobView(
+                        speechRecognizer: viewModel.speechRecognizer,
+                        listeningState: .init(
+                            get: { viewModel.isListening },
+                            set: { _ in }
+                        )
+                    )
+                    .frame(width: 250, height: 250)
+                    .scaleEffect(blobScale)
+                    .onTapGesture {
+                        toggleListening()
+                    }
                 }
 
                 // Transcription display
