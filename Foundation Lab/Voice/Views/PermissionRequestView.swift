@@ -19,31 +19,7 @@ struct PermissionRequestView: View {
     }
 
     var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "waveform")
-                .padding()
-                .font(.system(size: 60))
-                .padding(.vertical)
-                .foregroundStyle(.indigo.gradient)
-                .background {
-                    Circle()
-                        .fill(.regularMaterial)
-                        .frame(width: 120, height: 120)
-                }
-
-            VStack(spacing: 0) {
-                Text(String(localized: "Welcome to Voice"))
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .padding(.bottom, 4)
-
-                Text(String(localized: "Voice-powered reminders"))
-                    .font(.body)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.bottom)
-            }
-
+        VStack {
             // Permission items
             VStack(spacing: 20) {
                 PermissionItemView(
@@ -68,7 +44,6 @@ struct PermissionRequestView: View {
                 )
             }
             .padding()
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
 
             Button(action: requestPermissions) {
                 HStack {

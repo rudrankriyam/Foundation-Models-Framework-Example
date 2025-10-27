@@ -143,7 +143,9 @@ class PermissionManager: PermissionServiceProtocol {
             return true
         }
 
-        return await AVAudioApplication.requestRecordPermission()
+        let granted = await AVAudioApplication.requestRecordPermission()
+        microphonePermissionStatus = granted ? .granted : .denied
+        return granted
     }
 #else
     // macOS implementations for microphone permission

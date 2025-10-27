@@ -268,7 +268,6 @@ struct MessageBubbleView: View {
     }
     .padding()
   }
-  .background(.regularMaterial)
   .environment(ChatViewModel())
 }
 
@@ -305,7 +304,6 @@ struct MessageBubbleView: View {
     }
     .padding()
   }
-  .background(.regularMaterial)
   .environment(ChatViewModel())
 }
 
@@ -324,7 +322,6 @@ struct MessageBubbleView: View {
     }
     .padding()
   }
-  .background(.regularMaterial)
   .preferredColorScheme(.dark)
   .environment(ChatViewModel())
 }
