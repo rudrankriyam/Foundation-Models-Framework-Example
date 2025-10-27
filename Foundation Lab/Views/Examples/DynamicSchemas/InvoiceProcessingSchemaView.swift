@@ -48,6 +48,43 @@ struct InvoiceProcessingSchemaView: View {
 
     private let modes = ["Full Invoice", "Summary Only", "Line Items Focus"]
 
+    private var modeSelectorSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.small) {
+            Text("Extraction Mode")
+                .font(.headline)
+
+            Picker("Mode", selection: $extractionMode) {
+                ForEach(0..<modes.count, id: \.self) { index in
+                    Text(modes[index]).tag(index)
+                }
+            }
+            .pickerStyle(.segmented)
+        }
+    }
+
+    private var optionsSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.small) {
+            Toggle("Extract line items", isOn: $includeLineItems)
+                .disabled(extractionMode == 1) // Disabled for summary only
+
+            Toggle("Validate calculations", isOn: $calculateTotals)
+        }
+        .padding()
+        .background(Color.gray.opacity(0.05))
+        .cornerRadius(8)
+    }
+
+    private var sampleInvoiceLoaderSection: some View {
+        HStack {
+            Spacer()
+            Button("Load Sample Invoice") {
+                loadSampleInvoice()
+            }
+            .font(.caption)
+            .buttonStyle(.bordered)
+        }
+    }
+
     var body: some View {
         ExampleViewBase(
             title: "Invoice Processing",
@@ -58,42 +95,12 @@ struct InvoiceProcessingSchemaView: View {
             errorMessage: executor.errorMessage,
             codeExample: exampleCode,
             onRun: { Task { await runExample() } },
-            onReset: { executor.reset() }
-        ) {
+            onReset: { executor.reset() },
+            content: {
             VStack(alignment: .leading, spacing: Spacing.medium) {
-                // Mode selector
-                VStack(alignment: .leading, spacing: Spacing.small) {
-                    Text("Extraction Mode")
-                        .font(.headline)
-
-                    Picker("Mode", selection: $extractionMode) {
-                        ForEach(0..<modes.count, id: \.self) { index in
-                            Text(modes[index]).tag(index)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                }
-
-                // Options
-                VStack(alignment: .leading, spacing: Spacing.small) {
-                    Toggle("Extract line items", isOn: $includeLineItems)
-                        .disabled(extractionMode == 1) // Disabled for summary only
-
-                    Toggle("Validate calculations", isOn: $calculateTotals)
-                }
-                .padding()
-                .background(Color.gray.opacity(0.05))
-                .cornerRadius(8)
-
-                // Sample invoice loader
-                HStack {
-                    Spacer()
-                    Button("Load Sample Invoice") {
-                        loadSampleInvoice()
-                    }
-                    .font(.caption)
-                    .buttonStyle(.bordered)
-                }
+                modeSelectorSection
+                optionsSection
+                sampleInvoiceLoaderSection
 
                 // Results
                 if !executor.results.isEmpty {
@@ -115,7 +122,8 @@ struct InvoiceProcessingSchemaView: View {
             }
             .padding()
         }
-    }
+    )
+}
 
     private func loadSampleInvoice() {
         invoiceText = """
@@ -174,11 +182,11 @@ struct InvoiceProcessingSchemaView: View {
 
         switch extractionMode {
         case 0: // Full Invoice
-            schema = createFullInvoiceSchema()
+            schema = InvoiceSchemas.createFullInvoiceSchema()
         case 1: // Summary Only
-            schema = createSummarySchema()
+            schema = InvoiceSchemas.createSummarySchema()
         case 2: // Line Items Focus
-            schema = createLineItemsSchema()
+            schema = InvoiceSchemas.createLineItemsSchema()
         default:
             return
         }
@@ -197,7 +205,7 @@ struct InvoiceProcessingSchemaView: View {
                     // Add validation results if enabled
                     if calculateTotals, let dict = json as? [String: Any] {
                         result += "\n\n=== Validation Results ==="
-                        result += validateInvoiceTotals(dict)
+                        result += InvoiceSchemas.validateInvoiceTotals(dict)
                     }
 
                     return result
@@ -205,455 +213,6 @@ struct InvoiceProcessingSchemaView: View {
                 return output
             }
         )
-    }
-
-    private func createFullInvoiceSchema() -> DynamicGenerationSchema {
-        // Address schema for reuse
-        let addressSchema = DynamicGenerationSchema(
-            name: "Address",
-            description: "Address information",
-            properties: [
-                DynamicGenerationSchema.Property(
-                    name: "company",
-                    description: "Company name",
-                    schema: .init(type: String.self)
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "street",
-                    description: "Street address",
-                    schema: .init(type: String.self),
-                    isOptional: true
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "city",
-                    description: "City",
-                    schema: .init(type: String.self),
-                    isOptional: true
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "state",
-                    description: "State/Province",
-                    schema: .init(type: String.self),
-                    isOptional: true
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "postalCode",
-                    description: "ZIP/Postal code",
-                    schema: .init(type: String.self),
-                    isOptional: true
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "country",
-                    description: "Country",
-                    schema: .init(type: String.self),
-                    isOptional: true
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "taxId",
-                    description: "Tax ID or registration number",
-                    schema: .init(
-                        type: String.self,
-                        guides: [.pattern(/\d{2}-\d{7}/)]
-                    ),
-                    isOptional: true
-                )
-            ]
-        )
-
-        // Line item schema
-        let lineItemSchema = DynamicGenerationSchema(
-            name: "LineItem",
-            description: "Invoice line item",
-            properties: [
-                DynamicGenerationSchema.Property(
-                    name: "description",
-                    description: "Item description",
-                    schema: .init(type: String.self)
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "quantity",
-                    description: "Quantity",
-                    schema: .init(
-                        type: Double.self,
-                        guides: [.minimum(0.001)]
-                    ),
-                    isOptional: true
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "unitPrice",
-                    description: "Price per unit",
-                    schema: .init(
-                        type: Double.self,
-                        guides: [.minimum(0.01)]
-                    ),
-                    isOptional: true
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "amount",
-                    description: "Total amount for this line",
-                    schema: .init(
-                        type: Double.self,
-                        guides: [.minimum(0.0)]
-                    )
-                )
-            ]
-        )
-
-        // Payment terms schema
-        let paymentTermsSchema = DynamicGenerationSchema(
-            name: "PaymentTerms",
-            description: "Payment terms and conditions",
-            properties: [
-                DynamicGenerationSchema.Property(
-                    name: "terms",
-                    description: "Payment terms (e.g., Net 30)",
-                    schema: .init(type: String.self),
-                    isOptional: true
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "dueDate",
-                    description: "Payment due date",
-                    schema: .init(type: String.self),
-                    isOptional: true
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "lateFee",
-                    description: "Late fee policy if specified",
-                    schema: .init(type: String.self),
-                    isOptional: true
-                )
-            ]
-        )
-
-        // Main invoice schema
-        return DynamicGenerationSchema(
-            name: "Invoice",
-            description: "Complete invoice information",
-            properties: [
-                DynamicGenerationSchema.Property(
-                    name: "invoiceNumber",
-                    description: "Invoice number or ID",
-                    schema: .init(type: String.self)
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "invoiceDate",
-                    description: "Invoice issue date",
-                    schema: .init(type: String.self)
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "seller",
-                    description: "Seller/vendor information",
-                    schema: addressSchema
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "buyer",
-                    description: "Buyer/customer information",
-                    schema: addressSchema
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "lineItems",
-                    description: "Individual line items",
-                    schema: .init(arrayOf: lineItemSchema)
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "subtotal",
-                    description: "Subtotal before tax/discount",
-                    schema: .init(
-                        type: Double.self,
-                        guides: [.minimum(0.0)]
-                    )
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "discount",
-                    description: "Discount information if any",
-                    schema: DynamicGenerationSchema(
-                        name: "Discount",
-                        description: "Discount information",
-                        properties: [
-                            DynamicGenerationSchema.Property(
-                                name: "percentage",
-                                description: "Discount percentage",
-                                schema: .init(
-                                    type: Double.self,
-                                    guides: [.range(0.0...100.0)]
-                                ),
-                                isOptional: true
-                            ),
-                            DynamicGenerationSchema.Property(
-                                name: "amount",
-                                description: "Discount amount",
-                                schema: .init(
-                                    type: Double.self,
-                                    guides: [.minimum(0.0)]
-                                ),
-                                isOptional: true
-                            )
-                        ]
-                    ),
-                    isOptional: true
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "tax",
-                    description: "Tax information",
-                    schema: DynamicGenerationSchema(
-                        name: "Tax",
-                        description: "Tax information",
-                        properties: [
-                            DynamicGenerationSchema.Property(
-                                name: "rate",
-                                description: "Tax rate percentage",
-                                schema: .init(
-                                    type: Double.self,
-                                    guides: [.range(0.0...100.0)]
-                                )
-                            ),
-                            DynamicGenerationSchema.Property(
-                                name: "amount",
-                                description: "Tax amount",
-                                schema: .init(
-                                    type: Double.self,
-                                    guides: [.minimum(0.0)]
-                                )
-                            )
-                        ]
-                    ),
-                    isOptional: true
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "totalAmount",
-                    description: "Total amount due",
-                    schema: .init(
-                        type: Double.self,
-                        guides: [.minimum(0.0)]
-                    )
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "paymentTerms",
-                    description: "Payment terms and conditions",
-                    schema: paymentTermsSchema,
-                    isOptional: true
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "notes",
-                    description: "Additional notes or instructions",
-                    schema: .init(type: String.self),
-                    isOptional: true
-                )
-            ]
-        )
-    }
-
-    private func createSummarySchema() -> DynamicGenerationSchema {
-        return DynamicGenerationSchema(
-            name: "InvoiceSummary",
-            description: "Invoice summary information",
-            properties: [
-                DynamicGenerationSchema.Property(
-                    name: "invoiceNumber",
-                    description: "Invoice number",
-                    schema: .init(type: String.self)
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "date",
-                    description: "Invoice date",
-                    schema: .init(type: String.self)
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "sellerName",
-                    description: "Seller company name",
-                    schema: .init(type: String.self)
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "buyerName",
-                    description: "Buyer company name",
-                    schema: .init(type: String.self)
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "totalAmount",
-                    description: "Total amount due",
-                    schema: .init(
-                        type: Double.self,
-                        guides: [.minimum(0.0)]
-                    )
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "currency",
-                    description: "Currency if specified",
-                    schema: .init(type: String.self),
-                    isOptional: true
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "dueDate",
-                    description: "Payment due date",
-                    schema: .init(type: String.self),
-                    isOptional: true
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "status",
-                    description: "Invoice status",
-                    schema: .init(type: String.self),
-                    isOptional: true
-                )
-            ]
-        )
-    }
-
-    private func createLineItemsSchema() -> DynamicGenerationSchema {
-        let detailedLineItemSchema = DynamicGenerationSchema(
-            name: "DetailedLineItem",
-            description: "Detailed line item information",
-            properties: [
-                DynamicGenerationSchema.Property(
-                    name: "lineNumber",
-                    description: "Line item number",
-                    schema: .init(
-                        type: Int.self,
-                        guides: [.minimum(1)]
-                    ),
-                    isOptional: true
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "description",
-                    description: "Detailed item description",
-                    schema: .init(type: String.self)
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "category",
-                    description: "Item category",
-                    schema: .init(type: String.self),
-                    isOptional: true
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "quantity",
-                    description: "Quantity",
-                    schema: .init(
-                        type: Double.self,
-                        guides: [.minimum(0.001)]
-                    ),
-                    isOptional: true
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "unit",
-                    description: "Unit of measurement",
-                    schema: .init(type: String.self),
-                    isOptional: true
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "unitPrice",
-                    description: "Price per unit",
-                    schema: .init(
-                        type: Double.self,
-                        guides: [.minimum(0.01)]
-                    ),
-                    isOptional: true
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "amount",
-                    description: "Line total",
-                    schema: .init(
-                        type: Double.self,
-                        guides: [.minimum(0.0)]
-                    )
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "taxable",
-                    description: "Is this item taxable",
-                    schema: .init(type: Bool.self),
-                    isOptional: true
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "notes",
-                    description: "Additional notes for this item",
-                    schema: .init(type: String.self),
-                    isOptional: true
-                )
-            ]
-        )
-
-        return DynamicGenerationSchema(
-            name: "LineItemsExtraction",
-            description: "Line items extraction result",
-            properties: [
-                DynamicGenerationSchema.Property(
-                    name: "invoiceNumber",
-                    description: "Invoice reference",
-                    schema: .init(type: String.self)
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "lineItems",
-                    description: "All line items from the invoice",
-                    schema: .init(arrayOf: detailedLineItemSchema)
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "itemCount",
-                    description: "Total number of line items",
-                    schema: .init(
-                        type: Int.self,
-                        guides: [.minimum(0)]
-                    )
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "subtotal",
-                    description: "Sum of all line items",
-                    schema: .init(
-                        type: Double.self,
-                        guides: [.minimum(0.0)]
-                    )
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "averageItemValue",
-                    description: "Average value per line item",
-                    schema: .init(
-                        type: Double.self,
-                        guides: [.minimum(0.0)]
-                    ),
-                    isOptional: true
-                )
-            ]
-        )
-    }
-
-    private func validateInvoiceTotals(_ invoice: [String: Any]) -> String {
-        var validationResults = [String]()
-
-        // Validate subtotal calculation
-        if let lineItems = invoice["lineItems"] as? [[String: Any]] {
-            let calculatedSubtotal = lineItems.reduce(0.0) { sum, item in
-                sum + (item["amount"] as? Double ?? 0)
-            }
-
-            if let reportedSubtotal = invoice["subtotal"] as? Double {
-                let difference = abs(calculatedSubtotal - reportedSubtotal)
-                if difference < 0.01 {
-                    validationResults.append("\nSubtotal calculation is correct: $\(String(format: "%.2f", reportedSubtotal))")
-                } else {
-                    validationResults.append("\nSubtotal mismatch: Calculated $\(String(format: "%.2f", calculatedSubtotal)) vs Reported $\(String(format: "%.2f", reportedSubtotal))")
-                }
-            }
-        }
-
-        // Validate tax calculation
-        if let tax = invoice["tax"] as? [String: Any],
-           let taxRate = tax["rate"] as? Double,
-           let taxAmount = tax["amount"] as? Double,
-           let subtotal = invoice["subtotal"] as? Double {
-
-            let calculatedTax = subtotal * (taxRate / 100)
-            let difference = abs(calculatedTax - taxAmount)
-            if difference < 0.01 {
-                validationResults.append("\nTax calculation is correct: \(taxRate)% = $\(String(format: "%.2f", taxAmount))")
-            } else {
-                validationResults.append("\nTax calculation mismatch: Expected $\(String(format: "%.2f", calculatedTax)), got $\(String(format: "%.2f", taxAmount))")
-            }
-        }
-
-        // Validate total
-        if let total = invoice["totalAmount"] as? Double,
-           let _ = invoice["subtotal"] as? Double {
-            validationResults.append("\nTotal amount extracted: $\(String(format: "%.2f", total))")
-        }
-
-        return validationResults.joined()
     }
 
     private var exampleCode: String {

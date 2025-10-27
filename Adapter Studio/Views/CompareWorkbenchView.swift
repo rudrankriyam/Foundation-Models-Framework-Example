@@ -18,10 +18,10 @@ struct CompareWorkbenchView: View {
     @State private var adapterInitializationError: String?
 
     @FocusState private var promptIsFocused: Bool
-    
+
     init() {
         _compareViewModel = State(initialValue: CompareViewModel())
-        
+
         do {
             let provider = try AdapterProvider()
             _adapterProvider = State(initialValue: provider)
@@ -31,14 +31,14 @@ struct CompareWorkbenchView: View {
             _adapterInitializationError = State(initialValue: error.localizedDescription)
         }
     }
-    
+
     var body: some View {
         @Bindable var viewModel = compareViewModel
-        
+
         NavigationStack {
             ZStack(alignment: .top) {
                 background
-                
+
                 ScrollView {
                     VStack(alignment: .leading, spacing: 24) {
                         header(viewModel: viewModel, context: currentAdapterContext)
@@ -84,7 +84,7 @@ private extension CompareWorkbenchView {
     var currentAdapterContext: AdapterContext? {
         adapterProvider?.context
     }
-    
+
     func header(viewModel: CompareViewModel, context: AdapterContext?) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .firstTextBaseline, spacing: 12) {
@@ -98,7 +98,7 @@ private extension CompareWorkbenchView {
                 }
 
                 Spacer()
-                
+
                 if viewModel.isRunning {
                     Button(action: cancelRun) {
                         Label("Cancel", systemImage: "stop.circle")
@@ -107,17 +107,17 @@ private extension CompareWorkbenchView {
                     .tint(.red)
                 }
             }
-            
+
             adapterStatusView(context: context)
         }
     }
-    
+
     func promptSection(prompt: Binding<String>, isRunning: Bool) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Prompt")
                 .font(.headline)
                 .foregroundStyle(.white.opacity(0.85))
-            
+
             TextEditor(text: prompt)
                 .focused($promptIsFocused)
                 .padding(12)
@@ -132,15 +132,15 @@ private extension CompareWorkbenchView {
                         .stroke(isRunning ? Color.blue.opacity(0.6) : Color.white.opacity(0.1), lineWidth: 1)
                 )
                 .textSelection(.enabled)
-            
+
             HStack {
                 Button(action: { prompt.wrappedValue = "" }) {
                     Label("Clear", systemImage: "eraser")
                 }
                 .disabled(prompt.wrappedValue.isEmpty)
-                
+
                 Spacer()
-                
+
                 Button(action: runCurrentPrompt) {
                     Label(isRunning ? "Running" : "Run", systemImage: isRunning ? "hourglass" : "play.fill")
                 }
@@ -150,13 +150,13 @@ private extension CompareWorkbenchView {
         .padding()
         .glassCard(radius: 24)
     }
-    
+
     func comparisonColumns(viewModel: CompareViewModel, context: AdapterContext?) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Responses")
                 .font(.headline)
                 .foregroundStyle(.white.opacity(0.85))
-            
+
             HStack(alignment: .top, spacing: 16) {
                 SessionColumnView(
                     title: "Base",
@@ -164,7 +164,7 @@ private extension CompareWorkbenchView {
                     column: viewModel.baseColumn,
                     isActive: viewModel.isRunning
                 )
-                
+
                 SessionColumnView(
                     title: "Adapter",
                     subtitle: context?.metadata.fileName ?? "No Adapter Selected",
@@ -183,41 +183,41 @@ private extension CompareWorkbenchView {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(alignment: .center, spacing: 12) {
                     Label("Adapter Loaded", systemImage: "checkmark.seal.fill")
-                    
+
                     Spacer()
-                    
+
                     Button(action: reopenAdaptersDirectory) {
                         Label("Show in Finder", systemImage: "folder")
                     }
-                    
+
                     VStack(alignment: .trailing) {
                         Button(action: importAdapter) {
                             Label("Import Adapter", systemImage: "tray.and.arrow.down")
                         }
-                        
+
                         existingAdaptersMenu
                     }
                 }
-                
+
                 metadataGrid(for: context.metadata)
             }
         } else {
             HStack(spacing: 12) {
                 Label("No adapter selected", systemImage: "exclamationmark.triangle")
-                
+
                 Spacer()
-                
+
                 VStack(alignment: .trailing) {
                     Button(action: importAdapter) {
                         Label("Import Adapter", systemImage: "tray.and.arrow.down")
                     }
-                    
+
                     existingAdaptersMenu
                 }
             }
         }
     }
-    
+
     func metadataGrid(for metadata: AdapterMetadata) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             LabeledContent("Name") {
@@ -225,7 +225,7 @@ private extension CompareWorkbenchView {
                     .foregroundStyle(.white)
             }
             .foregroundStyle(.white.opacity(0.6))
-            
+
             if let modified = metadata.modifiedAt {
                 LabeledContent("Modified") {
                     Text(modifiedFormatted(modified))
@@ -233,7 +233,7 @@ private extension CompareWorkbenchView {
                 }
                 .foregroundStyle(.white.opacity(0.6))
             }
-            
+
             LabeledContent("Size") {
                 Text(byteCountFormatter.string(fromByteCount: Int64(metadata.fileSize)))
                     .foregroundStyle(.white)
@@ -241,7 +241,7 @@ private extension CompareWorkbenchView {
             .foregroundStyle(.white.opacity(0.6))
         }
     }
-    
+
     var existingAdaptersMenu: some View {
         Menu {
             if let provider = adapterProvider {
@@ -268,7 +268,7 @@ private extension CompareWorkbenchView {
             Label("Adapters", systemImage: "arrow.2.circlepath")
         }
     }
-    
+
     func statusDescription(for state: CompareViewModel.State) -> String {
         switch state {
         case .idle:
@@ -281,15 +281,15 @@ private extension CompareWorkbenchView {
             return "Comparison complete"
         }
     }
-    
+
     func runCurrentPrompt() {
         compareViewModel.submitCurrentPrompt()
     }
-    
+
     func cancelRun() {
         compareViewModel.cancel()
     }
-    
+
     func importAdapter() {
         guard let provider = adapterProvider else { return }
         provider.selectAndLoadAdapter()
@@ -311,32 +311,30 @@ private extension CompareWorkbenchView {
             adapterInitializationError = nil
         }
     }
-    
+
     func reopenAdaptersDirectory() {
         guard let directory = try? AdapterProvider.defaultAdaptersDirectory() else { return }
-        
+
         NSWorkspace.shared.activateFileViewerSelecting([directory])
     }
-    
+
     func configureEngineIfNeeded() {
         compareViewModel.configureAdapter(adapterProvider?.context)
     }
-    
+
     func modifiedFormatted(_ date: Date) -> String {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .full
         return formatter.localizedString(for: date, relativeTo: Date())
     }
-    
+
     func truncatedPrompt(_ prompt: String) -> String {
         let trimmed = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmed.count > 40 else { return trimmed }
         let prefix = trimmed.prefix(37)
         return "\(prefix)…"
     }
-    
 
-    
     func stateIdentifier(for state: CompareViewModel.State) -> String {
         switch state {
         case .idle:
@@ -349,7 +347,6 @@ private extension CompareWorkbenchView {
             return "completed_\(result.prompt.hashValue)"
         }
     }
-    
 
 }
 
@@ -359,8 +356,6 @@ private let byteCountFormatter: ByteCountFormatter = {
     formatter.countStyle = .file
     return formatter
 }()
-
-
 
 #if DEBUG
 #Preview {

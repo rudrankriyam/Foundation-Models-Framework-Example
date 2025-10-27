@@ -257,7 +257,9 @@ struct MessageBubbleView: View {
       ))
 
       MessageBubbleView(message: ChatMessage(
-        content: "## Foundation Models\n\nThey provide **powerful** on-device AI capabilities. For *streaming*, you can use `async sequences` to receive partial responses as they're generated, creating a more **responsive** user experience.",
+        content: "## Foundation Models\n\nThey provide **powerful** on-device AI capabilities. For *streaming*, " +
+                "you can use `async sequences` to receive partial responses as they're generated, creating a more " +
+                "**responsive** user experience.",
         isFromUser: false
       ))
 
@@ -268,7 +270,6 @@ struct MessageBubbleView: View {
     }
     .padding()
   }
-  .background(.regularMaterial)
   .environment(ChatViewModel())
 }
 
@@ -297,7 +298,8 @@ struct MessageBubbleView: View {
       MessageBubbleView(
         message: ChatMessage(
           content:
-            "For streaming responses, you can use async sequences with LanguageModelSession. This allows you to receive partial responses as they're generated, creating a more responsive user experience.",
+            "For streaming responses, you can use async sequences with LanguageModelSession. This allows you to " +
+            "receive partial responses as they're generated, creating a more responsive user experience.",
           isFromUser: false
         ))
 
@@ -305,7 +307,6 @@ struct MessageBubbleView: View {
     }
     .padding()
   }
-  .background(.regularMaterial)
   .environment(ChatViewModel())
 }
 
@@ -324,7 +325,6 @@ struct MessageBubbleView: View {
     }
     .padding()
   }
-  .background(.regularMaterial)
   .preferredColorScheme(.dark)
   .environment(ChatViewModel())
 }

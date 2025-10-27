@@ -34,13 +34,13 @@ struct SchemaErrorHandlingView: View {
             onReset: {
                 executor.reset()
                 selectedScenario = 0
-            }
-        ) {
-            VStack(alignment: .leading, spacing: Spacing.medium) {
-                // Scenario selector
-                VStack(alignment: .leading, spacing: Spacing.small) {
-                    Text("Error Scenario")
-                        .font(.headline)
+            },
+            content: {
+                VStack(alignment: .leading, spacing: Spacing.medium) {
+                    // Scenario selector
+                    VStack(alignment: .leading, spacing: Spacing.small) {
+                        Text("Error Scenario")
+                            .font(.headline)
 
                     Picker("Scenario", selection: $selectedScenario) {
                         ForEach(0..<scenarios.count, id: \.self) { index in
@@ -90,6 +90,7 @@ struct SchemaErrorHandlingView: View {
             }
             .padding()
         }
+        )
     }
 
     private var scenarioDescription: String {
@@ -97,9 +98,15 @@ struct SchemaErrorHandlingView: View {
         case 0:
             return "Basic extraction with a well-formed schema. This should succeed without errors."
         case 1:
-            return "The schema requires fields that might not be present in the input. The system will make best effort to extract available data."
+            return """
+            The schema requires fields that might not be present in the input. \
+            The system will make best effort to extract available data.
+            """
         case 2:
-            return "The input contains data that doesn't match the expected types. The system will attempt type conversion where possible."
+            return """
+            The input contains data that doesn't match the expected types. \
+            The system will attempt type conversion where possible.
+            """
         case 3:
             return "Complex validation rules that might fail. The system will provide detailed error information."
         default:

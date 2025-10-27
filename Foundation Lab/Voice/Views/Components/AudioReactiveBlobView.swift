@@ -1,14 +1,14 @@
 //
 //  AudioReactiveBlobView.swift
-//  Murmer
+//  Foundation Lab
 //
-//  Created by Rudrank Riyam on 6/26/25.
+//  Created by Rudrank Riyam on 10/27/25.
 //
 
 import SwiftUI
 
 struct AudioReactiveBlobView: View {
-    @ObservedObject var speechRecognizer: SpeechRecognizer
+    let speechRecognizer: SpeechRecognizer
     @State private var pulseScale: CGFloat = 1.0
 
     // External binding to sync with view model
@@ -27,7 +27,7 @@ struct AudioReactiveBlobView: View {
         ZStack {
             // Single clean blob
             Circle()
-                .fill(Color.indigo)
+                .fill(Color.indigo.gradient)
                 .frame(width: baseSize * pulseScale, height: baseSize * pulseScale)
                 .shadow(color: Color.indigo.opacity(0.4), radius: 10, x: 0, y: 5)
 
@@ -56,7 +56,6 @@ struct AudioReactiveBlobView: View {
             }
         }
     }
-
 }
 
 // MARK: - Preview

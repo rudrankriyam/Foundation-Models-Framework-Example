@@ -99,7 +99,7 @@ struct PromptHistory: View {
     VStack(alignment: .leading, spacing: 0) {
       Button(action: {
         isExpanded.toggle()
-      }) {
+      }, label: {
         HStack(spacing: Spacing.small) {
           Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
             .font(.caption2)
@@ -111,13 +111,13 @@ struct PromptHistory: View {
 
           Spacer()
         }
-      }
+      })
       .buttonStyle(.plain)
 
       if isExpanded && !history.isEmpty {
         VStack(alignment: .leading, spacing: Spacing.small) {
           ForEach(history.prefix(5), id: \.self) { prompt in
-            Button(action: { onSelect(prompt) }) {
+            Button(action: { onSelect(prompt) }, label: {
               Text(prompt)
                 .font(.callout)
                 .lineLimit(2)
@@ -125,7 +125,7 @@ struct PromptHistory: View {
                 .padding(Spacing.small)
                 .background(Color.gray.opacity(0.1))
                 .cornerRadius(8)
-            }
+            })
             .buttonStyle(.plain)
             .foregroundColor(.primary)
           }

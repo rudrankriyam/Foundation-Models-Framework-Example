@@ -1,51 +1,53 @@
 //
-//  ContentView.swift
-//  Murmer
+//  VoiceView.swift
+//  Foundation Lab
 //
-//  Created by Rudrank Riyam on 6/26/25.
+//  Created by Rudrank Riyam on 10/27/25.
 //
 
 import SwiftUI
+import Observation
 
-struct ContentView: View {
-    @StateObject private var viewModel = MurmerViewModel()
+struct VoiceView: View {
+    @State private var viewModel = VoiceViewModel()
+    @State private var blobScale: CGFloat = 1.0
+    @State private var isProcessingTap = false
 
     var body: some View {
         Group {
-            if viewModel.permissionService.allPermissionsGranted {
-                MurmerMainView(viewModel: viewModel)
+            if viewModel.allPermissionsGranted {
+                voiceMainView
             } else {
-                PermissionRequestView(permissionService: viewModel.permissionService)
+                PermissionRequestView(viewModel: viewModel)
             }
         }
         .onAppear {
-            viewModel.permissionService.checkAllPermissions()
+            viewModel.checkAllPermissions()
         }
-        .onChange(of: viewModel.permissionService.allPermissionsGranted) { _, _ in
+        .onChange(of: viewModel.allPermissionsGranted) { _, _ in
             // Force view update when permissions change
         }
+        .onDisappear {
+            viewModel.tearDown()
+        }
     }
-}
 
-struct MurmerMainView: View {
-    @ObservedObject var viewModel: MurmerViewModel
-    @State private var blobScale: CGFloat = 1.0
-
-    var body: some View {
-        VStack(spacing: 30) {
+    private var voiceMainView: some View {
+        let viewModel = self.viewModel
+        return VStack(spacing: 30) {
             // Header with list selector
             VStack(alignment: .leading, spacing: 16) {
-                Text("Murmer")
+                Text(String(localized: "Voice"))
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .foregroundStyle(.primary)
 
-                GlassDropdown(
-                    selectedValue: $viewModel.selectedList,
-                    options: viewModel.availableLists,
-                    title: "Reminder List"
-                )
-                .frame(maxWidth: 300)
+                Text(String(localized: "Create reminders with your voice"))
+                    .font(.headline)
+                    .foregroundStyle(.secondary)
+
+                reminderListPicker(viewModel: viewModel)
+                    .frame(maxWidth: 320)
             }
             .padding(.horizontal)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -54,7 +56,7 @@ struct MurmerMainView: View {
 
             // Main content
             VStack(spacing: 40) {
-                // Audio reactive blob
+                // Audio reactive blob placeholder
                 ZStack {
                     // Glow effect when listening
                     if viewModel.isListening {
@@ -70,13 +72,16 @@ struct MurmerMainView: View {
 
                     AudioReactiveBlobView(
                         speechRecognizer: viewModel.speechRecognizer,
-                        listeningState: $viewModel.isListening
+                        listeningState: .init(
+                            get: { viewModel.isListening },
+                            set: { _ in }
+                        )
                     )
-                        .frame(width: 250, height: 250)
-                        .scaleEffect(blobScale)
-                        .onTapGesture {
-                            toggleListening()
-                        }
+                    .frame(width: 250, height: 250)
+                    .scaleEffect(blobScale)
+                    .onTapGesture {
+                        toggleListening()
+                    }
                 }
 
                 // Transcription display
@@ -91,8 +96,8 @@ struct MurmerMainView: View {
                                         .scaleEffect(viewModel.isListening ? 1.2 : 0.8)
                                         .animation(
                                             .easeInOut(duration: 0.6)
-                                                .repeatForever()
-                                                .delay(Double(index) * 0.2),
+                                            .repeatForever()
+                                            .delay(Double(index) * 0.2),
                                             value: viewModel.isListening
                                         )
                                 }
@@ -109,22 +114,11 @@ struct MurmerMainView: View {
                     }
                     .background {
                         RoundedRectangle(cornerRadius: 16)
-                            .fill(.regularMaterial)
-                            #if os(iOS) || os(macOS)
-                            .glassEffect(.regular, in: .rect(cornerRadius: 16))
-                            #endif
                     }
                     .transition(.asymmetric(
                         insertion: .scale(scale: 0.8).combined(with: .opacity),
                         removal: .scale(scale: 0.8).combined(with: .opacity)
                     ))
-                }
-
-                // Instructions
-                if !viewModel.isListening && viewModel.recognizedText.isEmpty {
-                    Text("Tap the blob to start")
-                        .font(.headline)
-                        .foregroundStyle(.secondary)
                 }
             }
 
@@ -132,7 +126,7 @@ struct MurmerMainView: View {
         }
         .padding()
         .alert(
-            "Reminder Created",
+            String(localized: "Reminder Created"),
             isPresented: Binding(
                 get: { !viewModel.lastCreatedReminder.isEmpty },
                 set: { newValue in
@@ -146,9 +140,15 @@ struct MurmerMainView: View {
                 viewModel.lastCreatedReminder = ""
             }
         } message: {
-            Text("Reminder created: \"\(viewModel.lastCreatedReminder)\"")
+            Text(String(format: String(localized: "Reminder created: \"%@\""), viewModel.lastCreatedReminder))
         }
-        .alert("Error", isPresented: $viewModel.showError) {
+        .alert(
+            "Error",
+            isPresented: Binding(
+                get: { viewModel.showError },
+                set: { viewModel.showError = $0 }
+            )
+        ) {
             Button("OK", role: .cancel) {}
         } message: {
             Text(viewModel.errorMessage)
@@ -156,6 +156,19 @@ struct MurmerMainView: View {
     }
 
     private func toggleListening() {
+        // Prevent double-tapping
+        guard !isProcessingTap else { return }
+
+        isProcessingTap = true
+
+        defer {
+            // Reset processing flag after a short delay
+            Task {
+                try? await Task.sleep(for: .milliseconds(500))
+                isProcessingTap = false
+            }
+        }
+
         if viewModel.isListening {
             viewModel.stopListening()
             withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
@@ -171,13 +184,37 @@ struct MurmerMainView: View {
         }
 
         // Haptic feedback
-        #if os(iOS)
+#if os(iOS)
         let impact = UIImpactFeedbackGenerator(style: .medium)
         impact.impactOccurred()
-        #endif
+#endif
+    }
+}
+
+extension VoiceView {
+    @ViewBuilder
+    private func reminderListPicker(viewModel: VoiceViewModel) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(String(localized: "Reminder List"))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            Picker(String(localized: "Reminder List"), selection: Binding(
+                get: { viewModel.selectedList },
+                set: { viewModel.selectedList = $0 }
+            )) {
+                ForEach(viewModel.availableLists, id: \.self) { list in
+                    Text(list)
+                        .tag(list)
+                }
+            }
+            .pickerStyle(.menu)
+            .labelsHidden()
+        }
+        .padding()
     }
 }
 
 #Preview {
-    ContentView()
+    VoiceView()
 }

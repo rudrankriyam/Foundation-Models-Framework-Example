@@ -43,9 +43,9 @@ struct ReferencedSchemaView: View {
             errorMessage: executor.errorMessage,
             codeExample: exampleCode,
             onRun: { Task { await runExample() } },
-            onReset: { selectedExample = 0; showReferences = true }
-        ) {
-            VStack(alignment: .leading, spacing: Spacing.medium) {
+            onReset: { selectedExample = 0; showReferences = true },
+            content: {
+                VStack(alignment: .leading, spacing: Spacing.medium) {
                 // Example selector
                 Picker("Example", selection: $selectedExample) {
                     ForEach(0..<examples.count, id: \.self) { index in
@@ -124,6 +124,7 @@ struct ReferencedSchemaView: View {
             }
             .padding()
         }
+        )
     }
 
     private var bindingForSelectedExample: Binding<String> {
@@ -440,66 +441,66 @@ struct ReferencedSchemaView: View {
         var result = ""
         var processedRefs = Set<String>()
 
-        func formatValue(_ value: GeneratedContent, indent: Int = 0) -> String {
-            let indentStr = String(repeating: "  ", count: indent)
-            var output = ""
+        result = formatValue(content, indent: 0, processedRefs: &processedRefs)
+        return result.isEmpty ? "No data" : result
+    }
 
-            switch value.kind {
-            case .structure(let properties, let orderedKeys):
-                for key in orderedKeys {
-                    if let val = properties[key] {
-                        output += "\n\(indentStr)\(key): "
+    private func formatValue(_ value: GeneratedContent, indent: Int, processedRefs: inout Set<String>) -> String {
+        let indentStr = String(repeating: "  ", count: indent)
+        var output = ""
 
-                        switch val.kind {
-                        case .structure:
-                            // This is a referenced object
-                            if !processedRefs.contains(key) {
-                                processedRefs.insert(key)
-                                output += "(ref)"
-                            }
-                            output += formatValue(val, indent: indent + 1)
-                        case .array(let elements):
-                            output += "["
-                            for element in elements {
-                                output += formatValue(element, indent: indent + 1)
-                            }
-                            output += "\n\(indentStr)]"
-                        case .string(let str):
-                            output += "\"\(str)\""
-                        case .number(let num):
-                            output += String(num)
-                        case .bool(let bool):
-                            output += String(bool)
-                        case .null:
-                            output += "null"
-                        @unknown default:
-                            output += "unknown"
+        switch value.kind {
+        case .structure(let properties, let orderedKeys):
+            for key in orderedKeys {
+                if let val = properties[key] {
+                    output += "\n\(indentStr)\(key): "
+
+                    switch val.kind {
+                    case .structure:
+                        // This is a referenced object
+                        if !processedRefs.contains(key) {
+                            processedRefs.insert(key)
+                            output += "(ref)"
                         }
+                        output += formatValue(val, indent: indent + 1, processedRefs: &processedRefs)
+                    case .array(let elements):
+                        output += "["
+                        for element in elements {
+                            output += formatValue(element, indent: indent + 1, processedRefs: &processedRefs)
+                        }
+                        output += "\n\(indentStr)]"
+                    case .string(let str):
+                        output += "\"\(str)\""
+                    case .number(let num):
+                        output += String(num)
+                    case .bool(let bool):
+                        output += String(bool)
+                    case .null:
+                        output += "null"
+                    @unknown default:
+                        output += "unknown"
                     }
                 }
-            case .string(let str):
-                output += "\"\(str)\""
-            case .number(let num):
-                output += String(num)
-            case .bool(let bool):
-                output += String(bool)
-            case .array(let elements):
-                output += "["
-                for element in elements {
-                    output += formatValue(element, indent: indent + 1)
-                }
-                output += "\n\(indentStr)]"
-            case .null:
-                output += "null"
-            @unknown default:
-                output += "unknown"
             }
-
-            return output
+        case .string(let str):
+            output += "\"\(str)\""
+        case .number(let num):
+            output += String(num)
+        case .bool(let bool):
+            output += String(bool)
+        case .array(let elements):
+            output += "["
+            for element in elements {
+                output += formatValue(element, indent: indent + 1, processedRefs: &processedRefs)
+            }
+            output += "\n\(indentStr)]"
+        case .null:
+            output += "null"
+        @unknown default:
+            output += "unknown"
         }
 
-        result = formatValue(content)
-        return result.isEmpty ? "No data" : result
+        return output
     }
 
     private var exampleCode: String {

@@ -61,7 +61,8 @@ import Foundation
                 RESPOND IN \(userLanguage). Parse this food description into nutritional data: "\(food)"
 
                 Examples of good parsing:
-                "I had 2 scrambled eggs with toast" → Consider: 2 large eggs (~140 cal), 1 slice toast (~80 cal), cooking butter (~30 cal)
+                "I had 2 scrambled eggs with toast" → Consider: 2 large eggs (~140 cal), 1 slice toast (~80 cal), " +
+                "cooking butter (~30 cal)"
                 "protein shake after workout" → Consider: 1 scoop protein powder (~120 cal) + milk/water
                 "pizza slice for lunch" → Consider: 1 slice medium pizza (~280 cal)
                 "handful of almonds" → Consider: ~20 almonds (~160 cal)

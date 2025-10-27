@@ -1,16 +1,30 @@
 //
 //  InferenceService.swift
-//  Murmer
+//  Foundation Lab
 //
-//  Created by Rudrank Riyam on 9/24/25.
+//  Created by Rudrank Riyam on 10/27/25.
 //
 
 import Foundation
 import FoundationModels
-import Playgrounds
+
+// MARK: - AI Inference Protocol
+
+/// Protocol defining the interface for AI-powered text processing
+@MainActor
+protocol InferenceServiceProtocol {
+    /// Process input text and return AI-generated response
+    /// - Parameter text: Input text from speech recognition
+    /// - Returns: Processed text response from AI
+    /// - Throws: Error if processing fails
+    func processText(_ text: String) async throws -> String
+}
+
+// MARK: - AI Inference Service
 
 /// Independent inference service that processes text input and returns text output
 /// This service is completely decoupled from speech recognition and synthesis
+@MainActor
 class InferenceService: InferenceServiceProtocol {
     public let session: LanguageModelSession
 
@@ -51,7 +65,7 @@ class InferenceService: InferenceServiceProtocol {
         """
 
         self.session = LanguageModelSession(
-            tools: [MurmerRemindersTool()],
+            tools: [VoiceRemindersTool()],
             instructions: Instructions(instructions)
         )
     }

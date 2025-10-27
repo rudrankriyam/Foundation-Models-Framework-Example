@@ -29,80 +29,81 @@ struct EnumDynamicSchemaView: View {
             errorMessage: executor.errorMessage,
             codeExample: exampleCode,
             onRun: { Task { await runExample() } },
-            onReset: { selectedExample = 0; useCustomChoices = false }
-        ) {
-            VStack(alignment: .leading, spacing: Spacing.medium) {
-                // Example selector
-                Picker("Example", selection: $selectedExample) {
-                    ForEach(0..<examples.count, id: \.self) { index in
-                        Text(examples[index]).tag(index)
+            onReset: { selectedExample = 0; useCustomChoices = false },
+            content: {
+                VStack(alignment: .leading, spacing: Spacing.medium) {
+                    // Example selector
+                    Picker("Example", selection: $selectedExample) {
+                        ForEach(0..<examples.count, id: \.self) { index in
+                            Text(examples[index]).tag(index)
+                        }
                     }
-                }
-                .pickerStyle(.segmented)
+                    .pickerStyle(.segmented)
 
-                // Current choices display
-                VStack(alignment: .leading, spacing: Spacing.small) {
-                    Text("Available Choices")
-                        .font(.headline)
+                    // Current choices display
+                    VStack(alignment: .leading, spacing: Spacing.small) {
+                        Text("Available Choices")
+                            .font(.headline)
 
-                    Text(currentChoices.joined(separator: ", "))
-                        .font(.system(.body, design: .monospaced))
-                        .padding(8)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.blue.opacity(0.1))
-                        .cornerRadius(8)
-                }
+                        Text(currentChoices.joined(separator: ", "))
+                            .font(.system(.body, design: .monospaced))
+                            .padding(8)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color.blue.opacity(0.1))
+                            .cornerRadius(8)
+                    }
 
-                // Custom choices option
-                VStack(alignment: .leading, spacing: Spacing.small) {
-                    Toggle("Use Custom Choices", isOn: $useCustomChoices)
-                        .font(.caption)
-
-                    if useCustomChoices {
-                        TextField("Comma-separated choices", text: $customChoices)
-                            .textFieldStyle(.roundedBorder)
+                    // Custom choices option
+                    VStack(alignment: .leading, spacing: Spacing.small) {
+                        Toggle("Use Custom Choices", isOn: $useCustomChoices)
                             .font(.caption)
+
+                        if useCustomChoices {
+                            TextField("Comma-separated choices", text: $customChoices)
+                                .textFieldStyle(.roundedBorder)
+                                .font(.caption)
+                        }
+                    }
+                    .padding()
+                    .background(Color.gray.opacity(0.1))
+                    .cornerRadius(8)
+
+                    HStack {
+                        Button("Classify") {
+                            Task {
+                                await runExample()
+                            }
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(executor.isRunning || currentInput.isEmpty)
+
+                        if executor.isRunning {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        }
+                    }
+
+                    // Results section
+                    if !executor.results.isEmpty {
+                        VStack(alignment: .leading, spacing: Spacing.small) {
+                            Text("Generated Data")
+                                .font(.headline)
+
+                            ScrollView {
+                                Text(executor.results)
+                                    .font(.system(.caption, design: .monospaced))
+                                    .padding()
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(Color.gray.opacity(0.1))
+                                    .cornerRadius(8)
+                            }
+                            .frame(maxHeight: 250)
+                        }
                     }
                 }
                 .padding()
-                .background(Color.gray.opacity(0.1))
-                .cornerRadius(8)
-
-                HStack {
-                    Button("Classify") {
-                        Task {
-                            await runExample()
-                        }
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(executor.isRunning || currentInput.isEmpty)
-
-                    if executor.isRunning {
-                        ProgressView()
-                            .scaleEffect(0.8)
-                    }
-                }
-
-                // Results section
-                if !executor.results.isEmpty {
-                    VStack(alignment: .leading, spacing: Spacing.small) {
-                        Text("Generated Data")
-                            .font(.headline)
-
-                        ScrollView {
-                            Text(executor.results)
-                                .font(.system(.caption, design: .monospaced))
-                                .padding()
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(Color.gray.opacity(0.1))
-                                .cornerRadius(8)
-                        }
-                        .frame(maxHeight: 250)
-                    }
-                }
             }
-            .padding()
-        }
+        )
     }
 
     private var bindingForSelectedExample: Binding<String> {
@@ -158,48 +159,7 @@ struct EnumDynamicSchemaView: View {
             let confidence: Float?
             let reasoning: String?
 
-            switch response.content.kind {
-            case .structure(let properties, _):
-                classification = {
-                    if let value = properties[fieldName] {
-                        switch value.kind {
-                        case .string(let str):
-                            return str
-                        default:
-                            return "unknown"
-                        }
-                    }
-                    return "unknown"
-                }()
-
-                confidence = {
-                    if let value = properties["confidence"] {
-                        switch value.kind {
-                        case .number(let num):
-                            return Float(num)
-                        default:
-                            return nil
-                        }
-                    }
-                    return nil
-                }()
-
-                reasoning = {
-                    if let value = properties["reasoning"] {
-                        switch value.kind {
-                        case .string(let str):
-                            return str
-                        default:
-                            return nil
-                        }
-                    }
-                    return nil
-                }()
-            default:
-                classification = "unknown"
-                confidence = nil
-                reasoning = nil
-            }
+            (classification, confidence, reasoning) = extractClassificationData(from: response.content, fieldName: fieldName)
 
             return """
             📝 Input:
@@ -217,6 +177,34 @@ struct EnumDynamicSchemaView: View {
             ✅ Valid Choice: \(currentChoices.contains(classification) ? "Yes" : "No (Invalid!)")
             """
         }
+    }
+
+    private func extractClassificationData(from content: GeneratedContent, fieldName: String) -> (String, Float?, String?) {
+        switch content.kind {
+        case .structure(let properties, _):
+            let classification = extractStringValue(from: properties[fieldName])
+            let confidence = extractFloatValue(from: properties["confidence"])
+            let reasoning = extractStringValue(from: properties["reasoning"])
+            return (classification, confidence, reasoning)
+        default:
+            return ("unknown", nil, nil)
+        }
+    }
+
+    private func extractStringValue(from content: GeneratedContent?) -> String {
+        guard let content = content else { return "unknown" }
+        if case .string(let str) = content.kind {
+            return str
+        }
+        return "unknown"
+    }
+
+    private func extractFloatValue(from content: GeneratedContent?) -> Float? {
+        guard let content = content else { return nil }
+        if case .number(let num) = content.kind {
+            return Float(num)
+        }
+        return nil
     }
 
     private func createSchema(for index: Int) throws -> GenerationSchema {

@@ -99,11 +99,14 @@ enum DefaultPrompts {
 
   // MARK: - Instructions
 
-  static let basicChatInstructions = "You are a helpful and creative assistant. Provide clear, concise, and engaging responses."
+  static let basicChatInstructions =
+    "You are a helpful and creative assistant. Provide clear, concise, and engaging responses."
 
-  static let creativeWritingInstructions = "You are a creative writing assistant. Help users develop compelling stories, characters, and narratives."
+  static let creativeWritingInstructions =
+    "You are a creative writing assistant. Help users develop compelling stories, characters, and narratives."
 
-  static let businessIdeasInstructions = "You are a business strategy consultant. Generate innovative, practical, and market-viable business ideas."
+  static let businessIdeasInstructions =
+    "You are a business strategy consultant. Generate innovative, practical, and market-viable business ideas."
 
   // Model Availability
   static let modelAvailabilitySuggestions = [

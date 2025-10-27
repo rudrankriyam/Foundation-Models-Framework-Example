@@ -11,6 +11,7 @@ enum TabSelection: String, CaseIterable, Hashable {
   case examples
   case integrations
   case chat
+  case voice
   case settings
 
   var displayName: String {

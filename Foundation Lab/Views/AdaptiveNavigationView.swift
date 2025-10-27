@@ -54,6 +54,12 @@ struct AdaptiveNavigationView: View {
                 }
             }
 
+            Tab(TabSelection.voice.displayName, systemImage: "mic", value: .voice) {
+                NavigationStack {
+                    VoiceView()
+                }
+            }
+
             Tab(TabSelection.settings.displayName, systemImage: "gear", value: .settings) {
                 NavigationStack {
                     SettingsView()
@@ -104,6 +110,11 @@ struct AdaptiveNavigationView: View {
         case .chat:
             NavigationStack {
                 ChatView(viewModel: $chatViewModel)
+            }
+        case .voice:
+            NavigationStack {
+                VoiceView()
+                    .navigationTitle("Voice")
             }
         case .settings:
             NavigationStack {

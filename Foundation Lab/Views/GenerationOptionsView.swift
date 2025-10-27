@@ -96,7 +96,6 @@ struct GenerationOptionsView: View {
             }
         }
         .padding()
-        .background(.regularMaterial, in: .rect(cornerRadius: CornerRadius.large))
     }
 
     private var temperatureSlider: some View {
@@ -252,7 +251,6 @@ struct GenerationOptionsView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .frame(maxHeight: 300)
-                    .background(.regularMaterial, in: .rect(cornerRadius: CornerRadius.medium))
                 }
             }
         }

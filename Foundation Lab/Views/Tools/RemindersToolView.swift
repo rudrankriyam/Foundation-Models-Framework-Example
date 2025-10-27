@@ -253,12 +253,15 @@ struct RemindersToolView: View {
             Instructions {
               "You are a helpful assistant that can create reminders for users."
               "Current date and time: \(formattedDate)"
-              "Time zone: \(TimeZone.current.identifier) (\(TimeZone.current.localizedName(for: .standard, locale: Locale.current) ?? "Unknown"))"
+              "Time zone: \(TimeZone.current.identifier) (" +
+              "\(TimeZone.current.localizedName(for: .standard, locale: Locale.current) ?? "Unknown"))"
               "When creating reminders, consider the current date and time zone context."
               "Always execute tool calls directly without asking for confirmation or permission from the user."
               "If you need to create a reminder, call the RemindersTool immediately with the appropriate parameters."
-              "IMPORTANT: When setting due dates, you MUST format them as 'yyyy-MM-dd HH:mm:ss' (24-hour format)."
-              "Examples: '2025-01-15 17:00:00' for tomorrow at 5 PM, '2025-01-16 09:30:00' for day after tomorrow at 9:30 AM."
+              "IMPORTANT: When setting due dates, you MUST format them as 'yyyy-MM-dd HH:mm:ss' " +
+              "(24-hour format)."
+              "Examples: '2025-01-15 17:00:00' for tomorrow at 5 PM, '2025-01-16 09:30:00' for " +
+              "day after tomorrow at 9:30 AM."
               "Calculate the exact date and time based on the current date and time provided above."
             }
           }
@@ -289,7 +292,8 @@ struct RemindersToolView: View {
       Instructions {
         "You are a helpful assistant that can create reminders for users."
         "Current date and time: \(formattedDate)"
-        "Time zone: \(TimeZone.current.identifier) (\(TimeZone.current.localizedName(for: .standard, locale: Locale.current) ?? "Unknown"))"
+        "Time zone: \(TimeZone.current.identifier) (" +
+        "\(TimeZone.current.localizedName(for: .standard, locale: Locale.current) ?? "Unknown"))"
         "When creating reminders, consider the current date and time zone context."
         "Always execute tool calls directly without asking for confirmation or permission from the user."
         "If you need to create a reminder, call the RemindersTool immediately with the appropriate parameters."
@@ -314,7 +318,8 @@ struct RemindersToolView: View {
       Instructions {
         "You are a helpful assistant that creates reminders based on structured input."
         "Current date and time: \(formattedDate)"
-        "Time zone: \(TimeZone.current.identifier) (\(TimeZone.current.localizedName(for: .standard, locale: Locale.current) ?? "Unknown"))"
+        "Time zone: \(TimeZone.current.identifier) (" +
+        "\(TimeZone.current.localizedName(for: .standard, locale: Locale.current) ?? "Unknown"))"
         "Always execute the RemindersTool directly with the provided information."
         "Format due dates as 'yyyy-MM-dd HH:mm:ss' (24-hour format)."
       }
@@ -375,10 +380,10 @@ struct RemindersToolView: View {
 
 // MARK: - Supporting Types
 enum ReminderPriority: String, CaseIterable {
-  case none = "none"
-  case low = "low"
-  case medium = "medium"
-  case high = "high"
+  case none
+  case low
+  case medium
+  case high
 
   var displayName: String {
     switch self {

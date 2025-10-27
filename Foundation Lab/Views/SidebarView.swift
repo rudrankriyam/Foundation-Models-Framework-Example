@@ -37,6 +37,8 @@ extension TabSelection {
             return "wrench.and.screwdriver"
         case .chat:
             return "bubble.left.and.bubble.right"
+        case .voice:
+            return "mic"
         case .settings:
             return "gear"
         }
@@ -48,7 +50,8 @@ extension TabSelection {
         case .examples: return "1"
         case .integrations: return "2"
         case .chat: return "3"
-        case .settings: return "4"
+        case .voice: return "4"
+        case .settings: return "5"
         }
     }
 #endif

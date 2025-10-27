@@ -33,7 +33,7 @@ struct BasicChatView: View {
             VStack(spacing: Spacing.large) {
                 // Instructions Section
                 VStack(alignment: .leading, spacing: 0) {
-                    Button(action: { showInstructions.toggle() }) {
+                    Button(action: { showInstructions.toggle() }, label: {
                         HStack(spacing: Spacing.small) {
                             Image(systemName: showInstructions ? "chevron.down" : "chevron.right")
                                 .font(.caption2)
@@ -45,7 +45,7 @@ struct BasicChatView: View {
 
                             Spacer()
                         }
-                    }
+                    })
                     .buttonStyle(.plain)
                     .padding(.horizontal, Spacing.medium)
                     .padding(.vertical, Spacing.small)
@@ -117,7 +117,8 @@ struct BasicChatView: View {
 
     private func executeChat() {
         Task {
-            let guardrails: SystemLanguageModel.Guardrails = usePermissiveGuardrails ? .permissiveContentTransformations : .default
+            let guardrails: SystemLanguageModel.Guardrails = usePermissiveGuardrails ?
+                .permissiveContentTransformations : .default
 
             await executor.executeBasic(
                 prompt: currentPrompt,

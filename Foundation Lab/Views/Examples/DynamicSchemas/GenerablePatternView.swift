@@ -114,9 +114,9 @@ struct GenerablePatternView: View {
             errorMessage: executor.errorMessage,
             codeExample: exampleCode,
             onRun: { Task { await runExample() } },
-            onReset: { selectedExample = 0 }
-        ) {
-            VStack(alignment: .leading, spacing: Spacing.medium) {
+            onReset: { selectedExample = 0 },
+            content: {
+                VStack(alignment: .leading, spacing: Spacing.medium) {
                 // Example selector
                 Picker("Example", selection: $selectedExample) {
                     ForEach(0..<examples.count, id: \.self) { index in
@@ -187,6 +187,7 @@ struct GenerablePatternView: View {
             }
             .padding()
         }
+        )
     }
 
     private var currentPrompt: String {

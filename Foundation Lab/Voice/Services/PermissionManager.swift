@@ -1,14 +1,13 @@
 //
 //  PermissionManager.swift
-//  Murmer
+//  Foundation Lab
 //
-//  Created by Rudrank Riyam on 6/26/25.
+//  Created by Rudrank Riyam on 10/27/25.
 //
 
 import Foundation
 import Speech
 import EventKit
-import Combine
 
 #if os(iOS)
 import AVFoundation
@@ -18,28 +17,79 @@ import AppKit
 import AVFoundation
 #endif
 
-@MainActor
-class PermissionService: ObservableObject, PermissionServiceProtocol {
+// MARK: - Microphone Permission Type
 
 #if os(iOS)
-    @Published var microphonePermissionStatus: AVAudioApplication.recordPermission = .undetermined {
+typealias MicrophonePermissionStatus = AVAudioApplication.recordPermission
+#else
+enum MicrophonePermissionStatus {
+    case undetermined
+    case denied
+    case granted
+}
+#endif
+
+// MARK: - Permission Service Protocol
+
+/// Protocol defining the interface for permission management
+@MainActor
+protocol PermissionServiceProtocol: AnyObject {
+    /// Microphone permission status
+    var microphonePermissionStatus: MicrophonePermissionStatus { get }
+
+    /// Speech recognition permission status
+    var speechPermissionStatus: SFSpeechRecognizerAuthorizationStatus { get }
+
+    /// Reminders permission status
+    var remindersPermissionStatus: EKAuthorizationStatus { get }
+
+    /// Whether all required permissions are granted
+    var allPermissionsGranted: Bool { get }
+
+    /// Whether to show permission alert
+    var showPermissionAlert: Bool { get }
+
+    /// Message for permission alert
+    var permissionAlertMessage: String { get }
+
+    /// Check current status of all permissions
+    func checkAllPermissions()
+
+    /// Request all required permissions
+    /// - Returns: True if all permissions granted, false otherwise
+    func requestAllPermissions() async -> Bool
+
+    /// Show settings alert for denied permissions
+    func showSettingsAlert()
+
+    /// Open system settings for permissions
+    func openSettings()
+}
+
+// MARK: - Permission Manager Implementation
+
+@MainActor
+class PermissionManager: PermissionServiceProtocol {
+
+#if os(iOS)
+    var microphonePermissionStatus: AVAudioApplication.recordPermission = .undetermined {
         didSet { updateAllPermissionsStatus() }
     }
 #else
-    @Published var microphonePermissionStatus: MicrophonePermissionStatus = .undetermined {
+    var microphonePermissionStatus: MicrophonePermissionStatus = .undetermined {
         didSet { updateAllPermissionsStatus() }
     }
 #endif
 
-    @Published var speechPermissionStatus: SFSpeechRecognizerAuthorizationStatus = .notDetermined {
+    var speechPermissionStatus: SFSpeechRecognizerAuthorizationStatus = .notDetermined {
         didSet { updateAllPermissionsStatus() }
     }
-    @Published var remindersPermissionStatus: EKAuthorizationStatus = .notDetermined {
+    var remindersPermissionStatus: EKAuthorizationStatus = .notDetermined {
         didSet { updateAllPermissionsStatus() }
     }
-    @Published var allPermissionsGranted = false
-    @Published var showPermissionAlert = false
-    @Published var permissionAlertMessage = ""
+    var allPermissionsGranted = false
+    var showPermissionAlert = false
+    var permissionAlertMessage = ""
 
     var hasRemindersAccess: Bool {
         isRemindersPermissionGranted(remindersPermissionStatus)
@@ -93,7 +143,9 @@ class PermissionService: ObservableObject, PermissionServiceProtocol {
             return true
         }
 
-        return await AVAudioApplication.requestRecordPermission()
+        let granted = await AVAudioApplication.requestRecordPermission()
+        microphonePermissionStatus = granted ? .granted : .denied
+        return granted
     }
 #else
     // macOS implementations for microphone permission
@@ -250,7 +302,7 @@ class PermissionService: ObservableObject, PermissionServiceProtocol {
 
         if !deniedPermissions.isEmpty {
             let permissionsList = deniedPermissions.joined(separator: ", ")
-            permissionAlertMessage = "Please enable \(permissionsList) in Settings to use Murmer."
+            permissionAlertMessage = "Please enable \(permissionsList) in Settings to use Voice features."
             showPermissionAlert = true
         }
     }

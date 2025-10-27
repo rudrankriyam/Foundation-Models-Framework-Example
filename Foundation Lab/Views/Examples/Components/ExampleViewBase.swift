@@ -147,7 +147,7 @@ struct PromptSuggestions: View {
       ScrollView(.horizontal, showsIndicators: false) {
         HStack(spacing: Spacing.small) {
           ForEach(suggestions, id: \.self) { suggestion in
-            Button(action: { onSelect(suggestion) }) {
+            Button(action: { onSelect(suggestion) }, label: {
               Text(suggestion)
                 .font(.callout)
                 .padding(.horizontal, Spacing.medium)
@@ -159,7 +159,7 @@ struct PromptSuggestions: View {
                     .strokeBorder(Color.gray.opacity(0.2), lineWidth: 1)
                 )
                 .cornerRadius(12)
-            }
+            })
             .buttonStyle(.plain)
           }
         }
@@ -178,12 +178,13 @@ struct PromptSuggestions: View {
       isRunning: false,
       errorMessage: nil,
       onRun: {},
-      onReset: {}
-    ) {
+      onReset: {},
+      content: {
       ResultDisplay(
         result: "Why don't scientists trust atoms? Because they make up everything!",
         isSuccess: true
       )
     }
+    )
   }
 }

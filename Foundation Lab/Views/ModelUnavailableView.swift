@@ -46,11 +46,15 @@ struct ModelUnavailableView: View {
 
         switch reason {
         case .deviceNotEligible:
-            return "This device is not eligible for Apple Intelligence. Foundation Models Framework requires an iPhone 15 Pro or later, iPad with A17 Pro or M1 and newer, Apple Vision Pro, or a Mac with Apple silicon."
+            return "This device is not eligible for Apple Intelligence. Foundation Models Framework requires an " +
+                   "iPhone 15 Pro or later, iPad with A17 Pro or M1 and newer, Apple Vision Pro, " +
+                   "or a Mac with Apple silicon."
         case .appleIntelligenceNotEnabled:
-            return "Apple Intelligence is not enabled. Please enable Apple Intelligence in Settings to use Foundation Models Framework."
+            return "Apple Intelligence is not enabled. Please enable Apple Intelligence in Settings to use " +
+                   "Foundation Models Framework."
         case .modelNotReady:
-            return "Apple Intelligence models are still downloading. Please wait for the download to complete and try again."
+            return "Apple Intelligence models are still downloading. Please wait for the download to complete " +
+                   "and try again."
         @unknown default:
             return "Apple Intelligence is currently unavailable. Please try again later."
         }

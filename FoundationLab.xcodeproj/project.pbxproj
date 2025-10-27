@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		0A21D7F12E518858004E8806 /* LiquidGlasKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0A21D7F02E518858004E8806 /* LiquidGlasKit */; };
 		0A5454AB2E1148A8002C2152 /* Foundation Lab.icon in Resources */ = {isa = PBXBuildFile; fileRef = 0A5454A72E1148A8002C2152 /* Foundation Lab.icon */; };
-		0A6316F32E1291E900E13A6D /* Murmer.icon in Resources */ = {isa = PBXBuildFile; fileRef = 0A6316F22E1291E900E13A6D /* Murmer.icon */; };
 		0A979E842E1E5921008CFA37 /* FoundationModelsTools in Frameworks */ = {isa = PBXBuildFile; productRef = 0A979E832E1E5921008CFA37 /* FoundationModelsTools */; };
 		0AFDF8412EA8C3670071BEA5 /* Adapter Studio.icon in Resources */ = {isa = PBXBuildFile; fileRef = 0AFDF8402EA8C3670071BEA5 /* Adapter Studio.icon */; };
 		0AFDF8442EA8C3F80071BEA5 /* LiquidGlasKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0AFDF8432EA8C3F80071BEA5 /* LiquidGlasKit */; };
@@ -18,13 +17,11 @@
 
 /* Begin PBXFileReference section */
 		0A5454A72E1148A8002C2152 /* Foundation Lab.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "Foundation Lab.icon"; sourceTree = "<group>"; };
-		0A6316F22E1291E900E13A6D /* Murmer.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = Murmer.icon; sourceTree = "<group>"; };
 		0A90927D2EA8361C0062F02B /* Adapter Studio.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Adapter Studio.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0A9766662E1E562A008CFA37 /* Collections.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = Collections.xcodeproj; sourceTree = "<group>"; };
 		0AAE4FFF2DF76E6600838F13 /* Foundation Lab.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Foundation Lab.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0ABC0C9B2E09AB5300A09018 /* Physiqa.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Physiqa.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0ADB46DC2E0CE81900C29293 /* Psylean.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Psylean.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		0ADB48272E0D84EE00C29293 /* Murmer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Murmer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0AFDF8402EA8C3670071BEA5 /* Adapter Studio.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "Adapter Studio.icon"; sourceTree = "<group>"; };
 		6C9AECE22E728F6D00F4C37F /* SampleCode.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = SampleCode.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -97,11 +94,6 @@
 			path = Psylean;
 			sourceTree = "<group>";
 		};
-		0ADB48282E0D84EE00C29293 /* Murmer */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = Murmer;
-			sourceTree = "<group>";
-		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -137,13 +129,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		0ADB48242E0D84EE00C29293 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -162,11 +147,9 @@
 				0ADB46AD2E0CE6C100C29293 /* Foundation Lab */,
 				0ABC0C9C2E09AB5300A09018 /* Physiqa */,
 				0ADB46DD2E0CE81900C29293 /* Psylean */,
-				0ADB48282E0D84EE00C29293 /* Murmer */,
 				0A90927E2EA8361C0062F02B /* Adapter Studio */,
 				0AAE50002DF76E6600838F13 /* Products */,
 				0A5454A72E1148A8002C2152 /* Foundation Lab.icon */,
-				0A6316F22E1291E900E13A6D /* Murmer.icon */,
 				0AFDF8422EA8C3F80071BEA5 /* Frameworks */,
 			);
 			sourceTree = "<group>";
@@ -177,7 +160,6 @@
 				0AAE4FFF2DF76E6600838F13 /* Foundation Lab.app */,
 				0ABC0C9B2E09AB5300A09018 /* Physiqa.app */,
 				0ADB46DC2E0CE81900C29293 /* Psylean.app */,
-				0ADB48272E0D84EE00C29293 /* Murmer.app */,
 				0A90927D2EA8361C0062F02B /* Adapter Studio.app */,
 			);
 			name = Products;
@@ -285,28 +267,6 @@
 			productReference = 0ADB46DC2E0CE81900C29293 /* Psylean.app */;
 			productType = "com.apple.product-type.application";
 		};
-		0ADB48262E0D84EE00C29293 /* Murmer */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 0ADB482F2E0D84F000C29293 /* Build configuration list for PBXNativeTarget "Murmer" */;
-			buildPhases = (
-				0ADB48232E0D84EE00C29293 /* Sources */,
-				0ADB48242E0D84EE00C29293 /* Frameworks */,
-				0ADB48252E0D84EE00C29293 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				0ADB48282E0D84EE00C29293 /* Murmer */,
-			);
-			name = Murmer;
-			packageProductDependencies = (
-			);
-			productName = Murmer;
-			productReference = 0ADB48272E0D84EE00C29293 /* Murmer.app */;
-			productType = "com.apple.product-type.application";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -327,9 +287,6 @@
 						CreatedOnToolsVersion = 26.0;
 					};
 					0ADB46DB2E0CE81900C29293 = {
-						CreatedOnToolsVersion = 26.0;
-					};
-					0ADB48262E0D84EE00C29293 = {
 						CreatedOnToolsVersion = 26.0;
 					};
 				};
@@ -362,7 +319,6 @@
 				0AAE4FFE2DF76E6600838F13 /* Foundation Lab */,
 				0ABC0C9A2E09AB5300A09018 /* Physiqa */,
 				0ADB46DB2E0CE81900C29293 /* Psylean */,
-				0ADB48262E0D84EE00C29293 /* Murmer */,
 				0A90927C2EA8361C0062F02B /* Adapter Studio */,
 			);
 		};
@@ -399,14 +355,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		0ADB48252E0D84EE00C29293 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				0A6316F32E1291E900E13A6D /* Murmer.icon in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -438,13 +386,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		0ADB48232E0D84EE00C29293 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
@@ -462,7 +403,7 @@
 				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = NO;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = YES;
 				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
 				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
 				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
@@ -506,7 +447,7 @@
 				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = NO;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = YES;
 				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
 				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
 				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
@@ -677,7 +618,7 @@
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_RESOURCE_ACCESS_APPLE_MUSIC = YES;
-				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = YES;
 				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
 				ENABLE_RESOURCE_ACCESS_CALENDARS = YES;
 				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
@@ -697,7 +638,10 @@
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "This app does not write health data.";
 				INFOPLIST_KEY_NSLocationUsageDescription = "This app needs access to your location to provide weather information and location-based services.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This app needs access to your location to provide weather information and location-based services.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Foundation Lab needs access to your microphone to listen to your voice commands for creating reminders.";
+				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Foundation Lab needs full access to create and manage reminders from your voice commands.";
 				INFOPLIST_KEY_NSRemindersUsageDescription = "This app needs access to your reminders to create and manage reminder tasks.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Foundation Lab uses speech recognition to convert your voice into text for creating reminders.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -755,7 +699,7 @@
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_RESOURCE_ACCESS_APPLE_MUSIC = YES;
-				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = YES;
 				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
 				ENABLE_RESOURCE_ACCESS_CALENDARS = YES;
 				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
@@ -775,7 +719,10 @@
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "This app does not write health data.";
 				INFOPLIST_KEY_NSLocationUsageDescription = "This app needs access to your location to provide weather information and location-based services.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This app needs access to your location to provide weather information and location-based services.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Foundation Lab needs access to your microphone to listen to your voice commands for creating reminders.";
+				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Foundation Lab needs full access to create and manage reminders from your voice commands.";
 				INFOPLIST_KEY_NSRemindersUsageDescription = "This app needs access to your reminders to create and manage reminder tasks.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Foundation Lab uses speech recognition to convert your voice into text for creating reminders.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -924,7 +871,7 @@
 				ENABLE_INCOMING_NETWORK_CONNECTIONS = YES;
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = YES;
 				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
 				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
 				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
@@ -987,7 +934,7 @@
 				ENABLE_INCOMING_NETWORK_CONNECTIONS = YES;
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = YES;
 				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
 				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
 				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
@@ -1015,118 +962,6 @@
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.rudrankriyam.Psylean${SAMPLE_CODE_DISAMBIGUATOR}";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
-				RUNTIME_EXCEPTION_ALLOW_DYLD_ENVIRONMENT_VARIABLES = NO;
-				RUNTIME_EXCEPTION_ALLOW_JIT = NO;
-				RUNTIME_EXCEPTION_ALLOW_UNSIGNED_EXECUTABLE_MEMORY = NO;
-				RUNTIME_EXCEPTION_DEBUGGING_TOOL = NO;
-				RUNTIME_EXCEPTION_DISABLE_EXECUTABLE_PAGE_PROTECTION = NO;
-				RUNTIME_EXCEPTION_DISABLE_LIBRARY_VALIDATION = NO;
-				SDKROOT = auto;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
-				XROS_DEPLOYMENT_TARGET = 26.0;
-			};
-			name = Release;
-		};
-		0ADB48302E0D84F000C29293 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = Murmer;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
-				AUTOMATION_APPLE_EVENTS = NO;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = YQZQG7N4WG;
-				ENABLE_APP_SANDBOX = NO;
-				ENABLE_HARDENED_RUNTIME = NO;
-				ENABLE_PREVIEWS = YES;
-				ENABLE_RESOURCE_ACCESS_PHOTO_LIBRARY = NO;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Murmer needs access to your microphone to listen to your voice commands for creating reminders.";
-				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Murmer needs full access to create and manage reminders based on your voice commands.";
-				INFOPLIST_KEY_NSRemindersUsageDescription = "Murmer needs access to your reminders to create and manage reminder tasks.";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Murmer uses speech recognition to convert your voice into text for creating reminders.";
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
-				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.rudrankriyam.Murmer${SAMPLE_CODE_DISAMBIGUATOR}";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
-				RUNTIME_EXCEPTION_ALLOW_DYLD_ENVIRONMENT_VARIABLES = NO;
-				RUNTIME_EXCEPTION_ALLOW_JIT = NO;
-				RUNTIME_EXCEPTION_ALLOW_UNSIGNED_EXECUTABLE_MEMORY = NO;
-				RUNTIME_EXCEPTION_DEBUGGING_TOOL = NO;
-				RUNTIME_EXCEPTION_DISABLE_EXECUTABLE_PAGE_PROTECTION = NO;
-				RUNTIME_EXCEPTION_DISABLE_LIBRARY_VALIDATION = NO;
-				SDKROOT = auto;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
-				XROS_DEPLOYMENT_TARGET = 26.0;
-			};
-			name = Debug;
-		};
-		0ADB48312E0D84F000C29293 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = Murmer;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
-				AUTOMATION_APPLE_EVENTS = NO;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = YQZQG7N4WG;
-				ENABLE_APP_SANDBOX = NO;
-				ENABLE_HARDENED_RUNTIME = NO;
-				ENABLE_PREVIEWS = YES;
-				ENABLE_RESOURCE_ACCESS_PHOTO_LIBRARY = NO;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Murmer needs access to your microphone to listen to your voice commands for creating reminders.";
-				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Murmer needs full access to create and manage reminders based on your voice commands.";
-				INFOPLIST_KEY_NSRemindersUsageDescription = "Murmer needs access to your reminders to create and manage reminder tasks.";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Murmer uses speech recognition to convert your voice into text for creating reminders.";
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
-				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.rudrankriyam.Murmer${SAMPLE_CODE_DISAMBIGUATOR}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				RUNTIME_EXCEPTION_ALLOW_DYLD_ENVIRONMENT_VARIABLES = NO;
@@ -1191,15 +1026,6 @@
 			buildConfigurations = (
 				0ADB46E52E0CE81A00C29293 /* Debug */,
 				0ADB46E62E0CE81A00C29293 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		0ADB482F2E0D84F000C29293 /* Build configuration list for PBXNativeTarget "Murmer" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				0ADB48302E0D84F000C29293 /* Debug */,
-				0ADB48312E0D84F000C29293 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

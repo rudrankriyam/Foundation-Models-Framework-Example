@@ -20,7 +20,8 @@ struct ChatInstructionsView: View {
                         .font(.title2)
                         .fontWeight(.semibold)
 
-                    Text("Provide specific instructions to guide how the AI should respond. These instructions will apply to all new conversations.")
+                    Text("Provide specific instructions to guide how the AI should respond. These instructions will " +
+                         "apply to all new conversations.")
                         .font(.body)
                         .foregroundColor(.secondary)
                 }

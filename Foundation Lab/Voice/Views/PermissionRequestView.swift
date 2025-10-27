@@ -1,8 +1,8 @@
 //
 //  PermissionRequestView.swift
-//  Murmer
+//  Foundation Lab
 //
-//  Created by Rudrank Riyam on 6/26/25.
+//  Created by Rudrank Riyam on 10/27/25.
 //
 
 import SwiftUI
@@ -11,55 +11,39 @@ import Speech
 import EventKit
 
 struct PermissionRequestView: View {
-    @ObservedObject var permissionService: PermissionService
+    let viewModel: VoiceViewModel
     @State private var isRequestingPermissions = false
 
+    init(viewModel: VoiceViewModel) {
+        self.viewModel = viewModel
+    }
+
     var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "waveform")
-                .padding()
-                .font(.system(size: 60))
-                .padding(.vertical)
-                .glassEffect(.clear, in: .circle)
-
-            VStack(spacing: 0) {
-                Text("Welcome to Murmer")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .padding(.bottom, 4)
-
-                Text("Voice-powered reminders")
-                    .font(.body)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.bottom)
-            }
-
+        VStack {
             // Permission items
             VStack(spacing: 20) {
                 PermissionItemView(
                     icon: "mic.fill",
-                    title: "Microphone",
-                    description: "To hear your voice",
-                    status: permissionService.microphonePermissionStatus == .granted ? .granted : .pending
+                    title: String(localized: "Microphone"),
+                    description: String(localized: "To hear your voice"),
+                    status: getMicrophonePermissionStatus()
                 )
 
                 PermissionItemView(
                     icon: "waveform",
-                    title: "Speech Recognition",
-                    description: "To understand your words",
-                    status: permissionService.speechPermissionStatus == .authorized ? .granted : .pending
+                    title: String(localized: "Speech Recognition"),
+                    description: String(localized: "To understand your words"),
+                    status: getSpeechPermissionStatus()
                 )
 
                 PermissionItemView(
                     icon: "checklist",
-                    title: "Reminders",
-                    description: "To save your reminders",
-                    status: permissionService.hasRemindersAccess ? .granted : .pending
+                    title: String(localized: "Reminders"),
+                    description: String(localized: "To save your reminders"),
+                    status: getRemindersPermissionStatus()
                 )
             }
             .padding()
-            .glassEffect(.regular, in: .rect(cornerRadius: 12))
 
             Button(action: requestPermissions) {
                 HStack {
@@ -68,7 +52,9 @@ struct PermissionRequestView: View {
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
                             .scaleEffect(0.8)
                     } else {
-                        Text(permissionService.allPermissionsGranted ? "Continue" : "Grant Permissions")
+                        Text(viewModel.allPermissionsGranted ?
+                             String(localized: "Continue") :
+                             String(localized: "Grant Permissions"))
                             .fontWeight(.semibold)
                     }
                 }
@@ -77,39 +63,60 @@ struct PermissionRequestView: View {
             .controlSize(.large)
             .buttonBorderShape(.roundedRectangle(radius: 12))
             .disabled(isRequestingPermissions)
-            .buttonStyle(.glassProminent)
+            .buttonStyle(.borderedProminent)
             .tint(.indigo)
             .padding(.vertical)
         }
         .padding()
-        .alert("Permissions Required",
-               isPresented: $permissionService.showPermissionAlert) {
-            Button("Open Settings", action: permissionService.openSettings)
+        .alert(String(localized: "Permissions Required"),
+               isPresented: .init(
+                   get: { viewModel.showPermissionAlert },
+                   set: { _ in viewModel.showPermissionAlert = false }
+               )) {
+            Button("Open Settings", action: viewModel.openSettings)
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text(permissionService.permissionAlertMessage)
+            Text(viewModel.permissionAlertMessage)
         }
         .frame(maxHeight: .infinity)
     }
 
     func requestPermissions() {
         // If all permissions are already granted, just update the status
-        if permissionService.allPermissionsGranted {
+        if viewModel.allPermissionsGranted {
             // Force a re-check to ensure the parent view updates
-            permissionService.checkAllPermissions()
+            viewModel.checkAllPermissions()
             return
         }
 
         isRequestingPermissions = true
 
         Task {
-            _ = await permissionService.requestAllPermissions()
+            _ = await viewModel.requestAllPermissions()
             isRequestingPermissions = false
 
-            if !permissionService.allPermissionsGranted {
-                permissionService.showSettingsAlert()
+            if !viewModel.allPermissionsGranted {
+                viewModel.showSettingsAlert()
             }
         }
+    }
+
+    // MARK: - Permission Status Helpers
+
+    private func getMicrophonePermissionStatus() -> PermissionItemView.PermissionStatus {
+#if os(iOS)
+        return viewModel.microphonePermissionStatus == .granted ? .granted : .pending
+#else
+        return viewModel.microphonePermissionStatus == .granted ? .granted : .pending
+#endif
+    }
+
+    private func getSpeechPermissionStatus() -> PermissionItemView.PermissionStatus {
+        viewModel.speechPermissionStatus == .authorized ? .granted : .pending
+    }
+
+    private func getRemindersPermissionStatus() -> PermissionItemView.PermissionStatus {
+        viewModel.hasRemindersAccess ? .granted : .pending
     }
 }
 
@@ -151,24 +158,6 @@ struct PermissionItemView: View {
     }
 }
 
-// Mock PermissionService for preview
-class MockPermissionService: PermissionService {
-    override init() {
-        super.init()
-        // Set up mock permissions for preview
-#if os(iOS)
-        self.microphonePermissionStatus = .undetermined
-#else
-        self.microphonePermissionStatus = .granted
-#endif
-        self.speechPermissionStatus = .notDetermined
-        self.remindersPermissionStatus = .notDetermined
-        self.allPermissionsGranted = false
-        self.showPermissionAlert = false
-        self.permissionAlertMessage = ""
-    }
-}
-
 #Preview {
-    PermissionRequestView(permissionService: MockPermissionService())
+    PermissionRequestView(viewModel: VoiceViewModel())
 }

@@ -15,6 +15,7 @@ import Playgrounds
     """)
 
     let session = LanguageModelSession(instructions: customInstructions)
-    let response = try await session.respond(to: "Please review this sentence: 'The quick brown fox jumps over the lazy dog.'")
+    let response = try await session.respond(to: "Please review this sentence: 'The quick brown fox jumps over " +
+                                                    "the lazy dog.'")
     print("Feedback: \(response.content)")
 }

@@ -15,7 +15,8 @@ struct HealthDataTool: Tool {
 
     @Generable
     struct Arguments {
-        @Guide(description: "The type of health data to fetch: 'today', 'weekly', or specific metric like 'steps', 'heartRate', 'sleep', 'activeEnergy', 'distance'")
+        @Guide(description: "The type of health data to fetch: 'today', 'weekly', or specific metric like 'steps', " +
+                            "'heartRate', 'sleep', 'activeEnergy', 'distance'")
         var dataType: String
     }
 
@@ -84,73 +85,91 @@ struct HealthDataTool: Tool {
 
     private func generateSpecificMetric(type: String) -> HealthMetrics {
         switch type {
-        case "steps":
-            return HealthMetrics(
-                dataType: type,
-                steps: Int.random(in: 8000...12000),
-                activeEnergy: nil,
-                distance: nil,
-                heartRate: nil,
-                sleep: nil,
-                date: DateFormatter.todayString,
-                status: "success"
-            )
-        case "heartRate":
-            return HealthMetrics(
-                dataType: type,
-                steps: nil,
-                activeEnergy: nil,
-                distance: nil,
-                heartRate: Int.random(in: 65...95),
-                sleep: nil,
-                date: DateFormatter.todayString,
-                status: "success"
-            )
-        case "sleep":
-            return HealthMetrics(
-                dataType: type,
-                steps: nil,
-                activeEnergy: nil,
-                distance: nil,
-                heartRate: nil,
-                sleep: Double.random(in: 6.5...8.5),
-                date: DateFormatter.yesterdayString,
-                status: "success"
-            )
-        case "activeEnergy":
-            return HealthMetrics(
-                dataType: type,
-                steps: nil,
-                activeEnergy: Int.random(in: 300...600),
-                distance: nil,
-                heartRate: nil,
-                sleep: nil,
-                date: DateFormatter.todayString,
-                status: "success"
-            )
-        case "distance":
-            return HealthMetrics(
-                dataType: type,
-                steps: nil,
-                activeEnergy: nil,
-                distance: Double.random(in: 4.0...10.0),
-                heartRate: nil,
-                sleep: nil,
-                date: DateFormatter.todayString,
-                status: "success"
-            )
-        default:
-            return HealthMetrics(
-                dataType: type,
-                steps: nil,
-                activeEnergy: nil,
-                distance: nil,
-                heartRate: nil,
-                sleep: nil,
-                date: DateFormatter.todayString,
-                status: "error"
-            )
+        case "steps": return generateStepsMetric()
+        case "heartRate": return generateHeartRateMetric()
+        case "sleep": return generateSleepMetric()
+        case "activeEnergy": return generateActiveEnergyMetric()
+        case "distance": return generateDistanceMetric()
+        default: return generateDefaultMetric(type: type)
         }
+    }
+
+    private func generateStepsMetric() -> HealthMetrics {
+        HealthMetrics(
+            dataType: "steps",
+            steps: Int.random(in: 8000...12000),
+            activeEnergy: nil,
+            distance: nil,
+            heartRate: nil,
+            sleep: nil,
+            date: DateFormatter.todayString,
+            status: "success"
+        )
+    }
+
+    private func generateHeartRateMetric() -> HealthMetrics {
+        HealthMetrics(
+            dataType: "heartRate",
+            steps: nil,
+            activeEnergy: nil,
+            distance: nil,
+            heartRate: Int.random(in: 65...95),
+            sleep: nil,
+            date: DateFormatter.todayString,
+            status: "success"
+        )
+    }
+
+    private func generateSleepMetric() -> HealthMetrics {
+        HealthMetrics(
+            dataType: "sleep",
+            steps: nil,
+            activeEnergy: nil,
+            distance: nil,
+            heartRate: nil,
+            sleep: Double.random(in: 6.5...8.5),
+            date: DateFormatter.yesterdayString,
+            status: "success"
+        )
+    }
+
+    private func generateActiveEnergyMetric() -> HealthMetrics {
+        HealthMetrics(
+            dataType: "activeEnergy",
+            steps: nil,
+            activeEnergy: Int.random(in: 300...600),
+            distance: nil,
+            heartRate: nil,
+            sleep: nil,
+            date: DateFormatter.todayString,
+            status: "success"
+        )
+    }
+
+    private func generateDistanceMetric() -> HealthMetrics {
+        HealthMetrics(
+            dataType: "distance",
+            steps: nil,
+            activeEnergy: nil,
+            distance: Double.random(in: 4.0...10.0),
+            heartRate: nil,
+            sleep: nil,
+            date: DateFormatter.todayString,
+            status: "success"
+        )
+    }
+
+    private func generateDefaultMetric(type: String) -> HealthMetrics {
+        HealthMetrics(
+            dataType: type,
+            steps: nil,
+            activeEnergy: nil,
+            distance: nil,
+            heartRate: nil,
+            sleep: nil,
+            date: DateFormatter.todayString,
+            status: "error"
+        )
     }
 
     enum HealthDataError: Error, LocalizedError {
@@ -161,7 +180,8 @@ struct HealthDataTool: Tool {
         var errorDescription: String? {
             switch self {
             case .invalidDataType(let type):
-                return "Invalid data type: '\(type)'. Use 'today', 'weekly', 'steps', 'heartRate', 'sleep', 'activeEnergy', or 'distance'."
+                return "Invalid data type: '\(type)'. Use 'today', 'weekly', 'steps', 'heartRate', 'sleep', " +
+                       "'activeEnergy', or 'distance'."
             case .healthKitUnavailable:
                 return "HealthKit is not available on this device"
             case .permissionDenied:

@@ -60,10 +60,8 @@ final class LanguageService {
         let languageCode = userLocale.language.languageCode?.identifier ?? "en"
 
         // Find the matching supported language by code
-        for language in supportedLanguages {
-            if language.languageCode?.identifier == languageCode {
-                return getDisplayName(for: language)
-            }
+        for language in supportedLanguages where language.languageCode?.identifier == languageCode {
+            return getDisplayName(for: language)
         }
 
         // Fallback to first supported language

@@ -22,7 +22,9 @@ struct CreativeWritingView: View {
       currentPrompt: $currentPrompt,
       isRunning: executor.isRunning,
       errorMessage: executor.errorMessage,
-      codeExample: DefaultPrompts.creativeWritingCode(prompt: currentPrompt, instructions: showInstructions && !instructions.isEmpty ? instructions : nil),
+      codeExample: DefaultPrompts.creativeWritingCode(prompt: currentPrompt,
+                                                        instructions: showInstructions && !instructions.isEmpty ?
+                                                                     instructions : nil),
       onRun: executeCreativeWriting,
       onReset: resetToDefaults
     ) {

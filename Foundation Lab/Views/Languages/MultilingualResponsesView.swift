@@ -136,7 +136,8 @@ for prompt in prompts {
         // If no supported languages found with templates, use fallback
         if prompts.isEmpty {
             prompts = [
-                LanguagePrompt(language: "English", flag: "🌐", text: "What is the capital of France? Please provide a brief answer.")
+                LanguagePrompt(language: "English", flag: "🌐",
+                              text: "What is the capital of France? Please provide a brief answer.")
             ]
         }
 
