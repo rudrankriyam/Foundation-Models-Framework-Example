@@ -40,14 +40,12 @@ struct VoiceView: View {
                     .font(.headline)
                     .foregroundStyle(.secondary)
 
-                // GlassDropdown placeholder - will be created later
-                Text("Reminder List: \(viewModel.selectedList)")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
-                    .frame(maxWidth: 300)
+                GlassDropdown(
+                    selectedValue: $viewModel.selectedList,
+                    options: viewModel.availableLists,
+                    title: "Reminder List"
+                )
+                .frame(maxWidth: 300)
             }
             .padding(.horizontal)
             .frame(maxWidth: .infinity, alignment: .leading)
