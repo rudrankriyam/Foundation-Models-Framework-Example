@@ -375,10 +375,10 @@ struct RemindersToolView: View {
 
 // MARK: - Supporting Types
 enum ReminderPriority: String, CaseIterable {
-  case none = "none"
-  case low = "low"
-  case medium = "medium"
-  case high = "high"
+  case none
+  case low
+  case medium
+  case high
 
   var displayName: String {
     switch self {

@@ -97,9 +97,15 @@ struct SchemaErrorHandlingView: View {
         case 0:
             return "Basic extraction with a well-formed schema. This should succeed without errors."
         case 1:
-            return "The schema requires fields that might not be present in the input. The system will make best effort to extract available data."
+            return """
+            The schema requires fields that might not be present in the input. \
+            The system will make best effort to extract available data.
+            """
         case 2:
-            return "The input contains data that doesn't match the expected types. The system will attempt type conversion where possible."
+            return """
+            The input contains data that doesn't match the expected types. \
+            The system will attempt type conversion where possible.
+            """
         case 3:
             return "Complex validation rules that might fail. The system will provide detailed error information."
         default:

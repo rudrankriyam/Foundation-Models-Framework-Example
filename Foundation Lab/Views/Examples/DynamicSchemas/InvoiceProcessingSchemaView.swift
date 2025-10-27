@@ -649,7 +649,7 @@ struct InvoiceProcessingSchemaView: View {
 
         // Validate total
         if let total = invoice["totalAmount"] as? Double,
-           let _ = invoice["subtotal"] as? Double {
+           invoice["subtotal"] is Double {
             validationResults.append("\nTotal amount extracted: $\(String(format: "%.2f", total))")
         }
 

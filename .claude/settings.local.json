@@ -51,7 +51,9 @@
       "Bash(xcrun xcodebuild build:*)",
       "WebSearch",
       "WebFetch(domain:brave.com)",
-      "Bash(xcrun xcodebuild:*)"
+      "Bash(xcrun xcodebuild:*)",
+      "Bash(swiftlint)",
+      "Bash(swiftlint --strict)"
     ],
     "deny": [],
     "includeCoAuthoredBy": false

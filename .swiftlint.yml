@@ -1,8 +1,6 @@
 included:
-  - FoundationLab
+  - "Foundation Lab"
   - GlassUI
-  - Murmer
-  - MurmerTests
   - Physiqa
   - Psylean
   - TestFlight

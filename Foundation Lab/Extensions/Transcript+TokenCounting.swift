@@ -83,9 +83,6 @@ func estimateTokensForStructuredContent(_ content: GeneratedContent) -> Int {
     return max(1, Int(ceil(Double(characterCount) * tokensPerChar)))
 }
 
-/// Uses character-based counting: 4 characters per token
-// Removed unused alternative token estimator
-
 // MARK: - Helper Functions
 
 // Removed unused helper functions

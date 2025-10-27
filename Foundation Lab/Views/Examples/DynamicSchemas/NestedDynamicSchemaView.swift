@@ -531,9 +531,9 @@ struct NestedDynamicSchemaView: View {
                     case .array(let elements):
                         // Array
                         result += "["
-                        for (i, element) in elements.enumerated() {
+                        for (index, element) in elements.enumerated() {
                             result += formatNestedContent(element, indent: indent + 1)
-                            if i < elements.count - 1 {
+                            if index < elements.count - 1 {
                                 result += ","
                             }
                         }
@@ -553,9 +553,9 @@ struct NestedDynamicSchemaView: View {
             }
         case .array(let elements):
             result += "["
-            for (i, element) in elements.enumerated() {
+            for (index, element) in elements.enumerated() {
                 result += formatNestedContent(element, indent: indent + 1)
-                if i < elements.count - 1 {
+                if index < elements.count - 1 {
                     result += ","
                 }
             }
