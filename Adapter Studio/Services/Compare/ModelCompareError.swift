@@ -9,7 +9,7 @@ import Foundation
 
 /// Lightweight error payload surfaced by ``ModelCompareEngine``.
 struct ModelCompareError: Sendable {
-    
+
     /// Localized description suitable for UI alerts and toasts.
     let message: String
 }

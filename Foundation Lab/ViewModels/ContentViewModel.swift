@@ -132,7 +132,6 @@ class ContentViewModel {
     }
   }
 
-
   @MainActor
   func executeWeatherToolCalling() async {
     let requestText = "Is it hotter in New Delhi, or San Francisco? Compare the weather in both cities."

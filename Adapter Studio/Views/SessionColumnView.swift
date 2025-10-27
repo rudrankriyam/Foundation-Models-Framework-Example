@@ -13,9 +13,9 @@ struct SessionColumnView: View {
     let subtitle: String
     let column: CompareViewModel.ColumnState
     let isActive: Bool
-    
+
     private let cornerRadius: CGFloat = 18
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             header
@@ -33,18 +33,18 @@ struct SessionColumnView: View {
                 )
         )
     }
-    
+
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title.uppercased())
                 .font(.caption.weight(.semibold))
-            
+
             Text(subtitle)
                 .font(.headline)
                 .foregroundStyle(.white.opacity(0.9))
         }
     }
-    
+
     @ViewBuilder
     private var responseBody: some View {
         ScrollView {
@@ -64,7 +64,7 @@ struct SessionColumnView: View {
         .frame(minHeight: 220)
         .scrollContentBackground(.hidden)
     }
-    
+
     @ViewBuilder
     private var metricsSection: some View {
         if let metrics = column.metrics {
@@ -72,11 +72,11 @@ struct SessionColumnView: View {
                 if let ttf = metrics.timeToFirstToken {
                     MetricBadge(icon: "bolt.fill", title: "First token", value: formattedDuration(ttf))
                 }
-                
+
                 if let duration = metrics.totalDuration {
                     MetricBadge(icon: "clock", title: "Total", value: formattedDuration(duration))
                 }
-                
+
                 MetricBadge(icon: "calendar", title: "Started", value: metrics.startedAt.formatted(date: .omitted, time: .standard))
             }
         } else if isActive {
@@ -84,7 +84,7 @@ struct SessionColumnView: View {
                 .progressViewStyle(.circular)
         }
     }
-    
+
     private var placeholder: some View {
         VStack(alignment: .leading, spacing: 10) {
             if isActive {
@@ -92,7 +92,7 @@ struct SessionColumnView: View {
                     ProgressView()
                         .progressViewStyle(.circular)
                         .scaleEffect(0.9)
-                    
+
                     Text("Streaming response…")
                         .font(.callout)
                         .foregroundStyle(.white.opacity(0.65))
@@ -104,7 +104,7 @@ struct SessionColumnView: View {
             }
         }
     }
-    
+
     private func formattedDuration(_ value: TimeInterval) -> String {
         let formatted = value.formatted(.number.precision(.fractionLength(2)))
         return "\(formatted)s"
@@ -115,7 +115,7 @@ private struct MetricBadge: View {
     let icon: String
     let title: String
     let value: String
-    
+
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: icon)
@@ -126,7 +126,7 @@ private struct MetricBadge: View {
                     Circle()
                         .fill(.primary.opacity(0.35))
                 )
-            
+
             VStack(alignment: .leading, spacing: 2) {
                 Text(title.uppercased())
                     .font(.caption2.weight(.semibold))

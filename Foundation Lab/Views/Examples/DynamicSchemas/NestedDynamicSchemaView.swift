@@ -515,7 +515,6 @@ struct NestedDynamicSchemaView: View {
         }
     }
 
-
     private var exampleCode: String {
         """
         // Creating deeply nested schemas

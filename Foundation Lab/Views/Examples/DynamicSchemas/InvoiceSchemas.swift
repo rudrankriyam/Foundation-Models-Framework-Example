@@ -86,73 +86,24 @@ struct InvoiceSchemas {
         )
     }
 
-    private static func createInvoiceSchemaProperties(addressSchema: DynamicGenerationSchema,
-                                                     lineItemSchema: DynamicGenerationSchema) -> [DynamicGenerationSchema.Property] {
-        let invoiceNumberProperty = DynamicGenerationSchema.Property(
-            name: "invoiceNumber",
-            description: "Invoice number or identifier",
-            schema: .init(type: String.self)
-        )
-        let issueDateProperty = DynamicGenerationSchema.Property(
-            name: "issueDate",
-            description: "Date the invoice was issued",
-            schema: .init(type: String.self)
-        )
-        let dueDateProperty = DynamicGenerationSchema.Property(
-            name: "dueDate",
-            description: "Payment due date",
-            schema: .init(type: String.self)
-        )
-        let fromAddressProperty = DynamicGenerationSchema.Property(
-            name: "fromAddress",
-            description: "Address of the seller/company issuing the invoice",
-            schema: addressSchema
-        )
-        let toAddressProperty = DynamicGenerationSchema.Property(
-            name: "toAddress",
-            description: "Address of the buyer/customer",
-            schema: addressSchema
-        )
-        let lineItemsProperty = DynamicGenerationSchema.Property(
-            name: "lineItems",
-            description: "List of line items on the invoice",
-            schema: .init(arrayOf: lineItemSchema)
-        )
-        let subtotalProperty = DynamicGenerationSchema.Property(
-            name: "subtotal",
-            description: "Subtotal before tax",
-            schema: .init(type: Double.self)
-        )
-        let taxAmountProperty = DynamicGenerationSchema.Property(
-            name: "taxAmount",
-            description: "Total tax amount",
-            schema: .init(type: Double.self)
-        )
-        let taxRateProperty = DynamicGenerationSchema.Property(
-            name: "taxRate",
-            description: "Tax rate applied",
-            schema: .init(type: Double.self)
-        )
-        let totalProperty = DynamicGenerationSchema.Property(
-            name: "total",
-            description: "Total amount due",
-            schema: .init(type: Double.self)
-        )
-        let paymentTermsProperty = DynamicGenerationSchema.Property(
-            name: "paymentTerms",
-            description: "Payment terms and conditions",
-            schema: .init(type: String.self)
-        )
-        let notesProperty = DynamicGenerationSchema.Property(
-            name: "notes",
-            description: "Additional notes or comments",
-            schema: .init(type: String.self),
-            isOptional: true
-        )
-
-        return [invoiceNumberProperty, issueDateProperty, dueDateProperty, fromAddressProperty, toAddressProperty,
-                lineItemsProperty, subtotalProperty, taxAmountProperty, taxRateProperty, totalProperty,
-                paymentTermsProperty, notesProperty]
+    private static func createInvoiceSchemaProperties(
+        addressSchema: DynamicGenerationSchema,
+        lineItemSchema: DynamicGenerationSchema
+    ) -> [DynamicGenerationSchema.Property] {
+        [
+            DynamicGenerationSchema.Property(name: "invoiceNumber", description: "Invoice ID", schema: .init(type: String.self)),
+            DynamicGenerationSchema.Property(name: "issueDate", description: "Issue date", schema: .init(type: String.self)),
+            DynamicGenerationSchema.Property(name: "dueDate", description: "Due date", schema: .init(type: String.self)),
+            DynamicGenerationSchema.Property(name: "fromAddress", description: "Seller address", schema: addressSchema),
+            DynamicGenerationSchema.Property(name: "toAddress", description: "Buyer address", schema: addressSchema),
+            DynamicGenerationSchema.Property(name: "lineItems", description: "Invoice items", schema: .init(arrayOf: lineItemSchema)),
+            DynamicGenerationSchema.Property(name: "subtotal", description: "Pre-tax total", schema: .init(type: Double.self)),
+            DynamicGenerationSchema.Property(name: "taxAmount", description: "Tax amount", schema: .init(type: Double.self)),
+            DynamicGenerationSchema.Property(name: "taxRate", description: "Tax rate", schema: .init(type: Double.self)),
+            DynamicGenerationSchema.Property(name: "total", description: "Total due", schema: .init(type: Double.self)),
+            DynamicGenerationSchema.Property(name: "paymentTerms", description: "Payment terms", schema: .init(type: String.self)),
+            DynamicGenerationSchema.Property(name: "notes", description: "Notes", schema: .init(type: String.self), isOptional: true)
+        ]
     }
 
     static func createFullInvoiceSchema() -> DynamicGenerationSchema {

@@ -12,7 +12,7 @@ struct VoiceView: View {
     @State private var viewModel = VoiceViewModel()
     @State private var blobScale: CGFloat = 1.0
     @State private var isProcessingTap = false
-    
+
     var body: some View {
         Group {
             if viewModel.allPermissionsGranted {
@@ -31,7 +31,7 @@ struct VoiceView: View {
             viewModel.tearDown()
         }
     }
-    
+
     private var voiceMainView: some View {
         let viewModel = self.viewModel
         return VStack(spacing: 30) {
@@ -41,19 +41,19 @@ struct VoiceView: View {
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .foregroundStyle(.primary)
-                
+
                 Text(String(localized: "Create reminders with your voice"))
                     .font(.headline)
                     .foregroundStyle(.secondary)
-                
+
                 reminderListPicker(viewModel: viewModel)
                     .frame(maxWidth: 320)
             }
             .padding(.horizontal)
             .frame(maxWidth: .infinity, alignment: .leading)
-            
+
             Spacer()
-            
+
             // Main content
             VStack(spacing: 40) {
                 // Audio reactive blob placeholder
@@ -69,7 +69,7 @@ struct VoiceView: View {
                                 value: viewModel.isListening
                             )
                     }
-                    
+
                     AudioReactiveBlobView(
                         speechRecognizer: viewModel.speechRecognizer,
                         listeningState: .init(
@@ -83,7 +83,7 @@ struct VoiceView: View {
                         toggleListening()
                     }
                 }
-                
+
                 // Transcription display
                 if !viewModel.recognizedText.isEmpty || viewModel.isListening {
                     VStack(spacing: 8) {
@@ -121,7 +121,7 @@ struct VoiceView: View {
                     ))
                 }
             }
-            
+
             Spacer()
         }
         .padding()
@@ -154,13 +154,13 @@ struct VoiceView: View {
             Text(viewModel.errorMessage)
         }
     }
-    
+
     private func toggleListening() {
         // Prevent double-tapping
         guard !isProcessingTap else { return }
-        
+
         isProcessingTap = true
-        
+
         defer {
             // Reset processing flag after a short delay
             Task {
@@ -168,7 +168,7 @@ struct VoiceView: View {
                 isProcessingTap = false
             }
         }
-        
+
         if viewModel.isListening {
             viewModel.stopListening()
             withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
@@ -182,7 +182,7 @@ struct VoiceView: View {
                 }
             }
         }
-        
+
         // Haptic feedback
 #if os(iOS)
         let impact = UIImpactFeedbackGenerator(style: .medium)
@@ -198,7 +198,7 @@ extension VoiceView {
             Text(String(localized: "Reminder List"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            
+
             Picker(String(localized: "Reminder List"), selection: Binding(
                 get: { viewModel.selectedList },
                 set: { viewModel.selectedList = $0 }

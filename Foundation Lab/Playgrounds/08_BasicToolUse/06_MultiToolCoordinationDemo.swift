@@ -12,17 +12,17 @@ import Playgrounds
 #Playground {
     print("=== Multi-Tool Coordination Demo ===")
     print()
-    
+
     // Create tools
     let locationTool = MockLocationTool()
     let weatherTool = MockWeatherTool()
-    
+
     do {
         // Scenario 1: User asks for location first, then weather for "here"
         print("Scenario 1: Location-aware weather query")
-        
+
         let session = LanguageModelSession(tools: [locationTool, weatherTool])
-        
+
         // First, get user location
         print("1. Getting user location...")
         let locationResponse = try await session.respond(
@@ -30,7 +30,7 @@ import Playgrounds
         )
         print("Location response: \(locationResponse.content)")
         print()
-        
+
         // Now ask for weather using "here" - the weather tool should coordinate
         print("2. Asking for weather at 'here' (should use location data)...")
         let weatherResponse = try await session.respond(
@@ -38,18 +38,18 @@ import Playgrounds
         )
         print("Weather response: \(weatherResponse.content)")
         print("Notice how the weather tool used the location data from the previous call!")
-        
+
         // Scenario 2: Direct city query (no coordination needed)
         print("Scenario 2: Standard city weather query")
-        
+
         let cityWeatherResponse = try await session.respond(
             to: Prompt("What's the weather like in London?")
         )
         print("City weather response: \(cityWeatherResponse.content)")
-        
+
         // Scenario 3: Show transcript analysis
         print("Scenario 3: Transcript Analysis")
-        
+
         print("Transcript entries:")
         for (index, entry) in session.transcript.enumerated() {
             switch entry {
@@ -79,7 +79,7 @@ import Playgrounds
                 print("\(index): Unknown transcript entry type")
             }
         }
-        
+
     } catch {
         print("Error: \(error)")
     }

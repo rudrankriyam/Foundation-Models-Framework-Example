@@ -215,7 +215,6 @@ struct InvoiceProcessingSchemaView: View {
         )
     }
 
-
     private var exampleCode: String {
         """
         // Complex invoice processing with nested schemas

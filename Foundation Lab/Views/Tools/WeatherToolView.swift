@@ -14,7 +14,7 @@ struct WeatherToolView: View {
     @State private var result: String = ""
     @State private var errorMessage: String?
     @State private var location: String = "San Francisco"
-    
+
     var body: some View {
         ToolViewBase(
             title: "Weather",
@@ -29,7 +29,7 @@ struct WeatherToolView: View {
                     text: $location,
                     placeholder: "Enter city name"
                 )
-                
+
                 ToolExecuteButton(
                     "Get Weather",
                     systemImage: "cloud.sun",
@@ -37,7 +37,7 @@ struct WeatherToolView: View {
                     action: executeWeatherTool
                 )
                 .disabled(location.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                
+
                 if !result.isEmpty {
                     ResultDisplay(
                         result: result,
@@ -47,19 +47,19 @@ struct WeatherToolView: View {
             }
         }
     }
-    
+
     private func executeWeatherTool() {
         Task {
             await performWeatherRequest()
         }
     }
-    
+
     @MainActor
     private func performWeatherRequest() async {
         isRunning = true
         errorMessage = nil
         result = ""
-        
+
         do {
             let session = LanguageModelSession(tools: [WeatherTool()])
             let response = try await session.respond(
@@ -72,7 +72,7 @@ struct WeatherToolView: View {
         } catch {
             errorMessage = "Failed to get weather: \(error.localizedDescription)"
         }
-        
+
         isRunning = false
     }
 }

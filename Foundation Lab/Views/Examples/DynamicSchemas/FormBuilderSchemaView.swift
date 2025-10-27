@@ -156,11 +156,23 @@ struct FormBuilderSchemaView: View {
     }
 
     private func createFormSchemaFromDescription(_ description: String) -> DynamicGenerationSchema {
-        // Analyze the description to determine likely fields
         let lowercased = description.lowercased()
         var properties: [DynamicGenerationSchema.Property] = []
 
-        // Personal info fields
+        // Add field types based on description content
+        addPersonalInfoFields(to: &properties, for: lowercased)
+        addExperienceFields(to: &properties, for: lowercased)
+        addSkillsFields(to: &properties, for: lowercased)
+        addCommonFields(to: &properties)
+
+        return DynamicGenerationSchema(
+            name: "FormData",
+            description: "Form data extracted from user input",
+            properties: properties
+        )
+    }
+
+    private func addPersonalInfoFields(to properties: inout [DynamicGenerationSchema.Property], for lowercased: String) {
         if lowercased.contains("personal") || lowercased.contains("name") {
             properties.append(
                 DynamicGenerationSchema.Property(
@@ -197,8 +209,9 @@ struct FormBuilderSchemaView: View {
                 )
             )
         }
+    }
 
-        // Experience fields
+    private func addExperienceFields(to properties: inout [DynamicGenerationSchema.Property], for lowercased: String) {
         if lowercased.contains("experience") || lowercased.contains("job") {
             properties.append(
                 DynamicGenerationSchema.Property(
@@ -221,8 +234,9 @@ struct FormBuilderSchemaView: View {
                 )
             )
         }
+    }
 
-        // Skills fields
+    private func addSkillsFields(to properties: inout [DynamicGenerationSchema.Property], for lowercased: String) {
         if lowercased.contains("skill") {
             properties.append(
                 DynamicGenerationSchema.Property(
@@ -232,8 +246,9 @@ struct FormBuilderSchemaView: View {
                 )
             )
         }
+    }
 
-        // Additional common fields
+    private func addCommonFields(to properties: inout [DynamicGenerationSchema.Property]) {
         properties.append(
             DynamicGenerationSchema.Property(
                 name: "availability",
@@ -260,101 +275,119 @@ struct FormBuilderSchemaView: View {
                 isOptional: true
             )
         )
-
-        return DynamicGenerationSchema(
-            name: "FormData",
-            description: "Form data extracted from user input",
-            properties: properties
-        )
     }
 
     private func createPredefinedJobApplicationSchema() -> DynamicGenerationSchema {
-        return DynamicGenerationSchema(
+        DynamicGenerationSchema(
             name: "JobApplication",
             description: "Job application form data",
             properties: [
+                createPersonalInfoProperty(),
+                createExperienceProperty(),
+                createPreferencesProperty()
+            ]
+        )
+    }
+
+    private func createPersonalInfoProperty() -> DynamicGenerationSchema.Property {
+        DynamicGenerationSchema.Property(
+            name: "personalInfo",
+            description: "Personal information",
+            schema: createPersonalInfoSchema()
+        )
+    }
+
+    private func createPersonalInfoSchema() -> DynamicGenerationSchema {
+        DynamicGenerationSchema(
+            name: "PersonalInfo",
+            properties: [
                 DynamicGenerationSchema.Property(
-                    name: "personalInfo",
-                    description: "Personal information",
-                    schema: DynamicGenerationSchema(
-                        name: "PersonalInfo",
-                        properties: [
-                            DynamicGenerationSchema.Property(
-                                name: "fullName",
-                                description: "Applicant's full name",
-                                schema: .init(type: String.self)
-                            ),
-                            DynamicGenerationSchema.Property(
-                                name: "email",
-                                description: "Email address",
-                                schema: .init(
-                                    type: String.self,
-                                    guides: [.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)]
-                                )
-                            ),
-                            DynamicGenerationSchema.Property(
-                                name: "phone",
-                                description: "Phone number",
-                                schema: .init(
-                                    type: String.self,
-                                    guides: [.pattern(/\(\d{3}\) \d{3}-\d{4}/)]
-                                ),
-                                isOptional: true
-                            )
-                        ]
+                    name: "fullName",
+                    description: "Applicant's full name",
+                    schema: .init(type: String.self)
+                ),
+                DynamicGenerationSchema.Property(
+                    name: "email",
+                    description: "Email address",
+                    schema: .init(
+                        type: String.self,
+                        guides: [.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)]
                     )
                 ),
                 DynamicGenerationSchema.Property(
-                    name: "experience",
-                    description: "Professional experience",
-                    schema: DynamicGenerationSchema(
-                        name: "Experience",
-                        properties: [
-                            DynamicGenerationSchema.Property(
-                                name: "years",
-                                description: "Years of experience",
-                                schema: .init(
-                                    type: Int.self,
-                                    guides: [.range(0...50)]
-                                )
-                            ),
-                            DynamicGenerationSchema.Property(
-                                name: "currentRole",
-                                description: "Current position",
-                                schema: .init(type: String.self)
-                            ),
-                            DynamicGenerationSchema.Property(
-                                name: "skills",
-                                description: "Technical skills",
-                                schema: .init(arrayOf: .init(type: String.self))
-                            )
-                        ]
+                    name: "phone",
+                    description: "Phone number",
+                    schema: .init(
+                        type: String.self,
+                        guides: [.pattern(/\(\d{3}\) \d{3}-\d{4}/)]
+                    ),
+                    isOptional: true
+                )
+            ]
+        )
+    }
+
+    private func createExperienceProperty() -> DynamicGenerationSchema.Property {
+        DynamicGenerationSchema.Property(
+            name: "experience",
+            description: "Professional experience",
+            schema: createExperienceSchema()
+        )
+    }
+
+    private func createExperienceSchema() -> DynamicGenerationSchema {
+        DynamicGenerationSchema(
+            name: "Experience",
+            properties: [
+                DynamicGenerationSchema.Property(
+                    name: "years",
+                    description: "Years of experience",
+                    schema: .init(
+                        type: Int.self,
+                        guides: [.range(0...50)]
                     )
                 ),
                 DynamicGenerationSchema.Property(
-                    name: "preferences",
-                    description: "Job preferences",
-                    schema: DynamicGenerationSchema(
-                        name: "Preferences",
-                        properties: [
-                            DynamicGenerationSchema.Property(
-                                name: "startDate",
-                                description: "Available to start",
-                                schema: .init(type: String.self)
-                            ),
-                            DynamicGenerationSchema.Property(
-                                name: "salaryRange",
-                                description: "Expected salary",
-                                schema: .init(type: String.self),
-                                isOptional: true
-                            ),
-                            DynamicGenerationSchema.Property(
-                                name: "remoteWork",
-                                description: "Open to remote",
-                                schema: .init(type: Bool.self)
-                            )
-                        ]
-                    )
+                    name: "currentRole",
+                    description: "Current position",
+                    schema: .init(type: String.self)
+                ),
+                DynamicGenerationSchema.Property(
+                    name: "skills",
+                    description: "Technical skills",
+                    schema: .init(arrayOf: .init(type: String.self))
+                )
+            ]
+        )
+    }
+
+    private func createPreferencesProperty() -> DynamicGenerationSchema.Property {
+        DynamicGenerationSchema.Property(
+            name: "preferences",
+            description: "Job preferences",
+            schema: createPreferencesSchema()
+        )
+    }
+
+    private func createPreferencesSchema() -> DynamicGenerationSchema {
+        DynamicGenerationSchema(
+            name: "Preferences",
+            properties: [
+                DynamicGenerationSchema.Property(
+                    name: "startDate",
+                    description: "Available to start",
+                    schema: .init(type: String.self)
+                ),
+                DynamicGenerationSchema.Property(
+                    name: "salaryRange",
+                    description: "Expected salary",
+                    schema: .init(type: String.self),
+                    isOptional: true
+                ),
+                DynamicGenerationSchema.Property(
+                    name: "remoteWork",
+                    description: "Open to remote",
+                    schema: .init(type: Bool.self)
                 )
             ]
         )

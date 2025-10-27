@@ -187,108 +187,56 @@ private var bindingForSelectedExample: Binding<String> {
         switch index {
         case 0:
             // Person schema
-            let nameProperty = DynamicGenerationSchema.Property(
-                name: "name",
-                description: "The person's full name",
-                schema: .init(type: String.self)
-            )
-
-            let ageProperty = DynamicGenerationSchema.Property(
-                name: "age",
-                description: "The person's age in years",
-                schema: .init(type: Int.self)
-            )
-
-            let occupationProperty = DynamicGenerationSchema.Property(
-                name: "occupation",
-                description: "The person's job or profession",
-                schema: .init(type: String.self)
-            )
-
-            let hobbiesProperty = DynamicGenerationSchema.Property(
-                name: "hobbies",
-                description: "List of hobbies or interests",
-                schema: .init(arrayOf: .init(type: String.self))
-            )
-
             let personSchema = DynamicGenerationSchema(
                 name: "Person",
                 description: "Information about a person",
-                properties: [nameProperty, ageProperty, occupationProperty, hobbiesProperty]
+                properties: [
+                    .init(name: "name", description: "The person's full name", schema: .init(type: String.self)),
+                    .init(name: "age", description: "The person's age in years", schema: .init(type: Int.self)),
+                    .init(name: "occupation", description: "The person's job or profession", schema: .init(type: String.self)),
+                    .init(name: "hobbies", description: "List of hobbies or interests", schema: .init(arrayOf: .init(type: String.self)))
+                ]
             )
-
             return try GenerationSchema(root: personSchema, dependencies: [])
 
         case 1:
             // Product schema
-            let nameProperty = DynamicGenerationSchema.Property(
-                name: "name",
-                description: "Product name",
-                schema: .init(type: String.self)
-            )
-
-            let priceProperty = DynamicGenerationSchema.Property(
-                name: "price",
-                description: "Price in USD",
-                schema: .init(type: Float.self)
-            )
-
-            // Nested specifications object
-            let specsProperties = [
-                DynamicGenerationSchema.Property(
-                    name: "display_size",
-                    description: "Display size if mentioned",
-                    schema: .init(type: String.self),
-                    isOptional: true
-                ),
-                DynamicGenerationSchema.Property(
-                    name: "other_specs",
-                    description: "Any other specifications",
-                    schema: .init(arrayOf: .init(type: String.self)),
-                    isOptional: true
-                )
-            ]
-
             let specsSchema = DynamicGenerationSchema(
                 name: "Specifications",
                 description: "Product specifications",
-                properties: specsProperties
-            )
-
-            let specsProperty = DynamicGenerationSchema.Property(
-                name: "specifications",
-                description: "Product specifications",
-                schema: specsSchema
+                properties: [
+                    .init(name: "display_size",
+                          description: "Display size if mentioned",
+                          schema: .init(type: String.self),
+                          isOptional: true),
+                    .init(name: "other_specs",
+                          description: "Any other specifications",
+                          schema: .init(arrayOf: .init(type: String.self)),
+                          isOptional: true)
+                ]
             )
 
             let productSchema = DynamicGenerationSchema(
                 name: "Product",
                 description: "Product information",
-                properties: [nameProperty, priceProperty, specsProperty]
+                properties: [
+                    .init(name: "name", description: "Product name", schema: .init(type: String.self)),
+                    .init(name: "price", description: "Price in USD", schema: .init(type: Float.self)),
+                    .init(name: "specifications", description: "Product specifications", schema: specsSchema)
+                ]
             )
-
             return try GenerationSchema(root: productSchema, dependencies: [specsSchema])
 
         default:
             // Custom simple schema
-            let field1 = DynamicGenerationSchema.Property(
-                name: "field1",
-                description: "A text field",
-                schema: .init(type: String.self)
-            )
-
-            let field2 = DynamicGenerationSchema.Property(
-                name: "field2",
-                description: "A number field",
-                schema: .init(type: Int.self)
-            )
-
             let customSchema = DynamicGenerationSchema(
                 name: "CustomObject",
                 description: "A custom object",
-                properties: [field1, field2]
+                properties: [
+                    .init(name: "field1", description: "A text field", schema: .init(type: String.self)),
+                    .init(name: "field2", description: "A number field", schema: .init(type: Int.self))
+                ]
             )
-
             return try GenerationSchema(root: customSchema, dependencies: [])
         }
     }

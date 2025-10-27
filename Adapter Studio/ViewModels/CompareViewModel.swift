@@ -14,7 +14,7 @@ import OSLog
 @MainActor
 @Observable
 final class CompareViewModel {
-    
+
     /// High-level UI states surfaced to the view layer.
     enum State {
         case idle
@@ -22,36 +22,36 @@ final class CompareViewModel {
         case failed(message: String)
         case completed(result: ModelCompareResult)
     }
-    
+
     /// Streaming information for a single column in the UI.
     struct ColumnState {
         var text: String = ""
         var metrics: ModelCompareResponseMetrics?
-        
+
         mutating func reset() {
             text = ""
             metrics = nil
         }
     }
-    
+
     /// The current prompt text bound to the UI.
     var prompt: String = ""
-    
+
     /// Snapshot of the baseline model output.
     private(set) var baseColumn = ColumnState()
-    
+
     /// Snapshot of the adapter model output.
     private(set) var adapterColumn = ColumnState()
-    
+
     /// Most recent comparison state.
     private(set) var state: State = .idle
-    
+
     /// Previously completed comparison result, if any.
     private(set) var lastResult: ModelCompareResult?
-    
+
     /// Most recent error message, used to drive alerts or banners.
     private(set) var lastErrorMessage: String?
-    
+
     /// Returns `true` when the engine is currently producing output.
     var isRunning: Bool {
         if case .running = state {
@@ -59,11 +59,11 @@ final class CompareViewModel {
         }
         return false
     }
-    
+
     @ObservationIgnored private let engine: ModelCompareEngine
     @ObservationIgnored private var streamTask: Task<Void, Never>?
     @ObservationIgnored private let logger = Logger(subsystem: "com.rudrankriyam.foundation-model-adapterstudio", category: "CompareViewModel")
-    
+
     init(engine: ModelCompareEngine? = nil) {
         if let engine {
             self.engine = engine
@@ -71,7 +71,7 @@ final class CompareViewModel {
             self.engine = ModelCompareEngine()
         }
     }
-    
+
     deinit {
         streamTask?.cancel()
     }
@@ -80,7 +80,7 @@ final class CompareViewModel {
 // MARK: - Adapter Configuration
 
 extension CompareViewModel {
-    
+
     /// Forwards adapter context updates to the compare engine.
     func configureAdapter(_ context: AdapterContext?) {
         engine.configureAdapter(context)
@@ -90,29 +90,29 @@ extension CompareViewModel {
 // MARK: - Prompt Submission
 
 extension CompareViewModel {
-    
+
     /// Starts a comparison run using the current prompt value.
     func submitCurrentPrompt(options: GenerationOptions = GenerationOptions()) {
         let trimmedPrompt = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmedPrompt.isEmpty == false else {
             return
         }
-        
+
         cancel()
         prepareForRun(prompt: trimmedPrompt)
-        
+
         let stream = engine.submit(prompt: trimmedPrompt, options: options)
-        
+
         streamTask = Task { [weak self] in
             guard let self else { return }
             for await event in stream {
                 await self.handle(event)
             }
-            
+
             self.streamDidComplete()
         }
     }
-    
+
     /// Cancels the active comparison task, if any.
     func cancel() {
         streamTask?.cancel()
@@ -124,7 +124,7 @@ extension CompareViewModel {
 // MARK: - Private Helpers
 
 private extension CompareViewModel {
-    
+
     func prepareForRun(prompt: String) {
         baseColumn.reset()
         adapterColumn.reset()
@@ -133,7 +133,7 @@ private extension CompareViewModel {
         state = .running(prompt: prompt)
         logger.log("Started comparison run for prompt: \(prompt, privacy: .public)")
     }
-    
+
     func streamDidComplete() {
         streamTask = nil
         if case .running = state {
@@ -141,7 +141,7 @@ private extension CompareViewModel {
             logger.debug("Comparison run completed without terminal result.")
         }
     }
-    
+
     func handle(_ event: ModelCompareEvent) async {
         switch event {
         case .started(let prompt):
@@ -190,18 +190,18 @@ private extension CompareViewModel {
             baseColumn.text = baseSummary.text
             baseColumn.metrics = baseSummary.metrics
         }
-        
+
         if let adapterSummary = result.adapter {
             adapterColumn.text = adapterSummary.text
             adapterColumn.metrics = adapterSummary.metrics
         }
-        
+
         // Guard against overwriting failed state: if already failed, don't transition to completed
         if case .failed = state {
             logger.debug("Comparison completion received but state is already failed, preserving error state")
             return
         }
-        
+
         state = .completed(result: result)
     }
 }

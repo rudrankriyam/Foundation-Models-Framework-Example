@@ -11,7 +11,7 @@ import SwiftUI
 struct BusinessIdeasView: View {
     @State private var currentPrompt = DefaultPrompts.businessIdeas
     @State private var executor = ExampleExecutor()
-    
+
     var body: some View {
         ExampleViewBase(
             title: "Business Ideas",
@@ -37,20 +37,20 @@ struct BusinessIdeasView: View {
                 .padding()
                 .background(Color.orange.opacity(0.1))
                 .cornerRadius(8)
-                
+
                 // Prompt Suggestions
                 PromptSuggestions(
                     suggestions: DefaultPrompts.businessIdeasSuggestions,
                     onSelect: { currentPrompt = $0 }
                 )
-                
+
                 if #available(iOS 26.1, macOS 26.1, *) {
                     PromptSuggestions(
                         suggestions: DefaultPrompts.optionalSemanticsSuggestions,
                         onSelect: { currentPrompt = $0 }
                     )
                 }
-                
+
                 // Prompt History
                 if !executor.promptHistory.isEmpty {
                     PromptHistory(
@@ -58,13 +58,13 @@ struct BusinessIdeasView: View {
                         onSelect: { currentPrompt = $0 }
                     )
                 }
-                
+
                 // Result Display
                 if !executor.result.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
                         Label("Generated Business Concept", systemImage: "briefcase")
                             .font(.headline)
-                        
+
                         ResultDisplay(
                             result: executor.result,
                             isSuccess: executor.errorMessage == nil
@@ -74,7 +74,7 @@ struct BusinessIdeasView: View {
             }
         }
     }
-    
+
     private func executeBusinessIdea() {
         Task {
             await executor.executeStructured(
@@ -85,7 +85,7 @@ struct BusinessIdeasView: View {
             }
         }
     }
-    
+
     private func resetToDefaults() {
         currentPrompt = "" // Clear the prompt completely
         executor.clearAll() // Clear all results, errors, and history
@@ -96,7 +96,7 @@ private extension BusinessIdeasView {
     var codeExample: String {
         DefaultPrompts.optionalSemanticsCode(prompt: currentPrompt)
     }
-    
+
     var infoBannerText: String {
         if #available(iOS 26.1, macOS 26.1, *) {
             return "Generates structured business ideas with market analysis and optional timeline semantics"
@@ -104,7 +104,7 @@ private extension BusinessIdeasView {
             return "Generates structured business ideas with market analysis"
         }
     }
-    
+
     func formattedIdea(_ idea: BusinessIdea) -> String {
     """
     💡 Business Name: \(idea.name)
@@ -128,7 +128,7 @@ private extension BusinessIdeasView {
     \(timelineSection(for: idea.timeline))
     """
     }
-    
+
     func timelineSection(for timeline: String?) -> String {
         timeline ?? "To be determined"
     }

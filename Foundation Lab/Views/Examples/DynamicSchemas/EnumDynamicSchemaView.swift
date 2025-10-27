@@ -16,9 +16,9 @@ struct EnumDynamicSchemaView: View {
     @State private var selectedExample = 0
     @State private var customChoices = "excellent, good, average, poor"
     @State private var useCustomChoices = false
-    
+
     private let examples = ["Sentiment Analysis", "Task Priority", "Weather Condition"]
-    
+
     var body: some View {
         ExampleViewBase(
             title: "Enum Schemas",
@@ -39,12 +39,12 @@ struct EnumDynamicSchemaView: View {
                         }
                     }
                     .pickerStyle(.segmented)
-                    
+
                     // Current choices display
                     VStack(alignment: .leading, spacing: Spacing.small) {
                         Text("Available Choices")
                             .font(.headline)
-                        
+
                         Text(currentChoices.joined(separator: ", "))
                             .font(.system(.body, design: .monospaced))
                             .padding(8)
@@ -52,12 +52,12 @@ struct EnumDynamicSchemaView: View {
                             .background(Color.blue.opacity(0.1))
                             .cornerRadius(8)
                     }
-                    
+
                     // Custom choices option
                     VStack(alignment: .leading, spacing: Spacing.small) {
                         Toggle("Use Custom Choices", isOn: $useCustomChoices)
                             .font(.caption)
-                        
+
                         if useCustomChoices {
                             TextField("Comma-separated choices", text: $customChoices)
                                 .textFieldStyle(.roundedBorder)
@@ -67,7 +67,7 @@ struct EnumDynamicSchemaView: View {
                     .padding()
                     .background(Color.gray.opacity(0.1))
                     .cornerRadius(8)
-                    
+
                     HStack {
                         Button("Classify") {
                             Task {
@@ -76,19 +76,19 @@ struct EnumDynamicSchemaView: View {
                         }
                         .buttonStyle(.borderedProminent)
                         .disabled(executor.isRunning || currentInput.isEmpty)
-                        
+
                         if executor.isRunning {
                             ProgressView()
                                 .scaleEffect(0.8)
                         }
                     }
-                    
+
                     // Results section
                     if !executor.results.isEmpty {
                         VStack(alignment: .leading, spacing: Spacing.small) {
                             Text("Generated Data")
                                 .font(.headline)
-                            
+
                             ScrollView {
                                 Text(executor.results)
                                     .font(.system(.caption, design: .monospaced))
@@ -105,7 +105,7 @@ struct EnumDynamicSchemaView: View {
             }
         )
     }
-    
+
     private var bindingForSelectedExample: Binding<String> {
         switch selectedExample {
         case 0: return $customerInput
@@ -113,7 +113,7 @@ struct EnumDynamicSchemaView: View {
         default: return $weatherInput
         }
     }
-    
+
     private var currentInput: String {
         switch selectedExample {
         case 0: return customerInput
@@ -121,12 +121,12 @@ struct EnumDynamicSchemaView: View {
         default: return weatherInput
         }
     }
-    
+
     private var currentChoices: [String] {
         if useCustomChoices {
             return customChoices.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
         }
-        
+
         switch selectedExample {
         case 0:
             return ["positive", "negative", "neutral", "mixed"]
@@ -136,44 +136,44 @@ struct EnumDynamicSchemaView: View {
             return ["sunny", "cloudy", "rainy", "snowy", "foggy", "stormy"]
         }
     }
-    
+
     private func runExample() async {
         await executor.execute {
             let schema = try createSchema(for: selectedExample)
             let session = LanguageModelSession()
-            
+
             let fieldName = selectedExample == 0 ? "sentiment" : selectedExample == 1 ? "priority" : "condition"
             let prompt = """
             Analyze the following text and classify it into one of the available categories.
-            
+
             Text: \(currentInput)
             """
-            
+
             let response = try await session.respond(
                 to: Prompt(prompt),
                 schema: schema,
                 options: .init(temperature: 0.1)
             )
-            
+
             let classification: String
             let confidence: Float?
             let reasoning: String?
-            
+
             (classification, confidence, reasoning) = extractClassificationData(from: response.content, fieldName: fieldName)
-            
+
             return """
             📝 Input:
             \(currentInput)
-            
+
             🏷️ Classification: \(classification)
-            
+
             📊 Available Choices:
             \(currentChoices.map { "• \($0)" }.joined(separator: "\n"))
-            
+
             \(confidence != nil ? "🎯 Confidence: \(String(format: "%.1f%%", (confidence ?? 0) * 100))" : "")
-            
+
             \(reasoning != nil ? "💭 Reasoning: \(reasoning ?? "")" : "")
-            
+
             ✅ Valid Choice: \(currentChoices.contains(classification) ? "Yes" : "No (Invalid!)")
             """
         }
@@ -211,45 +211,45 @@ struct EnumDynamicSchemaView: View {
         let choices = currentChoices
         let fieldName = index == 0 ? "sentiment" : index == 1 ? "priority" : "condition"
         let description = index == 0 ? "The sentiment of the text" : index == 1 ? "The priority level" : "The weather condition"
-        
+
         // Create enum schema
         let enumSchema = DynamicGenerationSchema(
             name: "\(fieldName.capitalized)Type",
             description: description,
             anyOf: choices
         )
-        
+
         // Create properties for the result
         let classificationProperty = DynamicGenerationSchema.Property(
             name: fieldName,
             description: description,
             schema: enumSchema
         )
-        
+
         let confidenceProperty = DynamicGenerationSchema.Property(
             name: "confidence",
             description: "Confidence score between 0 and 1",
             schema: .init(type: Float.self),
             isOptional: true
         )
-        
+
         let reasoningProperty = DynamicGenerationSchema.Property(
             name: "reasoning",
             description: "Brief explanation for the classification",
             schema: .init(type: String.self),
             isOptional: true
         )
-        
+
         // Create the main schema
         let resultSchema = DynamicGenerationSchema(
             name: "ClassificationResult",
             description: "Classification result with optional confidence and reasoning",
             properties: [classificationProperty, confidenceProperty, reasoningProperty]
         )
-        
+
         return try GenerationSchema(root: resultSchema, dependencies: [enumSchema])
     }
-    
+
     private var exampleCode: String {
         """
         // Creating an enum schema with string choices
@@ -258,24 +258,24 @@ struct EnumDynamicSchemaView: View {
             description: "Sentiment classification",
             anyOf: ["positive", "negative", "neutral", "mixed"]
         )
-        
+
         // Use the enum in a property
         let sentimentProperty = DynamicGenerationSchema.Property(
             name: "sentiment",
             description: "The sentiment of the text",
             schema: sentimentSchema
         )
-        
+
         let resultSchema = DynamicGenerationSchema(
             name: "Result",
             properties: [sentimentProperty]
         )
-        
+
         let schema = try GenerationSchema(
             root: resultSchema,
             dependencies: [sentimentSchema]
         )
-        
+
         // The model will only choose from the provided options
         // Edge cases:
         // - Empty choices array (will throw error)
