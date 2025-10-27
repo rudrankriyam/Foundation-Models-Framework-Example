@@ -17,7 +17,7 @@
 
 /* Begin PBXFileReference section */
 		0A5454A72E1148A8002C2152 /* Foundation Lab.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "Foundation Lab.icon"; sourceTree = "<group>"; };
-				0A90927D2EA8361C0062F02B /* Adapter Studio.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Adapter Studio.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		0A90927D2EA8361C0062F02B /* Adapter Studio.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Adapter Studio.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0A9766662E1E562A008CFA37 /* Collections.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = Collections.xcodeproj; sourceTree = "<group>"; };
 		0AAE4FFF2DF76E6600838F13 /* Foundation Lab.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Foundation Lab.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0ABC0C9B2E09AB5300A09018 /* Physiqa.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Physiqa.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -94,7 +94,7 @@
 			path = Psylean;
 			sourceTree = "<group>";
 		};
-		/* End PBXFileSystemSynchronizedRootGroup section */
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		0A90927A2EA8361C0062F02B /* Frameworks */ = {
@@ -147,10 +147,10 @@
 				0ADB46AD2E0CE6C100C29293 /* Foundation Lab */,
 				0ABC0C9C2E09AB5300A09018 /* Physiqa */,
 				0ADB46DD2E0CE81900C29293 /* Psylean */,
-								0A90927E2EA8361C0062F02B /* Adapter Studio */,
+				0A90927E2EA8361C0062F02B /* Adapter Studio */,
 				0AAE50002DF76E6600838F13 /* Products */,
 				0A5454A72E1148A8002C2152 /* Foundation Lab.icon */,
-								0AFDF8422EA8C3F80071BEA5 /* Frameworks */,
+				0AFDF8422EA8C3F80071BEA5 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};

@@ -12,6 +12,7 @@ import AVFoundation
 #endif
 import Combine
 import Accelerate
+import OSLog
 
 // MARK: - Recognition State
 
@@ -120,6 +121,7 @@ class SpeechRecognizer: NSObject, SpeechRecognitionService {
     var hasPermission = false
     var currentAmplitude: Double = 0
 
+    private let logger = VoiceLogging.recognition
     private let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognitionTask: SFSpeechRecognitionTask?
@@ -175,7 +177,7 @@ class SpeechRecognizer: NSObject, SpeechRecognitionService {
     }
 
     func startRecognition() throws {
-        print("START RECOGNITION CALLED")
+        logger.info("START RECOGNITION CALLED")
 
         try validateAuthorization()
         try ensureRecognizerAvailable()
@@ -190,19 +192,21 @@ class SpeechRecognizer: NSObject, SpeechRecognitionService {
         try prepareAudioEngine()
 
         state = .listening()
-        print("START RECOGNITION COMPLETED SUCCESSFULLY")
+        logger.info("START RECOGNITION COMPLETED SUCCESSFULLY")
     }
 
     func stopRecognition() {
-        print("STOP RECOGNITION CALLED")
+        logger.info("STOP RECOGNITION CALLED")
 
         // If we're listening and have partial text, complete with that text
         if case .listening(let partialText) = state,
            !partialText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            print("Completing with partial text: '\(partialText)'")
+            if VoiceLogging.isVerboseEnabled {
+                logger.debug("Completing with partial text: \(partialText, privacy: .public)")
+            }
             state = .completed(finalText: partialText)
         } else {
-            print("No partial text to use, setting to idle")
+            logger.debug("No partial text to use, setting to idle")
             state = .idle
         }
 
@@ -212,31 +216,30 @@ class SpeechRecognizer: NSObject, SpeechRecognitionService {
         cleanupRecognition()
 
         // Deactivate audio session to allow speech synthesis
-        #if os(iOS)
-        DispatchQueue.global(qos: .background).async {
+#if os(iOS)
+        Task { @MainActor in
             do {
                 let audioSession = AVAudioSession.sharedInstance()
                 try audioSession.setActive(false, options: .notifyOthersOnDeactivation)
-                print("Deactivated audio session after speech recognition")
+                logger.debug("Deactivated audio session after speech recognition")
             } catch {
-                print("Failed to deactivate audio session")
-                print("Deactivation error: \(error.localizedDescription)")
+                logger.error("Failed to deactivate audio session: \(error.localizedDescription, privacy: .public)")
             }
         }
-        #endif
+#endif
     }
 
     // MARK: - Private Helper Methods
 
     private func validateAuthorization() throws {
         let authStatus = SFSpeechRecognizer.authorizationStatus()
-        print("Authorization status: \(authStatus.rawValue)")
+        logger.debug("Authorization status: \(authStatus.rawValue)")
 
         guard authStatus == .authorized else {
             hasPermission = false
             let error = SpeechRecognitionError.notAuthorized
             state = .error(error)
-            print("Authorization failed")
+            logger.error("Authorization failed")
             throw error
         }
 
@@ -245,23 +248,23 @@ class SpeechRecognizer: NSObject, SpeechRecognitionService {
 
     private func ensureRecognizerAvailable() throws {
         let isAvailable = speechRecognizer?.isAvailable ?? false
-        print("Speech recognizer available: \(isAvailable)")
+        logger.debug("Speech recognizer available: \(isAvailable)")
 
         guard isAvailable else {
             let error = SpeechRecognitionError.recognizerNotAvailable
             state = .error(error)
-            print("Speech recognizer not available")
+            logger.error("Speech recognizer not available")
             throw error
         }
     }
 
     private func cleanUpIfCurrentlyListening() {
         guard case .listening = state else {
-            print("Not currently listening, skipping cleanup")
+            logger.debug("Not currently listening, skipping cleanup")
             return
         }
 
-        print("Currently listening, performing basic cleanup")
+        logger.debug("Currently listening, performing basic cleanup")
 
         if let task = recognitionTask {
             task.cancel()
@@ -288,7 +291,7 @@ class SpeechRecognizer: NSObject, SpeechRecognitionService {
     }
 
     private func configureAudioSessionIfNeeded() throws {
-        print("Configuring audio session for speech recognition")
+        logger.debug("Configuring audio session for speech recognition")
 
         #if os(iOS)
         var lastError: Error?
@@ -302,14 +305,13 @@ class SpeechRecognizer: NSObject, SpeechRecognitionService {
                     options: [.duckOthers, .defaultToSpeaker]
                 )
                 try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
-                print("Audio session configured successfully")
+                logger.debug("Audio session configured successfully")
                 lastError = nil
                 break
 
             } catch {
                 lastError = error
-                print("Audio session configuration failed (attempt \(attempt))")
-                print("Error: \(error.localizedDescription)")
+                logger.error("Audio session configuration failed (attempt \(attempt)): \(error.localizedDescription, privacy: .public)")
 
                 if attempt == 1 {
                     usleep(100_000)
@@ -318,7 +320,7 @@ class SpeechRecognizer: NSObject, SpeechRecognitionService {
         }
 
         if lastError != nil {
-            print("Audio session configuration failed after all attempts")
+            logger.error("Audio session configuration failed after all attempts")
             state = .error(.audioSessionFailed)
             throw SpeechRecognitionError.audioSessionFailed
         }
@@ -339,12 +341,12 @@ class SpeechRecognizer: NSObject, SpeechRecognitionService {
             request.taskHint = .dictation
         }
 
-        print("Recognition request prepared")
+        logger.debug("Recognition request prepared")
         return request
     }
 
     private func configureRecognitionTask(with request: SFSpeechAudioBufferRecognitionRequest) {
-        print("Starting recognition task...")
+        logger.debug("Starting recognition task")
         recognitionTask = speechRecognizer?.recognitionTask(with: request) { [weak self] result, error in
             guard let self else {
                 return
@@ -352,24 +354,26 @@ class SpeechRecognizer: NSObject, SpeechRecognitionService {
 
             Task { @MainActor in
                 guard !self.hasProcessedFinalResult else {
-                    if let error {
-                        print("CALLBACK IGNORED: Error - \(error.localizedDescription)")
-                    } else if let result {
-                        print("CALLBACK IGNORED: Result - isFinal=\(result.isFinal)")
-                        print("CALLBACK IGNORED TEXT: '\(result.bestTranscription.formattedString)'")
-                    } else {
-                        print("CALLBACK IGNORED: Unknown callback")
+                    if VoiceLogging.isVerboseEnabled {
+                        if let error {
+                            self.logger.debug("Callback ignored (already processed) error: \(error.localizedDescription, privacy: .public)")
+                        } else if let result {
+                            self.logger.debug("Callback ignored (already processed) result final=\(result.isFinal)")
+                        } else {
+                            self.logger.debug("Callback ignored (already processed) unknown payload")
+                        }
                     }
                     return
                 }
 
                 if let error {
-                    print("SPEECH ERROR: \(error.localizedDescription)")
+                    self.logger.error("Speech recognition error: \(error.localizedDescription, privacy: .public)")
 
                     if case .listening(let partialText) = self.state,
                        !partialText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        print("Ignoring error; partial text available")
-                        print("Partial text: '\(partialText)'")
+                        if VoiceLogging.isVerboseEnabled {
+                            self.logger.debug("Ignoring error due to partial text: \(partialText, privacy: .public)")
+                        }
                         self.hasProcessedFinalResult = true
                         self.state = .completed(finalText: partialText)
                     } else {
@@ -383,11 +387,15 @@ class SpeechRecognizer: NSObject, SpeechRecognitionService {
                     let transcription = result.bestTranscription.formattedString
 
                     if result.isFinal {
-                        print("FINAL RESULT: '\(transcription)'")
+                        if VoiceLogging.isVerboseEnabled {
+                            self.logger.debug("Final result: \(transcription, privacy: .public)")
+                        }
                         self.hasProcessedFinalResult = true
                         self.state = .completed(finalText: transcription)
                     } else if !self.hasProcessedFinalResult {
-                        print("PARTIAL RESULT: '\(transcription)'")
+                        if VoiceLogging.isVerboseEnabled {
+                            self.logger.debug("Partial result: \(transcription, privacy: .public)")
+                        }
                         self.state = .listening(partialText: transcription)
                     }
                 }
@@ -422,10 +430,11 @@ class SpeechRecognizer: NSObject, SpeechRecognitionService {
                 self.processAudioBuffer(buffer)
             }
 
-            self.audioBufferCount += 1
-            if self.audioBufferCount % 50 == 0 {
-                print("Buffer \(self.audioBufferCount)")
-                print("Frame length: \(buffer.frameLength)")
+            if VoiceLogging.isVerboseEnabled {
+                self.audioBufferCount += 1
+                if self.audioBufferCount % 200 == 0 {
+                    self.logger.debug("Processed \(self.audioBufferCount) audio buffers (frameLength=\(buffer.frameLength))")
+                }
             }
         }
 
@@ -433,9 +442,9 @@ class SpeechRecognizer: NSObject, SpeechRecognitionService {
 
         do {
             try audioEngine.start()
-            print("Audio engine started successfully")
+            logger.debug("Audio engine started successfully")
         } catch {
-            print("Audio engine start failed: \(error.localizedDescription)")
+            logger.error("Audio engine start failed: \(error.localizedDescription, privacy: .public)")
             state = .error(.audioSessionFailed)
             throw SpeechRecognitionError.audioSessionFailed
         }
@@ -443,27 +452,26 @@ class SpeechRecognizer: NSObject, SpeechRecognitionService {
 
     private func determineTapFormat(for inputNode: AVAudioInputNode) throws -> AVAudioFormat {
         let recordingFormat = inputNode.outputFormat(forBus: 0)
-        let sampleRateMessage = "Hardware sampleRate=\(recordingFormat.sampleRate)"
-        let channelMessage = "Hardware channels=\(recordingFormat.channelCount)"
-        print(sampleRateMessage)
-        print(channelMessage)
+        if VoiceLogging.isVerboseEnabled {
+            logger.debug("Hardware sampleRate=\(recordingFormat.sampleRate, format: .fixed(precision: 2))")
+            logger.debug("Hardware channels=\(recordingFormat.channelCount)")
+        }
 
         guard recordingFormat.sampleRate > 0, recordingFormat.channelCount > 0 else {
             guard let fallbackFormat = AVAudioFormat(standardFormatWithSampleRate: 16000, channels: 1) else {
                 state = .error(.audioSessionFailed)
                 throw SpeechRecognitionError.audioSessionFailed
             }
-            print("Installing tap with fallback sampleRate=16000")
-            print("Installing tap with fallback channels=1")
+            logger.debug("Installing tap with fallback sampleRate=16000 channels=1")
             return fallbackFormat
         }
 
-        print("Installing tap with hardware format")
+        logger.debug("Installing tap with hardware format")
         return recordingFormat
     }
 
     private func cleanupRecognition() {
-        print("CLEANUP RECOGNITION")
+        logger.debug("CLEANUP RECOGNITION")
 
         if let task = recognitionTask {
             task.cancel()
@@ -486,7 +494,7 @@ class SpeechRecognizer: NSObject, SpeechRecognitionService {
 
         hasProcessedFinalResult = true
 
-        print("CLEANUP COMPLETED")
+        logger.debug("CLEANUP COMPLETED")
     }
 
     // MARK: - Amplitude Monitoring
@@ -533,21 +541,24 @@ extension SpeechRecognizer: SFSpeechRecognitionTaskDelegate {
         _ task: SFSpeechRecognitionTask,
         didFinishRecognition recognitionResult: SFSpeechRecognitionResult
     ) {
+        guard VoiceLogging.isVerboseEnabled else { return }
         let transcript = recognitionResult.bestTranscription.formattedString
-        print("TASK DELEGATE: Final recognition result received")
-        print("TASK DELEGATE TEXT: '\(transcript)'")
+        VoiceLogging.recognition.debug("Task delegate final result: \(transcript, privacy: .public)")
     }
 
     nonisolated func speechRecognitionTaskFinishedReadingAudio(_ task: SFSpeechRecognitionTask) {
-        print("TASK DELEGATE: Finished reading audio")
+        guard VoiceLogging.isVerboseEnabled else { return }
+        VoiceLogging.recognition.debug("Task delegate: finished reading audio")
     }
 
     nonisolated func speechRecognitionTaskWasCancelled(_ task: SFSpeechRecognitionTask) {
-        print("TASK DELEGATE: Task was cancelled")
+        guard VoiceLogging.isVerboseEnabled else { return }
+        VoiceLogging.recognition.debug("Task delegate: task cancelled")
     }
 
     nonisolated func speechRecognitionTask(_ task: SFSpeechRecognitionTask, didFinishSuccessfully successfully: Bool) {
-        print("TASK DELEGATE: Task finished successfully: \(successfully)")
+        guard VoiceLogging.isVerboseEnabled else { return }
+        VoiceLogging.recognition.debug("Task delegate finished successfully=\(successfully)")
     }
 }
 
@@ -556,6 +567,7 @@ extension SpeechRecognizer: SFSpeechRecognizerDelegate {
     nonisolated func speechRecognizer(_ speechRecognizer: SFSpeechRecognizer, availabilityDidChange available: Bool) {
         Task { @MainActor in
             if !available {
+                VoiceLogging.recognition.error("Speech recognizer availability changed to false")
                 self.state = .error(.recognizerNotAvailable)
                 self.stopRecognition()
             }

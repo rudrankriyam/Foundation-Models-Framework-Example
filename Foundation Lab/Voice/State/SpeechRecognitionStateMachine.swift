@@ -7,11 +7,11 @@
 
 import Foundation
 import Combine
+import OSLog
 
 // MARK: - Speech Recognition State Machine
 
 /// State machine for managing speech recognition workflow
-@Observable
 @MainActor
 final class SpeechRecognitionStateMachine {
 
@@ -90,6 +90,7 @@ final class SpeechRecognitionStateMachine {
     private let speechSynthesisService: SpeechSynthesisService
     private let inferenceService: InferenceServiceProtocol
     private let permissionService: PermissionServiceProtocol
+    private let logger = VoiceLogging.state
 
     private var cancellables = Set<AnyCancellable>()
     private var currentSpeechTask: Task<Void, Never>?
@@ -114,11 +115,11 @@ final class SpeechRecognitionStateMachine {
 
     func startWorkflow() async {
         guard state.canStartListening else {
-            print("⚠️ Cannot start listening from current state: \(state)")
+            logger.warning("Cannot start listening from current state: \(String(describing: self.state))")
             return
         }
 
-        print("🚀 Starting speech recognition workflow")
+        logger.info("Starting speech recognition workflow")
 
         // Check permissions first
         await requestPermissionsIfNeeded()
@@ -130,7 +131,7 @@ final class SpeechRecognitionStateMachine {
     }
 
     func stopWorkflow() {
-        print("🛑 Stopping speech recognition workflow")
+        logger.info("Stopping speech recognition workflow")
 
         // Cancel any ongoing tasks
         currentSpeechTask?.cancel()
@@ -146,9 +147,21 @@ final class SpeechRecognitionStateMachine {
     // MARK: - Private Methods
 
     private func setupBindings() {
-        // Note: Since we're using @Observable, we'll need to monitor changes differently
-        // For now, we'll use Combine with the services if they support it
-        // This would need to be adapted based on how the services are implemented
+        // Monitor speech recognizer state changes with a timer-based approach
+        // since the service is no longer @Observable
+        Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.checkAndUpdateStates()
+            }
+        }
+    }
+
+    private func checkAndUpdateStates() {
+        // Check speech recognition state
+        handleSpeechRecognitionStateChange(from: speechRecognitionService.state)
+        
+        // Check speech synthesis state
+        handleSpeechSynthesisStateChange()
     }
 
     private func handleSpeechRecognitionStateChange(from recognitionState: SpeechRecognitionState) {
@@ -161,11 +174,13 @@ final class SpeechRecognitionStateMachine {
 
         case .listening:
             if case .initializingRecognition = state {
+                logger.info("State machine: initializingRecognition → listening")
                 state = .listening
             }
 
         case .completed(let finalText):
             if !finalText.isEmpty {
+                logger.info("State machine: listening → processingSpeech with text: \(finalText)")
                 state = .processingSpeech(finalText)
                 processRecognizedText(finalText)
             } else {
@@ -173,6 +188,7 @@ final class SpeechRecognitionStateMachine {
             }
 
         case .error(let error):
+            logger.error("State machine: speech recognition error: \(error.localizedDescription)")
             state = .error(.recognitionFailed(error.localizedDescription))
         }
     }

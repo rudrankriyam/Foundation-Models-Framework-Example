@@ -10,6 +10,8 @@ import EventKit
 import Foundation
 import FoundationModels
 import SwiftUI
+import OSLog
+import Speech
 
 #if os(iOS)
 import UIKit
@@ -29,6 +31,18 @@ class VoiceViewModel {
     var lastCreatedReminder: String = ""
     var partialText: String = ""
 
+    // MARK: - Permission State (Observable)
+    var allPermissionsGranted = false
+    var showPermissionAlert = false
+    var permissionAlertMessage = ""
+    var microphonePermissionStatus: MicrophonePermissionStatus = .undetermined
+    var speechPermissionStatus: SFSpeechRecognizerAuthorizationStatus = .notDetermined
+    var remindersPermissionStatus: EKAuthorizationStatus = .notDetermined
+
+    var hasRemindersAccess: Bool {
+        return remindersPermissionStatus == .fullAccess || remindersPermissionStatus == .writeOnly
+    }
+
     // MARK: - Services
 
     let speechRecognizer: SpeechRecognizer
@@ -39,6 +53,7 @@ class VoiceViewModel {
     // MARK: - Private Properties
 
     private let stateMachine: SpeechRecognitionStateMachine
+    private let logger = VoiceLogging.state
     private let eventStore = EKEventStore()
 
     private var cancellables = Set<AnyCancellable>()
@@ -47,7 +62,7 @@ class VoiceViewModel {
 
     init() {
         self.speechRecognizer = SpeechRecognizer()
-        self.speechSynthesizer = SpeechSynthesizer()
+        self.speechSynthesizer = SpeechSynthesizer.shared
         self.inferenceService = InferenceService()
         self.permissionManager = PermissionManager()
 
@@ -92,7 +107,7 @@ class VoiceViewModel {
     }
 
     private func handleStateMachineStateChange(_ state: SpeechRecognitionStateMachine.State) {
-        print("🔄 STATE MACHINE CHANGED: \(state)")
+        logger.debug("State machine changed: \(String(describing: state))")
 
         switch state {
         case .idle:
@@ -123,7 +138,7 @@ class VoiceViewModel {
     // MARK: - Public Interface
 
     func startListening() async {
-        print("📱 START LISTENING CALLED")
+        logger.info("Start listening requested")
 
         // Reset UI state
         showError = false
@@ -133,7 +148,7 @@ class VoiceViewModel {
     }
 
     func stopListening() {
-        print("📱 STOP LISTENING CALLED")
+        logger.info("Stop listening requested")
 
         // Delegate to state machine
         stateMachine.stopWorkflow()
@@ -181,4 +196,36 @@ class VoiceViewModel {
         generator.notificationOccurred(type)
     }
 #endif
+
+    // MARK: - Permission Methods
+
+    func checkAllPermissions() {
+        permissionManager.checkAllPermissions()
+        syncPermissionState()
+    }
+
+    func requestAllPermissions() async -> Bool {
+        let granted = await permissionManager.requestAllPermissions()
+        syncPermissionState()
+        return granted
+    }
+
+    func showSettingsAlert() {
+        permissionManager.showSettingsAlert()
+        syncPermissionState()
+    }
+
+    func openSettings() {
+        permissionManager.openSettings()
+    }
+
+    private func syncPermissionState() {
+        // Sync permission state from service to observable properties
+        allPermissionsGranted = permissionManager.allPermissionsGranted
+        showPermissionAlert = permissionManager.showPermissionAlert
+        permissionAlertMessage = permissionManager.permissionAlertMessage
+        microphonePermissionStatus = permissionManager.microphonePermissionStatus
+        speechPermissionStatus = permissionManager.speechPermissionStatus
+        remindersPermissionStatus = permissionManager.remindersPermissionStatus
+    }
 }

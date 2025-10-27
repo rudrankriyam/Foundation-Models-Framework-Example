@@ -8,6 +8,7 @@
 import AVFoundation
 import Combine
 import Foundation
+import OSLog
 
 #if os(iOS)
 import UIKit
@@ -64,13 +65,15 @@ enum SpeechSynthesizerError: LocalizedError {
 
 /// A service class that handles text-to-speech synthesis
 /// Follows the single responsibility principle with one public method
-@Observable
 @MainActor
 final class SpeechSynthesizer: NSObject, SpeechSynthesisService {
+
+    static let shared = SpeechSynthesizer()
 
     var isSpeaking = false
     var error: SpeechSynthesizerError?
 
+    private let logger = VoiceLogging.synthesis
     private let synthesizer = AVSpeechSynthesizer()
     private var currentUtterance: AVSpeechUtterance?
     private var audioSessionConfigured = false
@@ -82,7 +85,7 @@ final class SpeechSynthesizer: NSObject, SpeechSynthesisService {
     var availableLanguages: [String] = []
     private let volume: Float
 
-    init(volume: Float = 1.0) {
+    private init(volume: Float = 1.0) {
         self.volume = max(0.0, min(1.0, volume))
 
         super.init()
@@ -117,7 +120,7 @@ final class SpeechSynthesizer: NSObject, SpeechSynthesisService {
     private func preWarmSynthesizer() {
         // Don't pre-warm automatically - it can cause audio engine conflicts
         // We'll initialize on first use instead
-        print("🔊 Speech synthesizer ready for first use")
+        logger.debug("Speech synthesizer ready for first use")
     }
 
     private func configurePlaybackSession() {
@@ -127,9 +130,9 @@ final class SpeechSynthesizer: NSObject, SpeechSynthesisService {
             try audioSession.setCategory(.playback, mode: .default, options: [.duckOthers])
             try audioSession.setActive(true, options: [])
             audioSessionConfigured = true
-            print("🔊 Configured audio session for speech synthesis playback")
+            logger.debug("Configured audio session for speech synthesis playback")
         } catch {
-            print("🔊 Failed to configure audio session for playback: \(error.localizedDescription)")
+            logger.error("Failed to configure audio session for playback: \(error.localizedDescription, privacy: .public)")
         }
         #endif
     }
@@ -198,10 +201,10 @@ final class SpeechSynthesizer: NSObject, SpeechSynthesisService {
                 availableVoices.first { $0.name.contains(name) }
             }.first ?? availableVoices.first ?? AVSpeechSynthesisVoice(language: "en-US")
 
-            if let voice = selectedVoice {
-                print("Selected voice: \(voice.name) (\(voice.language)) - Quality: \(voice.quality.rawValue)")
-                let voiceSummaries = availableVoices.map { "\($0.name) (Q:\($0.quality.rawValue))" }
-                print("Available voices: \(voiceSummaries.joined(separator: ", "))")
+            if VoiceLogging.isVerboseEnabled, let voice = selectedVoice {
+                logger.debug("Selected voice: \(voice.name, privacy: .public) (\(voice.language, privacy: .public)) quality=\(voice.quality.rawValue)")
+                let summaries = availableVoices.map { "\($0.name) (Q:\($0.quality.rawValue))" }.joined(separator: ", ")
+                logger.debug("Available voices: \(summaries, privacy: .public)")
             }
         }
     }
@@ -211,11 +214,10 @@ final class SpeechSynthesizer: NSObject, SpeechSynthesisService {
         utterance.voice = selectedVoice ?? AVSpeechSynthesisVoice(language: "en-US")
         utterance.volume = max(0.0, min(1.0, volume))
 
-        let voiceName = utterance.voice?.name ?? "default"
-        print(
-            "Created utterance: text='\(text)', voice=\(voiceName), rate=\(utterance.rate), " +
-            "pitch=\(utterance.pitchMultiplier), volume=\(utterance.volume)"
-        )
+        if VoiceLogging.isVerboseEnabled {
+            let voiceName = utterance.voice?.name ?? "default"
+            logger.debug("Created utterance voice=\(voiceName, privacy: .public) rate=\(utterance.rate, format: .fixed(precision: 2)) pitch=\(utterance.pitchMultiplier, format: .fixed(precision: 2)) volume=\(utterance.volume, format: .fixed(precision: 2))")
+        }
 
         return utterance
     }
@@ -225,7 +227,7 @@ final class SpeechSynthesizer: NSObject, SpeechSynthesisService {
         isSpeaking = true
         error = nil
 
-        print("Starting speech synthesis: '\(utterance.speechString)'")
+        logger.info("Starting speech synthesis")
         synthesizer.speak(utterance)
     }
 
@@ -236,16 +238,16 @@ final class SpeechSynthesizer: NSObject, SpeechSynthesisService {
     }
 
     private func handleSuccess() {
-        print("Speech synthesis completed successfully")
+        logger.info("Speech synthesis completed successfully")
 
         #if os(iOS)
-        Task.detached {
+        Task { @MainActor in
             do {
                 let audioSession = AVAudioSession.sharedInstance()
                 try audioSession.setActive(false, options: .notifyOthersOnDeactivation)
-                print("Deactivated audio session after speech synthesis")
+                logger.debug("Deactivated audio session after speech synthesis")
             } catch {
-                print("Failed to deactivate audio session: \(error.localizedDescription)")
+                logger.error("Failed to deactivate audio session: \(error.localizedDescription, privacy: .public)")
             }
         }
         #endif
@@ -261,17 +263,17 @@ final class SpeechSynthesizer: NSObject, SpeechSynthesisService {
     private func handleError(_ synthError: SpeechSynthesizerError) {
         error = synthError
 
-        #if os(iOS)
-        Task.detached {
+#if os(iOS)
+        Task { @MainActor in
             do {
                 let audioSession = AVAudioSession.sharedInstance()
                 try audioSession.setActive(false, options: .notifyOthersOnDeactivation)
-                print("Deactivated audio session after speech synthesis error")
+                logger.debug("Deactivated audio session after speech synthesis error")
             } catch {
-                print("Failed to deactivate audio session: \(error.localizedDescription)")
+                logger.error("Failed to deactivate audio session after error: \(error.localizedDescription, privacy: .public)")
             }
         }
-        #endif
+#endif
 
         if let continuation = pendingContinuation {
             continuation.resume(throwing: synthError)

@@ -11,11 +11,11 @@ import Speech
 import EventKit
 
 struct PermissionRequestView: View {
-    let permissionManager: PermissionManager
+    let viewModel: VoiceViewModel
     @State private var isRequestingPermissions = false
 
-    init(permissionManager: PermissionManager) {
-        self.permissionManager = permissionManager
+    init(viewModel: VoiceViewModel) {
+        self.viewModel = viewModel
     }
 
     var body: some View {
@@ -77,7 +77,7 @@ struct PermissionRequestView: View {
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
                             .scaleEffect(0.8)
                     } else {
-                        Text(permissionManager.allPermissionsGranted ? "Continue" : "Grant Permissions")
+                        Text(viewModel.allPermissionsGranted ? "Continue" : "Grant Permissions")
                             .fontWeight(.semibold)
                     }
                 }
@@ -93,33 +93,33 @@ struct PermissionRequestView: View {
         .padding()
         .alert("Permissions Required",
                isPresented: .init(
-                   get: { permissionManager.showPermissionAlert },
-                   set: { _ in }
+                   get: { viewModel.showPermissionAlert },
+                   set: { _ in viewModel.showPermissionAlert = false }
                )) {
-            Button("Open Settings", action: permissionManager.openSettings)
+            Button("Open Settings", action: viewModel.openSettings)
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text(permissionManager.permissionAlertMessage)
+            Text(viewModel.permissionAlertMessage)
         }
         .frame(maxHeight: .infinity)
     }
 
     func requestPermissions() {
         // If all permissions are already granted, just update the status
-        if permissionManager.allPermissionsGranted {
+        if viewModel.allPermissionsGranted {
             // Force a re-check to ensure the parent view updates
-            permissionManager.checkAllPermissions()
+            viewModel.checkAllPermissions()
             return
         }
 
         isRequestingPermissions = true
 
         Task {
-            _ = await permissionManager.requestAllPermissions()
+            _ = await viewModel.requestAllPermissions()
             isRequestingPermissions = false
 
-            if !permissionManager.allPermissionsGranted {
-                permissionManager.showSettingsAlert()
+            if !viewModel.allPermissionsGranted {
+                viewModel.showSettingsAlert()
             }
         }
     }
@@ -128,18 +128,18 @@ struct PermissionRequestView: View {
 
     private func getMicrophonePermissionStatus() -> PermissionItemView.PermissionStatus {
 #if os(iOS)
-        return permissionManager.microphonePermissionStatus == .granted ? .granted : .pending
+        return viewModel.microphonePermissionStatus == .granted ? .granted : .pending
 #else
-        return permissionManager.microphonePermissionStatus == .granted ? .granted : .pending
+        return viewModel.microphonePermissionStatus == .granted ? .granted : .pending
 #endif
     }
 
     private func getSpeechPermissionStatus() -> PermissionItemView.PermissionStatus {
-        return permissionManager.speechPermissionStatus == .authorized ? .granted : .pending
+        viewModel.speechPermissionStatus == .authorized ? .granted : .pending
     }
 
     private func getRemindersPermissionStatus() -> PermissionItemView.PermissionStatus {
-        return permissionManager.hasRemindersAccess ? .granted : .pending
+        viewModel.hasRemindersAccess ? .granted : .pending
     }
 }
 
@@ -182,5 +182,5 @@ struct PermissionItemView: View {
 }
 
 #Preview {
-    PermissionRequestView(permissionManager: PermissionManager())
+    PermissionRequestView(viewModel: VoiceViewModel())
 }

@@ -6,29 +6,32 @@
 //
 
 import SwiftUI
+import Observation
 
 struct VoiceView: View {
     @State private var viewModel = VoiceViewModel()
     @State private var blobScale: CGFloat = 1.0
+    @State private var isProcessingTap = false
 
     var body: some View {
         Group {
-            if viewModel.permissionManager.allPermissionsGranted {
+            if viewModel.allPermissionsGranted {
                 voiceMainView
             } else {
-                PermissionRequestView(permissionManager: viewModel.permissionManager)
+                PermissionRequestView(viewModel: viewModel)
             }
         }
         .onAppear {
-            viewModel.permissionManager.checkAllPermissions()
+            viewModel.checkAllPermissions()
         }
-        .onChange(of: viewModel.permissionManager.allPermissionsGranted) { _, _ in
+        .onChange(of: viewModel.allPermissionsGranted) { _, _ in
             // Force view update when permissions change
         }
     }
 
     private var voiceMainView: some View {
-        VStack(spacing: 30) {
+        let viewModel = self.viewModel
+        return VStack(spacing: 30) {
             // Header with list selector
             VStack(alignment: .leading, spacing: 16) {
                 Text("Voice")
@@ -41,7 +44,10 @@ struct VoiceView: View {
                     .foregroundStyle(.secondary)
 
                 GlassDropdown(
-                    selectedValue: $viewModel.selectedList,
+                    selectedValue: Binding(
+                        get: { viewModel.selectedList },
+                        set: { viewModel.selectedList = $0 }
+                    ),
                     options: viewModel.availableLists,
                     title: "Reminder List"
                 )
@@ -148,7 +154,13 @@ struct VoiceView: View {
         } message: {
             Text("Reminder created: \"\(viewModel.lastCreatedReminder)\"")
         }
-        .alert("Error", isPresented: $viewModel.showError) {
+        .alert(
+            "Error",
+            isPresented: Binding(
+                get: { viewModel.showError },
+                set: { viewModel.showError = $0 }
+            )
+        ) {
             Button("OK", role: .cancel) {}
         } message: {
             Text(viewModel.errorMessage)
@@ -156,6 +168,19 @@ struct VoiceView: View {
     }
 
     private func toggleListening() {
+        // Prevent double-tapping
+        guard !isProcessingTap else { return }
+        
+        isProcessingTap = true
+        
+        defer {
+            // Reset processing flag after a short delay
+            Task {
+                try? await Task.sleep(for: .milliseconds(500))
+                isProcessingTap = false
+            }
+        }
+        
         if viewModel.isListening {
             viewModel.stopListening()
             withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {

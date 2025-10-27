@@ -69,7 +69,6 @@ protocol PermissionServiceProtocol: AnyObject {
 
 // MARK: - Permission Manager Implementation
 
-@Observable
 @MainActor
 class PermissionManager: PermissionServiceProtocol {
 

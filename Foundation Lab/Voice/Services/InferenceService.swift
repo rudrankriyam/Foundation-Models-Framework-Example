@@ -24,7 +24,6 @@ protocol InferenceServiceProtocol {
 
 /// Independent inference service that processes text input and returns text output
 /// This service is completely decoupled from speech recognition and synthesis
-@Observable
 @MainActor
 class InferenceService: InferenceServiceProtocol {
     public let session: LanguageModelSession
