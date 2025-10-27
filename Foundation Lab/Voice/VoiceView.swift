@@ -16,9 +16,7 @@ struct VoiceView: View {
             if viewModel.permissionManager.allPermissionsGranted {
                 voiceMainView
             } else {
-                // We'll create this later
-                Text("Permission Request View Needed")
-                    .foregroundStyle(.secondary)
+                PermissionRequestView(permissionManager: viewModel.permissionManager)
             }
         }
         .onAppear {
