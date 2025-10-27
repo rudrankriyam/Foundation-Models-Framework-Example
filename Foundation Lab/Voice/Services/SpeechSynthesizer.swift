@@ -115,20 +115,9 @@ final class SpeechSynthesizer: NSObject, SpeechSynthesisService {
     }
 
     private func preWarmSynthesizer() {
-        Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 500_000_000)
-
-            if let voice = self.selectedVoice ?? AVSpeechSynthesisVoice(language: "en-US") {
-                let warmUpUtterance = AVSpeechUtterance(string: ".")
-                warmUpUtterance.voice = voice
-                warmUpUtterance.volume = 0.01
-                warmUpUtterance.rate = 0.1
-                warmUpUtterance.pitchMultiplier = 1.0
-
-                self.synthesizer.speak(warmUpUtterance)
-                print("🔊 Pre-warmed speech synthesizer with \(voice.name)")
-            }
-        }
+        // Don't pre-warm automatically - it can cause audio engine conflicts
+        // We'll initialize on first use instead
+        print("🔊 Speech synthesizer ready for first use")
     }
 
     private func configurePlaybackSession() {
@@ -150,7 +139,24 @@ final class SpeechSynthesizer: NSObject, SpeechSynthesisService {
             let allVoices = AVSpeechSynthesisVoice.speechVoices()
             var voicesGroupedByLanguage: [String: [AVSpeechSynthesisVoice]] = [:]
 
-            for voice in allVoices {
+            // Filter out novelty/system voices and only keep high-quality speech voices
+            let speechVoices = allVoices.filter { voice in
+                // Filter out novelty voices by checking if they're system voices
+                return !voice.name.contains("Bad News") &&
+                       !voice.name.contains("Good News") &&
+                       !voice.name.contains("Boing") &&
+                       !voice.name.contains("Bubbles") &&
+                       !voice.name.contains("Jester") &&
+                       !voice.name.contains("Junior") &&
+                       !voice.name.contains("Moira") &&
+                       !voice.name.contains("Ralph") &&
+                       !voice.name.contains("Trinoids") &&
+                       !voice.name.contains("Whisper") &&
+                       !voice.name.contains("Zarvox") &&
+                       voice.quality == .enhanced
+            }
+
+            for voice in speechVoices {
                 let languageCode = voice.language
                 voicesGroupedByLanguage[languageCode, default: []].append(voice)
             }
@@ -174,7 +180,7 @@ final class SpeechSynthesizer: NSObject, SpeechSynthesisService {
                 return lang1 < lang2
             }
 
-            let englishVoices = allVoices.filter { $0.language.hasPrefix("en") }
+            let englishVoices = speechVoices.filter { $0.language.hasPrefix("en") }
                 .sorted { voice1, voice2 in
                     if voice1.quality != voice2.quality {
                         return voice1.quality.rawValue > voice2.quality.rawValue
@@ -182,13 +188,19 @@ final class SpeechSynthesizer: NSObject, SpeechSynthesisService {
                     return voice1.name < voice2.name
                 }
 
-            availableVoices = englishVoices
-            let avaVoice = englishVoices.first { $0.name == "Ava" }
-            selectedVoice = avaVoice ?? englishVoices.first ?? AVSpeechSynthesisVoice(language: "en-US")
+            availableVoices = englishVoices.isEmpty ?
+                allVoices.filter { $0.language.hasPrefix("en") && $0.quality == .default } :
+                englishVoices
+
+            // Prefer common high-quality voices, fall back to any available
+            let preferredVoices = ["Samantha", "Karen", "Moira", "Ava", "Alex", "Daniel", "Karen", "Tessa"]
+            selectedVoice = preferredVoices.compactMap { name in
+                availableVoices.first { $0.name.contains(name) }
+            }.first ?? availableVoices.first ?? AVSpeechSynthesisVoice(language: "en-US")
 
             if let voice = selectedVoice {
                 print("Selected voice: \(voice.name) (\(voice.language)) - Quality: \(voice.quality.rawValue)")
-                let voiceSummaries = englishVoices.map { "\($0.name) (Q:\($0.quality.rawValue))" }
+                let voiceSummaries = availableVoices.map { "\($0.name) (Q:\($0.quality.rawValue))" }
                 print("Available voices: \(voiceSummaries.joined(separator: ", "))")
             }
         }

@@ -497,8 +497,14 @@ class SpeechRecognizer: NSObject, SpeechRecognitionService {
         }
         let frameLength = Int(buffer.frameLength)
 
+        // Only process if we have valid audio data
+        guard frameLength > 0 else { return }
+
         var rms: Float = 0
         vDSP_rmsqv(channelData, 1, &rms, vDSP_Length(frameLength))
+
+        // Ensure we don't get NaN or invalid values
+        guard !rms.isNaN && !rms.isInfinite && rms >= 0 else { return }
 
         let normalizedAmplitude = Double(min(log10(1 + rms * 9), 1.0))
         let smoothedAmplitude = smoothAmplitude(normalizedAmplitude)
