@@ -6,7 +6,6 @@
 //
 
 import AVFoundation
-import Combine
 import Foundation
 import OSLog
 
@@ -26,6 +25,12 @@ protocol SpeechSynthesisService: AnyObject {
 
     /// Any current error state
     var error: SpeechSynthesizerError? { get }
+
+    /// Handler invoked whenever speaking state changes
+    var speakingStateHandler: ((Bool) -> Void)? { get set }
+
+    /// Handler invoked when an unrecoverable error occurs
+    var errorHandler: ((SpeechSynthesizerError) -> Void)? { get set }
 
     /// Available voices organized by language
     var voicesByLanguage: [String: [AVSpeechSynthesisVoice]] { get }
@@ -78,6 +83,8 @@ final class SpeechSynthesizer: NSObject, SpeechSynthesisService {
     private var currentUtterance: AVSpeechUtterance?
     private var audioSessionConfigured = false
     private var pendingContinuation: CheckedContinuation<Void, Error>?
+    var speakingStateHandler: ((Bool) -> Void)?
+    var errorHandler: ((SpeechSynthesizerError) -> Void)?
 
     var selectedVoice: AVSpeechSynthesisVoice?
     var availableVoices: [AVSpeechSynthesisVoice] = []
@@ -151,7 +158,6 @@ final class SpeechSynthesizer: NSObject, SpeechSynthesisService {
                        !voice.name.contains("Bubbles") &&
                        !voice.name.contains("Jester") &&
                        !voice.name.contains("Junior") &&
-                       !voice.name.contains("Moira") &&
                        !voice.name.contains("Ralph") &&
                        !voice.name.contains("Trinoids") &&
                        !voice.name.contains("Whisper") &&
@@ -225,6 +231,7 @@ final class SpeechSynthesizer: NSObject, SpeechSynthesisService {
     private func startSynthesis(utterance: AVSpeechUtterance) {
         currentUtterance = utterance
         isSpeaking = true
+        speakingStateHandler?(true)
         error = nil
 
         logger.info("Starting speech synthesis")
@@ -258,10 +265,12 @@ final class SpeechSynthesizer: NSObject, SpeechSynthesisService {
         }
 
         resetState()
+        speakingStateHandler?(false)
     }
 
     private func handleError(_ synthError: SpeechSynthesizerError) {
         error = synthError
+        errorHandler?(synthError)
 
 #if os(iOS)
         Task { @MainActor in
@@ -281,6 +290,7 @@ final class SpeechSynthesizer: NSObject, SpeechSynthesisService {
         }
 
         resetState()
+        speakingStateHandler?(false)
     }
 }
 

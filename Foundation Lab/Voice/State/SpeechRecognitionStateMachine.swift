@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import Combine
 import OSLog
 
 // MARK: - Speech Recognition State Machine
@@ -82,7 +81,11 @@ final class SpeechRecognitionStateMachine {
 
     // MARK: - Observable Properties
 
-    private(set) var state: State = .idle
+    private(set) var state: State = .idle {
+        didSet { notifyStateChange() }
+    }
+
+    var onStateChange: ((State) -> Void)?
 
     // MARK: - Private Properties
 
@@ -92,8 +95,9 @@ final class SpeechRecognitionStateMachine {
     private let permissionService: PermissionServiceProtocol
     private let logger = VoiceLogging.state
 
-    private var cancellables = Set<AnyCancellable>()
     private var currentSpeechTask: Task<Void, Never>?
+    private var speechRecognizerHandlerToken: UUID?
+    private var idleResetTask: Task<Void, Never>?
 
     // MARK: - Initialization
 
@@ -147,21 +151,17 @@ final class SpeechRecognitionStateMachine {
     // MARK: - Private Methods
 
     private func setupBindings() {
-        // Monitor speech recognizer state changes with a timer-based approach
-        // since the service is no longer @Observable
-        Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                self?.checkAndUpdateStates()
-            }
+        speechRecognizerHandlerToken = speechRecognitionService.addStateChangeHandler { [weak self] newState in
+            self?.handleSpeechRecognitionStateChange(from: newState)
         }
-    }
 
-    private func checkAndUpdateStates() {
-        // Check speech recognition state
-        handleSpeechRecognitionStateChange(from: speechRecognitionService.state)
-        
-        // Check speech synthesis state
-        handleSpeechSynthesisStateChange()
+        speechSynthesisService.speakingStateHandler = { [weak self] isSpeaking in
+            self?.handleSpeechSynthesisStateChange(isSpeaking: isSpeaking)
+        }
+
+        speechSynthesisService.errorHandler = { [weak self] error in
+            self?.handleSynthesisError(error)
+        }
     }
 
     private func handleSpeechRecognitionStateChange(from recognitionState: SpeechRecognitionState) {
@@ -190,28 +190,22 @@ final class SpeechRecognitionStateMachine {
         case .error(let error):
             logger.error("State machine: speech recognition error: \(error.localizedDescription)")
             state = .error(.recognitionFailed(error.localizedDescription))
+            scheduleIdleReset()
         }
     }
 
-    private func handleSpeechSynthesisStateChange() {
-        // Handle synthesis completion
-        if !speechSynthesisService.isSpeaking {
-            if case .synthesizingResponse = state {
-                state = .completed
-                // Auto-transition to idle after a delay to allow user to hear the response
-                Task { [weak self] in
-                    try? await Task.sleep(nanoseconds: 500_000_000) // 500ms delay
-                    await MainActor.run {
-                        self?.state = .idle
-                    }
-                }
-            }
-        }
+    private func handleSpeechSynthesisStateChange(isSpeaking: Bool) {
+        guard case .synthesizingResponse = state else { return }
 
-        // Handle synthesis errors
-        if let synthesisError = speechSynthesisService.error {
-            state = .error(.synthesisFailed(synthesisError.localizedDescription))
+        if !isSpeaking {
+            state = .completed
+            scheduleIdleReset()
         }
+    }
+
+    private func handleSynthesisError(_ error: SpeechSynthesizerError) {
+        state = .error(.synthesisFailed(error.localizedDescription))
+        scheduleIdleReset()
     }
 
     private func requestPermissionsIfNeeded() async {
@@ -229,6 +223,7 @@ final class SpeechRecognitionStateMachine {
         } else {
             state = .permissionDenied
             state = .error(.permissionDenied)
+            scheduleIdleReset()
         }
     }
 
@@ -240,6 +235,7 @@ final class SpeechRecognitionStateMachine {
             // State will be updated via binding when recognition actually starts
         } catch {
             state = .error(.recognitionFailed(error.localizedDescription))
+            scheduleIdleReset()
         }
     }
 
@@ -257,6 +253,7 @@ final class SpeechRecognitionStateMachine {
 
             } catch {
                 self.state = .error(.processingFailed(error.localizedDescription))
+                self.scheduleIdleReset()
             }
         }
     }
@@ -264,8 +261,27 @@ final class SpeechRecognitionStateMachine {
     // MARK: - Cleanup
 
     func cleanup() {
-        cancellables.forEach { $0.cancel() }
         currentSpeechTask?.cancel()
         currentSpeechTask = nil
+        if let token = speechRecognizerHandlerToken {
+            speechRecognitionService.removeStateChangeHandler(token)
+            speechRecognizerHandlerToken = nil
+        }
+        idleResetTask?.cancel()
+        idleResetTask = nil
+        speechSynthesisService.speakingStateHandler = nil
+        speechSynthesisService.errorHandler = nil
+    }
+
+    private func notifyStateChange() {
+        onStateChange?(state)
+    }
+
+    private func scheduleIdleReset() {
+        idleResetTask?.cancel()
+        idleResetTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(0.5))
+            self?.state = .idle
+        }
     }
 }

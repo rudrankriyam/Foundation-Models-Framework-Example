@@ -27,6 +27,9 @@ struct VoiceView: View {
         .onChange(of: viewModel.allPermissionsGranted) { _, _ in
             // Force view update when permissions change
         }
+        .onDisappear {
+            viewModel.tearDown()
+        }
     }
 
     private var voiceMainView: some View {
@@ -34,12 +37,12 @@ struct VoiceView: View {
         return VStack(spacing: 30) {
             // Header with list selector
             VStack(alignment: .leading, spacing: 16) {
-                Text("Voice")
+                Text(String(localized: "Voice"))
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .foregroundStyle(.primary)
 
-                Text("Create reminders with your voice")
+                Text(String(localized: "Create reminders with your voice"))
                     .font(.headline)
                     .foregroundStyle(.secondary)
 
@@ -49,7 +52,7 @@ struct VoiceView: View {
                         set: { viewModel.selectedList = $0 }
                     ),
                     options: viewModel.availableLists,
-                    title: "Reminder List"
+                    title: String(localized: "Reminder List")
                 )
                 .frame(maxWidth: 300)
             }
@@ -128,7 +131,7 @@ struct VoiceView: View {
 
                 // Instructions
                 if !viewModel.isListening && viewModel.recognizedText.isEmpty {
-                    Text("Tap the microphone to start")
+                    Text(String(localized: "Tap the microphone to start"))
                         .font(.headline)
                         .foregroundStyle(.secondary)
                 }
@@ -138,7 +141,7 @@ struct VoiceView: View {
         }
         .padding()
         .alert(
-            "Reminder Created",
+            String(localized: "Reminder Created"),
             isPresented: Binding(
                 get: { !viewModel.lastCreatedReminder.isEmpty },
                 set: { newValue in
@@ -152,7 +155,7 @@ struct VoiceView: View {
                 viewModel.lastCreatedReminder = ""
             }
         } message: {
-            Text("Reminder created: \"\(viewModel.lastCreatedReminder)\"")
+            Text(String(format: String(localized: "Reminder created: \"%@\""), viewModel.lastCreatedReminder))
         }
         .alert(
             "Error",

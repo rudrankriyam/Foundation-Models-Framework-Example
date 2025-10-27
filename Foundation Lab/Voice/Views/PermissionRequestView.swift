@@ -32,12 +32,12 @@ struct PermissionRequestView: View {
                 }
 
             VStack(spacing: 0) {
-                Text("Welcome to Voice")
+                Text(String(localized: "Welcome to Voice"))
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .padding(.bottom, 4)
 
-                Text("Voice-powered reminders")
+                Text(String(localized: "Voice-powered reminders"))
                     .font(.body)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -48,22 +48,22 @@ struct PermissionRequestView: View {
             VStack(spacing: 20) {
                 PermissionItemView(
                     icon: "mic.fill",
-                    title: "Microphone",
-                    description: "To hear your voice",
+                    title: String(localized: "Microphone"),
+                    description: String(localized: "To hear your voice"),
                     status: getMicrophonePermissionStatus()
                 )
 
                 PermissionItemView(
                     icon: "waveform",
-                    title: "Speech Recognition",
-                    description: "To understand your words",
+                    title: String(localized: "Speech Recognition"),
+                    description: String(localized: "To understand your words"),
                     status: getSpeechPermissionStatus()
                 )
 
                 PermissionItemView(
                     icon: "checklist",
-                    title: "Reminders",
-                    description: "To save your reminders",
+                    title: String(localized: "Reminders"),
+                    description: String(localized: "To save your reminders"),
                     status: getRemindersPermissionStatus()
                 )
             }
@@ -77,7 +77,7 @@ struct PermissionRequestView: View {
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
                             .scaleEffect(0.8)
                     } else {
-                        Text(viewModel.allPermissionsGranted ? "Continue" : "Grant Permissions")
+                        Text(viewModel.allPermissionsGranted ? String(localized: "Continue") : String(localized: "Grant Permissions"))
                             .fontWeight(.semibold)
                     }
                 }
@@ -91,7 +91,7 @@ struct PermissionRequestView: View {
             .padding(.vertical)
         }
         .padding()
-        .alert("Permissions Required",
+        .alert(String(localized: "Permissions Required"),
                isPresented: .init(
                    get: { viewModel.showPermissionAlert },
                    set: { _ in viewModel.showPermissionAlert = false }

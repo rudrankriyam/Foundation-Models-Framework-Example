@@ -68,10 +68,14 @@ struct VoiceRemindersTool: Tool {
         if let listName = arguments.listName {
             calendar = try await getOrCreateList(named: listName, eventStore: eventStore)
         } else {
-            guard let defaultCalendar = eventStore.defaultCalendarForNewReminders() else {
+            let preferredList = VoiceContext.selectedReminderList
+            if let selected = try? await getOrCreateList(named: preferredList, eventStore: eventStore) {
+                calendar = selected
+            } else if let defaultCalendar = eventStore.defaultCalendarForNewReminders() {
+                calendar = defaultCalendar
+            } else {
                 throw VoiceReminderError.noDefaultList
             }
-            calendar = defaultCalendar
         }
 
         reminder.calendar = calendar

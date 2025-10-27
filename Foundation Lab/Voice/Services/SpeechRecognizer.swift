@@ -7,10 +7,7 @@
 
 import Foundation
 import Speech
-#if os(iOS)
 import AVFoundation
-#endif
-import Combine
 import Accelerate
 import OSLog
 
@@ -96,6 +93,13 @@ protocol SpeechRecognitionService: AnyObject {
     /// Current recognition state
     var state: SpeechRecognitionState { get }
 
+    /// Register a handler for recognition state updates
+    @discardableResult
+    func addStateChangeHandler(_ handler: @escaping (SpeechRecognitionState) -> Void) -> UUID
+
+    /// Remove a previously registered state change handler
+    func removeStateChangeHandler(_ token: UUID)
+
     /// Whether the service has microphone permission
     var hasPermission: Bool { get }
 
@@ -117,7 +121,9 @@ protocol SpeechRecognitionService: AnyObject {
 @Observable
 @MainActor
 class SpeechRecognizer: NSObject, SpeechRecognitionService {
-    var state: SpeechRecognitionState = .idle
+    var state: SpeechRecognitionState = .idle {
+        didSet { notifyStateHandlers() }
+    }
     var hasPermission = false
     var currentAmplitude: Double = 0
 
@@ -126,6 +132,7 @@ class SpeechRecognizer: NSObject, SpeechRecognitionService {
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognitionTask: SFSpeechRecognitionTask?
     private let audioEngine = AVAudioEngine()
+    private var stateHandlers: [UUID: (SpeechRecognitionState) -> Void] = [:]
     private var audioBufferCount = 0
 
     // Simple flag to prevent double processing
@@ -143,6 +150,18 @@ class SpeechRecognizer: NSObject, SpeechRecognitionService {
         // Check initial permission status
         let authStatus = SFSpeechRecognizer.authorizationStatus()
         hasPermission = authStatus == .authorized
+    }
+
+    @discardableResult
+    func addStateChangeHandler(_ handler: @escaping (SpeechRecognitionState) -> Void) -> UUID {
+        let token = UUID()
+        stateHandlers[token] = handler
+        handler(state)
+        return token
+    }
+
+    func removeStateChangeHandler(_ token: UUID) {
+        stateHandlers[token] = nil
     }
 
     
@@ -532,6 +551,12 @@ class SpeechRecognizer: NSObject, SpeechRecognitionService {
         }
 
         return smoothed
+    }
+
+    private func notifyStateHandlers() {
+        for handler in stateHandlers.values {
+            handler(state)
+        }
     }
 }
 

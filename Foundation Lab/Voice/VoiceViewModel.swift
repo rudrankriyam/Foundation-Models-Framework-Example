@@ -5,7 +5,6 @@
 //  Created by Rudrank Riyam on 10/27/25.
 //
 
-import Combine
 import EventKit
 import Foundation
 import FoundationModels
@@ -24,7 +23,11 @@ class VoiceViewModel {
 
     var isListening = false
     var recognizedText = ""
-    var selectedList = "Default"
+    var selectedList = "Default" {
+        didSet {
+            VoiceContext.selectedReminderList = selectedList
+        }
+    }
     var availableLists: [String] = ["Default"]
     var showError = false
     var errorMessage = ""
@@ -56,7 +59,7 @@ class VoiceViewModel {
     private let logger = VoiceLogging.state
     private let eventStore = EKEventStore()
 
-    private var cancellables = Set<AnyCancellable>()
+    private var recognitionHandlerToken: UUID?
 
     // MARK: - Initialization
 
@@ -73,6 +76,7 @@ class VoiceViewModel {
             permissionService: permissionManager
         )
 
+        VoiceContext.selectedReminderList = selectedList
         setupBindings()
         loadReminderLists()
     }
@@ -96,14 +100,45 @@ class VoiceViewModel {
             permissionService: permissionManager
         )
 
+        VoiceContext.selectedReminderList = selectedList
         setupBindings()
         loadReminderLists()
     }
 
+    func tearDown() {
+        stateMachine.cleanup()
+        if let token = recognitionHandlerToken {
+            speechRecognizer.removeStateChangeHandler(token)
+            recognitionHandlerToken = nil
+        }
+    }
+
     private func setupBindings() {
-        // Bind to speech recognizer state changes for partial text
-        // Note: Since we're using @Observable, we'll need to monitor changes differently
-        // This would need to be adapted based on how the services are implemented
+        stateMachine.onStateChange = { [weak self] state in
+            self?.handleStateMachineStateChange(state)
+        }
+
+        recognitionHandlerToken = speechRecognizer.addStateChangeHandler { [weak self] recognitionState in
+            guard let self else { return }
+
+            switch recognitionState {
+            case .listening(let partial):
+                self.partialText = partial
+
+            case .completed(let finalText):
+                self.partialText = ""
+                if !finalText.isEmpty {
+                    self.recognizedText = finalText
+                }
+
+            case .error(let error):
+                self.partialText = ""
+                self.showError(error.localizedDescription)
+
+            case .idle:
+                self.partialText = ""
+            }
+        }
     }
 
     private func handleStateMachineStateChange(_ state: SpeechRecognitionStateMachine.State) {
@@ -112,7 +147,6 @@ class VoiceViewModel {
         switch state {
         case .idle:
             isListening = false
-            recognizedText = ""
 
         case .listening:
             isListening = true
@@ -142,6 +176,8 @@ class VoiceViewModel {
 
         // Reset UI state
         showError = false
+        partialText = ""
+        recognizedText = ""
 
         // Delegate to state machine
         await stateMachine.startWorkflow()
@@ -162,7 +198,17 @@ class VoiceViewModel {
             let listNames = calendars.map { $0.title }.sorted()
 
             await MainActor.run {
-                self.availableLists = ["Default"] + listNames
+                var uniqueLists = ["Default"]
+                for name in listNames where !uniqueLists.contains(name) {
+                    uniqueLists.append(name)
+                }
+                self.availableLists = uniqueLists
+
+                if let preferred = uniqueLists.first(where: { $0 == VoiceContext.selectedReminderList }) {
+                    self.selectedList = preferred
+                } else if let defaultList = calendars.first?.title {
+                    self.selectedList = defaultList
+                }
             }
         }
     }
@@ -221,11 +267,20 @@ class VoiceViewModel {
 
     private func syncPermissionState() {
         // Sync permission state from service to observable properties
+        let previousRemindersStatus = remindersPermissionStatus
         allPermissionsGranted = permissionManager.allPermissionsGranted
         showPermissionAlert = permissionManager.showPermissionAlert
         permissionAlertMessage = permissionManager.permissionAlertMessage
         microphonePermissionStatus = permissionManager.microphonePermissionStatus
         speechPermissionStatus = permissionManager.speechPermissionStatus
         remindersPermissionStatus = permissionManager.remindersPermissionStatus
+
+        if !isRemindersPermissionGranted(previousRemindersStatus) && hasRemindersAccess {
+            loadReminderLists()
+        }
+    }
+
+    private func isRemindersPermissionGranted(_ status: EKAuthorizationStatus) -> Bool {
+        status == .fullAccess || status == .writeOnly
     }
 }
