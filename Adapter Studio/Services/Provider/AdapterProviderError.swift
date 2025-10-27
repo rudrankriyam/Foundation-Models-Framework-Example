@@ -20,6 +20,11 @@ enum AdapterProviderError: LocalizedError {
     ///
     /// The associated message contains the underlying file-system error for diagnostic purposes.
     case directoryCreationFailed(String)
+
+    /// The adapters directory exists but is not writable.
+    ///
+    /// The associated message contains details about the permission issue.
+    case directoryNotWritable(String)
     
     /// The selected file did not have the expected `.fmadapter` file extension.
     ///
@@ -43,6 +48,8 @@ enum AdapterProviderError: LocalizedError {
             return "Selection cancelled"
         case .directoryCreationFailed(let message):
             return "Failed to prepare adapter directory: \(message)"
+        case .directoryNotWritable(let message):
+            return "Adapter directory is not writable: \(message)"
         case .invalidFileExtension(let url):
             return "The selected file \"\(url.lastPathComponent)\" is not an .fmadapter package."
         case .copyFailed(let message):

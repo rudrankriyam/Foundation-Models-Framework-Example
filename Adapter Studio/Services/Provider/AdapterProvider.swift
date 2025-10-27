@@ -83,9 +83,22 @@ final class AdapterProvider {
 }
 
 extension AdapterProvider {
-    
+
     /// File extension expected for adapter packages produced by the training toolkit.
     static let adapterExtension = "fmadapter"
+
+    /// Validates that the adapters directory exists and is writable.
+    ///
+    /// - Parameter directory: The directory URL to validate.
+    /// - Throws: ``AdapterProviderError/directoryNotWritable(_:)`` when the directory is not writable.
+    static func validateDirectoryAccess(_ directory: URL) throws {
+        let fileManager = FileManager.default
+
+        // Check if we can write to the directory
+        guard fileManager.isWritableFile(atPath: directory.path) else {
+            throw AdapterProviderError.directoryNotWritable("No write permission for directory: \(directory.path)")
+        }
+    }
     
     /// Resolves or creates the directory where Adapter Studio stores imported adapters.
     ///
@@ -94,6 +107,7 @@ extension AdapterProvider {
     ///
     /// - Parameter fileManager: An optional file manager used to resolve and create the directory.
     /// - Throws: ``AdapterProviderError/directoryCreationFailed(_:)`` when the directory cannot be resolved or created.
+    /// - Throws: ``AdapterProviderError/directoryNotWritable(_:)`` when the directory exists but is not writable.
     /// - Returns: An absolute URL to the adapters directory.
     static func defaultAdaptersDirectory(using fileManager: FileManager = .default) throws -> URL {
         guard let baseDirectory = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
@@ -111,7 +125,10 @@ extension AdapterProvider {
                 throw AdapterProviderError.directoryCreationFailed(error.localizedDescription)
             }
         }
-        
+
+        // Validate that the directory is writable
+        try validateDirectoryAccess(adapterStudioDirectory)
+
         return adapterStudioDirectory
     }
 }
@@ -160,6 +177,10 @@ private extension AdapterProvider {
     func importAndLoadAdapter(at url: URL) throws -> AdapterContext {
         guard url.pathExtension.lowercased() == Self.adapterExtension else {
             throw AdapterProviderError.invalidFileExtension(url)
+        }
+
+        guard fileManager.fileExists(atPath: url.path) else {
+            throw AdapterProviderError.loadFailed("Adapter file does not exist at path: \(url.path)")
         }
         
         let destinationURL: URL
