@@ -166,6 +166,30 @@ private extension AdapterProvider {
         return panel.runModal() == .OK ? panel.url : nil
     }
     
+    /// Validates that the adapters directory is accessible with proper permissions
+    private func validateDirectoryAccess() throws {
+        guard fileManager.isWritableFile(atPath: adaptersDirectory.path) else {
+            throw AdapterProviderError.directoryCreationFailed("Adapters directory is not writable")
+        }
+    }
+    
+    /// Maximum allowed size for adapter files (1GB)
+    private static let maxFileSize: UInt64 = 1024 * 1024 * 1024
+    
+    /// Validates an adapter file before loading
+    private func validateAdapterFile(at url: URL) throws {
+        let fileSize = calculateDirectorySize(url)
+        
+        if fileSize > Self.maxFileSize {
+            throw AdapterProviderError.fileTooLarge(fileSize)
+        }
+        
+        // Verify it's a valid package
+        guard let _ = try? FileWrapper(url: url, options: .immediate) else {
+            throw AdapterProviderError.invalidAdapterFile("Not a valid package")
+        }
+    }
+    
     /// Imports an adapter located outside the managed directory and loads it into memory.
     ///
     /// When the incoming adapter already resides in the managed directory the existing file is reused.
@@ -175,6 +199,13 @@ private extension AdapterProvider {
     /// - Throws: ``AdapterProviderError`` when validation or file operations fail.
     /// - Returns: An ``AdapterContext`` capturing both the adapter and its metadata.
     func importAndLoadAdapter(at url: URL) throws -> AdapterContext {
+        try validateDirectoryAccess()
+        try validateAdapterFile(at: url)
+        
+        guard fileManager.fileExists(atPath: url.path) else {
+            throw AdapterProviderError.loadFailed("Adapter file does not exist at path: \(url.path)")
+        }
+        
         guard url.pathExtension.lowercased() == Self.adapterExtension else {
             throw AdapterProviderError.invalidFileExtension(url)
         }
@@ -287,18 +318,19 @@ private extension AdapterProvider {
     private func calculateDirectorySize(_ url: URL) -> UInt64 {
         var totalSize: UInt64 = 0
         
-        guard let enumerator = fileManager.enumerator(at: url, includingPropertiesForKeys: [.fileSizeKey]) else {
+        guard let enumerator = fileManager.enumerator(at: url, includingPropertiesForKeys: [.fileSizeKey, .isRegularFileKey]) else {
+            logger.error("Failed to create enumerator for directory: \(url.path)")
             return 0
         }
         
         for case let fileURL as URL in enumerator {
             do {
-                let resourceValues = try fileURL.resourceValues(forKeys: [.fileSizeKey])
-                if let fileSize = resourceValues.fileSize {
+                let resourceValues = try fileURL.resourceValues(forKeys: [.fileSizeKey, .isRegularFileKey])
+                if resourceValues.isRegularFile == true, let fileSize = resourceValues.fileSize {
                     totalSize += UInt64(fileSize)
                 }
             } catch {
-                // Skip files we can't access
+                logger.error("Failed to get size for file: \(fileURL.path), error: \(error.localizedDescription)")
                 continue
             }
         }

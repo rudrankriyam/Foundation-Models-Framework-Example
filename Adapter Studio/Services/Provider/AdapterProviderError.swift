@@ -42,6 +42,12 @@ enum AdapterProviderError: LocalizedError {
     /// or any other underlying error encountered during initialization.
     case loadFailed(String)
     
+    /// The adapter file is corrupted or invalid
+    case invalidAdapterFile(String)
+    
+    /// The adapter file is too large to process
+    case fileTooLarge(UInt64)
+    
     var errorDescription: String? {
         switch self {
         case .userCancelled:
@@ -56,6 +62,10 @@ enum AdapterProviderError: LocalizedError {
             return "Could not import adapter file: \(message)"
         case .loadFailed(let message):
             return "Unable to load adapter: \(message)"
+        case .invalidAdapterFile(let message):
+            return "The adapter file is invalid or corrupted: \(message)"
+        case .fileTooLarge(let size):
+            return "The adapter file size (\(ByteCountFormatter.string(fromByteCount: Int64(size), countStyle: .file))) exceeds the maximum allowed size"
         }
     }
 }
