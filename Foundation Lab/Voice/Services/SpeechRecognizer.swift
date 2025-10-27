@@ -329,8 +329,7 @@ class SpeechRecognizer: NSObject, SpeechRecognitionService {
 
             } catch {
                 lastError = error
-                logger.error("Audio session configuration failed (attempt \(attempt)): " +
-                    "\(error.localizedDescription, privacy: .public)")
+                logger.error("Audio session configuration failed (attempt \(attempt)): \(error.localizedDescription, privacy: .public)")
 
                 if attempt == 1 {
                     usleep(100_000)

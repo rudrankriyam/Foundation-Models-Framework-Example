@@ -2,7 +2,7 @@
 //  SessionManagementView.swift
 //  FoundationLab
 //
-//  Created by Assistant on 12/30/25.
+//  Created by Rudrank Riyam on 27/10/2025.
 //
 
 import SwiftUI

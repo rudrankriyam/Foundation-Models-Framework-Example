@@ -142,8 +142,7 @@ final class SpeechSynthesizer: NSObject, SpeechSynthesisService {
             audioSessionConfigured = true
             logger.debug("Configured audio session for speech synthesis playback")
         } catch {
-            logger.error("Failed to configure audio session for playback: " +
-                        "\(error.localizedDescription, privacy: .public)")
+            logger.error("Failed to configure audio session for playback: \(error.localizedDescription, privacy: .public)")
         }
         #endif
     }
@@ -286,8 +285,7 @@ final class SpeechSynthesizer: NSObject, SpeechSynthesisService {
                 try audioSession.setActive(false, options: .notifyOthersOnDeactivation)
                 logger.debug("Deactivated audio session after speech synthesis error")
             } catch {
-                logger.error("Failed to deactivate audio session after error: " +
-                            "\(error.localizedDescription, privacy: .public)")
+                logger.error("Failed to deactivate audio session after error: \(error.localizedDescription, privacy: .public)")
             }
         }
 #endif
