@@ -34,7 +34,6 @@ struct LanguagesView: View {
         .navigationTitle("Supported Languages")
 #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
-        .background(TopGradientView())
 #endif
         .navigationDestination(for: LanguageExample.self) { languageExample in
             languageExample.createView()
@@ -64,6 +63,5 @@ struct LanguagesView: View {
 #Preview {
     NavigationStack {
         LanguagesView()
-            .background(TopGradientView())
     }
 }

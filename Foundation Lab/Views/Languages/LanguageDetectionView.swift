@@ -53,7 +53,6 @@ struct LanguageDetectionView: View {
         .navigationTitle("Language Detection")
 #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
-        .background(TopGradientView())
 #endif
     }
 
@@ -124,7 +123,6 @@ struct LanguageCard: View {
 #Preview {
     NavigationStack {
         LanguageDetectionView()
-            .background(TopGradientView())
     }
     .environment(LanguageService())
 }

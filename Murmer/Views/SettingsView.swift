@@ -31,7 +31,6 @@ struct SettingsView: View {
                 .padding()
             }
             .navigationTitle("Voice Settings")
-            .background(SimpleTopGradientView())
             .toolbar {
                 ToolbarItem(placement: .automatic) {
                     Button("Done") {
@@ -286,34 +285,6 @@ private extension SettingsView {
     }
 }
 
-// MARK: - Supporting Views
-
-struct SimpleTopGradientView: View {
-    @Environment(\.colorScheme) var scheme
-
-    var body: some View {
-        LinearGradient(colors: [
-            Color.indigo.opacity(0.44), .antiPrimary
-        ], startPoint: .top, endPoint: .center)
-        .ignoresSafeArea()
-    }
-}
-
-extension Color {
-    static var antiPrimary: Color {
-#if os(iOS) || os(tvOS) || os(macCatalyst) || os(visionOS)
-        return Color(UIColor { traitCollection in
-            if traitCollection.userInterfaceStyle == .dark {
-                return UIColor.black
-            } else {
-                return UIColor.white
-            }
-        })
-#else
-        return .white
-#endif
-    }
-}
 
 #Preview {
     SettingsView(speechSynthesizer: SpeechSynthesizer())

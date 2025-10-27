@@ -58,7 +58,6 @@ struct ToolViewBase<Content: View>: View {
     #if os(iOS)
     .navigationBarTitleDisplayMode(.large)
     .navigationSubtitle(description)
-    .background(TopGradientView())
     #endif
   }
 }

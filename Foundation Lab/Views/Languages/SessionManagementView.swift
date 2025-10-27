@@ -54,7 +54,6 @@ struct SessionManagementView: View {
         .navigationTitle("Multiple Sessions")
 #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
-        .background(TopGradientView())
 #endif
     }
 
@@ -231,6 +230,5 @@ struct ConversationStepCard: View {
 #Preview {
     NavigationStack {
         SessionManagementView()
-            .background(TopGradientView())
     }
 }

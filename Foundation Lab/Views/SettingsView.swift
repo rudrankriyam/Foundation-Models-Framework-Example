@@ -155,6 +155,5 @@ struct SettingsView: View {
 #Preview {
     NavigationStack {
         SettingsView()
-            .background(TopGradientView())
     }
 }
