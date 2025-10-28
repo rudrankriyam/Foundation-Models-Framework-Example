@@ -12,10 +12,18 @@ import Observation
 
 @Observable
 class HealthDataManager {
-    private let healthStore = HKHealthStore()
+    private var healthStore: HKHealthStore?
     private var modelContext: ModelContext?
 
     var isAuthorized = false
+
+    init() {
+        #if os(iOS)
+        if HKHealthStore.isHealthDataAvailable() {
+            self.healthStore = HKHealthStore()
+        }
+        #endif
+    }
 
     // Current health data
     var todaySteps: Double = 0
@@ -24,14 +32,16 @@ class HealthDataManager {
     var currentHeartRate: Double = 0
     var lastNightSleep: Double = 0
 
-    init() {}
-
     func setModelContext(_ context: ModelContext) {
         self.modelContext = context
     }
 
     // MARK: - Authorization
     func requestAuthorization() async throws {
+        guard let healthStore = healthStore else {
+            throw NSError(domain: "HealthDataManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "HealthKit is not available"])
+        }
+
         let readTypes: Set<HKObjectType> = [
             HKObjectType.quantityType(forIdentifier: .stepCount)!,
             HKObjectType.quantityType(forIdentifier: .activeEnergyBurned)!,
@@ -47,6 +57,8 @@ class HealthDataManager {
 
     // MARK: - Fetch Today's Data
     func fetchTodayHealthData() async {
+        guard healthStore != nil else { return }
+
         let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: Date())
         let endOfDay = Date()
@@ -91,7 +103,7 @@ extension HealthDataManager {
 
 private extension HealthDataManager {
     func fetchSteps(from startDate: Date, to endDate: Date) async {
-        guard let stepType = HKObjectType.quantityType(forIdentifier: .stepCount) else { return }
+        guard let healthStore = healthStore, let stepType = HKObjectType.quantityType(forIdentifier: .stepCount) else { return }
 
         let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
         let samplePredicate = HKSamplePredicate.quantitySample(type: stepType, predicate: predicate)
@@ -116,7 +128,7 @@ private extension HealthDataManager {
     }
 
     func fetchActiveEnergy(from startDate: Date, to endDate: Date) async {
-        guard let energyType = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) else { return }
+        guard let healthStore = healthStore, let energyType = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) else { return }
 
         let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
         let samplePredicate = HKSamplePredicate.quantitySample(type: energyType, predicate: predicate)
@@ -141,7 +153,7 @@ private extension HealthDataManager {
     }
 
     func fetchDistance(from startDate: Date, to endDate: Date) async {
-        guard let distanceType = HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning) else { return }
+        guard let healthStore = healthStore, let distanceType = HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning) else { return }
 
         let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
         let samplePredicate = HKSamplePredicate.quantitySample(type: distanceType, predicate: predicate)
@@ -167,7 +179,7 @@ private extension HealthDataManager {
     }
 
     func fetchLatestHeartRate() async {
-        guard let heartRateType = HKObjectType.quantityType(forIdentifier: .heartRate) else { return }
+        guard let healthStore = healthStore, let heartRateType = HKObjectType.quantityType(forIdentifier: .heartRate) else { return }
 
         let descriptor = HKSampleQueryDescriptor(
             predicates: [HKSamplePredicate.quantitySample(type: heartRateType)],
@@ -190,7 +202,7 @@ private extension HealthDataManager {
     }
 
     func fetchLastNightSleep() async {
-        guard let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) else { return }
+        guard let healthStore = healthStore, let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) else { return }
 
         let calendar = Calendar.current
         let endDate = calendar.startOfDay(for: Date())
@@ -258,7 +270,7 @@ private extension HealthDataManager {
     }
 
     func fetchStepsValue(from startDate: Date, to endDate: Date) async -> Double {
-        guard let stepType = HKObjectType.quantityType(forIdentifier: .stepCount) else { return 0 }
+        guard let healthStore = healthStore, let stepType = HKObjectType.quantityType(forIdentifier: .stepCount) else { return 0 }
 
         let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
         let samplePredicate = HKSamplePredicate.quantitySample(type: stepType, predicate: predicate)
@@ -281,7 +293,7 @@ private extension HealthDataManager {
     }
 
     func fetchActiveEnergyValue(from startDate: Date, to endDate: Date) async -> Double {
-        guard let energyType = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) else { return 0 }
+        guard let healthStore = healthStore, let energyType = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) else { return 0 }
 
         let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
         let samplePredicate = HKSamplePredicate.quantitySample(type: energyType, predicate: predicate)
@@ -304,7 +316,7 @@ private extension HealthDataManager {
     }
 
     func fetchSleepValue(for date: Date) async -> Double {
-        guard let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) else { return 0 }
+        guard let healthStore = healthStore, let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) else { return 0 }
 
         let calendar = Calendar.current
         let endDate = calendar.startOfDay(for: date)
