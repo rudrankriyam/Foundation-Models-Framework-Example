@@ -12,7 +12,7 @@ struct HealthExampleView: View {
     var body: some View {
         NavigationStack {
             #if os(iOS)
-            PhysiqaContentView()
+            HealthDashboardView()
             #else
             HealthUnavailableView()
             #endif
@@ -21,12 +21,6 @@ struct HealthExampleView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
         #endif
-    }
-}
-
-struct PhysiqaContentView: View {
-    var body: some View {
-        HealthDashboardView()
     }
 }
 
