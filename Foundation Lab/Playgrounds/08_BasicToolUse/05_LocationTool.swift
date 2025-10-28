@@ -47,7 +47,7 @@ struct MockLocationTool: Tool {
             longitude: randomLocation.longitude,
             city: arguments.includeAddress ? randomLocation.city : nil,
             country: arguments.includeAddress ? randomLocation.country : nil,
-            timestamp: DateFormatter.todayString
+            timestamp: ISO8601DateFormatter().string(from: Date())
         )
     }
 }

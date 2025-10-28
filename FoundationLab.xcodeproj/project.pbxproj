@@ -18,7 +18,6 @@
 		0A5454A72E1148A8002C2152 /* Foundation Lab.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "Foundation Lab.icon"; sourceTree = "<group>"; };
 		0A9766662E1E562A008CFA37 /* Collections.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = Collections.xcodeproj; sourceTree = "<group>"; };
 		0AAE4FFF2DF76E6600838F13 /* Foundation Lab.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Foundation Lab.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		0ABC0C9B2E09AB5300A09018 /* Physiqa.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Physiqa.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6C9AECE22E728F6D00F4C37F /* SampleCode.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = SampleCode.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -34,11 +33,6 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		0ABC0C9C2E09AB5300A09018 /* Physiqa */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = Physiqa;
-			sourceTree = "<group>";
-		};
 		0ADB46AD2E0CE6C100C29293 /* Foundation Lab */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -97,7 +91,6 @@
 			children = (
 				6C9AECE22E728F6D00F4C37F /* SampleCode.xcconfig */,
 				0ADB46AD2E0CE6C100C29293 /* Foundation Lab */,
-				0ABC0C9C2E09AB5300A09018 /* Physiqa */,
 				0AAE50002DF76E6600838F13 /* Products */,
 				0A5454A72E1148A8002C2152 /* Foundation Lab.icon */,
 				0AFDF8422EA8C3F80071BEA5 /* Frameworks */,
@@ -108,7 +101,6 @@
 			isa = PBXGroup;
 			children = (
 				0AAE4FFF2DF76E6600838F13 /* Foundation Lab.app */,
-				0ABC0C9B2E09AB5300A09018 /* Physiqa.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -146,28 +138,6 @@
 			);
 			productName = FoundationLab;
 			productReference = 0AAE4FFF2DF76E6600838F13 /* Foundation Lab.app */;
-			productType = "com.apple.product-type.application";
-		};
-		0ABC0C9A2E09AB5300A09018 /* Physiqa */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 0ABC0CA52E09AB5500A09018 /* Build configuration list for PBXNativeTarget "Physiqa" */;
-			buildPhases = (
-				0ABC0C972E09AB5300A09018 /* Sources */,
-				0ABC0C982E09AB5300A09018 /* Frameworks */,
-				0ABC0C992E09AB5300A09018 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				0ABC0C9C2E09AB5300A09018 /* Physiqa */,
-			);
-			name = Physiqa;
-			packageProductDependencies = (
-			);
-			productName = Physiqa;
-			productReference = 0ABC0C9B2E09AB5300A09018 /* Physiqa.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -220,7 +190,6 @@
 			projectRoot = "";
 			targets = (
 				0AAE4FFE2DF76E6600838F13 /* Foundation Lab */,
-				0ABC0C9A2E09AB5300A09018 /* Physiqa */,
 			);
 		};
 /* End PBXProject section */
@@ -567,100 +536,6 @@
 			};
 			name = Release;
 		};
-		0ABC0CA32E09AB5500A09018 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Physiqa/Physiqa.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = YQZQG7N4WG;
-				ENABLE_APP_SANDBOX = YES;
-				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Physiqa needs access to your health data to provide personalized insights and track your wellness journey.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Physiqa can save health metrics to help you track your progress over time.";
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
-				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.rudrankriyam.physiqa${SAMPLE_CODE_DISAMBIGUATOR}";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
-				SDKROOT = auto;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
-				XROS_DEPLOYMENT_TARGET = 26.0;
-			};
-			name = Debug;
-		};
-		0ABC0CA42E09AB5500A09018 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Physiqa/Physiqa.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = YQZQG7N4WG;
-				ENABLE_APP_SANDBOX = YES;
-				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Physiqa needs access to your health data to provide personalized insights and track your wellness journey.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Physiqa can save health metrics to help you track your progress over time.";
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
-				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.rudrankriyam.physiqa${SAMPLE_CODE_DISAMBIGUATOR}";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
-				SDKROOT = auto;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
-				XROS_DEPLOYMENT_TARGET = 26.0;
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -678,15 +553,6 @@
 			buildConfigurations = (
 				0AAE500B2DF76E6800838F13 /* Debug */,
 				0AAE500C2DF76E6800838F13 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		0ABC0CA52E09AB5500A09018 /* Build configuration list for PBXNativeTarget "Physiqa" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				0ABC0CA32E09AB5500A09018 /* Debug */,
-				0ABC0CA42E09AB5500A09018 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
