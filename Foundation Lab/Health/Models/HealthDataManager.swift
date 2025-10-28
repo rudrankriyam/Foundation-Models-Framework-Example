@@ -1,6 +1,6 @@
 //
 //  HealthDataManager.swift
-//  Physiqa
+//  FoundationLab
 //
 //  Created by Rudrank Riyam on 6/23/25.
 //
@@ -9,13 +9,28 @@ import Foundation
 import HealthKit
 import SwiftData
 import Observation
+import OSLog
 
 @Observable
 class HealthDataManager {
-    private let healthStore = HKHealthStore()
+    private var healthStore: HKHealthStore?
     private var modelContext: ModelContext?
+    private let logger = VoiceLogging.health
+
+    // Constants
+    private let metersToKilometers: Double = 1000.0
+    private let secondsToHours: Double = 3600.0
+    private let healthKitUnavailableErrorCode = -1
 
     var isAuthorized = false
+
+    init() {
+        #if os(iOS)
+        if HKHealthStore.isHealthDataAvailable() {
+            self.healthStore = HKHealthStore()
+        }
+        #endif
+    }
 
     // Current health data
     var todaySteps: Double = 0
@@ -24,14 +39,16 @@ class HealthDataManager {
     var currentHeartRate: Double = 0
     var lastNightSleep: Double = 0
 
-    init() {}
-
     func setModelContext(_ context: ModelContext) {
         self.modelContext = context
     }
 
     // MARK: - Authorization
     func requestAuthorization() async throws {
+        guard let healthStore = healthStore else {
+            throw NSError(domain: "HealthDataManager", code: healthKitUnavailableErrorCode, userInfo: [NSLocalizedDescriptionKey: String(localized: "HealthKit is not available")])
+        }
+
         let readTypes: Set<HKObjectType> = [
             HKObjectType.quantityType(forIdentifier: .stepCount)!,
             HKObjectType.quantityType(forIdentifier: .activeEnergyBurned)!,
@@ -47,6 +64,8 @@ class HealthDataManager {
 
     // MARK: - Fetch Today's Data
     func fetchTodayHealthData() async {
+        guard healthStore != nil else { return }
+
         let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: Date())
         let endOfDay = Date()
@@ -90,11 +109,18 @@ extension HealthDataManager {
 }
 
 private extension HealthDataManager {
-    func fetchSteps(from startDate: Date, to endDate: Date) async {
-        guard let stepType = HKObjectType.quantityType(forIdentifier: .stepCount) else { return }
+    func fetchQuantityData(
+        quantityTypeIdentifier: HKQuantityTypeIdentifier,
+        unit: HKUnit,
+        from startDate: Date,
+        to endDate: Date,
+        updateUI: @MainActor (Double) -> Void,
+        metricType: MetricType
+    ) async {
+        guard let healthStore = healthStore, let quantityType = HKObjectType.quantityType(forIdentifier: quantityTypeIdentifier) else { return }
 
         let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
-        let samplePredicate = HKSamplePredicate.quantitySample(type: stepType, predicate: predicate)
+        let samplePredicate = HKSamplePredicate.quantitySample(type: quantityType, predicate: predicate)
 
         let descriptor = HKStatisticsQueryDescriptor(
             predicate: samplePredicate,
@@ -104,70 +130,78 @@ private extension HealthDataManager {
         do {
             let result = try await descriptor.result(for: healthStore)
             if let sum = result?.sumQuantity() {
-                let value = sum.doubleValue(for: HKUnit.count())
-                await MainActor.run {
-                    self.todaySteps = value
-                }
-                await saveMetric(type: .steps, value: value)
+                let value = sum.doubleValue(for: unit)
+                await updateUI(value)
+                await saveMetric(type: metricType, value: value)
             }
         } catch {
-            // Handle steps fetch error silently
+            logger.error("Failed to fetch \(quantityTypeIdentifier.rawValue) data: \(error.localizedDescription)")
         }
+    }
+
+    func fetchQuantityValue(
+        quantityTypeIdentifier: HKQuantityTypeIdentifier,
+        unit: HKUnit,
+        from startDate: Date,
+        to endDate: Date
+    ) async -> Double {
+        guard let healthStore = healthStore, let quantityType = HKObjectType.quantityType(forIdentifier: quantityTypeIdentifier) else { return 0 }
+
+        let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
+        let samplePredicate = HKSamplePredicate.quantitySample(type: quantityType, predicate: predicate)
+
+        let descriptor = HKStatisticsQueryDescriptor(
+            predicate: samplePredicate,
+            options: .cumulativeSum
+        )
+
+        do {
+            let result = try await descriptor.result(for: healthStore)
+            if let sum = result?.sumQuantity() {
+                return sum.doubleValue(for: unit)
+            }
+        } catch {
+            logger.error("Failed to fetch \(quantityTypeIdentifier.rawValue) value: \(error.localizedDescription)")
+        }
+
+        return 0
+    }
+
+    func fetchSteps(from startDate: Date, to endDate: Date) async {
+        await fetchQuantityData(
+            quantityTypeIdentifier: .stepCount,
+            unit: HKUnit.count(),
+            from: startDate,
+            to: endDate,
+            updateUI: { self.todaySteps = $0 },
+            metricType: .steps
+        )
     }
 
     func fetchActiveEnergy(from startDate: Date, to endDate: Date) async {
-        guard let energyType = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) else { return }
-
-        let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
-        let samplePredicate = HKSamplePredicate.quantitySample(type: energyType, predicate: predicate)
-
-        let descriptor = HKStatisticsQueryDescriptor(
-            predicate: samplePredicate,
-            options: .cumulativeSum
+        await fetchQuantityData(
+            quantityTypeIdentifier: .activeEnergyBurned,
+            unit: .kilocalorie(),
+            from: startDate,
+            to: endDate,
+            updateUI: { self.todayActiveEnergy = $0 },
+            metricType: .activeEnergy
         )
-
-        do {
-            let result = try await descriptor.result(for: healthStore)
-            if let sum = result?.sumQuantity() {
-                let value = sum.doubleValue(for: .kilocalorie())
-                await MainActor.run {
-                    self.todayActiveEnergy = value
-                }
-                await saveMetric(type: .activeEnergy, value: value)
-            }
-        } catch {
-            // Handle active energy fetch error silently
-        }
     }
 
     func fetchDistance(from startDate: Date, to endDate: Date) async {
-        guard let distanceType = HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning) else { return }
-
-        let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
-        let samplePredicate = HKSamplePredicate.quantitySample(type: distanceType, predicate: predicate)
-
-        let descriptor = HKStatisticsQueryDescriptor(
-            predicate: samplePredicate,
-            options: .cumulativeSum
+        await fetchQuantityData(
+            quantityTypeIdentifier: .distanceWalkingRunning,
+            unit: .meter(),
+            from: startDate,
+            to: endDate,
+            updateUI: { self.todayDistance = $0 / self.metersToKilometers }, // Convert meters to kilometers
+            metricType: .distance
         )
-
-        do {
-            let result = try await descriptor.result(for: healthStore)
-            if let sum = result?.sumQuantity() {
-                let meters = sum.doubleValue(for: .meter())
-                let value = meters / 1000
-                await MainActor.run {
-                    self.todayDistance = value
-                }
-                await saveMetric(type: .distance, value: value)
-            }
-        } catch {
-            // Handle distance fetch error silently
-        }
     }
 
     func fetchLatestHeartRate() async {
-        guard let heartRateType = HKObjectType.quantityType(forIdentifier: .heartRate) else { return }
+        guard let healthStore = healthStore, let heartRateType = HKObjectType.quantityType(forIdentifier: .heartRate) else { return }
 
         let descriptor = HKSampleQueryDescriptor(
             predicates: [HKSamplePredicate.quantitySample(type: heartRateType)],
@@ -185,12 +219,12 @@ private extension HealthDataManager {
                 await saveMetric(type: .heartRate, value: value)
             }
         } catch {
-            // Handle heart rate fetch error silently
+            logger.error("Failed to fetch heart rate data: \(error.localizedDescription)")
         }
     }
 
     func fetchLastNightSleep() async {
-        guard let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) else { return }
+        guard let healthStore = healthStore, let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) else { return }
 
         let calendar = Calendar.current
         let endDate = calendar.startOfDay(for: Date())
@@ -213,7 +247,7 @@ private extension HealthDataManager {
                 totalSleepTime += duration
             }
 
-            let value = totalSleepTime / 3600
+            let value = totalSleepTime / secondsToHours
             await MainActor.run {
                 self.lastNightSleep = value
             }
@@ -221,7 +255,7 @@ private extension HealthDataManager {
                 await saveMetric(type: .sleep, value: value)
             }
         } catch {
-            // Handle sleep fetch error silently
+            logger.error("Failed to fetch sleep data: \(error.localizedDescription)")
         }
     }
 
@@ -258,53 +292,25 @@ private extension HealthDataManager {
     }
 
     func fetchStepsValue(from startDate: Date, to endDate: Date) async -> Double {
-        guard let stepType = HKObjectType.quantityType(forIdentifier: .stepCount) else { return 0 }
-
-        let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
-        let samplePredicate = HKSamplePredicate.quantitySample(type: stepType, predicate: predicate)
-
-        let descriptor = HKStatisticsQueryDescriptor(
-            predicate: samplePredicate,
-            options: .cumulativeSum
+        await fetchQuantityValue(
+            quantityTypeIdentifier: .stepCount,
+            unit: HKUnit.count(),
+            from: startDate,
+            to: endDate
         )
-
-        do {
-            let result = try await descriptor.result(for: healthStore)
-            if let sum = result?.sumQuantity() {
-                return sum.doubleValue(for: HKUnit.count())
-            }
-        } catch {
-            // Handle steps value fetch error silently
-        }
-
-        return 0
     }
 
     func fetchActiveEnergyValue(from startDate: Date, to endDate: Date) async -> Double {
-        guard let energyType = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) else { return 0 }
-
-        let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
-        let samplePredicate = HKSamplePredicate.quantitySample(type: energyType, predicate: predicate)
-
-        let descriptor = HKStatisticsQueryDescriptor(
-            predicate: samplePredicate,
-            options: .cumulativeSum
+        await fetchQuantityValue(
+            quantityTypeIdentifier: .activeEnergyBurned,
+            unit: .kilocalorie(),
+            from: startDate,
+            to: endDate
         )
-
-        do {
-            let result = try await descriptor.result(for: healthStore)
-            if let sum = result?.sumQuantity() {
-                return sum.doubleValue(for: .kilocalorie())
-            }
-        } catch {
-            // Handle energy value fetch error silently
-        }
-
-        return 0
     }
 
     func fetchSleepValue(for date: Date) async -> Double {
-        guard let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) else { return 0 }
+        guard let healthStore = healthStore, let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) else { return 0 }
 
         let calendar = Calendar.current
         let endDate = calendar.startOfDay(for: date)
@@ -327,9 +333,9 @@ private extension HealthDataManager {
                 totalSleepTime += duration
             }
 
-            return totalSleepTime / 3600
+            return totalSleepTime / secondsToHours
         } catch {
-            // Handle sleep value fetch error silently
+            logger.error("Failed to fetch sleep value: \(error.localizedDescription)")
         }
 
         return 0
@@ -353,7 +359,7 @@ private extension HealthDataManager {
         do {
             try modelContext.save()
         } catch {
-            // Handle metric save error silently
+            logger.error("Failed to save health metric: \(error.localizedDescription)")
         }
     }
 }

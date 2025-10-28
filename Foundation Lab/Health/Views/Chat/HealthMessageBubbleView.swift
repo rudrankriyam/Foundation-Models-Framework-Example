@@ -1,6 +1,6 @@
 //
 //  HealthMessageBubbleView.swift
-//  Physiqa
+//  FoundationLab
 //
 //  Created by Rudrank Riyam on 6/23/25.
 //
@@ -14,7 +14,7 @@ struct HealthMessageBubbleView: View {
     var body: some View {
         HStack(alignment: .bottom, spacing: 8) {
             if !isFromUser {
-                // Physiqa avatar
+                // Health AI avatar
                 ZStack {
                     Circle()
                         .fill(Color.primary.opacity(0.1))
@@ -64,7 +64,7 @@ struct HealthMessageBubbleView: View {
 #Preview {
     VStack(spacing: 16) {
         HealthMessageBubbleView(
-            content: "Hi! I'm Physiqa, your personal health coach. How can I help you today?",
+            content: "Hi! I'm your personal health coach AI. How can I help you today?",
             isFromUser: false
         )
 

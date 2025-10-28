@@ -1,8 +1,5 @@
 included:
   - "Foundation Lab"
-  - Physiqa
-  - Psylean
-  - "Adapter Studio"
 
 excluded:
   - Carthage

@@ -1,6 +1,6 @@
 //
 //  HealthDataTool.swift
-//  Physiqa
+//  FoundationLab
 //
 //  Created by Rudrank Riyam on 6/23/25.
 //
@@ -161,7 +161,7 @@ struct HealthDataTool: Tool {
             return createErrorOutput(error: "Metric type not supported")
         }
 
-        return await GeneratedContent(properties: [
+        return GeneratedContent(properties: [
             "status": "success",
             "metric": type.rawValue,
             "value": value,

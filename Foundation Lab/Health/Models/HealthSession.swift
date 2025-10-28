@@ -1,6 +1,6 @@
 //
-//  PhysiqaSession.swift
-//  Physiqa
+//  HealthSession.swift
+//  FoundationLab
 //
 //  Created by Rudrank Riyam on 6/23/25.
 //
@@ -9,7 +9,7 @@ import Foundation
 import SwiftData
 
 @Model
-final class PhysiqaSession {
+final class HealthSession {
     var id: UUID
     var startDate: Date
     var endDate: Date?

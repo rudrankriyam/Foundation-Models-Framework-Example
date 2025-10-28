@@ -155,7 +155,7 @@ struct GuidedDynamicSchemaView: View {
                     description: "US phone number",
                     schema: DynamicGenerationSchema(
                         type: String.self,
-                        guides: [.pattern(/\(\d{3}\) \d{3}-\d{4}/)]
+                        guides: [.pattern(/\(\d {3}\) \d {3}-\d {4}/)]
                     )
                 ),
                 DynamicGenerationSchema.Property(
@@ -163,7 +163,7 @@ struct GuidedDynamicSchemaView: View {
                     description: "Extension",
                     schema: DynamicGenerationSchema(
                         type: String.self,
-                        guides: [.pattern(/x\d{3,4}/)]
+                        guides: [.pattern(/x\d {3,4}/)]
                     ),
                     isOptional: true
                 )

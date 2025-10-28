@@ -1,6 +1,6 @@
 //
 //  ConversationSummary.swift
-//  Physiqa
+//  FoundationLab
 //
 //  Created by Rudrank Riyam on 6/23/25.
 //
@@ -9,7 +9,7 @@ import Foundation
 import FoundationModels
 
 @Generable
-struct ConversationSummary {
+struct HealthConversationSummary {
     @Guide(description: "A comprehensive summary of the health coaching conversation")
     let summary: String
 

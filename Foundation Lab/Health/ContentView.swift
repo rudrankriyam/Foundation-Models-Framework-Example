@@ -1,6 +1,6 @@
 //
 //  ContentView.swift
-//  Physiqa
+//  FoundationLab
 //
 //  Created by Rudrank Riyam on 6/23/25.
 //
@@ -18,5 +18,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: [HealthMetric.self, HealthInsight.self, PhysiqaSession.self])
+        .modelContainer(for: [HealthMetric.self, HealthInsight.self, HealthSession.self])
 }

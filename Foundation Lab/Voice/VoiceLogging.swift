@@ -15,6 +15,7 @@ enum VoiceLogging {
     static let recognition = Logger(subsystem: subsystem, category: "voice.recognition")
     static let synthesis = Logger(subsystem: subsystem, category: "voice.synthesis")
     static let permissions = Logger(subsystem: subsystem, category: "voice.permissions")
+    static let health = Logger(subsystem: subsystem, category: "health")
 
 #if DEBUG
     private static let verboseFlag = ProcessInfo.processInfo.environment["VOICE_VERBOSE_LOGS"] == "1"

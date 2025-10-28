@@ -1,6 +1,6 @@
 //
 //  HealthInsight.swift
-//  Physiqa
+//  FoundationLab
 //
 //  Created by Rudrank Riyam on 6/23/25.
 //

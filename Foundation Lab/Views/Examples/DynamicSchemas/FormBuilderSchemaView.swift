@@ -190,7 +190,7 @@ struct FormBuilderSchemaView: View {
                     description: "Email address",
                     schema: .init(
                         type: String.self,
-                        guides: [.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)]
+                        guides: [.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z] {2,}$/)]
                     )
                 )
             )
@@ -203,7 +203,7 @@ struct FormBuilderSchemaView: View {
                     description: "Phone number (US format)",
                     schema: .init(
                         type: String.self,
-                        guides: [.pattern(/\(\d{3}\) \d{3}-\d{4}/)]
+                        guides: [.pattern(/\(\d {3}\) \d {3}-\d {4}/)]
                     ),
                     isOptional: true
                 )
@@ -311,7 +311,7 @@ struct FormBuilderSchemaView: View {
                     description: "Email address",
                     schema: .init(
                         type: String.self,
-                        guides: [.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)]
+                        guides: [.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z] {2,}$/)]
                     )
                 ),
                 DynamicGenerationSchema.Property(
@@ -319,7 +319,7 @@ struct FormBuilderSchemaView: View {
                     description: "Phone number",
                     schema: .init(
                         type: String.self,
-                        guides: [.pattern(/\(\d{3}\) \d{3}-\d{4}/)]
+                        guides: [.pattern(/\(\d {3}\) \d {3}-\d {4}/)]
                     ),
                     isOptional: true
                 )

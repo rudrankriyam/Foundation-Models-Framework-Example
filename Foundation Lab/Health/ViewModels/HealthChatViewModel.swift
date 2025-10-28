@@ -1,16 +1,21 @@
 //
-//  PhysiqaChatViewModel.swift
-//  Physiqa
+//  HealthChatViewModel.swift
+//  FoundationLab
 //
 //  Created by Rudrank Riyam on 6/23/25.
 //
 
+import Foundation
 import FoundationModels
 import Observation
 import SwiftData
+import SwiftUI
 
 @Observable
-final class PhysiqaChatViewModel {
+final class HealthChatViewModel {
+
+    // Constants
+    private let sessionTimeoutHours: TimeInterval = 3600 // 1 hour in seconds
 
     // MARK: - Published Properties
     var isLoading: Bool = false
@@ -35,7 +40,7 @@ final class PhysiqaChatViewModel {
         self.session = LanguageModelSession(
             tools: tools,
             instructions: Instructions(
-                "You are Physiqa, a friendly and knowledgeable health coach AI assistant. " +
+                "You are a friendly and knowledgeable health coach AI assistant. " +
                 "Based on the user's health data, provide personalized, encouraging responses. " +
                 "Be supportive and celebrate small wins. Use emojis occasionally."
             )
@@ -103,7 +108,7 @@ final class PhysiqaChatViewModel {
         session = LanguageModelSession(
             tools: tools,
             instructions: Instructions(
-                "You are Physiqa, a friendly and knowledgeable health coach AI assistant. " +
+                "You are a friendly and knowledgeable health coach AI assistant. " +
                 "Based on the user's health data, provide personalized, encouraging responses. " +
                 "Be supportive and celebrate small wins. Use emojis occasionally."
             )
@@ -126,7 +131,7 @@ final class PhysiqaChatViewModel {
 
 }
 
-private extension PhysiqaChatViewModel {
+private extension HealthChatViewModel {
     func shouldGenerateInsight(from response: String) -> Bool {
         let insightKeywords = ["goal", "achieve", "progress", "improve", "recommend", "suggest", "tip", "advice"]
         return insightKeywords.contains { response.lowercased().contains($0) }
@@ -142,7 +147,7 @@ private extension PhysiqaChatViewModel {
                     }
                     return nil
                 }.joined(separator: " ")
-                return "User: \(text)"
+                return String(localized: "User:") + " \(text)"
             case .response(let response):
                 let text = response.segments.compactMap { segment in
                     if case .text(let textSegment) = segment {
@@ -150,16 +155,16 @@ private extension PhysiqaChatViewModel {
                     }
                     return nil
                 }.joined(separator: " ")
-                return "Physiqa: \(text)"
+                return String(localized: "Health AI:") + " \(text)"
             default:
                 return nil
             }
         }.joined(separator: "\n\n")
     }
 
-    func createNewSessionWithContext(summary: ConversationSummary) {
+    func createNewSessionWithContext(summary: HealthConversationSummary) {
         let contextInstructions = """
-        You are Physiqa, a friendly and knowledgeable health coach AI assistant.
+        You are a friendly and knowledgeable health coach AI assistant.
         Based on the user's health data, provide personalized, encouraging responses.
         Be supportive and celebrate small wins. Use emojis occasionally.
 
@@ -186,23 +191,23 @@ private extension PhysiqaChatViewModel {
 }
 
 @MainActor
-private extension PhysiqaChatViewModel {
+private extension HealthChatViewModel {
     func saveMessageToSession(_ content: String, isFromUser: Bool) async {
         guard let modelContext = modelContext else { return }
 
-        let descriptor = FetchDescriptor<PhysiqaSession>(
-            sortBy: [SortDescriptor(\.startDate, order: .reverse)]
+        let descriptor = FetchDescriptor<HealthSession>(
+            sortBy: [SortDescriptor<HealthSession>(\.startDate, order: .reverse)]
         )
 
         do {
             let sessions = try modelContext.fetch(descriptor)
-            let activeSession: PhysiqaSession
+            let activeSession: HealthSession
 
             if let existingSession = sessions.first,
-               existingSession.startDate.timeIntervalSinceNow > -3600 {
+               existingSession.startDate.timeIntervalSinceNow > -sessionTimeoutHours {
                 activeSession = existingSession
             } else {
-                activeSession = PhysiqaSession(sessionType: .coaching)
+                activeSession = HealthSession(sessionType: .coaching)
                 modelContext.insert(activeSession)
             }
 
@@ -251,7 +256,7 @@ private extension PhysiqaChatViewModel {
         }
     }
 
-    func generateConversationSummary() async throws -> ConversationSummary {
+    func generateConversationSummary() async throws -> HealthConversationSummary {
         let summarySession = LanguageModelSession(
             instructions: Instructions(
                 """
@@ -272,7 +277,7 @@ private extension PhysiqaChatViewModel {
 
         let summaryResponse = try await summarySession.respond(
             to: Prompt(summaryPrompt),
-            generating: ConversationSummary.self
+            generating: HealthConversationSummary.self
         )
 
         return summaryResponse.content

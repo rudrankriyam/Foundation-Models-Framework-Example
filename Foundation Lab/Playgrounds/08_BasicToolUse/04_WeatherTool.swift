@@ -81,7 +81,7 @@ struct MockWeatherTool: Tool {
             longitude: -122.4194,
             city: "San Francisco",
             country: "US",
-            timestamp: DateFormatter.todayString
+            timestamp: ISO8601DateFormatter().string(from: Date())
         )
     }
 
