@@ -136,7 +136,7 @@ private var currentInput: String {
                     description: "Email address",
                     schema: DynamicGenerationSchema(
                         type: String.self,
-                        guides: [.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z] {2,}$/)]
+                        guides: [.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)]
                     )
                 ),
                 DynamicGenerationSchema.Property(
@@ -168,7 +168,7 @@ private var currentInput: String {
                     description: "Contact email",
                     schema: DynamicGenerationSchema(
                         type: String.self,
-                        guides: [.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z] {2,}$/)]
+                        guides: [.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)]
                     ),
                     isOptional: true
                 )
@@ -208,7 +208,7 @@ private var currentInput: String {
                     description: "Last four digits of card",
                     schema: DynamicGenerationSchema(
                         type: String.self,
-                        guides: [.pattern(/^\d {4}$/)]
+                        guides: [.pattern(/^\d{4}$/)]
                     )
                 ),
                 DynamicGenerationSchema.Property(
@@ -253,7 +253,7 @@ private var currentInput: String {
                     description: "Bank account last 4 digits",
                     schema: DynamicGenerationSchema(
                         type: String.self,
-                        guides: [.pattern(/^\d {4}$/)]
+                        guides: [.pattern(/^\d{4}$/)]
                     ),
                     isOptional: true
                 ),
@@ -262,7 +262,7 @@ private var currentInput: String {
                     description: "Bank routing number",
                     schema: DynamicGenerationSchema(
                         type: String.self,
-                        guides: [.pattern(/^\d {9}$/)]
+                        guides: [.pattern(/^\d{9}$/)]
                     ),
                     isOptional: true
                 ),
@@ -359,7 +359,7 @@ private var currentInput: String {
                     description: "ISO 8601 timestamp",
                     schema: DynamicGenerationSchema(
                         type: String.self,
-                        guides: [.pattern(/^\d {4}-\d {2}-\d {2}T\d {2}:\d {2}:\d {2}/)]
+                        guides: [.pattern(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)]
                     ),
                     isOptional: true
                 )
@@ -428,7 +428,7 @@ private var currentInput: String {
                     description: "Error code",
                     schema: DynamicGenerationSchema(
                         type: String.self,
-                        guides: [.pattern(/^[A-Z] {3}-\d {3,4}$/)]
+                        guides: [.pattern(/^[A-Z]{3}-\d{3,4}$/)]
                     ),
                     isOptional: true
                 ),
