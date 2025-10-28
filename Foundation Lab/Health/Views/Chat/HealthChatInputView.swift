@@ -56,7 +56,7 @@ struct HealthChatInputView: View {
 
             // Input field
             HStack(spacing: 12) {
-                TextField("Ask Physiqa anything...", text: $messageText, axis: .vertical)
+                TextField("Ask Health AI anything...", text: $messageText, axis: .vertical)
                     .textFieldStyle(.plain)
                     .focused($isTextFieldFocused)
                     .padding(.horizontal, 16)

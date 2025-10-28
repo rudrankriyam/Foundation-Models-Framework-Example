@@ -1,13 +1,13 @@
 //
 //  HealthColors.swift
-//  Physiqa
+//  FoundationLab
 //
 //  Created by Rudrank Riyam on 6/23/25.
 //
 
 import SwiftUI
 
-/// Health-themed color palette for Physiqa
+/// Health-themed color palette for FoundationLab
 extension Color {
     // MARK: - Primary Health Colors
     static let healthPrimary = Color(red: 0.0, green: 0.78, blue: 0.88) // Bright cyan

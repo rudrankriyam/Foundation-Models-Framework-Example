@@ -29,7 +29,7 @@ struct HealthChatView: View {
                 )
             }
             .background(Color.lightBackground)
-            .navigationTitle("Physiqa")
+            .navigationTitle("Health AI")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -198,7 +198,7 @@ struct WelcomeMessageView: View {
                     .font(.title2)
                     .foregroundStyle(Color.healthPrimary)
 
-                Text("Welcome to Physiqa!")
+                Text("Welcome to Health AI!")
                     .font(.title3)
                     .fontWeight(.semibold)
             }

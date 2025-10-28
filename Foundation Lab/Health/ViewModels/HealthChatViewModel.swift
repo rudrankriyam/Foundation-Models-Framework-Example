@@ -37,7 +37,7 @@ final class HealthChatViewModel {
         self.session = LanguageModelSession(
             tools: tools,
             instructions: Instructions(
-                "You are Physiqa, a friendly and knowledgeable health coach AI assistant. " +
+                "You are a friendly and knowledgeable health coach AI assistant. " +
                 "Based on the user's health data, provide personalized, encouraging responses. " +
                 "Be supportive and celebrate small wins. Use emojis occasionally."
             )
@@ -105,7 +105,7 @@ final class HealthChatViewModel {
         session = LanguageModelSession(
             tools: tools,
             instructions: Instructions(
-                "You are Physiqa, a friendly and knowledgeable health coach AI assistant. " +
+                "You are a friendly and knowledgeable health coach AI assistant. " +
                 "Based on the user's health data, provide personalized, encouraging responses. " +
                 "Be supportive and celebrate small wins. Use emojis occasionally."
             )
@@ -152,7 +152,7 @@ private extension HealthChatViewModel {
                     }
                     return nil
                 }.joined(separator: " ")
-                return "Physiqa: \(text)"
+                return "Health AI: \(text)"
             default:
                 return nil
             }
@@ -161,7 +161,7 @@ private extension HealthChatViewModel {
 
     func createNewSessionWithContext(summary: HealthConversationSummary) {
         let contextInstructions = """
-        You are Physiqa, a friendly and knowledgeable health coach AI assistant.
+        You are a friendly and knowledgeable health coach AI assistant.
         Based on the user's health data, provide personalized, encouraging responses.
         Be supportive and celebrate small wins. Use emojis occasionally.
 

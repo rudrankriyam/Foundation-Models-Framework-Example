@@ -38,10 +38,10 @@ enum HealthAIMood {
     case calm
 }
 
-/// Represents a personalized response from Physiqa
+/// Represents a personalized response from the Health AI
 @Generable
 struct HealthResponse {
-    @Guide(description: "The main message content from Physiqa")
+    @Guide(description: "The main message content from the Health AI")
     let message: String
 
     @Guide(description: "The emotional tone of the response")
