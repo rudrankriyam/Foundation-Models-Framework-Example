@@ -193,7 +193,7 @@ struct SchemaErrorHandlingView: View {
                         description: "Unique product identifier",
                         schema: DynamicGenerationSchema(
                             type: String.self,
-                            guides: [.pattern(/^PROD-\d{6}$/)]
+                            guides: [.pattern(/^PROD-\d {6}$/)]
                         ),
                         isOptional: false  // Required!
                     ),
@@ -268,7 +268,7 @@ struct SchemaErrorHandlingView: View {
                         description: "SKU must match pattern ABC-123-XYZ",
                         schema: DynamicGenerationSchema(
                             type: String.self,
-                            guides: [.pattern(/^[A-Z]{3}-\d{3}-[A-Z]{3}$/)]
+                            guides: [.pattern(/^[A-Z] {3}-\d {3}-[A-Z] {3}$/)]
                         )
                     ),
                     DynamicGenerationSchema.Property(
