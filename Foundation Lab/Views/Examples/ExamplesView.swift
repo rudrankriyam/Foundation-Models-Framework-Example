@@ -42,6 +42,8 @@ struct ExamplesView: View {
                 ModelAvailabilityView()
             case .generationOptions:
                 GenerationOptionsView()
+            case .health:
+                HealthExampleView()
             }
         }
     }

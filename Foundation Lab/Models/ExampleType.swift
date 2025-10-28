@@ -18,6 +18,7 @@ enum ExampleType: String, CaseIterable, Identifiable {
     case modelAvailability = "model_availability"
     case generationGuides = "generation_guides"
     case generationOptions = "generation_options"
+    case health = "health"
 
     var id: String { rawValue }
 
@@ -39,6 +40,8 @@ enum ExampleType: String, CaseIterable, Identifiable {
             return "Generation Guides"
         case .generationOptions:
             return "Generation Options"
+        case .health:
+            return "Health Dashboard"
         }
     }
 
@@ -60,6 +63,8 @@ enum ExampleType: String, CaseIterable, Identifiable {
             return "Guided generation with constraints"
         case .generationOptions:
             return "Experiment with model parameters"
+        case .health:
+            return "AI-powered health insights and tracking"
         }
     }
 
@@ -81,6 +86,8 @@ enum ExampleType: String, CaseIterable, Identifiable {
             return "slider.horizontal.3"
         case .generationOptions:
             return "tuningfork"
+        case .health:
+            return "heart.fill"
         }
     }
 

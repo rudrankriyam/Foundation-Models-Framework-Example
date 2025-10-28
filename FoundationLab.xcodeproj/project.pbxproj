@@ -10,7 +10,6 @@
 		0A21D7F12E518858004E8806 /* LiquidGlasKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0A21D7F02E518858004E8806 /* LiquidGlasKit */; };
 		0A5454AB2E1148A8002C2152 /* Foundation Lab.icon in Resources */ = {isa = PBXBuildFile; fileRef = 0A5454A72E1148A8002C2152 /* Foundation Lab.icon */; };
 		0A979E842E1E5921008CFA37 /* FoundationModelsTools in Frameworks */ = {isa = PBXBuildFile; productRef = 0A979E832E1E5921008CFA37 /* FoundationModelsTools */; };
-		0AFDF8442EA8C3F80071BEA5 /* LiquidGlasKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0AFDF8432EA8C3F80071BEA5 /* LiquidGlasKit */; };
 		FA43F9412E13A16E00F24BCC /* HighlightSwift in Frameworks */ = {isa = PBXBuildFile; productRef = FA43F9402E13A16E00F24BCC /* HighlightSwift */; };
 /* End PBXBuildFile section */
 
@@ -44,14 +43,6 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		0A90927A2EA8361C0062F02B /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				0AFDF8442EA8C3F80071BEA5 /* LiquidGlasKit in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		0AAE4FFC2DF76E6600838F13 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -59,20 +50,6 @@
 				FA43F9412E13A16E00F24BCC /* HighlightSwift in Frameworks */,
 				0A979E842E1E5921008CFA37 /* FoundationModelsTools in Frameworks */,
 				0A21D7F12E518858004E8806 /* LiquidGlasKit in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		0ABC0C982E09AB5300A09018 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		0ADB46D92E0CE81900C29293 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -150,16 +127,7 @@
 				LastSwiftUpdateCheck = 2610;
 				LastUpgradeCheck = 2610;
 				TargetAttributes = {
-					0A90927C2EA8361C0062F02B = {
-						CreatedOnToolsVersion = 26.1;
-					};
 					0AAE4FFE2DF76E6600838F13 = {
-						CreatedOnToolsVersion = 26.0;
-					};
-					0ABC0C9A2E09AB5300A09018 = {
-						CreatedOnToolsVersion = 26.0;
-					};
-					0ADB46DB2E0CE81900C29293 = {
 						CreatedOnToolsVersion = 26.0;
 					};
 				};
@@ -203,45 +171,10 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		0ABC0C992E09AB5300A09018 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		0ADB46DA2E0CE81900C29293 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		0A9092792EA8361C0062F02B /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		0AAE4FFB2DF76E6600838F13 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		0ABC0C972E09AB5300A09018 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		0ADB46D82E0CE81900C29293 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -604,11 +537,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 0A979E822E1E5921008CFA37 /* XCRemoteSwiftPackageReference "FoundationModelsTools" */;
 			productName = FoundationModelsTools;
-		};
-		0AFDF8432EA8C3F80071BEA5 /* LiquidGlasKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 0A21D7EF2E518858004E8806 /* XCRemoteSwiftPackageReference "LiquidGlasKit" */;
-			productName = LiquidGlasKit;
 		};
 		FA43F9402E13A16E00F24BCC /* HighlightSwift */ = {
 			isa = XCSwiftPackageProductDependency;
