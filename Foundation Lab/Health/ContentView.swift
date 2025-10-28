@@ -18,5 +18,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: [HealthMetric.self, HealthInsight.self, PhysiqaSession.self])
+        .modelContainer(for: [HealthMetric.self, HealthInsight.self, HealthSession.self])
 }

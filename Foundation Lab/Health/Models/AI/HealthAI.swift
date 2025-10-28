@@ -1,6 +1,6 @@
 //
-//  Physiqa.swift
-//  Physiqa
+//  HealthAI.swift
+//  FoundationLab
 //
 //  Created by Rudrank Riyam on 6/23/25.
 //
@@ -10,12 +10,12 @@ import FoundationModels
 
 /// The main AI character that interacts with users about their health
 @Generable
-struct Physiqa {
+struct HealthAI {
     @Guide(description: "A friendly greeting based on time of day and user's recent health data")
     let greeting: String
 
     @Guide(description: "Current mood/personality of the buddy (cheerful, encouraging, concerned, celebratory)")
-    let mood: PhysiqaMood
+    let mood: HealthAIMood
 
     @Guide(description: "A motivational message tailored to the user's health goals")
     let motivationalMessage: String
@@ -28,7 +28,7 @@ struct Physiqa {
 }
 
 @Generable
-enum PhysiqaMood {
+enum HealthAIMood {
     case cheerful
     case encouraging
     case concerned
@@ -40,7 +40,7 @@ enum PhysiqaMood {
 
 /// Represents a personalized response from Physiqa
 @Generable
-struct PhysiqaResponse {
+struct HealthResponse {
     @Guide(description: "The main message content from Physiqa")
     let message: String
 

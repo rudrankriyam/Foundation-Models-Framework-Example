@@ -1,6 +1,6 @@
 //
-//  PhysiqaChatInputView.swift
-//  Physiqa
+//  HealthChatInputView.swift
+//  FoundationLab
 //
 //  Created by Rudrank Riyam on 6/23/25.
 //
@@ -10,9 +10,9 @@ import SwiftUI
 import UIKit
 #endif
 
-struct PhysiqaChatInputView: View {
+struct HealthChatInputView: View {
     @Binding var messageText: String
-    let chatViewModel: PhysiqaChatViewModel
+    let chatViewModel: HealthChatViewModel
     @FocusState.Binding var isTextFieldFocused: Bool
 
     private var backgroundColor: Color {

@@ -1,6 +1,6 @@
 //
-//  PhysiqaChatViewModel.swift
-//  Physiqa
+//  HealthChatViewModel.swift
+//  FoundationLab
 //
 //  Created by Rudrank Riyam on 6/23/25.
 //
@@ -12,7 +12,7 @@ import SwiftData
 import SwiftUI
 
 @Observable
-final class PhysiqaChatViewModel {
+final class HealthChatViewModel {
 
     // MARK: - Published Properties
     var isLoading: Bool = false
@@ -128,7 +128,7 @@ final class PhysiqaChatViewModel {
 
 }
 
-private extension PhysiqaChatViewModel {
+private extension HealthChatViewModel {
     func shouldGenerateInsight(from response: String) -> Bool {
         let insightKeywords = ["goal", "achieve", "progress", "improve", "recommend", "suggest", "tip", "advice"]
         return insightKeywords.contains { response.lowercased().contains($0) }
@@ -188,23 +188,23 @@ private extension PhysiqaChatViewModel {
 }
 
 @MainActor
-private extension PhysiqaChatViewModel {
+private extension HealthChatViewModel {
     func saveMessageToSession(_ content: String, isFromUser: Bool) async {
         guard let modelContext = modelContext else { return }
 
-        let descriptor = FetchDescriptor<PhysiqaSession>(
-            sortBy: [SortDescriptor<PhysiqaSession>(\.startDate, order: .reverse)]
+        let descriptor = FetchDescriptor<HealthSession>(
+            sortBy: [SortDescriptor<HealthSession>(\.startDate, order: .reverse)]
         )
 
         do {
             let sessions = try modelContext.fetch(descriptor)
-            let activeSession: PhysiqaSession
+            let activeSession: HealthSession
 
             if let existingSession = sessions.first,
                existingSession.startDate.timeIntervalSinceNow > -3600 {
                 activeSession = existingSession
             } else {
-                activeSession = PhysiqaSession(sessionType: .coaching)
+                activeSession = HealthSession(sessionType: .coaching)
                 modelContext.insert(activeSession)
             }
 

@@ -1,6 +1,6 @@
 //
-//  PhysiqaChatView.swift
-//  Physiqa
+//  HealthChatView.swift
+//  FoundationLab
 //
 //  Created by Rudrank Riyam on 6/23/25.
 //
@@ -9,8 +9,8 @@ import SwiftUI
 import FoundationModels
 import SwiftData
 
-struct PhysiqaChatView: View {
-    @State private var viewModel = PhysiqaChatViewModel()
+struct HealthChatView: View {
+    @State private var viewModel = HealthChatViewModel()
     @State private var scrollID: String?
     @State private var messageText = ""
     @FocusState private var isTextFieldFocused: Bool
@@ -22,7 +22,7 @@ struct PhysiqaChatView: View {
             VStack(spacing: 0) {
                 messagesView
 
-                PhysiqaChatInputView(
+                HealthChatInputView(
                     messageText: $messageText,
                     chatViewModel: viewModel,
                     isTextFieldFocused: $isTextFieldFocused
@@ -89,7 +89,7 @@ struct PhysiqaChatView: View {
                     }
 
                     ForEach(viewModel.session.transcript) { entry in
-                        PhysiqaTranscriptEntryView(entry: entry)
+                        HealthTranscriptEntryView(entry: entry)
                             .id(entry.id)
                     }
 
@@ -137,7 +137,7 @@ struct PhysiqaChatView: View {
     }
 }
 
-struct PhysiqaTranscriptEntryView: View {
+struct HealthTranscriptEntryView: View {
     let entry: Transcript.Entry
 
     var body: some View {
@@ -274,6 +274,6 @@ struct ToolCallView: View {
 }
 
 #Preview {
-    PhysiqaChatView()
-        .modelContainer(for: [PhysiqaSession.self, HealthMetric.self, HealthInsight.self])
+    HealthChatView()
+        .modelContainer(for: [HealthSession.self, HealthMetric.self, HealthInsight.self])
 }

@@ -55,5 +55,5 @@ struct HealthUnavailableView: View {
 
 #Preview {
     HealthExampleView()
-        .modelContainer(for: [HealthMetric.self, HealthInsight.self, PhysiqaSession.self])
+        .modelContainer(for: [HealthMetric.self, HealthInsight.self, HealthSession.self])
 }
