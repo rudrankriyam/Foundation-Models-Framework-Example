@@ -10,37 +10,32 @@ import SwiftData
 
 struct HealthExampleView: View {
     var body: some View {
-        NavigationStack {
-            #if os(iOS)
+        Group {
+#if os(iOS)
             HealthDashboardView()
-            #else
+#else
             HealthUnavailableView()
-            #endif
+#endif
         }
         .navigationTitle("Health Dashboard")
-        #if os(iOS)
+#if os(iOS)
         .navigationBarTitleDisplayMode(.large)
-        #endif
+#endif
     }
 }
 
 struct HealthUnavailableView: View {
     var body: some View {
-        VStack(spacing: 20) {
+        VStack {
             Image(systemName: "heart.slash")
                 .font(.system(size: 60))
                 .foregroundColor(.secondary)
                 .padding()
-
+            
             Text("Health Data Unavailable")
                 .font(.title2)
                 .fontWeight(.semibold)
-
-            Text("The Health Dashboard requires HealthKit, which is available on iOS devices.\n\nHealthKit provides access to:\n• Step count and activity data\n• Heart rate monitoring\n• Sleep analysis\n• Workout tracking\n• Personalized health insights")
-                .multilineTextAlignment(.center)
-                .foregroundColor(.secondary)
-                .padding(.horizontal)
-
+            
             Spacer()
         }
         .padding()

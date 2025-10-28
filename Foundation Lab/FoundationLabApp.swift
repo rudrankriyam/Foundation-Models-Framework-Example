@@ -8,6 +8,7 @@
 import SwiftUI
 import AppIntents
 import FoundationModels
+import SwiftData
 
 @main
 struct FoundationLabApp: App {
@@ -17,6 +18,7 @@ struct FoundationLabApp: App {
     var body: some Scene {
         WindowGroup {
             AdaptiveNavigationView()
+                .modelContainer(for: [HealthMetric.self, HealthInsight.self, HealthSession.self])
 #if os(macOS)
                 .frame(minWidth: 800, minHeight: 600)
 #endif
