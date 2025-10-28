@@ -14,6 +14,9 @@ import SwiftUI
 @Observable
 final class HealthChatViewModel {
 
+    // Constants
+    private let sessionTimeoutHours: TimeInterval = 3600 // 1 hour in seconds
+
     // MARK: - Published Properties
     var isLoading: Bool = false
     var isSummarizing: Bool = false
@@ -144,7 +147,7 @@ private extension HealthChatViewModel {
                     }
                     return nil
                 }.joined(separator: " ")
-                return "User: \(text)"
+                return String(localized: "User:") + " \(text)"
             case .response(let response):
                 let text = response.segments.compactMap { segment in
                     if case .text(let textSegment) = segment {
@@ -152,7 +155,7 @@ private extension HealthChatViewModel {
                     }
                     return nil
                 }.joined(separator: " ")
-                return "Health AI: \(text)"
+                return String(localized: "Health AI:") + " \(text)"
             default:
                 return nil
             }
@@ -201,7 +204,7 @@ private extension HealthChatViewModel {
             let activeSession: HealthSession
 
             if let existingSession = sessions.first,
-               existingSession.startDate.timeIntervalSinceNow > -3600 {
+               existingSession.startDate.timeIntervalSinceNow > -sessionTimeoutHours {
                 activeSession = existingSession
             } else {
                 activeSession = HealthSession(sessionType: .coaching)
