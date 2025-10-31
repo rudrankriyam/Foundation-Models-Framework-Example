@@ -4466,4 +4466,3 @@ extension Array : PromptRepresentable where Element : PromptRepresentable {
     /// An instance that represents a prompt.
     public var promptRepresentation: Prompt { get }
 }
-
