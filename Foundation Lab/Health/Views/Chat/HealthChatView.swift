@@ -28,7 +28,7 @@ struct HealthChatView: View {
                     isTextFieldFocused: $isTextFieldFocused
                 )
             }
-            .background(Color.lightBackground)
+            .background(Color.adaptiveBackground)
             .navigationTitle("Health AI")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)

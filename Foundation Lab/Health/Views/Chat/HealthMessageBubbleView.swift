@@ -83,5 +83,5 @@ struct HealthMessageBubbleView: View {
         )
     }
     .padding()
-    .background(Color.lightBackground)
+    .background(Color.adaptiveBackground)
 }

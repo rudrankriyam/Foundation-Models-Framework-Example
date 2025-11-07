@@ -27,6 +27,16 @@ extension Color {
     static let alertRed = Color(red: 0.91, green: 0.26, blue: 0.21)
 
     // MARK: - Background Colors
+    static var adaptiveBackground: Color {
+        #if os(iOS)
+        Color(UIColor.systemBackground)
+        #elseif os(macOS)
+        Color(NSColor.windowBackgroundColor)
+        #else
+        Color(.systemBackground)
+        #endif
+    }
+
     static let lightBackground = Color(red: 0.97, green: 0.98, blue: 0.99)
     static let darkBackground = Color(red: 0.11, green: 0.11, blue: 0.14)
 
