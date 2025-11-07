@@ -31,8 +31,12 @@ class ContentViewModel {
 
   @MainActor
   private func executeExample(_ requestText: String,
-                             sessionBuilder: () -> LanguageModelSession = { LanguageModelSession(instructions: Instructions("You are a helpful assistant.")) },
-                             sessionOperation: (LanguageModelSession) async throws -> String) async {
+                              sessionBuilder: () -> LanguageModelSession = {
+                                LanguageModelSession(
+                                  instructions: Instructions("You are a helpful assistant.")
+                                )
+                              },
+                              sessionOperation: (LanguageModelSession) async throws -> String) async {
     setLoading(true)
     setRequestResponse(nil)
 
@@ -54,8 +58,8 @@ class ContentViewModel {
   @MainActor
   private func executeExampleWithTools(_ requestText: String,
                                        tools: [any Tool],
-                                      instructions: String = "You are a helpful assistant.",
-                                      sessionOperation: (LanguageModelSession) async throws -> String) async {
+                                       instructions: String = "You are a helpful assistant.",
+                                       sessionOperation: (LanguageModelSession) async throws -> String) async {
     setLoading(true)
     setRequestResponse(nil)
 
@@ -93,7 +97,7 @@ class ContentViewModel {
   func executeStructuredData() async {
     let requestText = "Suggest a sci-fi book."
 
-    await executeExample(requestText, sessionBuilder: { LanguageModelSession() }) { session in
+    await executeExample(requestText, sessionBuilder: { LanguageModelSession() }, sessionOperation: { session in
       let response = try await session.respond(
         to: Prompt(requestText),
         generating: BookRecommendation.self
@@ -106,14 +110,14 @@ class ContentViewModel {
         Genre: \(bookInfo.genre)
         Description: \(bookInfo.description)
         """
-    }
+    })
   }
 
   @MainActor
   func executeGenerationGuides() async {
     let requestText = "Write a product review for a smartphone."
 
-    await executeExample(requestText, sessionBuilder: { LanguageModelSession() }) { session in
+    await executeExample(requestText, sessionBuilder: { LanguageModelSession() }, sessionOperation: { session in
       let response = try await session.respond(
         to: Prompt(requestText),
         generating: ProductReview.self
@@ -129,7 +133,7 @@ class ContentViewModel {
         Pros: \(review.pros.joined(separator: ", "))
         Cons: \(review.cons.joined(separator: ", "))
         """
-    }
+    })
   }
 
   @MainActor
@@ -150,7 +154,10 @@ class ContentViewModel {
 
     await executeExampleWithTools(requestText,
                                  tools: [WebTool()],
-                                 instructions: "You are a helpful assistant with access to web search tools. Summarize the result.") { session in
+                                 instructions: """
+                                 You are a helpful assistant with access to web search tools. \
+                                 Summarize the result.
+                                 """) { session in
       let response = try await session.respond(to: Prompt(requestText))
       return "Web Search Results:\n\(response.content)\n\n"
     }
@@ -160,7 +167,7 @@ class ContentViewModel {
   func executeCreativeWriting() async {
     let requestText = "Create an outline for a mystery story set in a small town."
 
-    await executeExample(requestText, sessionBuilder: { LanguageModelSession() }) { session in
+    await executeExample(requestText, sessionBuilder: { LanguageModelSession() }, sessionOperation: { session in
       let response = try await session.respond(
         to: Prompt(requestText),
         generating: StoryOutline.self
@@ -177,14 +184,14 @@ class ContentViewModel {
         Central Conflict:
         \(storyOutline.conflict)
         """
-    }
+    })
   }
 
   @MainActor
   func executeBusinessIdea() async {
     let requestText = "Generate a unique startup business idea for 2025."
 
-    await executeExample(requestText, sessionBuilder: { LanguageModelSession() }) { session in
+    await executeExample(requestText, sessionBuilder: { LanguageModelSession() }, sessionOperation: { session in
       let response = try await session.respond(
         to: Prompt(requestText),
         generating: BusinessIdea.self
@@ -204,7 +211,7 @@ class ContentViewModel {
 
         Estimated Startup Cost: \(businessIdea.estimatedStartupCost)
         """
-    }
+    })
   }
 
   // MARK: - Helper Methods

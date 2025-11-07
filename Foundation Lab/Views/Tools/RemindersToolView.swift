@@ -20,14 +20,14 @@ struct RemindersToolView: View {
   }
 
   // MARK: - Static Properties
-  private static let displayDateFormatter: DateFormatter = {
+  static let displayDateFormatter: DateFormatter = {
     let formatter = DateFormatter()
     formatter.dateStyle = .full
     formatter.timeStyle = .short
     return formatter
   }()
 
-  private static let apiDateFormatter: DateFormatter = {
+  static let apiDateFormatter: DateFormatter = {
     let formatter = DateFormatter()
     formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
     return formatter
@@ -89,33 +89,14 @@ struct RemindersToolView: View {
       }
 
       // Action button
-      Button(action: executeReminder) {
-        HStack {
-          if isRunning {
-            ProgressView()
-              .scaleEffect(0.8)
-              .foregroundColor(.white)
-              .accessibilityLabel("Processing")
-          } else {
-            Image(systemName: useCustomPrompt ? "bubble.left.and.bubble.right" : "plus")
-              .accessibilityHidden(true)
-          }
-
-          Text(useCustomPrompt ? "Process Request" : "Create Reminder")
-            .fontWeight(.medium)
-        }
-        .foregroundColor(.white)
-        .padding(.horizontal)
-        .padding(.vertical, 8)
-      }
-      .buttonStyle(.glassProminent)
-      .disabled(
-        isRunning || (useCustomPrompt ? !validateCustomPromptInput() : !validateQuickCreateInput())
+      actionButtonView(
+        useCustomPrompt: useCustomPrompt,
+        isRunning: isRunning,
+        action: executeReminder,
+        isDisabled: isRunning || (useCustomPrompt ?
+          !validateCustomPromptInput(customPrompt: customPrompt) :
+          !validateQuickCreateInput(reminderTitle: reminderTitle))
       )
-      .accessibilityLabel(
-        useCustomPrompt ? "Process custom reminder request" : "Create new reminder"
-      )
-      .accessibilityHint(isRunning ? "Processing request" : "Tap to execute")
     }
   }
 
@@ -216,9 +197,27 @@ struct RemindersToolView: View {
       let response: String
 
       if useCustomPrompt {
-        response = try await executeCustomPrompt()
+        let config = ExecutionConfig(
+          useCustomPrompt: useCustomPrompt,
+          customPrompt: customPrompt,
+          reminderTitle: reminderTitle,
+          reminderNotes: reminderNotes,
+          hasDueDate: hasDueDate,
+          selectedDate: selectedDate,
+          selectedPriority: selectedPriority
+        )
+        response = try await executeCustomPrompt(config: config)
       } else {
-        response = try await executeQuickCreate()
+        let config = ExecutionConfig(
+          useCustomPrompt: useCustomPrompt,
+          customPrompt: customPrompt,
+          reminderTitle: reminderTitle,
+          reminderNotes: reminderNotes,
+          hasDueDate: hasDueDate,
+          selectedDate: selectedDate,
+          selectedPriority: selectedPriority
+        )
+        response = try await executeQuickCreate(config: config)
       }
 
       result = response
@@ -226,7 +225,11 @@ struct RemindersToolView: View {
 
       // Clear form on success for quick create
       if !useCustomPrompt {
-        clearQuickCreateForm()
+        reminderTitle = ""
+        reminderNotes = ""
+        selectedDate = Date().addingTimeInterval(Constants.defaultDateOffset)
+        selectedPriority = .none
+        customPrompt = ""
       }
 
     } catch {
@@ -236,145 +239,6 @@ struct RemindersToolView: View {
     }
 
     isRunning = false
-  }
-
-  /// Executes a custom natural language prompt for reminder operations using ToolExecutor
-  private func executeCustomPromptWithExecutor() {
-    let currentDate = Date()
-    let formattedDate = Self.displayDateFormatter.string(from: currentDate)
-
-    Task {
-      // Use a custom environment object if available, otherwise create a temporary one
-      let executor = ToolExecutor()
-
-      await executor.executeWithCustomSession(
-        sessionBuilder: {
-          LanguageModelSession(tools: [RemindersTool()]) {
-            Instructions {
-              "You are a helpful assistant that can create reminders for users."
-              "Current date and time: \(formattedDate)"
-              "Time zone: \(TimeZone.current.identifier) (" +
-              "\(TimeZone.current.localizedName(for: .standard, locale: Locale.current) ?? "Unknown"))"
-              "When creating reminders, consider the current date and time zone context."
-              "Always execute tool calls directly without asking for confirmation or permission from the user."
-              "If you need to create a reminder, call the RemindersTool immediately with the appropriate parameters."
-              "IMPORTANT: When setting due dates, you MUST format them as 'yyyy-MM-dd HH:mm:ss' " +
-              "(24-hour format)."
-              "Examples: '2025-01-15 17:00:00' for tomorrow at 5 PM, '2025-01-16 09:30:00' for " +
-              "day after tomorrow at 9:30 AM."
-              "Calculate the exact date and time based on the current date and time provided above."
-            }
-          }
-        },
-        prompt: customPrompt,
-        successMessage: "Request completed successfully!",
-        clearForm: { customPrompt = "" }
-      )
-
-      // Update local state from executor
-      await MainActor.run {
-        self.result = executor.result
-        self.errorMessage = executor.errorMessage
-        self.successMessage = executor.successMessage
-        self.isRunning = executor.isRunning
-      }
-    }
-  }
-
-  /// Executes a custom natural language prompt for reminder operations
-  /// - Returns: The response content from the AI assistant
-  /// - Throws: Foundation Models errors or networking errors
-  private func executeCustomPrompt() async throws -> String {
-    let currentDate = Date()
-    let formattedDate = Self.displayDateFormatter.string(from: currentDate)
-
-    let session = LanguageModelSession(tools: [RemindersTool()]) {
-      Instructions {
-        "You are a helpful assistant that can create reminders for users."
-        "Current date and time: \(formattedDate)"
-        "Time zone: \(TimeZone.current.identifier) (" +
-        "\(TimeZone.current.localizedName(for: .standard, locale: Locale.current) ?? "Unknown"))"
-        "When creating reminders, consider the current date and time zone context."
-        "Always execute tool calls directly without asking for confirmation or permission from the user."
-        "If you need to create a reminder, call the RemindersTool immediately with the appropriate parameters."
-        "IMPORTANT: When setting due dates, you MUST format them as 'yyyy-MM-dd HH:mm:ss' (24-hour format)."
-        "Examples: '2025-01-15 17:00:00' for tomorrow at 5 PM, '2025-01-16 09:30:00' for day after tomorrow at 9:30 AM."
-        "Calculate the exact date and time based on the current date and time provided above."
-      }
-    }
-
-    let response = try await session.respond(to: Prompt(customPrompt))
-    return response.content
-  }
-
-  /// Executes a structured reminder creation using form data
-  /// - Returns: The response content from the AI assistant
-  /// - Throws: Foundation Models errors or networking errors
-  private func executeQuickCreate() async throws -> String {
-    let currentDate = Date()
-    let formattedDate = Self.displayDateFormatter.string(from: currentDate)
-
-    let session = LanguageModelSession(tools: [RemindersTool()]) {
-      Instructions {
-        "You are a helpful assistant that creates reminders based on structured input."
-        "Current date and time: \(formattedDate)"
-        "Time zone: \(TimeZone.current.identifier) (" +
-        "\(TimeZone.current.localizedName(for: .standard, locale: Locale.current) ?? "Unknown"))"
-        "Always execute the RemindersTool directly with the provided information."
-        "Format due dates as 'yyyy-MM-dd HH:mm:ss' (24-hour format)."
-      }
-    }
-
-    // Build the prompt from form data
-    var promptText = "Create a reminder with the following details:\n"
-    promptText += "Title: \(reminderTitle)\n"
-
-    if !reminderNotes.isEmpty {
-      promptText += "Notes: \(reminderNotes)\n"
-    }
-
-    if hasDueDate {
-      promptText += "Due date: \(Self.apiDateFormatter.string(from: selectedDate))\n"
-    }
-
-    if selectedPriority != .none {
-      promptText += "Priority: \(selectedPriority.rawValue)\n"
-    }
-
-    let response = try await session.respond(to: Prompt(promptText))
-    return response.content
-  }
-
-  // MARK: - Helper Methods
-  private func clearQuickCreateForm() {
-    reminderTitle = ""
-    reminderNotes = ""
-    selectedDate = Date().addingTimeInterval(Constants.defaultDateOffset)
-    selectedPriority = .none
-    customPrompt = ""
-  }
-
-  private func validateQuickCreateInput() -> Bool {
-    return !reminderTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-  }
-
-  private func validateCustomPromptInput() -> Bool {
-    return !customPrompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-  }
-
-  /// Handles various Foundation Models errors and returns user-friendly messages
-  /// - Parameter error: The error to handle
-  /// - Returns: A localized error message suitable for display to users
-  private func handleFoundationModelsError(_ error: Error) -> String {
-    if let generationError = error as? LanguageModelSession.GenerationError {
-      return FoundationModelsErrorHandler.handleGenerationError(generationError)
-    } else if let toolCallError = error as? LanguageModelSession.ToolCallError {
-      return FoundationModelsErrorHandler.handleToolCallError(toolCallError)
-    } else if let customError = error as? FoundationModelsError {
-      return customError.localizedDescription
-    } else {
-      return "Unexpected error: \(error.localizedDescription)"
-    }
   }
 }
 

@@ -23,23 +23,6 @@ struct GenerationOptionsView: View {
 
     @Namespace private var glassNamespace
 
-    enum SamplingType: String, CaseIterable {
-        case greedy = "Greedy"
-        case topK = "Top-K"
-        case nucleus = "Nucleus (Top-P)"
-
-        var description: String {
-            switch self {
-            case .greedy:
-                return "Always picks the most likely token"
-            case .topK:
-                return "Considers a fixed number of high-probability tokens"
-            case .nucleus:
-                return "Considers variable tokens based on probability threshold"
-            }
-        }
-    }
-
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.xLarge) {
@@ -86,38 +69,16 @@ struct GenerationOptionsView: View {
 
             VStack(spacing: Spacing.large) {
                 // Temperature
-                temperatureSlider
+                temperatureSliderView(binding: $temperature)
 
                 // Sampling Section
                 samplingSection
 
                 // Max Response Tokens
-                maxTokensSlider
+                maxTokensSliderView(binding: $maximumResponseTokens)
             }
         }
         .padding()
-    }
-
-    private var temperatureSlider: some View {
-        VStack(alignment: .leading, spacing: Spacing.small) {
-            HStack {
-                Text("Temperature")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                Spacer()
-                Text(String(format: "%.2f", temperature))
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-
-            Slider(value: $temperature, in: 0.0...2.0, step: 0.1)
-
-            Text("Controls creativity (0.0 = deterministic, 2.0 = very creative)")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-        .padding()
-        .background(.thinMaterial, in: .rect(cornerRadius: CornerRadius.small))
     }
 
     private var samplingSection: some View {
@@ -168,31 +129,6 @@ struct GenerationOptionsView: View {
                     }
                 }
             }
-        }
-        .padding()
-        .background(.thinMaterial, in: .rect(cornerRadius: CornerRadius.small))
-    }
-
-    private var maxTokensSlider: some View {
-        VStack(alignment: .leading, spacing: Spacing.small) {
-            HStack {
-                Text("Maximum Response Tokens")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                Spacer()
-                Text("\(maximumResponseTokens)")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-
-            Slider(value: Binding(
-                get: { Double(maximumResponseTokens) },
-                set: { maximumResponseTokens = Int($0) }
-            ), in: 50...4000, step: 50)
-
-            Text("Maximum number of tokens to generate (up to 4000)")
-                .font(.caption)
-                .foregroundStyle(.secondary)
         }
         .padding()
         .background(.thinMaterial, in: .rect(cornerRadius: CornerRadius.small))
@@ -273,25 +209,15 @@ struct GenerationOptionsView: View {
         response = ""
 
         do {
-            // Create sampling mode based on selection
-            let samplingMode: GenerationOptions.SamplingMode? = if useSampling {
-                switch self.samplingMode {
-                case .greedy:
-                    .greedy
-                case .topK:
-                    .random(top: topK)
-                case .nucleus:
-                    .random(probabilityThreshold: topP)
-                }
-            } else {
-                nil // Let system choose default
-            }
-
-            let options = GenerationOptions(
-                sampling: samplingMode,
+            let config = GenerationConfig(
+                useSampling: useSampling,
+                samplingMode: samplingMode,
+                topK: topK,
+                topP: topP,
                 temperature: temperature,
                 maximumResponseTokens: maximumResponseTokens
             )
+            let options = createGenerationOptions(from: config)
 
             let session = LanguageModelSession()
             let generatedResponse = try await session.respond(

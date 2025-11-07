@@ -318,4 +318,3 @@ extension FormBuilderSchemaView {
         }
     }
 }
-

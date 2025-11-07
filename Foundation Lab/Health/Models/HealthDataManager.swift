@@ -46,7 +46,11 @@ class HealthDataManager {
     // MARK: - Authorization
     func requestAuthorization() async throws {
         guard let healthStore = healthStore else {
-            throw NSError(domain: "HealthDataManager", code: healthKitUnavailableErrorCode, userInfo: [NSLocalizedDescriptionKey: String(localized: "HealthKit is not available")])
+            throw NSError(
+                domain: "HealthDataManager",
+                code: healthKitUnavailableErrorCode,
+                userInfo: [NSLocalizedDescriptionKey: String(localized: "HealthKit is not available")]
+            )
         }
 
         guard let stepCountType = HKObjectType.quantityType(forIdentifier: .stepCount),
@@ -54,7 +58,15 @@ class HealthDataManager {
               let distanceType = HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning),
               let heartRateType = HKObjectType.quantityType(forIdentifier: .heartRate),
               let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) else {
-            throw NSError(domain: "HealthDataManager", code: healthKitUnavailableErrorCode, userInfo: [NSLocalizedDescriptionKey: String(localized: "Required HealthKit types are not available")])
+            throw NSError(
+                domain: "HealthDataManager",
+                code: healthKitUnavailableErrorCode,
+                userInfo: [
+                    NSLocalizedDescriptionKey: String(
+                        localized: "Required HealthKit types are not available"
+                    )
+                ]
+            )
         }
 
         let readTypes: Set<HKObjectType> = [
@@ -120,15 +132,22 @@ extension HealthDataManager {
 }
 
 private extension HealthDataManager {
+    struct QuantityQueryConfig {
+        let quantityTypeIdentifier: HKQuantityTypeIdentifier
+        let unit: HKUnit
+        let metricType: MetricType
+    }
+
     func fetchQuantityData(
-        quantityTypeIdentifier: HKQuantityTypeIdentifier,
-        unit: HKUnit,
+        config: QuantityQueryConfig,
         from startDate: Date,
         to endDate: Date,
-        updateUI: @MainActor (Double) -> Void,
-        metricType: MetricType
+        updateUI: @MainActor (Double) -> Void
     ) async {
-        guard let healthStore = healthStore, let quantityType = HKObjectType.quantityType(forIdentifier: quantityTypeIdentifier) else { return }
+        guard let healthStore = healthStore,
+              let quantityType = HKObjectType.quantityType(forIdentifier: config.quantityTypeIdentifier) else {
+            return
+        }
 
         let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
         let samplePredicate = HKSamplePredicate.quantitySample(type: quantityType, predicate: predicate)
@@ -141,12 +160,12 @@ private extension HealthDataManager {
         do {
             let result = try await descriptor.result(for: healthStore)
             if let sum = result?.sumQuantity() {
-                let value = sum.doubleValue(for: unit)
+                let value = sum.doubleValue(for: config.unit)
                 await updateUI(value)
-                await saveMetric(type: metricType, value: value)
+                await saveMetric(type: config.metricType, value: value)
             }
         } catch {
-            logger.error("Failed to fetch \(quantityTypeIdentifier.rawValue) data: \(error.localizedDescription)")
+            logger.error("Failed to fetch \(config.quantityTypeIdentifier.rawValue) data: \(error.localizedDescription)")
         }
     }
 
@@ -156,7 +175,10 @@ private extension HealthDataManager {
         from startDate: Date,
         to endDate: Date
     ) async -> Double {
-        guard let healthStore = healthStore, let quantityType = HKObjectType.quantityType(forIdentifier: quantityTypeIdentifier) else { return 0 }
+        guard let healthStore = healthStore,
+              let quantityType = HKObjectType.quantityType(forIdentifier: quantityTypeIdentifier) else {
+            return 0
+        }
 
         let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
         let samplePredicate = HKSamplePredicate.quantitySample(type: quantityType, predicate: predicate)
@@ -180,34 +202,40 @@ private extension HealthDataManager {
 
     func fetchSteps(from startDate: Date, to endDate: Date) async {
         await fetchQuantityData(
-            quantityTypeIdentifier: .stepCount,
-            unit: HKUnit.count(),
+            config: QuantityQueryConfig(
+                quantityTypeIdentifier: .stepCount,
+                unit: HKUnit.count(),
+                metricType: .steps
+            ),
             from: startDate,
             to: endDate,
-            updateUI: { self.todaySteps = $0 },
-            metricType: .steps
+            updateUI: { self.todaySteps = $0 }
         )
     }
 
     func fetchActiveEnergy(from startDate: Date, to endDate: Date) async {
         await fetchQuantityData(
-            quantityTypeIdentifier: .activeEnergyBurned,
-            unit: .kilocalorie(),
+            config: QuantityQueryConfig(
+                quantityTypeIdentifier: .activeEnergyBurned,
+                unit: .kilocalorie(),
+                metricType: .activeEnergy
+            ),
             from: startDate,
             to: endDate,
-            updateUI: { self.todayActiveEnergy = $0 },
-            metricType: .activeEnergy
+            updateUI: { self.todayActiveEnergy = $0 }
         )
     }
 
     func fetchDistance(from startDate: Date, to endDate: Date) async {
         await fetchQuantityData(
-            quantityTypeIdentifier: .distanceWalkingRunning,
-            unit: .meter(),
+            config: QuantityQueryConfig(
+                quantityTypeIdentifier: .distanceWalkingRunning,
+                unit: .meter(),
+                metricType: .distance
+            ),
             from: startDate,
             to: endDate,
-            updateUI: { self.todayDistance = $0 / self.metersToKilometers }, // Convert meters to kilometers
-            metricType: .distance
+            updateUI: { self.todayDistance = $0 / self.metersToKilometers } // Convert meters to kilometers
         )
     }
 

@@ -172,7 +172,6 @@ struct FormBuilderSchemaView: View {
         )
     }
 
-
     private var exampleCode: String {
         """
         // Generate form schema from description

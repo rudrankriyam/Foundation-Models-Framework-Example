@@ -150,68 +150,25 @@ final class SpeechSynthesizer: NSObject, SpeechSynthesisService {
     func loadAvailableVoices() {
         Task { @MainActor in
             let allVoices = AVSpeechSynthesisVoice.speechVoices()
-            var voicesGroupedByLanguage: [String: [AVSpeechSynthesisVoice]] = [:]
-
-            // Filter out novelty/system voices and only keep high-quality speech voices
-            let speechVoices = allVoices.filter { voice in
-                // Filter out novelty voices by checking if they're system voices
-                return !voice.name.contains("Bad News") &&
-                       !voice.name.contains("Good News") &&
-                       !voice.name.contains("Boing") &&
-                       !voice.name.contains("Bubbles") &&
-                       !voice.name.contains("Jester") &&
-                       !voice.name.contains("Junior") &&
-                       !voice.name.contains("Ralph") &&
-                       !voice.name.contains("Trinoids") &&
-                       !voice.name.contains("Whisper") &&
-                       !voice.name.contains("Zarvox") &&
-                       voice.quality == .enhanced
-            }
-
-            for voice in speechVoices {
-                let languageCode = voice.language
-                voicesGroupedByLanguage[languageCode, default: []].append(voice)
-            }
-
-            for (language, voices) in voicesGroupedByLanguage {
-                voicesGroupedByLanguage[language] = voices.sorted { voice1, voice2 in
-                    if voice1.quality != voice2.quality {
-                        return voice1.quality.rawValue > voice2.quality.rawValue
-                    }
-                    return voice1.name < voice2.name
-                }
-            }
+            let speechVoices = filterSpeechVoices(from: allVoices)
+            var voicesGroupedByLanguage = groupVoicesByLanguage(speechVoices)
+            voicesGroupedByLanguage = sortVoicesWithinLanguages(voicesGroupedByLanguage)
 
             voicesByLanguage = voicesGroupedByLanguage
-            availableLanguages = voicesGroupedByLanguage.keys.sorted { lang1, lang2 in
-                if lang1.hasPrefix("en") && !lang2.hasPrefix("en") {
-                    return true
-                } else if !lang1.hasPrefix("en") && lang2.hasPrefix("en") {
-                    return false
-                }
-                return lang1 < lang2
-            }
+            availableLanguages = sortLanguages(Set(voicesGroupedByLanguage.keys))
 
-            let englishVoices = speechVoices.filter { $0.language.hasPrefix("en") }
-                .sorted { voice1, voice2 in
-                    if voice1.quality != voice2.quality {
-                        return voice1.quality.rawValue > voice2.quality.rawValue
-                    }
-                    return voice1.name < voice2.name
-                }
+            let englishVoices = filterAndSortEnglishVoices(from: speechVoices, allVoices: allVoices)
+            availableVoices = englishVoices
 
-            availableVoices = englishVoices.isEmpty ?
-                allVoices.filter { $0.language.hasPrefix("en") && $0.quality == .default } :
-                englishVoices
-
-            // Prefer common high-quality voices, fall back to any available
-            let preferredVoices = ["Samantha", "Karen", "Moira", "Ava", "Alex", "Daniel", "Karen", "Tessa"]
-            selectedVoice = preferredVoices.compactMap { name in
-                availableVoices.first { $0.name.contains(name) }
-            }.first ?? availableVoices.first ?? AVSpeechSynthesisVoice(language: "en-US")
+            selectedVoice = selectPreferredVoice(from: englishVoices)
 
             if VoiceLogging.isVerboseEnabled, let voice = selectedVoice {
-                logger.debug("Selected voice: \(voice.name, privacy: .public) (\(voice.language, privacy: .public)) quality=\(voice.quality.rawValue)")
+                logger.debug(
+                    """
+                    Selected voice: \(voice.name, privacy: .public) \
+                    (\(voice.language, privacy: .public)) quality=\(voice.quality.rawValue)
+                    """
+                )
                 let summaries = availableVoices.map { "\($0.name) (Q:\($0.quality.rawValue))" }.joined(separator: ", ")
                 logger.debug("Available voices: \(summaries, privacy: .public)")
             }
