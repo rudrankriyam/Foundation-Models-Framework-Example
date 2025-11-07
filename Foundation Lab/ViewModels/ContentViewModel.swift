@@ -229,44 +229,14 @@ class ContentViewModel {
 extension ContentViewModel {
   func handleFoundationModelsError(_ error: Error) -> String {
     if let generationError = error as? LanguageModelSession.GenerationError {
-      return handleGenerationError(generationError)
+      return FoundationModelsErrorHandler.handleGenerationError(generationError)
     } else if let toolCallError = error as? LanguageModelSession.ToolCallError {
-      return handleToolCallError(toolCallError)
+      return FoundationModelsErrorHandler.handleToolCallError(toolCallError)
     } else if let customError = error as? FoundationModelsError {
       return customError.localizedDescription
     } else {
-      return "Unexpected error: \(error.localizedDescription)"
+      return String(localized: "Unexpected error: \(error.localizedDescription)")
     }
-  }
-
-  private func handleGenerationError(_ error: LanguageModelSession.GenerationError) -> String {
-    switch error {
-    case .exceededContextWindowSize(let context):
-      return "Context window exceeded: \(context.debugDescription)"
-    case .assetsUnavailable(let context):
-      return "Model assets unavailable: \(context.debugDescription)"
-    case .guardrailViolation(let context):
-      return "Content policy violation: \(context.debugDescription)"
-    case .decodingFailure(let context):
-      return "Failed to decode response: \(context.debugDescription)"
-    case .unsupportedGuide(let context):
-      return "Unsupported generation guide: \(context.debugDescription)"
-    case .unsupportedLanguageOrLocale(let context):
-      return "Unsupported language/locale: \(context.debugDescription)"
-    case .rateLimited(let context):
-      return "Rate limited: \(context.debugDescription)"
-    case .concurrentRequests(let context):
-        return "Concurrent requests limit exceeded: \(context.debugDescription)"
-        // Refusal is async throws
-    case .refusal(_, let context):
-        return "Model refused to respond: \(context.debugDescription)"
-    @unknown default:
-      return "Unknown generation error"
-    }
-  }
-
-  private func handleToolCallError(_ error: LanguageModelSession.ToolCallError) -> String {
-    return "Tool '\(error.tool.name)' failed: \(error.underlyingError.localizedDescription)"
   }
 }
 

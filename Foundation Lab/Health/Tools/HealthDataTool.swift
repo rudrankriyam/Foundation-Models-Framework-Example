@@ -29,10 +29,16 @@ struct HealthDataTool: Tool {
     }
 
     func call(arguments: Arguments) async throws -> some PromptRepresentable {
+        // Validate input
+        let dataType = arguments.dataType.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !dataType.isEmpty else {
+            return createErrorOutput(error: "Data type cannot be empty. Please specify 'today', 'weekly', or a specific metric.")
+        }
+        
         let healthManager = await MainActor.run { HealthDataManager.shared }
         let refreshFlag = arguments.refreshFromHealthKit ?? false
 
-        switch arguments.dataType.lowercased() {
+        switch dataType.lowercased() {
         case "today":
             return await fetchTodayData(healthManager: healthManager, refresh: refreshFlag)
         case "weekly":

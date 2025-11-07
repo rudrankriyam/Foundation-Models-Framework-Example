@@ -10,12 +10,14 @@ import FoundationModels
 import Observation
 import SwiftData
 import SwiftUI
+import OSLog
 
 @Observable
 final class HealthChatViewModel {
 
     // Constants
-    private let sessionTimeoutHours: TimeInterval = 3600 // 1 hour in seconds
+    private let sessionTimeoutHours: TimeInterval = AppConfiguration.Health.sessionTimeoutHours
+    private let logger = Logger(subsystem: "com.foundationlab.health", category: "HealthChatViewModel")
 
     // MARK: - Published Properties
     var isLoading: Bool = false
@@ -138,7 +140,7 @@ private extension HealthChatViewModel {
     }
 
     func createConversationText() -> String {
-        session.transcript.compactMap { entry in
+        return session.transcript.compactMap { entry in
             switch entry {
             case .prompt(let prompt):
                 let text = prompt.segments.compactMap { segment in
@@ -216,7 +218,7 @@ private extension HealthChatViewModel {
 
             try modelContext.save()
         } catch {
-            // Handle save error silently
+            logger.error("Failed to save message to session: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -236,7 +238,7 @@ private extension HealthChatViewModel {
         do {
             try modelContext.save()
         } catch {
-            // Handle save error silently
+            logger.error("Failed to save health insight: \(error.localizedDescription, privacy: .public)")
         }
     }
 

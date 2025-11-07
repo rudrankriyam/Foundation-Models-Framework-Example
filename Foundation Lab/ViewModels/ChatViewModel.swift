@@ -34,9 +34,9 @@ final class ChatViewModel {
     private(set) var feedbackState: [Transcript.Entry.ID: LanguageModelFeedback.Sentiment] = [:]
 
     // MARK: - Sliding Window Configuration
-    private let maxTokens = 4096
-    private let windowThreshold = 0.75 // Start windowing at 75%
-    private let targetWindowSize = 2000 // Keep ~2000 tokens after windowing
+    private let maxTokens = AppConfiguration.TokenManagement.maxTokens
+    private let windowThreshold = AppConfiguration.TokenManagement.windowThreshold
+    private let targetWindowSize = AppConfiguration.TokenManagement.targetWindowSize
 
     // MARK: - Initialization
 
@@ -86,7 +86,10 @@ final class ChatViewModel {
         feedbackState[entryID] = sentiment
 
         // Use the new session method to log feedback attachment
-        _ = session.logFeedbackAttachment(sentiment: sentiment)
+        // The return value is Data containing the feedback attachment (can be saved/submitted to Apple)
+        let feedbackData = session.logFeedbackAttachment(sentiment: sentiment)
+        // Note: feedbackData could be saved to a file for submission to Feedback Assistant if needed
+        _ = feedbackData // Explicitly acknowledge we're using the return value
     }
 
     @MainActor

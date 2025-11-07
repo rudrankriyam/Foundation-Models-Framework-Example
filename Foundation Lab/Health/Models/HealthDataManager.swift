@@ -49,12 +49,20 @@ class HealthDataManager {
             throw NSError(domain: "HealthDataManager", code: healthKitUnavailableErrorCode, userInfo: [NSLocalizedDescriptionKey: String(localized: "HealthKit is not available")])
         }
 
+        guard let stepCountType = HKObjectType.quantityType(forIdentifier: .stepCount),
+              let activeEnergyType = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned),
+              let distanceType = HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning),
+              let heartRateType = HKObjectType.quantityType(forIdentifier: .heartRate),
+              let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) else {
+            throw NSError(domain: "HealthDataManager", code: healthKitUnavailableErrorCode, userInfo: [NSLocalizedDescriptionKey: String(localized: "Required HealthKit types are not available")])
+        }
+
         let readTypes: Set<HKObjectType> = [
-            HKObjectType.quantityType(forIdentifier: .stepCount)!,
-            HKObjectType.quantityType(forIdentifier: .activeEnergyBurned)!,
-            HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning)!,
-            HKObjectType.quantityType(forIdentifier: .heartRate)!,
-            HKObjectType.categoryType(forIdentifier: .sleepAnalysis)!,
+            stepCountType,
+            activeEnergyType,
+            distanceType,
+            heartRateType,
+            sleepType,
             HKObjectType.workoutType()
         ]
 
@@ -96,7 +104,10 @@ extension HealthDataManager {
     func fetchWeeklyData() async -> [MetricType: [DailyMetricData]] {
         let calendar = Calendar.current
         let endDate = Date()
-        let startDate = calendar.date(byAdding: .day, value: -7, to: endDate)!
+        guard let startDate = calendar.date(byAdding: .day, value: -7, to: endDate) else {
+            logger.error("Failed to calculate start date for weekly data")
+            return [:]
+        }
 
         var weeklyData: [MetricType: [DailyMetricData]] = [:]
 
@@ -228,7 +239,10 @@ private extension HealthDataManager {
 
         let calendar = Calendar.current
         let endDate = calendar.startOfDay(for: Date())
-        let startDate = calendar.date(byAdding: .day, value: -1, to: endDate)!
+        guard let startDate = calendar.date(byAdding: .day, value: -1, to: endDate) else {
+            logger.error("Failed to calculate start date for sleep data")
+            return
+        }
 
         let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
         let samplePredicate = HKSamplePredicate.categorySample(type: sleepType, predicate: predicate)
@@ -270,7 +284,10 @@ private extension HealthDataManager {
         var currentDate = startDate
         while currentDate <= endDate {
             let dayStart = calendar.startOfDay(for: currentDate)
-            let dayEnd = calendar.date(byAdding: .day, value: 1, to: dayStart)!
+            guard let dayEnd = calendar.date(byAdding: .day, value: 1, to: dayStart) else {
+                logger.error("Failed to calculate day end date")
+                break
+            }
 
             let value: Double
             switch metricType {
@@ -285,7 +302,11 @@ private extension HealthDataManager {
             }
 
             dailyData.append(DailyMetricData(date: currentDate, value: value))
-            currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate)!
+            guard let nextDate = calendar.date(byAdding: .day, value: 1, to: currentDate) else {
+                logger.error("Failed to calculate next date")
+                break
+            }
+            currentDate = nextDate
         }
 
         return dailyData
@@ -314,7 +335,10 @@ private extension HealthDataManager {
 
         let calendar = Calendar.current
         let endDate = calendar.startOfDay(for: date)
-        let startDate = calendar.date(byAdding: .day, value: -1, to: endDate)!
+        guard let startDate = calendar.date(byAdding: .day, value: -1, to: endDate) else {
+            logger.error("Failed to calculate start date for sleep value")
+            return 0
+        }
 
         let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
         let samplePredicate = HKSamplePredicate.categorySample(type: sleepType, predicate: predicate)
@@ -372,5 +396,9 @@ struct DailyMetricData {
 
 // MARK: - Singleton Instance
 extension HealthDataManager {
+    /// Shared singleton instance of HealthDataManager.
+    /// This is thread-safe and uses lazy initialization.
+    /// The singleton pattern is appropriate here as HealthKit data access
+    /// should be centralized and shared across the app.
     static let shared = HealthDataManager()
 }

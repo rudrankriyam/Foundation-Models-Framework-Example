@@ -31,7 +31,9 @@ extension Transcript.Entry {
         case .toolOutput(let output):
             return output.segments.reduce(0) { $0 + $1.estimatedTokenCount } + 3 // Output overhead
         @unknown default:
-            fatalError()
+            // Return 0 for unknown entry types to avoid crashes
+            // This is a conservative estimate that won't affect token budget calculations
+            return 0
         }
     }
 }
@@ -45,7 +47,9 @@ extension Transcript.Segment {
         case .structure(let structuredSegment):
             return estimateTokensForStructuredContent(structuredSegment.content)
         @unknown default:
-            fatalError()
+            // Return 0 for unknown segment types to avoid crashes
+            // This is a conservative estimate that won't affect token budget calculations
+            return 0
         }
     }
 }

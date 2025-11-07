@@ -32,11 +32,22 @@ struct HealthAnalysisTool: Tool {
     }
 
     func call(arguments: Arguments) async throws -> some PromptRepresentable {
-        // In a real implementation, this would query SwiftData for health metrics
-        // For now, we'll return a structured response
-
-        let analysisType = arguments.analysisType.lowercased()
+        // Validate input
+        let analysisType = arguments.analysisType.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !analysisType.isEmpty else {
+            return GeneratedContent(properties: [
+                "status": "error",
+                "message": "Analysis type cannot be empty. Use 'daily', 'weekly', 'trends', 'correlations', or 'comprehensive'"
+            ])
+        }
+        
         let days = arguments.daysToAnalyze ?? 7
+        guard days > 0 && days <= 365 else {
+            return GeneratedContent(properties: [
+                "status": "error",
+                "message": "Days to analyze must be between 1 and 365"
+            ])
+        }
 
         switch analysisType {
         case "daily":
