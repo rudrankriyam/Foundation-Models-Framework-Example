@@ -139,174 +139,190 @@ struct SchemaErrorHandlingView: View {
         }
     }
 
+    private func createBasicProductSchema() -> DynamicGenerationSchema {
+        DynamicGenerationSchema(
+            name: "Product",
+            description: "Product information",
+            properties: [
+                DynamicGenerationSchema.Property(
+                    name: "name",
+                    description: "Product name",
+                    schema: DynamicGenerationSchema(type: String.self),
+                    isOptional: true
+                ),
+                DynamicGenerationSchema.Property(
+                    name: "price",
+                    description: "Price in dollars",
+                    schema: DynamicGenerationSchema(
+                        type: Double.self,
+                        guides: [.minimum(0.01)]
+                    ),
+                    isOptional: true
+                ),
+                DynamicGenerationSchema.Property(
+                    name: "colors",
+                    description: "Available colors",
+                    schema: DynamicGenerationSchema(
+                        arrayOf: DynamicGenerationSchema(type: String.self),
+                        minimumElements: 1,
+                        maximumElements: 10
+                    ),
+                    isOptional: true
+                ),
+                DynamicGenerationSchema.Property(
+                    name: "weight",
+                    description: "Weight in kilograms",
+                    schema: DynamicGenerationSchema(
+                        type: Double.self,
+                        guides: [.minimum(0.001)]
+                    ),
+                    isOptional: true
+                )
+            ]
+        )
+    }
+
+    private func createStrictProductSchema() -> DynamicGenerationSchema {
+        DynamicGenerationSchema(
+            name: "StrictProduct",
+            description: "Product with all required fields",
+            properties: [
+                DynamicGenerationSchema.Property(
+                    name: "productId",
+                    description: "Unique product identifier",
+                    schema: DynamicGenerationSchema(
+                        type: String.self,
+                        guides: [.pattern(/^PROD-\d {6}$/)]
+                    ),
+                    isOptional: false  // Required!
+                ),
+                DynamicGenerationSchema.Property(
+                    name: "name",
+                    description: "Product name (required)",
+                    schema: DynamicGenerationSchema(type: String.self),
+                    isOptional: false  // Required!
+                ),
+                DynamicGenerationSchema.Property(
+                    name: "category",
+                    description: "Product category (required)",
+                    schema: DynamicGenerationSchema(
+                        type: String.self,
+                        guides: [.anyOf(["Electronics", "Clothing", "Food", "Other"])]
+                    ),
+                    isOptional: false  // Required!
+                ),
+                DynamicGenerationSchema.Property(
+                    name: "inStock",
+                    description: "Stock status (required)",
+                    schema: DynamicGenerationSchema(type: Bool.self),
+                    isOptional: false  // Required!
+                )
+            ]
+        )
+    }
+
+    private func createTypeSensitiveProductSchema() -> DynamicGenerationSchema {
+        DynamicGenerationSchema(
+            name: "TypeSensitiveProduct",
+            description: "Product with specific type requirements",
+            properties: [
+                DynamicGenerationSchema.Property(
+                    name: "itemCount",
+                    description: "Number of items (must be integer)",
+                    schema: DynamicGenerationSchema(
+                        type: Int.self,
+                        guides: [.range(1...1000)]
+                    )
+                ),
+                DynamicGenerationSchema.Property(
+                    name: "price",
+                    description: "Exact price with decimals",
+                    schema: DynamicGenerationSchema(
+                        type: Decimal.self,
+                        guides: [.minimum(0.01)]
+                    )
+                ),
+                DynamicGenerationSchema.Property(
+                    name: "isAvailable",
+                    description: "Availability status (boolean)",
+                    schema: DynamicGenerationSchema(type: Bool.self)
+                ),
+                DynamicGenerationSchema.Property(
+                    name: "tags",
+                    description: "Product tags (array of strings)",
+                    schema: DynamicGenerationSchema(
+                        arrayOf: DynamicGenerationSchema(type: String.self),
+                        minimumElements: 1
+                    )
+                )
+            ]
+        )
+    }
+
+    private func createValidatedProductSchema() -> DynamicGenerationSchema {
+        DynamicGenerationSchema(
+            name: "ValidatedProduct",
+            description: "Product with strict validation rules",
+            properties: [
+                DynamicGenerationSchema.Property(
+                    name: "sku",
+                    description: "SKU must match pattern ABC-123-XYZ",
+                    schema: DynamicGenerationSchema(
+                        type: String.self,
+                        guides: [.pattern(/^[A-Z] {3}-\d {3}-[A-Z] {3}$/)]
+                    )
+                ),
+                DynamicGenerationSchema.Property(
+                    name: "price",
+                    description: "Price must be between $10 and $999.99",
+                    schema: DynamicGenerationSchema(
+                        type: Double.self,
+                        guides: [.range(10.0...999.99)]
+                    )
+                ),
+                DynamicGenerationSchema.Property(
+                    name: "discount",
+                    description: "Discount percentage (0-50%)",
+                    schema: DynamicGenerationSchema(
+                        type: Int.self,
+                        guides: [.range(0...50)]
+                    ),
+                    isOptional: true
+                ),
+                DynamicGenerationSchema.Property(
+                    name: "status",
+                    description: "Product status (must be one of the allowed values)",
+                    schema: DynamicGenerationSchema(
+                        type: String.self,
+                        guides: [.anyOf(["active", "discontinued", "coming_soon"])]
+                    )
+                ),
+                DynamicGenerationSchema.Property(
+                    name: "rating",
+                    description: "Product rating (1.0 to 5.0 in 0.5 increments)",
+                    schema: DynamicGenerationSchema(
+                        type: Double.self,
+                        guides: [.range(1.0...5.0)]
+                    ),
+                    isOptional: true
+                )
+            ]
+        )
+    }
+
     private func createSchema(for scenario: Int) -> DynamicGenerationSchema {
         switch scenario {
         case 0: // Basic extraction
-            return DynamicGenerationSchema(
-                name: "Product",
-                description: "Product information",
-                properties: [
-                    DynamicGenerationSchema.Property(
-                        name: "name",
-                        description: "Product name",
-                        schema: DynamicGenerationSchema(type: String.self),
-                        isOptional: true
-                    ),
-                    DynamicGenerationSchema.Property(
-                        name: "price",
-                        description: "Price in dollars",
-                        schema: DynamicGenerationSchema(
-                            type: Double.self,
-                            guides: [.minimum(0.01)]
-                        ),
-                        isOptional: true
-                    ),
-                    DynamicGenerationSchema.Property(
-                        name: "colors",
-                        description: "Available colors",
-                        schema: DynamicGenerationSchema(
-                            arrayOf: DynamicGenerationSchema(type: String.self),
-                            minimumElements: 1,
-                            maximumElements: 10
-                        ),
-                        isOptional: true
-                    ),
-                    DynamicGenerationSchema.Property(
-                        name: "weight",
-                        description: "Weight in kilograms",
-                        schema: DynamicGenerationSchema(
-                            type: Double.self,
-                            guides: [.minimum(0.001)]
-                        ),
-                        isOptional: true
-                    )
-                ]
-            )
+            return createBasicProductSchema()
 
         case 1: // Missing required fields - all fields are required
-            return DynamicGenerationSchema(
-                name: "StrictProduct",
-                description: "Product with all required fields",
-                properties: [
-                    DynamicGenerationSchema.Property(
-                        name: "productId",
-                        description: "Unique product identifier",
-                        schema: DynamicGenerationSchema(
-                            type: String.self,
-                            guides: [.pattern(/^PROD-\d {6}$/)]
-                        ),
-                        isOptional: false  // Required!
-                    ),
-                    DynamicGenerationSchema.Property(
-                        name: "name",
-                        description: "Product name (required)",
-                        schema: DynamicGenerationSchema(type: String.self),
-                        isOptional: false  // Required!
-                    ),
-                    DynamicGenerationSchema.Property(
-                        name: "category",
-                        description: "Product category (required)",
-                        schema: DynamicGenerationSchema(
-                            type: String.self,
-                            guides: [.anyOf(["Electronics", "Clothing", "Food", "Other"])]
-                        ),
-                        isOptional: false  // Required!
-                    ),
-                    DynamicGenerationSchema.Property(
-                        name: "inStock",
-                        description: "Stock status (required)",
-                        schema: DynamicGenerationSchema(type: Bool.self),
-                        isOptional: false  // Required!
-                    )
-                ]
-            )
+            return createStrictProductSchema()
 
         case 2: // Type mismatch scenario
-            return DynamicGenerationSchema(
-                name: "TypeSensitiveProduct",
-                description: "Product with specific type requirements",
-                properties: [
-                    DynamicGenerationSchema.Property(
-                        name: "itemCount",
-                        description: "Number of items (must be integer)",
-                        schema: DynamicGenerationSchema(
-                            type: Int.self,
-                            guides: [.range(1...1000)]
-                        )
-                    ),
-                    DynamicGenerationSchema.Property(
-                        name: "price",
-                        description: "Exact price with decimals",
-                        schema: DynamicGenerationSchema(
-                            type: Decimal.self,
-                            guides: [.minimum(0.01)]
-                        )
-                    ),
-                    DynamicGenerationSchema.Property(
-                        name: "isAvailable",
-                        description: "Availability status (boolean)",
-                        schema: DynamicGenerationSchema(type: Bool.self)
-                    ),
-                    DynamicGenerationSchema.Property(
-                        name: "tags",
-                        description: "Product tags (array of strings)",
-                        schema: DynamicGenerationSchema(
-                            arrayOf: DynamicGenerationSchema(type: String.self),
-                            minimumElements: 1
-                        )
-                    )
-                ]
-            )
+            return createTypeSensitiveProductSchema()
 
         case 3: // Validation failure scenario
-            return DynamicGenerationSchema(
-                name: "ValidatedProduct",
-                description: "Product with strict validation rules",
-                properties: [
-                    DynamicGenerationSchema.Property(
-                        name: "sku",
-                        description: "SKU must match pattern ABC-123-XYZ",
-                        schema: DynamicGenerationSchema(
-                            type: String.self,
-                            guides: [.pattern(/^[A-Z] {3}-\d {3}-[A-Z] {3}$/)]
-                        )
-                    ),
-                    DynamicGenerationSchema.Property(
-                        name: "price",
-                        description: "Price must be between $10 and $999.99",
-                        schema: DynamicGenerationSchema(
-                            type: Double.self,
-                            guides: [.range(10.0...999.99)]
-                        )
-                    ),
-                    DynamicGenerationSchema.Property(
-                        name: "discount",
-                        description: "Discount percentage (0-50%)",
-                        schema: DynamicGenerationSchema(
-                            type: Int.self,
-                            guides: [.range(0...50)]
-                        ),
-                        isOptional: true
-                    ),
-                    DynamicGenerationSchema.Property(
-                        name: "status",
-                        description: "Product status (must be one of the allowed values)",
-                        schema: DynamicGenerationSchema(
-                            type: String.self,
-                            guides: [.anyOf(["active", "discontinued", "coming_soon"])]
-                        )
-                    ),
-                    DynamicGenerationSchema.Property(
-                        name: "rating",
-                        description: "Product rating (1.0 to 5.0 in 0.5 increments)",
-                        schema: DynamicGenerationSchema(
-                            type: Double.self,
-                            guides: [.range(1.0...5.0)]
-                        ),
-                        isOptional: true
-                    )
-                ]
-            )
+            return createValidatedProductSchema()
 
         default:
             return DynamicGenerationSchema(

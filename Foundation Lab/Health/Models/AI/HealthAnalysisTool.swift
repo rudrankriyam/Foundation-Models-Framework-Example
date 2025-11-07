@@ -40,7 +40,7 @@ struct HealthAnalysisTool: Tool {
                 "message": "Analysis type cannot be empty. Use 'daily', 'weekly', 'trends', 'correlations', or 'comprehensive'"
             ])
         }
-        
+
         let days = arguments.daysToAnalyze ?? 7
         guard days > 0 && days <= 365 else {
             return GeneratedContent(properties: [

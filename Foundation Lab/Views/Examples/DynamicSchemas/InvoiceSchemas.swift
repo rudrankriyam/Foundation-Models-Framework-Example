@@ -154,87 +154,101 @@ struct InvoiceSchemas {
         return DynamicGenerationSchema(
             name: "InvoiceSummary",
             description: "Summary of key invoice information",
-            properties: [invoiceNumberProperty, totalAmountProperty, dueDateProperty, vendorNameProperty, customerNameProperty, itemCountProperty]
+            properties: [
+                invoiceNumberProperty,
+                totalAmountProperty,
+                dueDateProperty,
+                vendorNameProperty,
+                customerNameProperty,
+                itemCountProperty
+            ]
         )
     }
 
-    static func createLineItemsSchema() -> DynamicGenerationSchema {
-        // Create detailed line item schema
-        let itemNumberProperty = DynamicGenerationSchema.Property(
-            name: "itemNumber",
-            description: "Line item number or identifier",
-            schema: .init(type: Int.self)
-        )
-        let descriptionProperty = DynamicGenerationSchema.Property(
-            name: "description",
-            description: "Description of the goods or services",
-            schema: .init(type: String.self)
-        )
-        let categoryProperty = DynamicGenerationSchema.Property(
-            name: "category",
-            description: "Category or type of item",
-            schema: .init(type: String.self)
-        )
-        let quantityProperty = DynamicGenerationSchema.Property(
-            name: "quantity",
-            description: "Quantity of items",
-            schema: .init(type: Double.self)
-        )
-        let unitOfMeasureProperty = DynamicGenerationSchema.Property(
-            name: "unitOfMeasure",
-            description: "Unit of measurement (e.g., each, hours, lbs)",
-            schema: .init(type: String.self)
-        )
-        let unitPriceProperty = DynamicGenerationSchema.Property(
-            name: "unitPrice",
-            description: "Price per unit",
-            schema: .init(type: Double.self)
-        )
-        let lineTotalProperty = DynamicGenerationSchema.Property(
-            name: "lineTotal",
-            description: "Total for this line item",
-            schema: .init(type: Double.self)
-        )
-        let taxableProperty = DynamicGenerationSchema.Property(
-            name: "taxable",
-            description: "Whether this item is taxable",
-            schema: .init(type: Bool.self),
-            isOptional: true
-        )
+    private static func createDetailedLineItemProperties() -> [DynamicGenerationSchema.Property] {
+        [
+            DynamicGenerationSchema.Property(
+                name: "itemNumber",
+                description: "Line item number or identifier",
+                schema: .init(type: Int.self)
+            ),
+            DynamicGenerationSchema.Property(
+                name: "description",
+                description: "Description of the goods or services",
+                schema: .init(type: String.self)
+            ),
+            DynamicGenerationSchema.Property(
+                name: "category",
+                description: "Category or type of item",
+                schema: .init(type: String.self)
+            ),
+            DynamicGenerationSchema.Property(
+                name: "quantity",
+                description: "Quantity of items",
+                schema: .init(type: Double.self)
+            ),
+            DynamicGenerationSchema.Property(
+                name: "unitOfMeasure",
+                description: "Unit of measurement (e.g., each, hours, lbs)",
+                schema: .init(type: String.self)
+            ),
+            DynamicGenerationSchema.Property(
+                name: "unitPrice",
+                description: "Price per unit",
+                schema: .init(type: Double.self)
+            ),
+            DynamicGenerationSchema.Property(
+                name: "lineTotal",
+                description: "Total for this line item",
+                schema: .init(type: Double.self)
+            ),
+            DynamicGenerationSchema.Property(
+                name: "taxable",
+                description: "Whether this item is taxable",
+                schema: .init(type: Bool.self),
+                isOptional: true
+            )
+        ]
+    }
 
+    private static func createLineItemsFocusProperties(
+        detailedLineItemSchema: DynamicGenerationSchema
+    ) -> [DynamicGenerationSchema.Property] {
+        [
+            DynamicGenerationSchema.Property(
+                name: "invoiceNumber",
+                description: "Invoice number this line items belong to",
+                schema: .init(type: String.self)
+            ),
+            DynamicGenerationSchema.Property(
+                name: "lineItems",
+                description: "Array of detailed line items",
+                schema: .init(arrayOf: detailedLineItemSchema)
+            ),
+            DynamicGenerationSchema.Property(
+                name: "totalItems",
+                description: "Total number of line items",
+                schema: .init(type: Int.self)
+            ),
+            DynamicGenerationSchema.Property(
+                name: "totalValue",
+                description: "Total value of all line items",
+                schema: .init(type: Double.self)
+            )
+        ]
+    }
+
+    static func createLineItemsSchema() -> DynamicGenerationSchema {
         let detailedLineItemSchema = DynamicGenerationSchema(
             name: "DetailedLineItem",
             description: "Detailed line item with full information",
-            properties: [itemNumberProperty, descriptionProperty, categoryProperty, quantityProperty,
-                        unitOfMeasureProperty, unitPriceProperty, lineTotalProperty, taxableProperty]
-        )
-
-        // Create line items focus schema
-        let invoiceNumberProperty = DynamicGenerationSchema.Property(
-            name: "invoiceNumber",
-            description: "Invoice number this line items belong to",
-            schema: .init(type: String.self)
-        )
-        let lineItemsProperty = DynamicGenerationSchema.Property(
-            name: "lineItems",
-            description: "Array of detailed line items",
-            schema: .init(arrayOf: detailedLineItemSchema)
-        )
-        let totalItemsProperty = DynamicGenerationSchema.Property(
-            name: "totalItems",
-            description: "Total number of line items",
-            schema: .init(type: Int.self)
-        )
-        let totalValueProperty = DynamicGenerationSchema.Property(
-            name: "totalValue",
-            description: "Total value of all line items",
-            schema: .init(type: Double.self)
+            properties: createDetailedLineItemProperties()
         )
 
         return DynamicGenerationSchema(
             name: "LineItemsFocus",
             description: "Focus on line items with detailed information",
-            properties: [invoiceNumberProperty, lineItemsProperty, totalItemsProperty, totalValueProperty]
+            properties: createLineItemsFocusProperties(detailedLineItemSchema: detailedLineItemSchema)
         )
     }
 

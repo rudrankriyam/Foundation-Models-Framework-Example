@@ -34,7 +34,7 @@ struct HealthDataTool: Tool {
         guard !dataType.isEmpty else {
             return createErrorOutput(error: "Data type cannot be empty. Please specify 'today', 'weekly', or a specific metric.")
         }
-        
+
         let healthManager = await MainActor.run { HealthDataManager.shared }
         let refreshFlag = arguments.refreshFromHealthKit ?? false
 

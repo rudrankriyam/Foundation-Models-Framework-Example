@@ -31,11 +31,11 @@ struct HealthUnavailableView: View {
                 .font(.system(size: 60))
                 .foregroundColor(.secondary)
                 .padding()
-            
+
             Text("Health Data Unavailable")
                 .font(.title2)
                 .fontWeight(.semibold)
-            
+
             Spacer()
         }
         .padding()

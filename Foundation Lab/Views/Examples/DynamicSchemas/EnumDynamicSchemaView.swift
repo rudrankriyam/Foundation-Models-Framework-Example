@@ -8,6 +8,12 @@
 import SwiftUI
 import FoundationModels
 
+private struct ClassificationData {
+    let classification: String
+    let confidence: Float?
+    let reasoning: String?
+}
+
 struct EnumDynamicSchemaView: View {
     @State private var executor = ExampleExecutor()
     @State private var customerInput = "The customer seems very happy with our service and left a glowing review"
@@ -155,11 +161,10 @@ struct EnumDynamicSchemaView: View {
                 options: .init(temperature: 0.1)
             )
 
-            let classification: String
-            let confidence: Float?
-            let reasoning: String?
-
-            (classification, confidence, reasoning) = extractClassificationData(from: response.content, fieldName: fieldName)
+            let data = extractClassificationData(from: response.content, fieldName: fieldName)
+            let classification = data.classification
+            let confidence = data.confidence
+            let reasoning = data.reasoning
 
             return """
             📝 Input:
@@ -179,15 +184,15 @@ struct EnumDynamicSchemaView: View {
         }
     }
 
-    private func extractClassificationData(from content: GeneratedContent, fieldName: String) -> (String, Float?, String?) {
+    private func extractClassificationData(from content: GeneratedContent, fieldName: String) -> ClassificationData {
         switch content.kind {
         case .structure(let properties, _):
             let classification = extractStringValue(from: properties[fieldName])
             let confidence = extractFloatValue(from: properties["confidence"])
             let reasoning = extractStringValue(from: properties["reasoning"])
-            return (classification, confidence, reasoning)
+            return ClassificationData(classification: classification, confidence: confidence, reasoning: reasoning)
         default:
-            return ("unknown", nil, nil)
+            return ClassificationData(classification: "unknown", confidence: nil, reasoning: nil)
         }
     }
 

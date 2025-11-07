@@ -96,8 +96,25 @@ private var currentInput: String {
     private var schemaDescription: String {
         switch selectedExample {
         case 0: return "Contact can be either:\n• Person (name, email, role)\n• Company (companyName, industry, contactEmail)"
-        case 1: return "Payment can be:\n• Credit Card (amount with min $0.01, lastFourDigits matching \\d{4}, cardType from list, date)\n• Bank Transfer (amount with min $0.01, accountNumber \\d{4}, routingNumber \\d{9}, date)\n• Cryptocurrency (amount with min $0.01, cryptocurrency from Bitcoin/Ethereum/USDT/USDC, walletAddress, date)"
-        case 2: return "Notification can be:\n• System Alert (severity: info/warning/error/critical, title, message, ISO timestamp)\n• User Message (from, to, content, priority: low/normal/high/urgent, timestamp)\n• Error (code matching [A-Z]{3}-\\d{3,4}, message, stackTrace, timestamp)"
+        case 1:
+            return """
+                Payment can be:
+                • Credit Card (amount with min $0.01, lastFourDigits matching \\d{4}, \
+                cardType from list, date)
+                • Bank Transfer (amount with min $0.01, accountNumber \\d{4}, \
+                routingNumber \\d{9}, date)
+                • Cryptocurrency (amount with min $0.01, cryptocurrency from \
+                Bitcoin/Ethereum/USDT/USDC, walletAddress, date)
+                """
+        case 2:
+            return """
+                Notification can be:
+                • System Alert (severity: info/warning/error/critical, title, message, \
+                ISO timestamp)
+                • User Message (from, to, content, priority: low/normal/high/urgent, \
+                timestamp)
+                • Error (code matching [A-Z]{3}-\\d{3,4}, message, stackTrace, timestamp)
+                """
         default: return ""
         }
     }
@@ -182,8 +199,8 @@ private var currentInput: String {
         )
     }
 
-    private func createPaymentSchema() -> DynamicGenerationSchema {
-        let creditCardSchema = DynamicGenerationSchema(
+    private func createCreditCardSchema() -> DynamicGenerationSchema {
+        DynamicGenerationSchema(
             name: "CreditCard",
             description: "Credit card payment",
             properties: [
@@ -227,8 +244,10 @@ private var currentInput: String {
                 )
             ]
         )
+    }
 
-        let bankTransferSchema = DynamicGenerationSchema(
+    private func createBankTransferSchema() -> DynamicGenerationSchema {
+        DynamicGenerationSchema(
             name: "BankTransfer",
             description: "Bank transfer payment",
             properties: [
@@ -273,8 +292,10 @@ private var currentInput: String {
                 )
             ]
         )
+    }
 
-        let cryptoSchema = DynamicGenerationSchema(
+    private func createCryptoSchema() -> DynamicGenerationSchema {
+        DynamicGenerationSchema(
             name: "Cryptocurrency",
             description: "Cryptocurrency payment",
             properties: [
@@ -315,6 +336,12 @@ private var currentInput: String {
                 )
             ]
         )
+    }
+
+    private func createPaymentSchema() -> DynamicGenerationSchema {
+        let creditCardSchema = createCreditCardSchema()
+        let bankTransferSchema = createBankTransferSchema()
+        let cryptoSchema = createCryptoSchema()
 
         return DynamicGenerationSchema(
             name: "Payment",
@@ -323,8 +350,8 @@ private var currentInput: String {
         )
     }
 
-    private func createNotificationSchema() -> DynamicGenerationSchema {
-        let systemAlertSchema = DynamicGenerationSchema(
+    private func createSystemAlertSchema() -> DynamicGenerationSchema {
+        DynamicGenerationSchema(
             name: "SystemAlert",
             description: "System-generated alert",
             properties: [
@@ -365,8 +392,10 @@ private var currentInput: String {
                 )
             ]
         )
+    }
 
-        let userMessageSchema = DynamicGenerationSchema(
+    private func createUserMessageSchema() -> DynamicGenerationSchema {
+        DynamicGenerationSchema(
             name: "UserMessage",
             description: "User-to-user message",
             properties: [
@@ -410,8 +439,10 @@ private var currentInput: String {
                 )
             ]
         )
+    }
 
-        let errorNotificationSchema = DynamicGenerationSchema(
+    private func createErrorNotificationSchema() -> DynamicGenerationSchema {
+        DynamicGenerationSchema(
             name: "ErrorNotification",
             description: "Error notification",
             properties: [
@@ -451,6 +482,12 @@ private var currentInput: String {
                 )
             ]
         )
+    }
+
+    private func createNotificationSchema() -> DynamicGenerationSchema {
+        let systemAlertSchema = createSystemAlertSchema()
+        let userMessageSchema = createUserMessageSchema()
+        let errorNotificationSchema = createErrorNotificationSchema()
 
         return DynamicGenerationSchema(
             name: "Notification",

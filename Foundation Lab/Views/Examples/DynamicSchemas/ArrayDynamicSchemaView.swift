@@ -10,9 +10,16 @@ import FoundationModels
 
 struct ArrayDynamicSchemaView: View {
     @State private var executor = ExampleExecutor()
-    @State private var todoInput = "Today I need to: buy groceries, finish the report, call mom, exercise for 30 minutes, and prepare dinner"
+    @State private var todoInput = """
+        Today I need to: buy groceries, finish the report, call mom, \
+        exercise for 30 minutes, and prepare dinner
+        """
     @State private var ingredientsInput = "For this recipe you'll need eggs, flour, milk, butter, and a pinch of salt"
-    @State private var tagsInput = "This article covers machine learning, artificial intelligence, deep learning, neural networks, computer vision, natural language processing, and reinforcement learning"
+    @State private var tagsInput = """
+        This article covers machine learning, artificial intelligence, \
+        deep learning, neural networks, computer vision, natural language \
+        processing, and reinforcement learning
+        """
     @State private var selectedExample = 0
     @State private var minItems = 2
     @State private var maxItems = 5
