@@ -22,6 +22,7 @@ final class ChatViewModel {
         You are a helpful, friendly AI assistant. Engage in natural conversation and provide
         thoughtful, detailed responses.
         """
+    var useGreedySampling: Bool = false
     var errorMessage: String?
     var showError: Bool = false
 
@@ -32,6 +33,15 @@ final class ChatViewModel {
     // MARK: - Feedback State
 
     private(set) var feedbackState: [Transcript.Entry.ID: LanguageModelFeedback.Sentiment] = [:]
+
+    // MARK: - Generation Options
+
+    var generationOptions: GenerationOptions {
+        if useGreedySampling {
+            return GenerationOptions(sampling: .greedy)
+        }
+        return GenerationOptions()
+    }
 
     // MARK: - Sliding Window Configuration
     private let maxTokens = AppConfiguration.TokenManagement.maxTokens
@@ -63,7 +73,7 @@ final class ChatViewModel {
             }
 
             // Stream response from current session
-            let responseStream = session.streamResponse(to: Prompt(content))
+            let responseStream = session.streamResponse(to: Prompt(content), options: generationOptions)
 
             for try await _ in responseStream {
                 // The streaming automatically updates the session transcript
@@ -258,7 +268,7 @@ final class ChatViewModel {
 
     @MainActor
     private func respondWithNewSession(to userMessage: String) async throws {
-        let responseStream = session.streamResponse(to: Prompt(userMessage))
+        let responseStream = session.streamResponse(to: Prompt(userMessage), options: generationOptions)
 
         for try await _ in responseStream {
             // The streaming automatically updates the session transcript
