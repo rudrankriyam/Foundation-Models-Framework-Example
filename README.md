@@ -36,7 +36,7 @@ Launch `FoundationStudio.app`, and ensure Apple Intelligence is available. Then 
 | Device | CPU | GPU | RAM | OS | Input Tokens | Output Tokens | Total Tokens | Duration | Tokens/sec |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | iPad Pro 13" (M4) | Apple M4 10‑core | Apple M4 10‑core | 16 GB | iPadOS 18.1 | TBD | TBD | TBD | TBD | TBD |
-| iPad Pro 13" (M4) | Apple M4 10-core | Apple M4 10-core | 8 GB | iPadOS 26.1 | 228 | 3,040 | 3,268 | 39.45s | **82.84** |
+| iPad Pro 13" (M4, 8 GB) | Apple M4 10‑core | Apple M4 10‑core | 8 GB | iPadOS 26.1 | 228 | 3,040 | 3,268 | 39.45s | **82.84** |
 
 ## visionOS
 
