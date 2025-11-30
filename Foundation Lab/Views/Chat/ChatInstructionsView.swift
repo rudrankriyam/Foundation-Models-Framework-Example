@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ChatInstructionsView: View {
     @Binding var instructions: String
+    @Binding var useGreedySampling: Bool
     let onApply: () -> Void
     @Environment(\.dismiss) private var dismiss
 
@@ -25,6 +26,27 @@ struct ChatInstructionsView: View {
                         .font(.body)
                         .foregroundColor(.secondary)
                 }
+
+                // Greedy Sampling Section
+                VStack(alignment: .leading, spacing: Spacing.small) {
+                    HStack {
+                        Text("Greedy Sampling")
+                            .font(.headline)
+                        Spacer()
+                        Toggle("", isOn: $useGreedySampling)
+                            .labelsHidden()
+                    }
+
+                    Text("When enabled, the AI will always choose the most likely next word. This results in more " +
+                         "predictable, deterministic responses. When disabled, the AI uses more creative sampling " +
+                         "for varied responses.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(Spacing.medium)
+                .background(Color.blue.opacity(0.05))
+                .cornerRadius(12)
 
                 TextEditor(text: $instructions)
                     .font(.body)
@@ -66,6 +88,7 @@ struct ChatInstructionsView: View {
 #Preview {
     ChatInstructionsView(
         instructions: .constant("You are a helpful AI assistant. Please be concise and accurate in your responses."),
+        useGreedySampling: .constant(false),
         onApply: { }
     )
 }
