@@ -42,7 +42,7 @@ Launch `FoundationStudio.app`, and ensure Apple Intelligence is available. Then 
 
 | Device | CPU | GPU | RAM | OS | Input Tokens | Output Tokens | Total Tokens | Duration | Tokens/sec |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Apple Vision Pro (M2) | Apple M2 8-core (4P + 4E) | Apple M2 10-core | 16 GB | visionOS 26.1 | 228 | 2,641 | 2,869 | 69.88s | **41.05** |
+| Apple Vision Pro (M2) | Apple M2 8‑core (4P + 4E) | Apple M2 10‑core | 16 GB | visionOS 26.1 | 228 | 2,641 | 2,869 | 69.88s | **41.05** |
 | Apple Vision Pro (M5) | Apple M5 10‑core (4P + 6E) | Apple M5 10‑core | 16 GB | visionOS 26.0 | TBD | TBD | TBD | TBD | TBD |
 
 ## License
