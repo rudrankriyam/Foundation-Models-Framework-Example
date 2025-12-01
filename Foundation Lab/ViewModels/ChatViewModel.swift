@@ -30,7 +30,8 @@ final class ChatViewModel {
         """
     var samplingStrategy: SamplingStrategy = .default
     var topKSamplingValue: Int = 50
-    var useRandomSeed: Bool = false
+    var useFixedSeed: Bool = false
+    private var samplingSeed: UInt64?
     var errorMessage: String?
     var showError: Bool = false
 
@@ -51,9 +52,15 @@ final class ChatViewModel {
         case .greedy:
             return GenerationOptions(sampling: .greedy)
         case .sampling:
-            let seed: UInt64? = useRandomSeed ? UInt64.random(in: UInt64.min...UInt64.max) : nil
+            let seed: UInt64? = useFixedSeed ? (samplingSeed ?? generateAndStoreSeed()) : nil
             return GenerationOptions(sampling: .random(top: topKSamplingValue, seed: seed))
         }
+    }
+
+    private func generateAndStoreSeed() -> UInt64 {
+        let seed = UInt64.random(in: UInt64.min...UInt64.max)
+        samplingSeed = seed
+        return seed
     }
 
     // MARK: - Sliding Window Configuration

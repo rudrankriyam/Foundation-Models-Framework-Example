@@ -80,7 +80,7 @@ struct ChatView: View {
                 instructions: $viewModel.instructions,
                 samplingStrategy: $viewModel.samplingStrategy,
                 topKSamplingValue: $viewModel.topKSamplingValue,
-                useRandomSeed: $viewModel.useRandomSeed,
+                useFixedSeed: $viewModel.useFixedSeed,
                 onApply: {
                     viewModel.updateInstructions(viewModel.instructions)
                     viewModel.clearChat()

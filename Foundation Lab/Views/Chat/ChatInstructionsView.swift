@@ -18,11 +18,18 @@ struct ChatInstructionsView: View {
     @Binding var instructions: String
     @Binding var samplingStrategy: SamplingStrategy
     @Binding var topKSamplingValue: Int
-    @Binding var useRandomSeed: Bool
+    @Binding var useFixedSeed: Bool
     let onApply: () -> Void
     @Environment(\.dismiss) private var dismiss
 
     @Namespace private var glassNamespace
+
+    private var clampedTopKSamplingValue: Binding<Int> {
+        Binding(
+            get: { topKSamplingValue },
+            set: { topKSamplingValue = min(Constants.topKMaxValue, max(Constants.topKMinValue, $0)) }
+        )
+    }
 
     var body: some View {
         NavigationStack {
@@ -119,16 +126,13 @@ struct ChatInstructionsView: View {
                 Text("Top-K Sampling Value")
                     .font(.subheadline)
                 Spacer()
-                TextField("Value", value: $topKSamplingValue, formatter: NumberFormatter())
+                TextField("Value", value: clampedTopKSamplingValue, formatter: NumberFormatter())
                     .textFieldStyle(.roundedBorder)
                     .frame(width: Constants.textFieldWidth)
-                    .onChange(of: topKSamplingValue) { _, newValue in
-                        topKSamplingValue = min(Constants.topKMaxValue, max(Constants.topKMinValue, newValue))
-                    }
-
-                Toggle("", isOn: $useRandomSeed)
-                    .labelsHidden()
             }
+
+            Toggle("Use Fixed Seed", isOn: $useFixedSeed)
+                .font(.subheadline)
 
             Text("The Top-K value determines how many of the most likely tokens to consider. " +
                  "Lower values (10-20) produce more focused, deterministic responses. " +
@@ -137,11 +141,11 @@ struct ChatInstructionsView: View {
                 .foregroundColor(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            if useRandomSeed {
+            if useFixedSeed {
                 HStack {
                     Image(systemName: "dice")
                         .foregroundColor(.secondary)
-                    Text("Using random seed for reproducible variations")
+                    Text("Using fixed seed for reproducible variations")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -159,7 +163,7 @@ struct ChatInstructionsView: View {
         instructions: .constant("You are a helpful AI assistant. Please be concise and accurate in your responses."),
         samplingStrategy: .constant(.default),
         topKSamplingValue: .constant(ChatInstructionsView.Constants.defaultTopKValue),
-        useRandomSeed: .constant(false),
+        useFixedSeed: .constant(false),
         onApply: { }
     )
 }
