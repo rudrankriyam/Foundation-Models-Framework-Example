@@ -9,6 +9,12 @@ import Foundation
 import FoundationModels
 import Observation
 
+enum SamplingStrategy: Int, CaseIterable {
+    case `default`
+    case greedy
+    case sampling
+}
+
 @Observable
 final class ChatViewModel {
 
@@ -22,7 +28,10 @@ final class ChatViewModel {
         You are a helpful, friendly AI assistant. Engage in natural conversation and provide
         thoughtful, detailed responses.
         """
-    var useGreedySampling: Bool = false
+    var samplingStrategy: SamplingStrategy = .default
+    var topKSamplingValue: Int = 50
+    var useFixedSeed: Bool = false
+    private var samplingSeed: UInt64?
     var errorMessage: String?
     var showError: Bool = false
 
@@ -37,10 +46,21 @@ final class ChatViewModel {
     // MARK: - Generation Options
 
     var generationOptions: GenerationOptions {
-        if useGreedySampling {
+        switch samplingStrategy {
+        case .default:
+            return GenerationOptions()
+        case .greedy:
             return GenerationOptions(sampling: .greedy)
+        case .sampling:
+            let seed: UInt64? = useFixedSeed ? (samplingSeed ?? generateAndStoreSeed()) : nil
+            return GenerationOptions(sampling: .random(top: topKSamplingValue, seed: seed))
         }
-        return GenerationOptions()
+    }
+
+    private func generateAndStoreSeed() -> UInt64 {
+        let seed = UInt64.random(in: UInt64.min...UInt64.max)
+        samplingSeed = seed
+        return seed
     }
 
     // MARK: - Sliding Window Configuration

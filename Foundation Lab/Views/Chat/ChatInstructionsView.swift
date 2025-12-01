@@ -8,60 +8,61 @@
 import SwiftUI
 
 struct ChatInstructionsView: View {
+    enum Constants {
+        static let defaultTopKValue = 50
+        static let topKMinValue = 1
+        static let topKMaxValue = 100
+        static let textFieldWidth: CGFloat = 100
+        static let samplingConfigBackgroundColor = Color.blue.opacity(0.05)
+    }
     @Binding var instructions: String
-    @Binding var useGreedySampling: Bool
+    @Binding var samplingStrategy: SamplingStrategy
+    @Binding var topKSamplingValue: Int
+    @Binding var useFixedSeed: Bool
     let onApply: () -> Void
     @Environment(\.dismiss) private var dismiss
 
+    @Namespace private var glassNamespace
+
+    private var clampedTopKSamplingValue: Binding<Int> {
+        Binding(
+            get: { topKSamplingValue },
+            set: { topKSamplingValue = min(Constants.topKMaxValue, max(Constants.topKMinValue, $0)) }
+        )
+    }
+
     var body: some View {
         NavigationStack {
-            VStack(alignment: .leading, spacing: Spacing.medium) {
-                VStack(alignment: .leading, spacing: Spacing.small) {
-                    Text("Customize AI Behavior")
-                        .font(.title2)
-                        .fontWeight(.semibold)
+            ScrollView {
+                VStack(alignment: .leading, spacing: Spacing.large) {
+                    VStack(alignment: .leading, spacing: Spacing.small) {
+                        Text("Customize AI Behavior")
+                            .font(.title2)
+                            .fontWeight(.semibold)
 
-                    Text("Provide specific instructions to guide how the AI should respond. These instructions will " +
-                         "apply to all new conversations.")
-                        .font(.body)
-                        .foregroundColor(.secondary)
-                }
-
-                // Greedy Sampling Section
-                VStack(alignment: .leading, spacing: Spacing.small) {
-                    HStack {
-                        Text("Greedy Sampling")
-                            .font(.headline)
-                        Spacer()
-                        Toggle("", isOn: $useGreedySampling)
-                            .labelsHidden()
+                        Text("Provide specific instructions to guide how the AI should respond. These instructions will " +
+                             "apply to all new conversations.")
+                            .font(.body)
+                            .foregroundColor(.secondary)
                     }
 
-                    Text("When enabled, the AI will always choose the most likely next word. This results in more " +
-                         "predictable, deterministic responses. When disabled, the AI uses more creative sampling " +
-                         "for varied responses.")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                    samplingStrategySection
+
+                    TextEditor(text: $instructions)
+                        .font(.body)
+                        .scrollContentBackground(.hidden)
+                        .padding(Spacing.medium)
+                        .background(Color.gray.opacity(0.1))
+                        .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                        )
+
+                    Spacer(minLength: 20)
                 }
                 .padding(Spacing.medium)
-                .background(Color.blue.opacity(0.05))
-                .cornerRadius(12)
-
-                TextEditor(text: $instructions)
-                    .font(.body)
-                    .scrollContentBackground(.hidden)
-                    .padding(Spacing.medium)
-                    .background(Color.gray.opacity(0.1))
-                    .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                    )
-
-                Spacer()
             }
-            .padding(Spacing.medium)
             .navigationTitle("Instructions")
 #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
@@ -83,12 +84,86 @@ struct ChatInstructionsView: View {
             }
         }
     }
+
+    private var samplingStrategySection: some View {
+        VStack(alignment: .leading, spacing: Spacing.medium) {
+            Text("Sampling Strategy")
+                .font(.headline)
+                .padding(.horizontal, Spacing.medium)
+
+            Picker("Sampling Strategy", selection: $samplingStrategy) {
+                Text("Default").tag(SamplingStrategy.default)
+                Text("Greedy").tag(SamplingStrategy.greedy)
+                Text("Sampling").tag(SamplingStrategy.sampling)
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal, Spacing.medium)
+
+            Text("""
+                Default: Uses system defaults for optimal balance.
+                Greedy: Always chooses the most likely token (deterministic).
+                Sampling: Uses top-k sampling for creative, varied responses.
+                """)
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, Spacing.medium)
+
+            if samplingStrategy == .sampling {
+                samplingConfigurationView
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .padding(.top, Spacing.small)
+            }
+        }
+        .padding(Spacing.medium)
+        .glassEffect(.regular.interactive(true), in: .rect(cornerRadius: 12))
+        .glassEffectID("sampling-strategy", in: glassNamespace)
+    }
+
+    private var samplingConfigurationView: some View {
+        VStack(alignment: .leading, spacing: Spacing.medium) {
+            HStack {
+                Text("Top-K Sampling Value")
+                    .font(.subheadline)
+                Spacer()
+                TextField("Value", value: clampedTopKSamplingValue, formatter: NumberFormatter())
+                    .textFieldStyle(.roundedBorder)
+                    .frame(width: Constants.textFieldWidth)
+            }
+
+            Toggle("Use Fixed Seed", isOn: $useFixedSeed)
+                .font(.subheadline)
+
+            Text("The Top-K value determines how many of the most likely tokens to consider. " +
+                 "Lower values (10-20) produce more focused, deterministic responses. " +
+                 "Higher values (50-100) allow more creative variations.")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if useFixedSeed {
+                HStack {
+                    Image(systemName: "dice")
+                        .foregroundColor(.secondary)
+                    Text("Using fixed seed for reproducible variations")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.top, Spacing.small)
+            }
+        }
+        .padding(Spacing.medium)
+        .background(Constants.samplingConfigBackgroundColor)
+        .cornerRadius(12)
+    }
 }
 
 #Preview {
     ChatInstructionsView(
         instructions: .constant("You are a helpful AI assistant. Please be concise and accurate in your responses."),
-        useGreedySampling: .constant(false),
+        samplingStrategy: .constant(.default),
+        topKSamplingValue: .constant(ChatInstructionsView.Constants.defaultTopKValue),
+        useFixedSeed: .constant(false),
         onApply: { }
     )
 }

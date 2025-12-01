@@ -348,7 +348,6 @@ extension ReferencedSchemaView {
     }
 
     func formatValue(_ value: GeneratedContent, indent: Int, processedRefs: inout Set<String>) -> String {
-        let indentStr = String(repeating: "  ", count: indent)
         var output = ""
 
         switch value.kind {
