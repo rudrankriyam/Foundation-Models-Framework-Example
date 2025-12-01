@@ -8,6 +8,13 @@
 import SwiftUI
 
 struct ChatInstructionsView: View {
+    enum Constants {
+        static let defaultTopKValue = 50
+        static let topKMinValue = 1
+        static let topKMaxValue = 100
+        static let textFieldWidth: CGFloat = 100
+        static let samplingConfigBackgroundColor = Color.blue.opacity(0.05)
+    }
     @Binding var instructions: String
     @Binding var samplingStrategy: SamplingStrategy
     @Binding var topKSamplingValue: Int
@@ -114,13 +121,9 @@ struct ChatInstructionsView: View {
                 Spacer()
                 TextField("Value", value: $topKSamplingValue, formatter: NumberFormatter())
                     .textFieldStyle(.roundedBorder)
-                    .frame(width: 100)
+                    .frame(width: Constants.textFieldWidth)
                     .onChange(of: topKSamplingValue) { _, newValue in
-                        if newValue < 1 {
-                            topKSamplingValue = 1
-                        } else if newValue > 100 {
-                            topKSamplingValue = 100
-                        }
+                        topKSamplingValue = min(Constants.topKMaxValue, max(Constants.topKMinValue, newValue))
                     }
 
                 Toggle("", isOn: $useRandomSeed)
@@ -146,7 +149,7 @@ struct ChatInstructionsView: View {
             }
         }
         .padding(Spacing.medium)
-        .background(Color.blue.opacity(0.05))
+        .background(Constants.samplingConfigBackgroundColor)
         .cornerRadius(12)
     }
 }
@@ -155,7 +158,7 @@ struct ChatInstructionsView: View {
     ChatInstructionsView(
         instructions: .constant("You are a helpful AI assistant. Please be concise and accurate in your responses."),
         samplingStrategy: .constant(.default),
-        topKSamplingValue: .constant(50),
+        topKSamplingValue: .constant(ChatInstructionsView.Constants.defaultTopKValue),
         useRandomSeed: .constant(false),
         onApply: { }
     )

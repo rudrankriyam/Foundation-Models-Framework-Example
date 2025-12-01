@@ -28,7 +28,6 @@ final class ChatViewModel {
         You are a helpful, friendly AI assistant. Engage in natural conversation and provide
         thoughtful, detailed responses.
         """
-    var useGreedySampling: Bool = false
     var samplingStrategy: SamplingStrategy = .default
     var topKSamplingValue: Int = 50
     var useRandomSeed: Bool = false
