@@ -9,6 +9,12 @@ import Foundation
 import FoundationModels
 import Observation
 
+enum SamplingStrategy: Int, CaseIterable {
+    case `default`
+    case greedy
+    case sampling
+}
+
 @Observable
 final class ChatViewModel {
 
@@ -23,6 +29,9 @@ final class ChatViewModel {
         thoughtful, detailed responses.
         """
     var useGreedySampling: Bool = false
+    var samplingStrategy: SamplingStrategy = .default
+    var topKSamplingValue: Int = 50
+    var useRandomSeed: Bool = false
     var errorMessage: String?
     var showError: Bool = false
 
@@ -37,10 +46,15 @@ final class ChatViewModel {
     // MARK: - Generation Options
 
     var generationOptions: GenerationOptions {
-        if useGreedySampling {
+        switch samplingStrategy {
+        case .default:
+            return GenerationOptions()
+        case .greedy:
             return GenerationOptions(sampling: .greedy)
+        case .sampling:
+            let seed: UInt64? = useRandomSeed ? UInt64.random(in: UInt64.min...UInt64.max) : nil
+            return GenerationOptions(sampling: .random(top: topKSamplingValue, seed: seed))
         }
-        return GenerationOptions()
     }
 
     // MARK: - Sliding Window Configuration

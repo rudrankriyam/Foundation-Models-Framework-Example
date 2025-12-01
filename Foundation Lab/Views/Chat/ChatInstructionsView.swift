@@ -7,21 +7,14 @@
 
 import SwiftUI
 
-enum SamplingStrategy: Int, CaseIterable {
-    case `default`
-    case greedy
-    case sampling
-}
-
 struct ChatInstructionsView: View {
     @Binding var instructions: String
-    @Binding var useGreedySampling: Bool
+    @Binding var samplingStrategy: SamplingStrategy
+    @Binding var topKSamplingValue: Int
+    @Binding var useRandomSeed: Bool
     let onApply: () -> Void
     @Environment(\.dismiss) private var dismiss
 
-    @State private var selectedStrategy: SamplingStrategy = .default
-    @State private var topKSamplingValue: Int = 50
-    @State private var useRandomSeed: Bool = false
     @Namespace private var glassNamespace
 
     var body: some View {
@@ -69,16 +62,12 @@ struct ChatInstructionsView: View {
 
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Apply") {
-                        updateGreedySamplingFromStrategy()
                         onApply()
                         dismiss()
                     }
                     .fontWeight(.semibold)
                 }
             }
-        }
-        .onAppear {
-            loadStrategyFromGreedySampling()
         }
     }
 
@@ -88,7 +77,7 @@ struct ChatInstructionsView: View {
                 .font(.headline)
                 .padding(.horizontal, Spacing.medium)
 
-            Picker("Sampling Strategy", selection: $selectedStrategy) {
+            Picker("Sampling Strategy", selection: $samplingStrategy) {
                 Text("Default").tag(SamplingStrategy.default)
                 Text("Greedy").tag(SamplingStrategy.greedy)
                 Text("Sampling").tag(SamplingStrategy.sampling)
@@ -106,7 +95,7 @@ struct ChatInstructionsView: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, Spacing.medium)
 
-            if selectedStrategy == .sampling {
+            if samplingStrategy == .sampling {
                 samplingConfigurationView
                     .transition(.move(edge: .top).combined(with: .opacity))
                     .padding(.top, Spacing.small)
@@ -160,24 +149,14 @@ struct ChatInstructionsView: View {
         .background(Color.blue.opacity(0.05))
         .cornerRadius(12)
     }
-
-    private func loadStrategyFromGreedySampling() {
-        selectedStrategy = useGreedySampling ? .greedy : .default
-        if !useGreedySampling {
-            topKSamplingValue = 50
-            useRandomSeed = true
-        }
-    }
-
-    private func updateGreedySamplingFromStrategy() {
-        useGreedySampling = selectedStrategy == .greedy
-    }
 }
 
 #Preview {
     ChatInstructionsView(
         instructions: .constant("You are a helpful AI assistant. Please be concise and accurate in your responses."),
-        useGreedySampling: .constant(false),
+        samplingStrategy: .constant(.default),
+        topKSamplingValue: .constant(50),
+        useRandomSeed: .constant(false),
         onApply: { }
     )
 }
