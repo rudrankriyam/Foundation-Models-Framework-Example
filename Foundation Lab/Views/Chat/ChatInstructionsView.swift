@@ -15,10 +15,8 @@ struct ChatInstructionsView: View {
         static let textFieldWidth: CGFloat = 100
         static let samplingConfigBackgroundColor = Color.blue.opacity(0.05)
     }
-    @Binding var instructions: String
-    @Binding var samplingStrategy: SamplingStrategy
-    @Binding var topKSamplingValue: Int
-    @Binding var useFixedSeed: Bool
+    @Binding var viewModel: ChatViewModel
+
     let onApply: () -> Void
     @Environment(\.dismiss) private var dismiss
 
@@ -26,8 +24,8 @@ struct ChatInstructionsView: View {
 
     private var clampedTopKSamplingValue: Binding<Int> {
         Binding(
-            get: { topKSamplingValue },
-            set: { topKSamplingValue = min(Constants.topKMaxValue, max(Constants.topKMinValue, $0)) }
+            get: { viewModel.topKSamplingValue },
+            set: { viewModel.topKSamplingValue = min(Constants.topKMaxValue, max(Constants.topKMinValue, $0)) }
         )
     }
 
@@ -48,7 +46,10 @@ struct ChatInstructionsView: View {
 
                     samplingStrategySection
 
-                    TextEditor(text: $instructions)
+                    // Guardrails Toggle
+                    PermissiveGuardrailsToggle(isEnabled: $viewModel.usePermissiveGuardrails)
+
+                    TextEditor(text: $viewModel.instructions)
                         .font(.body)
                         .scrollContentBackground(.hidden)
                         .padding(Spacing.medium)
@@ -91,7 +92,7 @@ struct ChatInstructionsView: View {
                 .font(.headline)
                 .padding(.horizontal, Spacing.medium)
 
-            Picker("Sampling Strategy", selection: $samplingStrategy) {
+            Picker("Sampling Strategy", selection: $viewModel.samplingStrategy) {
                 Text("Default").tag(SamplingStrategy.default)
                 Text("Greedy").tag(SamplingStrategy.greedy)
                 Text("Sampling").tag(SamplingStrategy.sampling)
@@ -109,7 +110,7 @@ struct ChatInstructionsView: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, Spacing.medium)
 
-            if samplingStrategy == .sampling {
+            if viewModel.samplingStrategy == .sampling {
                 samplingConfigurationView
                     .transition(.move(edge: .top).combined(with: .opacity))
                     .padding(.top, Spacing.small)
@@ -131,7 +132,7 @@ struct ChatInstructionsView: View {
                     .frame(width: Constants.textFieldWidth)
             }
 
-            Toggle("Use Fixed Seed", isOn: $useFixedSeed)
+            Toggle("Use Fixed Seed", isOn: $viewModel.useFixedSeed)
                 .font(.subheadline)
 
             Text("The Top-K value determines how many of the most likely tokens to consider. " +
@@ -141,7 +142,7 @@ struct ChatInstructionsView: View {
                 .foregroundColor(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            if useFixedSeed {
+            if viewModel.useFixedSeed {
                 HStack {
                     Image(systemName: "dice")
                         .foregroundColor(.secondary)
@@ -159,11 +160,7 @@ struct ChatInstructionsView: View {
 }
 
 #Preview {
-    ChatInstructionsView(
-        instructions: .constant("You are a helpful AI assistant. Please be concise and accurate in your responses."),
-        samplingStrategy: .constant(.default),
-        topKSamplingValue: .constant(ChatInstructionsView.Constants.defaultTopKValue),
-        useFixedSeed: .constant(false),
+    ChatInstructionsView(viewModel: .constant(.init()),
         onApply: { }
     )
 }

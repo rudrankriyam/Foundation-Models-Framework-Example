@@ -69,26 +69,7 @@ struct BasicChatView: View {
                 .cornerRadius(12)
 
                 // Guardrails Toggle
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Permissive Content Transformations")
-                            .font(.callout)
-                            .foregroundColor(.primary)
-
-                        Text("Allow potentially unsafe content for text transformations")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-
-                    Spacer()
-
-                    Toggle("", isOn: $usePermissiveGuardrails)
-                        .labelsHidden()
-                }
-                .padding(.horizontal, Spacing.medium)
-                .padding(.vertical, Spacing.small)
-                .background(Color.gray.opacity(0.1))
-                .cornerRadius(12)
+                PermissiveGuardrailsToggle(isEnabled: $usePermissiveGuardrails)
 
                 // Prompt Suggestions
                 PromptSuggestions(
