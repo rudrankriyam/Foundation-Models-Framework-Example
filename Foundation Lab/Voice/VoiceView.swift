@@ -10,7 +10,6 @@ import Observation
 
 struct VoiceView: View {
     @State private var viewModel = VoiceViewModel()
-    @State private var blobScale: CGFloat = 1.0
     @State private var isProcessingTap = false
 
     var body: some View {
@@ -53,34 +52,6 @@ struct VoiceView: View {
 
             // Main content
             VStack(spacing: 40) {
-                // Audio reactive blob placeholder
-                ZStack {
-                    // Glow effect when listening
-                    if viewModel.isListening {
-                        Circle()
-                            .fill(Color.indigo.opacity(0.2))
-                            .frame(width: 400, height: 400)
-                            .blur(radius: 30)
-                            .animation(
-                                .easeInOut(duration: 2).repeatForever(autoreverses: true),
-                                value: viewModel.isListening
-                            )
-                    }
-
-                    AudioReactiveBlobView(
-                        speechRecognizer: viewModel.speechRecognizer,
-                        listeningState: .init(
-                            get: { viewModel.isListening },
-                            set: { _ in }
-                        )
-                    )
-                    .frame(width: 250, height: 250)
-                    .scaleEffect(blobScale)
-                    .onTapGesture {
-                        toggleListening()
-                    }
-                }
-
                 // Transcription display
                 if !viewModel.recognizedText.isEmpty || viewModel.isListening {
                     VStack(spacing: 8) {
@@ -152,15 +123,9 @@ struct VoiceView: View {
 
         if viewModel.isListening {
             viewModel.stopListening()
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                blobScale = 1.0
-            }
         } else {
             Task {
                 await viewModel.startListening()
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                    blobScale = 1.2
-                }
             }
         }
 
