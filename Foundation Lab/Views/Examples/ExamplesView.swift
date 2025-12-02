@@ -50,9 +50,10 @@ struct ExamplesView: View {
                 EmptyView()
             }
         }
-        .sheet(isPresented: $showChatFullscreen) {
-            ChatView()
-                .presentationDetents([.large])
+        .fullScreenCover(isPresented: $showChatFullscreen) {
+            NavigationStack {
+                ChatView()
+            }
         }
     }
 

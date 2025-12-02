@@ -28,7 +28,8 @@ struct ChatView: View {
 
             ChatInputView(
                 messageText: $messageText,
-                isTextFieldFocused: $isTextFieldFocused
+                isTextFieldFocused: $isTextFieldFocused,
+                onVoiceTap: { showVoiceSheet = true }
             )
         }
         .environment(viewModel)

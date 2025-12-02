@@ -11,6 +11,7 @@ struct ChatInputView: View {
     @Binding var messageText: String
     @Environment(ChatViewModel.self) var chatViewModel
     @FocusState.Binding var isTextFieldFocused: Bool
+    var onVoiceTap: () -> Void = {}
     @Namespace private var glassNamespace
 
     var body: some View {
@@ -54,7 +55,7 @@ struct ChatInputView: View {
                 .buttonStyle(.plain)
 #endif
 
-                Button(action: { /* TODO: Implement voice input */ }) {
+                Button(action: onVoiceTap) {
                     Image(systemName: "waveform")
                         .font(.headline)
                         .foregroundStyle(.white)
@@ -62,7 +63,7 @@ struct ChatInputView: View {
                 .padding(Spacing.small)
                 .glassEffect(
                     .regular
-                        .tint(.purple)
+                        .tint(.indigo)
                         .interactive(true), in: .circle
                 )
                 .glassEffectID("voiceButton", in: glassNamespace)
@@ -95,10 +96,10 @@ struct ChatInputView: View {
                 chatViewModel.isSummarizing
             )
 
-            Button(action: { /* TODO: Implement voice input */ }) {
+            Button(action: onVoiceTap) {
                 Image(systemName: "waveform.circle.fill")
                     .font(.title2)
-                    .foregroundStyle(.purple)
+                    .foregroundStyle(.indigo)
             }
             .buttonStyle(.plain)
             .padding(Spacing.small)

@@ -76,7 +76,7 @@ enum ExampleType: String, CaseIterable, Identifiable {
     var icon: String {
         switch self {
         case .basicChat:
-            return "message.and.ellipsis"
+            return "ellipsis.message"
         case .businessIdeas:
             return "lightbulb"
         case .creativeWriting:
