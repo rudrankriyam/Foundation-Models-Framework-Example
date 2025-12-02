@@ -179,12 +179,16 @@ class VoiceViewModel {
         // Prewarm the session with the system's default instructions
         inferenceService.session.prewarm(promptPrefix: Prompt(inferenceService.instructions))
 
-        // Send a greeting
-        let greeting = "Hey there! How can I help you today?"
-        recognizedText = greeting
+        // Have the AI generate a greeting
+        do {
+            let greeting = try await inferenceService.processText("Please greet me in a friendly, conversational way.")
+            recognizedText = greeting
 
-        // Process through state machine for TTS
-        stateMachine.simulateGreeting(greeting)
+            // Process through state machine for TTS
+            stateMachine.simulateGreeting(greeting)
+        } catch {
+            logger.error("Failed to generate greeting: \(error)")
+        }
     }
 
     // MARK: - UI Feedback Methods
