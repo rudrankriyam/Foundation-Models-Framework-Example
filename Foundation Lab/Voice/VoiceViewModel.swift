@@ -23,12 +23,6 @@ class VoiceViewModel {
 
     var isListening = false
     var recognizedText = ""
-    var selectedList = "Default" {
-        didSet {
-            VoiceContext.selectedReminderList = selectedList
-        }
-    }
-    var availableLists: [String] = ["Default"]
     var showError = false
     var errorMessage = ""
     var lastCreatedReminder: String = ""
@@ -40,11 +34,6 @@ class VoiceViewModel {
     var permissionAlertMessage = ""
     var microphonePermissionStatus: MicrophonePermissionStatus = .undetermined
     var speechPermissionStatus: SFSpeechRecognizerAuthorizationStatus = .notDetermined
-    var remindersPermissionStatus: EKAuthorizationStatus = .notDetermined
-
-    var hasRemindersAccess: Bool {
-        return remindersPermissionStatus == .fullAccess || remindersPermissionStatus == .writeOnly
-    }
 
     // MARK: - Services
 
@@ -57,7 +46,6 @@ class VoiceViewModel {
 
     private let stateMachine: SpeechRecognitionStateMachine
     private let logger = VoiceLogging.state
-    private let eventStore = EKEventStore()
 
     private var recognitionHandlerToken: UUID?
 
@@ -76,9 +64,7 @@ class VoiceViewModel {
             permissionService: permissionManager
         )
 
-        VoiceContext.selectedReminderList = selectedList
         setupBindings()
-        loadReminderLists()
     }
 
     // For testing with dependency injection
@@ -100,9 +86,7 @@ class VoiceViewModel {
             permissionService: permissionManager
         )
 
-        VoiceContext.selectedReminderList = selectedList
         setupBindings()
-        loadReminderLists()
     }
 
     func tearDown() {
@@ -192,27 +176,6 @@ class VoiceViewModel {
 
     // MARK: - UI Feedback Methods
 
-    func loadReminderLists() {
-        Task {
-            let calendars = eventStore.calendars(for: .reminder)
-            let listNames = calendars.map { $0.title }.sorted()
-
-            await MainActor.run {
-                var uniqueLists = ["Default"]
-                for name in listNames where !uniqueLists.contains(name) {
-                    uniqueLists.append(name)
-                }
-                self.availableLists = uniqueLists
-
-                if let preferred = uniqueLists.first(where: { $0 == VoiceContext.selectedReminderList }) {
-                    self.selectedList = preferred
-                } else if let defaultList = calendars.first?.title {
-                    self.selectedList = defaultList
-                }
-            }
-        }
-    }
-
     private func showError(_ message: String) {
         errorMessage = message
 
@@ -267,20 +230,10 @@ class VoiceViewModel {
 
     private func syncPermissionState() {
         // Sync permission state from service to observable properties
-        let previousRemindersStatus = remindersPermissionStatus
         allPermissionsGranted = permissionManager.allPermissionsGranted
         showPermissionAlert = permissionManager.showPermissionAlert
         permissionAlertMessage = permissionManager.permissionAlertMessage
         microphonePermissionStatus = permissionManager.microphonePermissionStatus
         speechPermissionStatus = permissionManager.speechPermissionStatus
-        remindersPermissionStatus = permissionManager.remindersPermissionStatus
-
-        if !isRemindersPermissionGranted(previousRemindersStatus) && hasRemindersAccess {
-            loadReminderLists()
-        }
-    }
-
-    private func isRemindersPermissionGranted(_ status: EKAuthorizationStatus) -> Bool {
-        status == .fullAccess || status == .writeOnly
     }
 }

@@ -35,19 +35,16 @@ struct VoiceView: View {
     private var voiceMainView: some View {
         let viewModel = self.viewModel
         return VStack(spacing: 30) {
-            // Header with list selector
+            // Header
             VStack(alignment: .leading, spacing: 16) {
                 Text(String(localized: "Voice"))
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .foregroundStyle(.primary)
 
-                Text(String(localized: "Create reminders with your voice"))
+                Text(String(localized: "Have a conversation with AI"))
                     .font(.headline)
                     .foregroundStyle(.secondary)
-
-                reminderListPicker(viewModel: viewModel)
-                    .frame(maxWidth: 320)
             }
             .padding(.horizontal)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -126,7 +123,7 @@ struct VoiceView: View {
         }
         .padding()
         .alert(
-            String(localized: "Reminder Created"),
+            String(localized: "Response"),
             isPresented: Binding(
                 get: { !viewModel.lastCreatedReminder.isEmpty },
                 set: { newValue in
@@ -140,7 +137,7 @@ struct VoiceView: View {
                 viewModel.lastCreatedReminder = ""
             }
         } message: {
-            Text(String(format: String(localized: "Reminder created: \"%@\""), viewModel.lastCreatedReminder))
+            Text(String(format: String(localized: "Response: \"%@\""), viewModel.lastCreatedReminder))
         }
         .alert(
             "Error",
@@ -188,30 +185,6 @@ struct VoiceView: View {
         let impact = UIImpactFeedbackGenerator(style: .medium)
         impact.impactOccurred()
 #endif
-    }
-}
-
-extension VoiceView {
-    @ViewBuilder
-    private func reminderListPicker(viewModel: VoiceViewModel) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(String(localized: "Reminder List"))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            Picker(String(localized: "Reminder List"), selection: Binding(
-                get: { viewModel.selectedList },
-                set: { viewModel.selectedList = $0 }
-            )) {
-                ForEach(viewModel.availableLists, id: \.self) { list in
-                    Text(list)
-                        .tag(list)
-                }
-            }
-            .pickerStyle(.menu)
-            .labelsHidden()
-        }
-        .padding()
     }
 }
 
