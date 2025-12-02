@@ -57,7 +57,7 @@ struct ChatInputView: View {
 
                 Button(action: onVoiceTap) {
                     Image(systemName: "waveform")
-                        .font(.headline)
+                        .font(.subheadline)
                         .foregroundStyle(.white)
                 }
                 .padding(Spacing.small)
