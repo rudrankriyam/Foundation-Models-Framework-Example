@@ -31,13 +31,14 @@ final class ChatViewModel {
     var samplingStrategy: SamplingStrategy = .default
     var topKSamplingValue: Int = 50
     var useFixedSeed: Bool = false
+    var usePermissiveGuardrails: Bool = false
     private var samplingSeed: UInt64?
     var errorMessage: String?
     var showError: Bool = false
 
     // MARK: - Public Properties
 
-    private(set) var session: LanguageModelSession
+    private(set) var session: LanguageModelSession = LanguageModelSession()
 
     // MARK: - Feedback State
 
@@ -57,6 +58,14 @@ final class ChatViewModel {
         }
     }
 
+    // MARK: - Language Model
+
+    private func createLanguageModel() -> SystemLanguageModel {
+        let guardrails: SystemLanguageModel.Guardrails = usePermissiveGuardrails ?
+            .permissiveContentTransformations : .default
+        return SystemLanguageModel(useCase: .general, guardrails: guardrails)
+    }
+
     private func generateAndStoreSeed() -> UInt64 {
         let seed = UInt64.random(in: UInt64.min...UInt64.max)
         samplingSeed = seed
@@ -71,11 +80,10 @@ final class ChatViewModel {
     // MARK: - Initialization
 
     init() {
-        self.session = LanguageModelSession(
-            instructions: Instructions(
-                "You are a helpful, friendly AI assistant. Engage in natural conversation and provide " +
-                "thoughtful, detailed responses."
-            )
+        // Initialize session with proper language model and instructions
+        session = LanguageModelSession(
+            model: SystemLanguageModel(useCase: .general, guardrails: .default),
+            instructions: Instructions(instructions)
         )
     }
 
@@ -132,6 +140,7 @@ final class ChatViewModel {
         sessionCount = 1
         feedbackState.removeAll()
         session = LanguageModelSession(
+            model: createLanguageModel(),
             instructions: Instructions(instructions)
         )
     }
@@ -142,6 +151,7 @@ final class ChatViewModel {
         // Create a new session with updated instructions
         // Note: The transcript is read-only, so we start fresh with new instructions
         session = LanguageModelSession(
+            model: createLanguageModel(),
             instructions: Instructions(instructions)
         )
     }
@@ -174,7 +184,7 @@ final class ChatViewModel {
         let windowedTranscript = Transcript(entries: finalEntries)
         _ = windowedTranscript.estimatedTokenCount
 
-        session = LanguageModelSession(transcript: windowedTranscript)
+        session = LanguageModelSession(model: createLanguageModel(), transcript: windowedTranscript)
 
         sessionCount += 1
 
@@ -240,6 +250,7 @@ final class ChatViewModel {
     @MainActor
     private func generateConversationSummary() async throws -> ConversationSummary {
         let summarySession = LanguageModelSession(
+            model: createLanguageModel(),
             instructions: Instructions(
                 "You are an expert at summarizing conversations. Create comprehensive summaries that " +
                 "preserve all important context and details."
@@ -282,7 +293,10 @@ final class ChatViewModel {
       The user's next message is a continuation of your previous discussion.
       """
 
-        session = LanguageModelSession(instructions: Instructions(contextInstructions))
+        session = LanguageModelSession(
+            model: createLanguageModel(),
+            instructions: Instructions(contextInstructions)
+        )
         sessionCount += 1
     }
 
