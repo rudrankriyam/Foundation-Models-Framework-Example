@@ -61,6 +61,36 @@ struct ChatInstructionsView: View {
                         )
 
                     Spacer(minLength: 20)
+
+                    // Navigation Link Section
+                    VStack(spacing: 0) {
+                        Rectangle()
+                            .foregroundColor(.clear)
+                            .frame(height: 1)
+                            .padding(.bottom, Spacing.medium)
+
+                        Text("More Options")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding(.bottom, Spacing.small)
+
+                        // Feedback Link
+                        NavigationLink(destination: FeedbackView(viewModel: viewModel, isPresented: .constant(true))) {
+                            HStack {
+                                Image(systemName: "bubble.left.and.exclamationmark.bubble.right")
+                                    .foregroundStyle(.tint)
+                                Text("Provide Feedback")
+                                    .foregroundStyle(.primary)
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            .padding(Spacing.medium)
+                            .background(Color.gray.opacity(0.05))
+                            .cornerRadius(12)
+                        }
+                    }
                 }
                 .padding(Spacing.medium)
             }
