@@ -50,13 +50,6 @@ struct FeedbackView: View {
                 }
             }
             .navigationTitle("Provide Feedback")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") {
-                        isPresented = false
-                    }
-                }
-            }
         }
 #if os(macOS)
         .frame(minWidth: 500, idealWidth: 600, maxWidth: .infinity,

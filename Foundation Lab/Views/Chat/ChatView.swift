@@ -45,6 +45,11 @@ struct ChatView: View {
             }
 
             ToolbarItemGroup(placement: .primaryAction) {
+                Button(action: { showInstructionsSheet = true }, label: {
+                    Label("Instructions", systemImage: "doc.text")
+                })
+                .help("Customize AI behavior")
+
                 Button(action: { viewModel.clearChat() }) {
                     Image(systemName: "xmark")
                 }
@@ -65,6 +70,20 @@ struct ChatView: View {
                 isTextFieldFocused = true
             }
         }
+#if os(iOS)
+        .fullScreenCover(isPresented: $showInstructionsSheet) {
+            NavigationStack {
+                ChatInstructionsView(
+                    viewModel: $viewModel,
+                    onApply: {
+                        viewModel.updateInstructions(viewModel.instructions)
+                        viewModel.clearChat()
+                    }
+                )
+                .navigationTitle("Instructions")
+            }
+        }
+#else
         .sheet(isPresented: $showInstructionsSheet) {
             NavigationStack {
                 ChatInstructionsView(
@@ -75,11 +94,10 @@ struct ChatView: View {
                     }
                 )
                 .navigationTitle("Instructions")
-#if os(macOS)
                 .frame(minWidth: 500, minHeight: 400)
-#endif
             }
         }
+#endif
         .sheet(isPresented: $showVoiceSheet) {
             VoiceView()
 #if os(macOS)
