@@ -50,11 +50,20 @@ struct ExamplesView: View {
                 EmptyView()
             }
         }
+#if os(iOS)
         .fullScreenCover(isPresented: $showChatFullscreen) {
             NavigationStack {
                 ChatView()
             }
         }
+#elseif os(macOS)
+        .sheet(isPresented: $showChatFullscreen) {
+            NavigationStack {
+                ChatView()
+            }
+            .frame(width: 1000, height: 700)
+        }
+#endif
     }
 
     // MARK: - View Components
