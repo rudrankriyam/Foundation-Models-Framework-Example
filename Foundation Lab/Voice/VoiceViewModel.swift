@@ -25,7 +25,6 @@ class VoiceViewModel {
     var recognizedText = ""
     var showError = false
     var errorMessage = ""
-    var lastCreatedReminder: String = ""
     var partialText: String = ""
 
     // MARK: - Permission State (Observable)
@@ -139,8 +138,8 @@ class VoiceViewModel {
             recognizedText = text
             isListening = false
 
-        case .synthesizingResponse(let response):
-            lastCreatedReminder = response
+        case .synthesizingResponse:
+            break
 
         case .completed:
             isListening = false
