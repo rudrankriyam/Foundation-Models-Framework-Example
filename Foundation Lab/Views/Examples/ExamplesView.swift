@@ -46,6 +46,8 @@ struct ExamplesView: View {
                 HealthExampleView()
             case .chat:
                 ChatViewContainer()
+            case .voice:
+                VoiceView()
             }
         }
     }

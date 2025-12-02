@@ -20,6 +20,7 @@ enum ExampleType: String, CaseIterable, Identifiable {
     case generationOptions = "generation_options"
     case health = "health"
     case chat = "chat"
+    case voice = "voice"
 
     var id: String { rawValue }
 
@@ -45,6 +46,8 @@ enum ExampleType: String, CaseIterable, Identifiable {
             return "Health Dashboard"
         case .chat:
             return "Chat"
+        case .voice:
+            return "Voice"
         }
     }
 
@@ -70,6 +73,8 @@ enum ExampleType: String, CaseIterable, Identifiable {
             return "AI-powered health insights and tracking"
         case .chat:
             return "Multi-turn conversation with AI assistant"
+        case .voice:
+            return "Voice-based AI interactions"
         }
     }
 
@@ -95,6 +100,8 @@ enum ExampleType: String, CaseIterable, Identifiable {
             return "heart.fill"
         case .chat:
             return "chat.bubble"
+        case .voice:
+            return "mic.fill"
         }
     }
 

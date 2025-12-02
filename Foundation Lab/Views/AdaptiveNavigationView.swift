@@ -41,15 +41,21 @@ struct AdaptiveNavigationView: View {
                 }
             }
 
-            Tab(TabSelection.integrations.displayName, systemImage: "wrench.and.screwdriver", value: .integrations) {
+            Tab(TabSelection.tools.displayName, systemImage: "wrench.and.screwdriver", value: .tools) {
                 NavigationStack {
-                    IntegrationsView()
+                    ToolsView()
                 }
             }
 
-            Tab(TabSelection.voice.displayName, systemImage: "mic", value: .voice) {
+            Tab(TabSelection.schemas.displayName, systemImage: "doc.text", value: .schemas) {
                 NavigationStack {
-                    VoiceView()
+                    SchemaExamplesView()
+                }
+            }
+
+            Tab(TabSelection.languages.displayName, systemImage: "globe.badge.chevron.backward", value: .languages) {
+                NavigationStack {
+                    LanguagesIntegrationsView()
                 }
             }
 
@@ -96,14 +102,17 @@ struct AdaptiveNavigationView: View {
             NavigationStack {
                 ExamplesView(viewModel: $contentViewModel)
             }
-        case .integrations:
+        case .tools:
             NavigationStack {
-                IntegrationsView()
+                ToolsView()
             }
-        case .voice:
+        case .schemas:
             NavigationStack {
-                VoiceView()
-                    .navigationTitle("Voice")
+                SchemaExamplesView()
+            }
+        case .languages:
+            NavigationStack {
+                LanguagesIntegrationsView()
             }
         case .settings:
             NavigationStack {

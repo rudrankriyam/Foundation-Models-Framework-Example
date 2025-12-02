@@ -9,16 +9,23 @@ import Foundation
 
 enum TabSelection: String, CaseIterable, Hashable {
   case examples
-  case integrations
-  case voice
+  case tools
+  case schemas
+  case languages
   case settings
 
   var displayName: String {
     switch self {
-    case .integrations:
-      return "Integrations"
-    default:
-      return rawValue.capitalized
+    case .examples:
+      return "Examples"
+    case .tools:
+      return "Tools"
+    case .schemas:
+      return "Schemas"
+    case .languages:
+      return "Languages"
+    case .settings:
+      return "Settings"
     }
   }
 }
