@@ -123,23 +123,6 @@ struct VoiceView: View {
         }
         .padding()
         .alert(
-            String(localized: "Response"),
-            isPresented: Binding(
-                get: { !viewModel.lastCreatedReminder.isEmpty },
-                set: { newValue in
-                    if !newValue {
-                        viewModel.lastCreatedReminder = ""
-                    }
-                }
-            )
-        ) {
-            Button("OK", role: .cancel) {
-                viewModel.lastCreatedReminder = ""
-            }
-        } message: {
-            Text(String(format: String(localized: "Response: \"%@\""), viewModel.lastCreatedReminder))
-        }
-        .alert(
             "Error",
             isPresented: Binding(
                 get: { viewModel.showError },
