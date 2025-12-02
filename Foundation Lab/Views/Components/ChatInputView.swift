@@ -38,7 +38,7 @@ struct ChatInputView: View {
                             .font(.subheadline)
                             .foregroundStyle(.white)
                     }
-                    .padding(Spacing.small)
+                    .padding(Spacing.medium)
                     .glassEffect(
                         .regular
                             .tint(.indigo)
@@ -51,7 +51,7 @@ struct ChatInputView: View {
                             .font(.headline)
                             .foregroundStyle(.white)
                     }
-                    .padding(Spacing.small)
+                    .padding(Spacing.medium)
                     .glassEffect(
                         .regular
                             .tint(.main)
