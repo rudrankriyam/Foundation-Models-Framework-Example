@@ -15,17 +15,6 @@ enum TabSelection: String, CaseIterable, Hashable {
   case settings
 
   var displayName: String {
-    switch self {
-    case .examples:
-      return "Examples"
-    case .tools:
-      return "Tools"
-    case .schemas:
-      return "Schemas"
-    case .languages:
-      return "Languages"
-    case .settings:
-      return "Settings"
-    }
+    rawValue.capitalized
   }
 }

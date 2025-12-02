@@ -98,6 +98,11 @@ enum ExampleType: String, CaseIterable, Identifiable {
         }
     }
 
+    /// Static property for examples displayed in the grid (excludes chat)
+    static var gridExamples: [ExampleType] {
+        allCases.filter { $0 != .chat }
+    }
+
 }
 
 // MARK: - Tool Example Enum

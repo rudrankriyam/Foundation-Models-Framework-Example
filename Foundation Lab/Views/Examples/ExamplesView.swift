@@ -91,7 +91,7 @@ struct ExamplesView: View {
 
     private var examplesGridView: some View {
         LazyVGrid(columns: adaptiveGridColumns, spacing: Spacing.large) {
-            ForEach(ExampleType.allCases.filter { $0 != .chat }) { exampleType in
+            ForEach(ExampleType.gridExamples) { exampleType in
                 NavigationLink(value: exampleType) {
                     GenericCardView(
                         icon: exampleType.icon,
