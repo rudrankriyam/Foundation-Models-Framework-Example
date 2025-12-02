@@ -11,7 +11,7 @@ struct PermissiveGuardrailsToggle: View {
     @Binding var isEnabled: Bool
 
     var body: some View {
-        HStack {
+        Toggle(isOn: $isEnabled) {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Permissive Content Transformations")
                     .font(.callout)
@@ -21,11 +21,6 @@ struct PermissiveGuardrailsToggle: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
-
-            Spacer()
-
-            Toggle("", isOn: $isEnabled)
-                .labelsHidden()
         }
         .padding(.horizontal, Spacing.medium)
         .padding(.vertical, Spacing.small)

@@ -302,6 +302,10 @@ extension ReferencedSchemaView {
             return String(bool)
         case .null:
             return "null"
+        case .structure(_, _):
+            return "<structure>"
+        case .array(_):
+            return "<array>"
         @unknown default:
             return "unknown"
         }

@@ -82,7 +82,7 @@ final class ChatViewModel {
     init() {
         // Initialize session with proper language model and instructions
         session = LanguageModelSession(
-            model: SystemLanguageModel(useCase: .general, guardrails: .default),
+            model: createLanguageModel(),
             instructions: Instructions(instructions)
         )
     }
