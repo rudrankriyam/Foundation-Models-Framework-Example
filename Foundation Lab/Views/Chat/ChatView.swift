@@ -167,6 +167,14 @@ struct ChatView: View {
     }
 }
 
+struct ChatViewContainer: View {
+    @State private var viewModel = ChatViewModel()
+
+    var body: some View {
+        ChatView(viewModel: $viewModel)
+    }
+}
+
 #Preview {
     NavigationStack {
         ChatView(viewModel: .constant(ChatViewModel()))

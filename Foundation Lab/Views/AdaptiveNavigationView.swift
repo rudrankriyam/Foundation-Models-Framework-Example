@@ -10,7 +10,6 @@ import FoundationModels
 
 struct AdaptiveNavigationView: View {
     @State private var contentViewModel = ContentViewModel()
-    @State private var chatViewModel = ChatViewModel()
     @State private var languageService = LanguageService()
     @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -45,12 +44,6 @@ struct AdaptiveNavigationView: View {
             Tab(TabSelection.integrations.displayName, systemImage: "wrench.and.screwdriver", value: .integrations) {
                 NavigationStack {
                     IntegrationsView()
-                }
-            }
-
-            Tab(TabSelection.chat.displayName, systemImage: "bubble.left.and.bubble.right", value: .chat) {
-                NavigationStack {
-                    ChatView(viewModel: $chatViewModel)
                 }
             }
 
@@ -106,10 +99,6 @@ struct AdaptiveNavigationView: View {
         case .integrations:
             NavigationStack {
                 IntegrationsView()
-            }
-        case .chat:
-            NavigationStack {
-                ChatView(viewModel: $chatViewModel)
             }
         case .voice:
             NavigationStack {

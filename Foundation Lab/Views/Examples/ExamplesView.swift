@@ -44,6 +44,8 @@ struct ExamplesView: View {
                 GenerationOptionsView()
             case .health:
                 HealthExampleView()
+            case .chat:
+                ChatViewContainer()
             }
         }
     }
