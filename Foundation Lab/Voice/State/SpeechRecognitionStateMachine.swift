@@ -260,6 +260,23 @@ final class SpeechRecognitionStateMachine {
         speechSynthesisService.errorHandler = nil
     }
 
+    // MARK: - Greeting
+
+    func simulateGreeting(_ text: String) {
+        state = .synthesizingResponse(text)
+
+        Task { [weak self] in
+            guard let self else { return }
+
+            do {
+                try await speechSynthesisService.synthesizeAndSpeak(text: text)
+                state = .idle
+            } catch {
+                state = .error(.synthesisFailed(error.localizedDescription))
+            }
+        }
+    }
+
     private func notifyStateChange() {
         onStateChange?(state)
     }

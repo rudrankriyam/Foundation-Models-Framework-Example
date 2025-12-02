@@ -10,7 +10,6 @@ import Observation
 
 struct VoiceView: View {
     @State private var viewModel = VoiceViewModel()
-    @State private var blobScale: CGFloat = 1.0
     @State private var isProcessingTap = false
 
     var body: some View {
@@ -27,6 +26,9 @@ struct VoiceView: View {
         .onChange(of: viewModel.allPermissionsGranted) { _, _ in
             // Force view update when permissions change
         }
+        .task {
+            await viewModel.prewarmAndGreet()
+        }
         .onDisappear {
             viewModel.tearDown()
         }
@@ -35,19 +37,16 @@ struct VoiceView: View {
     private var voiceMainView: some View {
         let viewModel = self.viewModel
         return VStack(spacing: 30) {
-            // Header with list selector
+            // Header
             VStack(alignment: .leading, spacing: 16) {
                 Text(String(localized: "Voice"))
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .foregroundStyle(.primary)
 
-                Text(String(localized: "Create reminders with your voice"))
+                Text(String(localized: "Have a conversation with AI"))
                     .font(.headline)
                     .foregroundStyle(.secondary)
-
-                reminderListPicker(viewModel: viewModel)
-                    .frame(maxWidth: 320)
             }
             .padding(.horizontal)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -56,34 +55,6 @@ struct VoiceView: View {
 
             // Main content
             VStack(spacing: 40) {
-                // Audio reactive blob placeholder
-                ZStack {
-                    // Glow effect when listening
-                    if viewModel.isListening {
-                        Circle()
-                            .fill(Color.indigo.opacity(0.2))
-                            .frame(width: 400, height: 400)
-                            .blur(radius: 30)
-                            .animation(
-                                .easeInOut(duration: 2).repeatForever(autoreverses: true),
-                                value: viewModel.isListening
-                            )
-                    }
-
-                    AudioReactiveBlobView(
-                        speechRecognizer: viewModel.speechRecognizer,
-                        listeningState: .init(
-                            get: { viewModel.isListening },
-                            set: { _ in }
-                        )
-                    )
-                    .frame(width: 250, height: 250)
-                    .scaleEffect(blobScale)
-                    .onTapGesture {
-                        toggleListening()
-                    }
-                }
-
                 // Transcription display
                 if !viewModel.recognizedText.isEmpty || viewModel.isListening {
                     VStack(spacing: 8) {
@@ -110,10 +81,11 @@ struct VoiceView: View {
                                 .multilineTextAlignment(.center)
                                 .padding()
                                 .frame(maxWidth: 300)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .fill(Color.adaptiveBackground.opacity(0.1))
+                                )
                         }
-                    }
-                    .background {
-                        RoundedRectangle(cornerRadius: 16)
                     }
                     .transition(.asymmetric(
                         insertion: .scale(scale: 0.8).combined(with: .opacity),
@@ -125,23 +97,6 @@ struct VoiceView: View {
             Spacer()
         }
         .padding()
-        .alert(
-            String(localized: "Reminder Created"),
-            isPresented: Binding(
-                get: { !viewModel.lastCreatedReminder.isEmpty },
-                set: { newValue in
-                    if !newValue {
-                        viewModel.lastCreatedReminder = ""
-                    }
-                }
-            )
-        ) {
-            Button("OK", role: .cancel) {
-                viewModel.lastCreatedReminder = ""
-            }
-        } message: {
-            Text(String(format: String(localized: "Reminder created: \"%@\""), viewModel.lastCreatedReminder))
-        }
         .alert(
             "Error",
             isPresented: Binding(
@@ -171,15 +126,9 @@ struct VoiceView: View {
 
         if viewModel.isListening {
             viewModel.stopListening()
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                blobScale = 1.0
-            }
         } else {
             Task {
                 await viewModel.startListening()
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                    blobScale = 1.2
-                }
             }
         }
 
@@ -188,30 +137,6 @@ struct VoiceView: View {
         let impact = UIImpactFeedbackGenerator(style: .medium)
         impact.impactOccurred()
 #endif
-    }
-}
-
-extension VoiceView {
-    @ViewBuilder
-    private func reminderListPicker(viewModel: VoiceViewModel) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(String(localized: "Reminder List"))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            Picker(String(localized: "Reminder List"), selection: Binding(
-                get: { viewModel.selectedList },
-                set: { viewModel.selectedList = $0 }
-            )) {
-                ForEach(viewModel.availableLists, id: \.self) { list in
-                    Text(list)
-                        .tag(list)
-                }
-            }
-            .pickerStyle(.menu)
-            .labelsHidden()
-        }
-        .padding()
     }
 }
 

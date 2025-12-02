@@ -7,7 +7,6 @@
 
 import Foundation
 import Speech
-import EventKit
 
 #if os(iOS)
 import AVFoundation
@@ -39,9 +38,6 @@ protocol PermissionServiceProtocol: AnyObject {
 
     /// Speech recognition permission status
     var speechPermissionStatus: SFSpeechRecognizerAuthorizationStatus { get }
-
-    /// Reminders permission status
-    var remindersPermissionStatus: EKAuthorizationStatus { get }
 
     /// Whether all required permissions are granted
     var allPermissionsGranted: Bool { get }
@@ -84,18 +80,9 @@ class PermissionManager: PermissionServiceProtocol {
     var speechPermissionStatus: SFSpeechRecognizerAuthorizationStatus = .notDetermined {
         didSet { updateAllPermissionsStatus() }
     }
-    var remindersPermissionStatus: EKAuthorizationStatus = .notDetermined {
-        didSet { updateAllPermissionsStatus() }
-    }
     var allPermissionsGranted = false
     var showPermissionAlert = false
     var permissionAlertMessage = ""
-
-    var hasRemindersAccess: Bool {
-        isRemindersPermissionGranted(remindersPermissionStatus)
-    }
-
-    private let eventStore = EKEventStore()
 
     init() {
         initializeAudioSessionIfNeeded()
@@ -114,7 +101,6 @@ class PermissionManager: PermissionServiceProtocol {
     func checkAllPermissions() {
         checkMicrophonePermission()
         checkSpeechPermission()
-        checkRemindersPermission()
         updateAllPermissionsStatus()
         debugPrintPermissionStatuses(context: "Initial check")
     }
@@ -123,7 +109,6 @@ class PermissionManager: PermissionServiceProtocol {
         _ = await requestMicrophonePermission()
 
         _ = await requestSpeechPermission()
-        _ = await requestRemindersPermission()
 
         updateAllPermissionsStatus()
         debugPrintPermissionStatuses(context: "Post-request")
@@ -242,31 +227,6 @@ class PermissionManager: PermissionServiceProtocol {
         }
     }
 
-    // MARK: - Reminders Permission
-
-    private func checkRemindersPermission() {
-        if #available(iOS 17.0, *) {
-            remindersPermissionStatus = EKEventStore.authorizationStatus(for: .reminder)
-        } else {
-            remindersPermissionStatus = EKEventStore.authorizationStatus(for: .reminder)
-        }
-    }
-
-    private func requestRemindersPermission() async -> Bool {
-        if isRemindersPermissionGranted(remindersPermissionStatus) {
-            return true
-        }
-
-        do {
-            let granted = try await eventStore.requestFullAccessToReminders()
-            remindersPermissionStatus = granted ? .fullAccess : .denied
-            return granted
-        } catch {
-            remindersPermissionStatus = .denied
-            return false
-        }
-    }
-
     // MARK: - Helpers
 
     private func updateAllPermissionsStatus() {
@@ -277,13 +237,8 @@ class PermissionManager: PermissionServiceProtocol {
         #endif
 
         let speechGranted = speechPermissionStatus == .authorized
-        let remindersGranted = isRemindersPermissionGranted(remindersPermissionStatus)
 
-        allPermissionsGranted = micGranted && speechGranted && remindersGranted
-    }
-
-    private func isRemindersPermissionGranted(_ status: EKAuthorizationStatus) -> Bool {
-        return status == .fullAccess || status == .writeOnly
+        allPermissionsGranted = micGranted && speechGranted
     }
 
     func showSettingsAlert() {
@@ -295,9 +250,6 @@ class PermissionManager: PermissionServiceProtocol {
 
         if speechPermissionStatus == .denied || speechPermissionStatus == .restricted {
             deniedPermissions.append("Speech Recognition")
-        }
-        if remindersPermissionStatus == .denied || remindersPermissionStatus == .restricted {
-            deniedPermissions.append("Reminders")
         }
 
         if !deniedPermissions.isEmpty {

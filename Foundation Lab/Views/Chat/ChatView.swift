@@ -13,7 +13,6 @@ struct ChatView: View {
     @State private var scrollID: String?
     @State private var messageText = ""
     @State private var showInstructionsSheet = false
-    @State private var showFeedbackSheet = false
     @State private var showVoiceSheet = false
     @FocusState private var isTextFieldFocused: Bool
     @Environment(\.dismiss) private var dismiss
@@ -51,16 +50,11 @@ struct ChatView: View {
                 })
                 .help("Customize AI behavior")
 
-                Button(action: { showFeedbackSheet = true }, label: {
-                    Label("Feedback", systemImage: "bubble.left.and.exclamationmark.bubble.right")
-                })
-                .disabled(viewModel.session.transcript.isEmpty)
-                .help("Provide feedback on responses")
-
-                Button("Clear") {
-                    viewModel.clearChat()
+                Button(action: { viewModel.clearChat() }) {
+                    Image(systemName: "xmark")
                 }
                 .disabled(viewModel.session.transcript.isEmpty)
+                .help("Clear chat")
             }
         }
         .alert("Error", isPresented: $viewModel.showError) {
@@ -76,27 +70,34 @@ struct ChatView: View {
                 isTextFieldFocused = true
             }
         }
-        .sheet(isPresented: $showFeedbackSheet) {
-            FeedbackView(
-                viewModel: viewModel,
-                isPresented: $showFeedbackSheet
-            )
-#if os(macOS)
-            .frame(minWidth: 600, minHeight: 400)
-#endif
+#if os(iOS)
+        .fullScreenCover(isPresented: $showInstructionsSheet) {
+            NavigationStack {
+                ChatInstructionsView(
+                    viewModel: $viewModel,
+                    onApply: {
+                        viewModel.updateInstructions(viewModel.instructions)
+                        viewModel.clearChat()
+                    }
+                )
+                .navigationTitle("Instructions")
+            }
         }
+#else
         .sheet(isPresented: $showInstructionsSheet) {
-            ChatInstructionsView(
-                viewModel: $viewModel,
-                onApply: {
-                    viewModel.updateInstructions(viewModel.instructions)
-                    viewModel.clearChat()
-                }
-            )
-#if os(macOS)
-            .frame(minWidth: 500, minHeight: 400)
-#endif
+            NavigationStack {
+                ChatInstructionsView(
+                    viewModel: $viewModel,
+                    onApply: {
+                        viewModel.updateInstructions(viewModel.instructions)
+                        viewModel.clearChat()
+                    }
+                )
+                .navigationTitle("Instructions")
+                .frame(minWidth: 500, minHeight: 400)
+            }
         }
+#endif
         .sheet(isPresented: $showVoiceSheet) {
             VoiceView()
 #if os(macOS)

@@ -35,13 +35,6 @@ struct PermissionRequestView: View {
                     description: String(localized: "To understand your words"),
                     status: getSpeechPermissionStatus()
                 )
-
-                PermissionItemView(
-                    icon: "checklist",
-                    title: String(localized: "Reminders"),
-                    description: String(localized: "To save your reminders"),
-                    status: getRemindersPermissionStatus()
-                )
             }
             .padding()
 
@@ -113,10 +106,6 @@ struct PermissionRequestView: View {
 
     private func getSpeechPermissionStatus() -> PermissionItemView.PermissionStatus {
         viewModel.speechPermissionStatus == .authorized ? .granted : .pending
-    }
-
-    private func getRemindersPermissionStatus() -> PermissionItemView.PermissionStatus {
-        viewModel.hasRemindersAccess ? .granted : .pending
     }
 }
 

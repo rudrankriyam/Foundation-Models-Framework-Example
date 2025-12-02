@@ -23,15 +23,8 @@ class VoiceViewModel {
 
     var isListening = false
     var recognizedText = ""
-    var selectedList = "Default" {
-        didSet {
-            VoiceContext.selectedReminderList = selectedList
-        }
-    }
-    var availableLists: [String] = ["Default"]
     var showError = false
     var errorMessage = ""
-    var lastCreatedReminder: String = ""
     var partialText: String = ""
 
     // MARK: - Permission State (Observable)
@@ -40,11 +33,6 @@ class VoiceViewModel {
     var permissionAlertMessage = ""
     var microphonePermissionStatus: MicrophonePermissionStatus = .undetermined
     var speechPermissionStatus: SFSpeechRecognizerAuthorizationStatus = .notDetermined
-    var remindersPermissionStatus: EKAuthorizationStatus = .notDetermined
-
-    var hasRemindersAccess: Bool {
-        return remindersPermissionStatus == .fullAccess || remindersPermissionStatus == .writeOnly
-    }
 
     // MARK: - Services
 
@@ -57,7 +45,6 @@ class VoiceViewModel {
 
     private let stateMachine: SpeechRecognitionStateMachine
     private let logger = VoiceLogging.state
-    private let eventStore = EKEventStore()
 
     private var recognitionHandlerToken: UUID?
 
@@ -76,9 +63,7 @@ class VoiceViewModel {
             permissionService: permissionManager
         )
 
-        VoiceContext.selectedReminderList = selectedList
         setupBindings()
-        loadReminderLists()
     }
 
     // For testing with dependency injection
@@ -100,9 +85,7 @@ class VoiceViewModel {
             permissionService: permissionManager
         )
 
-        VoiceContext.selectedReminderList = selectedList
         setupBindings()
-        loadReminderLists()
     }
 
     func tearDown() {
@@ -155,8 +138,8 @@ class VoiceViewModel {
             recognizedText = text
             isListening = false
 
-        case .synthesizingResponse(let response):
-            lastCreatedReminder = response
+        case .synthesizingResponse:
+            break
 
         case .completed:
             isListening = false
@@ -190,28 +173,25 @@ class VoiceViewModel {
         stateMachine.stopWorkflow()
     }
 
-    // MARK: - UI Feedback Methods
+    func prewarmAndGreet() async {
+        logger.info("Prewarming and sending greeting")
 
-    func loadReminderLists() {
-        Task {
-            let calendars = eventStore.calendars(for: .reminder)
-            let listNames = calendars.map { $0.title }.sorted()
+        // Prewarm the session with the system's default instructions
+        inferenceService.session.prewarm(promptPrefix: Prompt(inferenceService.instructions))
 
-            await MainActor.run {
-                var uniqueLists = ["Default"]
-                for name in listNames where !uniqueLists.contains(name) {
-                    uniqueLists.append(name)
-                }
-                self.availableLists = uniqueLists
+        // Have the AI generate a greeting
+        do {
+            let greeting = try await inferenceService.processText("Please greet me in a friendly, conversational way.")
+            recognizedText = greeting
 
-                if let preferred = uniqueLists.first(where: { $0 == VoiceContext.selectedReminderList }) {
-                    self.selectedList = preferred
-                } else if let defaultList = calendars.first?.title {
-                    self.selectedList = defaultList
-                }
-            }
+            // Process through state machine for TTS
+            stateMachine.simulateGreeting(greeting)
+        } catch {
+            logger.error("Failed to generate greeting: \(error)")
         }
     }
+
+    // MARK: - UI Feedback Methods
 
     private func showError(_ message: String) {
         errorMessage = message
@@ -267,20 +247,10 @@ class VoiceViewModel {
 
     private func syncPermissionState() {
         // Sync permission state from service to observable properties
-        let previousRemindersStatus = remindersPermissionStatus
         allPermissionsGranted = permissionManager.allPermissionsGranted
         showPermissionAlert = permissionManager.showPermissionAlert
         permissionAlertMessage = permissionManager.permissionAlertMessage
         microphonePermissionStatus = permissionManager.microphonePermissionStatus
         speechPermissionStatus = permissionManager.speechPermissionStatus
-        remindersPermissionStatus = permissionManager.remindersPermissionStatus
-
-        if !isRemindersPermissionGranted(previousRemindersStatus) && hasRemindersAccess {
-            loadReminderLists()
-        }
-    }
-
-    private func isRemindersPermissionGranted(_ status: EKAuthorizationStatus) -> Bool {
-        status == .fullAccess || status == .writeOnly
     }
 }
