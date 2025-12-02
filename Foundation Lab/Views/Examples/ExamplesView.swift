@@ -10,6 +10,7 @@ import FoundationModels
 
 struct ExamplesView: View {
     @Binding var viewModel: ContentViewModel
+    @State private var showChatFullscreen = false
 
     var body: some View {
         ScrollView {
@@ -46,47 +47,45 @@ struct ExamplesView: View {
             case .health:
                 HealthExampleView()
             case .chat:
-                ChatViewContainer()
+                ChatViewContainer(dismiss: {
+                    showChatFullscreen = false
+                })
             }
+        }
+        .sheet(isPresented: $showChatFullscreen) {
+            ChatViewContainer(dismiss: {
+                showChatFullscreen = false
+            })
         }
     }
 
     // MARK: - View Components
 
     private var chatSection: some View {
-        NavigationLink(value: ExampleType.chat) {
+        Button(action: { showChatFullscreen = true }) {
             HStack(spacing: Spacing.medium) {
                 Image(systemName: "bubble.left.and.bubble.right.fill")
-                    .font(.system(size: 32))
-                    .foregroundStyle(.blue)
+                    .font(.title2)
+                    .foregroundStyle(.tint)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Chat")
-                        .font(.title2)
-                        .fontWeight(.semibold)
+                        .font(.headline)
                         .foregroundStyle(.primary)
 
                     Text("Multi-turn conversation with AI assistant")
-                        .font(.subheadline)
+                        .font(.caption)
                         .foregroundStyle(.secondary)
                 }
 
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
+                Spacer(minLength: 0)
             }
-            .padding(Spacing.large)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(.regularMaterial)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color.blue.opacity(0.3), lineWidth: 1)
-            )
-            .contentShape(.rect)
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+#if os(iOS) || os(macOS)
+            .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
+#endif
         }
         .buttonStyle(.plain)
         .padding(.horizontal, Spacing.medium)

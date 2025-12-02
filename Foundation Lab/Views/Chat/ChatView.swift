@@ -16,6 +16,7 @@ struct ChatView: View {
     @State private var showFeedbackSheet = false
     @State private var showVoiceSheet = false
     @FocusState private var isTextFieldFocused: Bool
+    let dismiss: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -32,11 +33,17 @@ struct ChatView: View {
             )
         }
         .environment(viewModel)
-        .navigationTitle("Chat (\(viewModel.session.transcript.estimatedTokenCount) tokens)")
+        .navigationTitle("Chat")
 #if os(iOS)
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarTitleDisplayMode(.inline)
 #endif
         .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Done") {
+                    dismiss()
+                }
+            }
+
             ToolbarItemGroup(placement: .primaryAction) {
                 Button(action: { showInstructionsSheet = true }, label: {
                     Label("Instructions", systemImage: "doc.text")
@@ -177,14 +184,17 @@ struct ChatView: View {
 
 struct ChatViewContainer: View {
     @State private var viewModel = ChatViewModel()
+    let dismiss: () -> Void
 
     var body: some View {
-        ChatView(viewModel: $viewModel)
+        ChatView(viewModel: $viewModel, dismiss: dismiss)
     }
 }
 
 #Preview {
     NavigationStack {
-        ChatView(viewModel: .constant(ChatViewModel()))
+        ChatView(viewModel: .constant(ChatViewModel())) {
+            print("Dismiss")
+        }
     }
 }
