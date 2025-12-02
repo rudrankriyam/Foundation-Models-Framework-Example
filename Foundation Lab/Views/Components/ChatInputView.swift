@@ -11,6 +11,7 @@ struct ChatInputView: View {
     @Binding var messageText: String
     @Environment(ChatViewModel.self) var chatViewModel
     @FocusState.Binding var isTextFieldFocused: Bool
+    @Binding var showVoiceSheet: Bool
     @Namespace private var glassNamespace
 
     var body: some View {
@@ -53,6 +54,19 @@ struct ChatInputView: View {
 #if os(macOS)
                 .buttonStyle(.plain)
 #endif
+
+                Button(action: { showVoiceSheet = true }) {
+                    Image(systemName: "waveform")
+                        .font(.headline)
+                        .foregroundStyle(.white)
+                }
+                .padding(Spacing.small)
+                .glassEffect(
+                    .regular
+                        .tint(.purple)
+                        .interactive(true), in: .circle
+                )
+                .glassEffectID("voiceButton", in: glassNamespace)
             }
         }
         .padding()
@@ -81,6 +95,14 @@ struct ChatInputView: View {
                 chatViewModel.isLoading ||
                 chatViewModel.isSummarizing
             )
+
+            Button(action: { showVoiceSheet = true }) {
+                Image(systemName: "waveform.circle.fill")
+                    .font(.title2)
+                    .foregroundStyle(.purple)
+            }
+            .buttonStyle(.plain)
+            .padding(Spacing.small)
         }
         .padding()
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: messageText.isEmpty)

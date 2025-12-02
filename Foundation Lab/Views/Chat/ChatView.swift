@@ -14,6 +14,7 @@ struct ChatView: View {
     @State private var messageText = ""
     @State private var showInstructionsSheet = false
     @State private var showFeedbackSheet = false
+    @State private var showVoiceSheet = false
     @FocusState private var isTextFieldFocused: Bool
 
     var body: some View {
@@ -26,7 +27,8 @@ struct ChatView: View {
 
             ChatInputView(
                 messageText: $messageText,
-                isTextFieldFocused: $isTextFieldFocused
+                isTextFieldFocused: $isTextFieldFocused,
+                showVoiceSheet: $showVoiceSheet
             )
         }
         .environment(viewModel)
@@ -88,6 +90,12 @@ struct ChatView: View {
             )
 #if os(macOS)
             .frame(minWidth: 500, minHeight: 400)
+#endif
+        }
+        .sheet(isPresented: $showVoiceSheet) {
+            VoiceView()
+#if os(macOS)
+            .frame(minWidth: 700, minHeight: 500)
 #endif
         }
     }
