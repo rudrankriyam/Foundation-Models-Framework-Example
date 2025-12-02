@@ -176,8 +176,8 @@ class VoiceViewModel {
     func prewarmAndGreet() async {
         logger.info("Prewarming and sending greeting")
 
-        // Prewarm the session for faster responses
-        inferenceService.session.prewarm()
+        // Prewarm the session with the system's default instructions
+        inferenceService.session.prewarm(promptPrefix: Prompt(inferenceService.instructions))
 
         // Send a greeting
         let greeting = "Hey there! How can I help you today?"
