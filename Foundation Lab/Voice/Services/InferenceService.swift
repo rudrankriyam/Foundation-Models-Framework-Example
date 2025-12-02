@@ -45,7 +45,9 @@ class InferenceService: InferenceServiceProtocol {
         - General productivity assistance
         - Learning and educational support
 
-        Always respond in a conversational, friendly manner. Keep responses concise and natural for speech synthesis. Aim for responses that are 1-3 sentences when possible, unless the user specifically asks for more detail.
+        Always respond in a conversational, friendly manner. Keep responses concise and natural
+        for speech synthesis. Aim for responses that are 1-3 sentences when possible, unless the
+        user specifically asks for more detail.
         """
 
         self.session = LanguageModelSession(
