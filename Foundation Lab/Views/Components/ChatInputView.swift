@@ -11,7 +11,6 @@ struct ChatInputView: View {
     @Binding var messageText: String
     @Environment(ChatViewModel.self) var chatViewModel
     @FocusState.Binding var isTextFieldFocused: Bool
-    @Binding var showVoiceSheet: Bool
     @Namespace private var glassNamespace
 
     var body: some View {
@@ -55,7 +54,7 @@ struct ChatInputView: View {
                 .buttonStyle(.plain)
 #endif
 
-                Button(action: { showVoiceSheet = true }) {
+                Button(action: { /* TODO: Implement voice input */ }) {
                     Image(systemName: "waveform")
                         .font(.headline)
                         .foregroundStyle(.white)
@@ -96,7 +95,7 @@ struct ChatInputView: View {
                 chatViewModel.isSummarizing
             )
 
-            Button(action: { showVoiceSheet = true }) {
+            Button(action: { /* TODO: Implement voice input */ }) {
                 Image(systemName: "waveform.circle.fill")
                     .font(.title2)
                     .foregroundStyle(.purple)

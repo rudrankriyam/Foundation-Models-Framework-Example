@@ -47,15 +47,12 @@ struct ExamplesView: View {
             case .health:
                 HealthExampleView()
             case .chat:
-                ChatViewContainer(dismiss: {
-                    showChatFullscreen = false
-                })
+                EmptyView()
             }
         }
         .sheet(isPresented: $showChatFullscreen) {
-            ChatViewContainer(dismiss: {
-                showChatFullscreen = false
-            })
+            ChatView()
+                .presentationDetents([.large])
         }
     }
 

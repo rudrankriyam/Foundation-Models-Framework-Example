@@ -9,14 +9,14 @@ import SwiftUI
 import FoundationModels
 
 struct ChatView: View {
-    @Binding var viewModel: ChatViewModel
+    @State private var viewModel = ChatViewModel()
     @State private var scrollID: String?
     @State private var messageText = ""
     @State private var showInstructionsSheet = false
     @State private var showFeedbackSheet = false
     @State private var showVoiceSheet = false
     @FocusState private var isTextFieldFocused: Bool
-    let dismiss: () -> Void
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         VStack(spacing: 0) {
@@ -28,8 +28,7 @@ struct ChatView: View {
 
             ChatInputView(
                 messageText: $messageText,
-                isTextFieldFocused: $isTextFieldFocused,
-                showVoiceSheet: $showVoiceSheet
+                isTextFieldFocused: $isTextFieldFocused
             )
         }
         .environment(viewModel)
@@ -42,6 +41,7 @@ struct ChatView: View {
                 Button("Done") {
                     dismiss()
                 }
+                .keyboardShortcut(.defaultAction)
             }
 
             ToolbarItemGroup(placement: .primaryAction) {
@@ -182,19 +182,8 @@ struct ChatView: View {
     }
 }
 
-struct ChatViewContainer: View {
-    @State private var viewModel = ChatViewModel()
-    let dismiss: () -> Void
-
-    var body: some View {
-        ChatView(viewModel: $viewModel, dismiss: dismiss)
-    }
-}
-
 #Preview {
     NavigationStack {
-        ChatView(viewModel: .constant(ChatViewModel())) {
-            print("Dismiss")
-        }
+        ChatView()
     }
 }
