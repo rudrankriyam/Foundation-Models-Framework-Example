@@ -22,7 +22,7 @@ struct ChatInputView: View {
                     .textFieldStyle(.plain)
                     .focused($isTextFieldFocused)
                     .padding(.horizontal, Spacing.medium)
-                    .padding(.vertical, Spacing.small)
+                    .padding(.vertical, Spacing.medium)
                     .glassEffect(.regular, in: .rect(cornerRadius: CornerRadius.xLarge))
                     .glassEffectID("textField", in: glassNamespace)
                     .onSubmit {
@@ -32,41 +32,37 @@ struct ChatInputView: View {
                     .submitLabel(.send)
 #endif
 
-                Button(action: sendMessage) {
-                    Image(systemName: "arrow.up")
-                        .font(.headline)
-                        .foregroundStyle(
-                            messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .gray : .white
-                        )
-                }
-                .padding(Spacing.small)
-                .glassEffect(
-                    .regular
-                        .tint(messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .clear : .main)
-                        .interactive(true), in: .circle
-                )
-                .glassEffectID("sendButton", in: glassNamespace)
-                .disabled(
-                    messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
-                    chatViewModel.isLoading ||
-                    chatViewModel.isSummarizing
-                )
+                if messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    Button(action: onVoiceTap) {
+                        Image(systemName: "waveform")
+                            .font(.subheadline)
+                            .foregroundStyle(.white)
+                    }
+                    .padding(Spacing.small)
+                    .glassEffect(
+                        .regular
+                            .tint(.indigo)
+                            .interactive(true), in: .circle
+                    )
+                    .glassEffectID("voiceButton", in: glassNamespace)
+                } else {
+                    Button(action: sendMessage) {
+                        Image(systemName: "arrow.up")
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                    }
+                    .padding(Spacing.small)
+                    .glassEffect(
+                        .regular
+                            .tint(.main)
+                            .interactive(true), in: .circle
+                    )
+                    .glassEffectID("sendButton", in: glassNamespace)
+                    .disabled(chatViewModel.isLoading || chatViewModel.isSummarizing)
 #if os(macOS)
-                .buttonStyle(.plain)
+                    .buttonStyle(.plain)
 #endif
-
-                Button(action: onVoiceTap) {
-                    Image(systemName: "waveform")
-                        .font(.subheadline)
-                        .foregroundStyle(.white)
                 }
-                .padding(Spacing.small)
-                .glassEffect(
-                    .regular
-                        .tint(.indigo)
-                        .interactive(true), in: .circle
-                )
-                .glassEffectID("voiceButton", in: glassNamespace)
             }
         }
         .padding()
