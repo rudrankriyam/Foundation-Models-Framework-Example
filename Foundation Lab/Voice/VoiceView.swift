@@ -107,10 +107,11 @@ struct VoiceView: View {
                                 .multilineTextAlignment(.center)
                                 .padding()
                                 .frame(maxWidth: 300)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .fill(Color.adaptiveBackground.opacity(0.1))
+                                )
                         }
-                    }
-                    .background {
-                        RoundedRectangle(cornerRadius: 16)
                     }
                     .transition(.asymmetric(
                         insertion: .scale(scale: 0.8).combined(with: .opacity),
