@@ -10,7 +10,6 @@ import FoundationModels
 
 struct AdaptiveNavigationView: View {
     @State private var contentViewModel = ContentViewModel()
-    @State private var chatViewModel = ChatViewModel()
     @State private var languageService = LanguageService()
     @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -42,21 +41,21 @@ struct AdaptiveNavigationView: View {
                 }
             }
 
-            Tab(TabSelection.integrations.displayName, systemImage: "wrench.and.screwdriver", value: .integrations) {
+            Tab(TabSelection.tools.displayName, systemImage: "wrench.and.screwdriver", value: .tools) {
                 NavigationStack {
-                    IntegrationsView()
+                    ToolsView()
                 }
             }
 
-            Tab(TabSelection.chat.displayName, systemImage: "bubble.left.and.bubble.right", value: .chat) {
+            Tab(TabSelection.schemas.displayName, systemImage: "doc.text", value: .schemas) {
                 NavigationStack {
-                    ChatView(viewModel: $chatViewModel)
+                    SchemaExamplesView()
                 }
             }
 
-            Tab(TabSelection.voice.displayName, systemImage: "mic", value: .voice) {
+            Tab(TabSelection.languages.displayName, systemImage: "globe.badge.chevron.backward", value: .languages) {
                 NavigationStack {
-                    VoiceView()
+                    LanguagesIntegrationsView()
                 }
             }
 
@@ -103,18 +102,17 @@ struct AdaptiveNavigationView: View {
             NavigationStack {
                 ExamplesView(viewModel: $contentViewModel)
             }
-        case .integrations:
+        case .tools:
             NavigationStack {
-                IntegrationsView()
+                ToolsView()
             }
-        case .chat:
+        case .schemas:
             NavigationStack {
-                ChatView(viewModel: $chatViewModel)
+                SchemaExamplesView()
             }
-        case .voice:
+        case .languages:
             NavigationStack {
-                VoiceView()
-                    .navigationTitle("Voice")
+                LanguagesIntegrationsView()
             }
         case .settings:
             NavigationStack {

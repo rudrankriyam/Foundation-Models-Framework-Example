@@ -9,12 +9,14 @@ import SwiftUI
 import FoundationModels
 
 struct ChatView: View {
-    @Binding var viewModel: ChatViewModel
+    @State private var viewModel = ChatViewModel()
     @State private var scrollID: String?
     @State private var messageText = ""
     @State private var showInstructionsSheet = false
     @State private var showFeedbackSheet = false
+    @State private var showVoiceSheet = false
     @FocusState private var isTextFieldFocused: Bool
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         VStack(spacing: 0) {
@@ -26,15 +28,23 @@ struct ChatView: View {
 
             ChatInputView(
                 messageText: $messageText,
-                isTextFieldFocused: $isTextFieldFocused
+                isTextFieldFocused: $isTextFieldFocused,
+                onVoiceTap: { showVoiceSheet = true }
             )
         }
         .environment(viewModel)
-        .navigationTitle("Chat (\(viewModel.session.transcript.estimatedTokenCount) tokens)")
+        .navigationTitle("Chat")
 #if os(iOS)
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarTitleDisplayMode(.inline)
 #endif
         .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Done") {
+                    dismiss()
+                }
+                .keyboardShortcut(.defaultAction)
+            }
+
             ToolbarItemGroup(placement: .primaryAction) {
                 Button(action: { showInstructionsSheet = true }, label: {
                     Label("Instructions", systemImage: "doc.text")
@@ -85,6 +95,12 @@ struct ChatView: View {
             )
 #if os(macOS)
             .frame(minWidth: 500, minHeight: 400)
+#endif
+        }
+        .sheet(isPresented: $showVoiceSheet) {
+            VoiceView()
+#if os(macOS)
+            .frame(minWidth: 700, minHeight: 500)
 #endif
         }
     }
@@ -166,6 +182,6 @@ struct ChatView: View {
 
 #Preview {
     NavigationStack {
-        ChatView(viewModel: .constant(ChatViewModel()))
+        ChatView()
     }
 }

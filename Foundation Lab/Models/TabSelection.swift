@@ -9,17 +9,12 @@ import Foundation
 
 enum TabSelection: String, CaseIterable, Hashable {
   case examples
-  case integrations
-  case chat
-  case voice
+  case tools
+  case schemas
+  case languages
   case settings
 
   var displayName: String {
-    switch self {
-    case .integrations:
-      return "Integrations"
-    default:
-      return rawValue.capitalized
-    }
+    rawValue.capitalized
   }
 }

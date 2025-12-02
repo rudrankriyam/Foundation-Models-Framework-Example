@@ -10,11 +10,13 @@ import FoundationModels
 
 struct ExamplesView: View {
     @Binding var viewModel: ContentViewModel
+    @State private var showChatFullscreen = false
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.large) {
-                exampleButtonsView
+                chatSection
+                examplesGridView
                 responseView
                 loadingView
             }
@@ -44,15 +46,52 @@ struct ExamplesView: View {
                 GenerationOptionsView()
             case .health:
                 HealthExampleView()
+            case .chat:
+                EmptyView()
+            }
+        }
+        .fullScreenCover(isPresented: $showChatFullscreen) {
+            NavigationStack {
+                ChatView()
             }
         }
     }
 
     // MARK: - View Components
 
-    private var exampleButtonsView: some View {
+    private var chatSection: some View {
+        Button(action: { showChatFullscreen = true }) {
+            HStack(spacing: Spacing.medium) {
+                Image(systemName: "bubble.left.and.bubble.right.fill")
+                    .font(.title2)
+                    .foregroundStyle(.tint)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Chat")
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+
+                    Text("Multi-turn conversation with AI assistant")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer(minLength: 0)
+            }
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+#if os(iOS) || os(macOS)
+            .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
+#endif
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, Spacing.medium)
+    }
+
+    private var examplesGridView: some View {
         LazyVGrid(columns: adaptiveGridColumns, spacing: Spacing.large) {
-            ForEach(ExampleType.allCases) { exampleType in
+            ForEach(ExampleType.gridExamples) { exampleType in
                 NavigationLink(value: exampleType) {
                     GenericCardView(
                         icon: exampleType.icon,
