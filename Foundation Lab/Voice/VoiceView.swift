@@ -26,6 +26,9 @@ struct VoiceView: View {
         .onChange(of: viewModel.allPermissionsGranted) { _, _ in
             // Force view update when permissions change
         }
+        .task {
+            await viewModel.prewarmAndGreet()
+        }
         .onDisappear {
             viewModel.tearDown()
         }

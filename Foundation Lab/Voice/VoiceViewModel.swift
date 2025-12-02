@@ -173,6 +173,20 @@ class VoiceViewModel {
         stateMachine.stopWorkflow()
     }
 
+    func prewarmAndGreet() async {
+        logger.info("Prewarming and sending greeting")
+
+        // Prewarm the session for faster responses
+        inferenceService.session.prewarm()
+
+        // Send a greeting
+        let greeting = "Hey there! How can I help you today?"
+        recognizedText = greeting
+
+        // Process through state machine for TTS
+        stateMachine.simulateGreeting(greeting)
+    }
+
     // MARK: - UI Feedback Methods
 
     private func showError(_ message: String) {
