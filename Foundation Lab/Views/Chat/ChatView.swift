@@ -77,10 +77,7 @@ struct ChatView: View {
         }
         .sheet(isPresented: $showInstructionsSheet) {
             ChatInstructionsView(
-                instructions: $viewModel.instructions,
-                samplingStrategy: $viewModel.samplingStrategy,
-                topKSamplingValue: $viewModel.topKSamplingValue,
-                useFixedSeed: $viewModel.useFixedSeed,
+                viewModel: $viewModel,
                 onApply: {
                     viewModel.updateInstructions(viewModel.instructions)
                     viewModel.clearChat()
