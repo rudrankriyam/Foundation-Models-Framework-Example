@@ -14,7 +14,8 @@ struct ExamplesView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.large) {
-                exampleButtonsView
+                chatSection
+                examplesGridView
                 responseView
                 loadingView
             }
@@ -52,9 +53,48 @@ struct ExamplesView: View {
 
     // MARK: - View Components
 
-    private var exampleButtonsView: some View {
+    private var chatSection: some View {
+        NavigationLink(value: ExampleType.chat) {
+            HStack(spacing: Spacing.medium) {
+                Image(systemName: "bubble.left.and.bubble.right.fill")
+                    .font(.system(size: 32))
+                    .foregroundStyle(.blue)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Chat")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.primary)
+
+                    Text("Multi-turn conversation with AI assistant")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(Spacing.large)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(.regularMaterial)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+            )
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, Spacing.medium)
+    }
+
+    private var examplesGridView: some View {
         LazyVGrid(columns: adaptiveGridColumns, spacing: Spacing.large) {
-            ForEach(ExampleType.allCases) { exampleType in
+            ForEach(ExampleType.allCases.filter { $0 != .chat }) { exampleType in
                 NavigationLink(value: exampleType) {
                     GenericCardView(
                         icon: exampleType.icon,

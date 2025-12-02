@@ -94,7 +94,7 @@ enum ExampleType: String, CaseIterable, Identifiable {
         case .health:
             return "heart.fill"
         case .chat:
-            return "chat.bubble"
+            return "bubble.left.and.bubble.right.fill"
         }
     }
 
