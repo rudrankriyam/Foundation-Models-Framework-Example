@@ -28,14 +28,14 @@ struct GenerationGuidesView: View {
         // Info Banner
         HStack {
           Image(systemName: "info.circle")
-            .foregroundColor(.purple)
+            .foregroundColor(.blue)
           Text("Uses @Guide annotations to structure product reviews with ratings, pros, cons, and recommendations")
             .font(.caption)
             .foregroundColor(.secondary)
           Spacer()
         }
         .padding()
-        .background(Color.purple.opacity(0.1))
+        .background(Color.blue.opacity(0.1))
         .cornerRadius(8)
 
         // Prompt Suggestions

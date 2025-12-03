@@ -132,7 +132,7 @@ enum DynamicSchemaExampleType: String, CaseIterable, Identifiable {
             case .advanced:
                 return .red
             case .expert:
-                return .purple
+                return .blue
             }
         }
 

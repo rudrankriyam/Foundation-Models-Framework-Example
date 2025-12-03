@@ -71,7 +71,7 @@ struct ReferencedSchemaView: View {
                             .font(.system(.caption, design: .monospaced))
                             .padding(8)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color.purple.opacity(0.1))
+                            .background(Color.blue.opacity(0.1))
                             .cornerRadius(8)
                     }
                 }

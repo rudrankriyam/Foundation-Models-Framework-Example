@@ -41,7 +41,7 @@ struct ChatInputView: View {
                     .padding(Spacing.medium)
                     .glassEffect(
                         .regular
-                            .tint(.indigo)
+                            .tint(.blue)
                             .interactive(true), in: .circle
                     )
                     .glassEffectID("voiceButton", in: glassNamespace)
@@ -95,7 +95,7 @@ struct ChatInputView: View {
             Button(action: onVoiceTap) {
                 Image(systemName: "waveform.circle.fill")
                     .font(.title2)
-                    .foregroundStyle(.indigo)
+                    .foregroundStyle(.blue)
             }
             .buttonStyle(.plain)
             .padding(Spacing.small)

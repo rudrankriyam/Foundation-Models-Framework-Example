@@ -173,7 +173,7 @@ struct ProductionLanguageExampleView: View {
                     NutritionCard(
                         title: "Carbs",
                         value: "\(result.carbsGrams)g",
-                        color: .purple
+                        color: .blue
                     )
 
                     NutritionCard(

@@ -32,14 +32,14 @@ struct CreativeWritingView: View {
         // Info Banner
         HStack {
           Image(systemName: "info.circle")
-            .foregroundColor(.indigo)
+            .foregroundColor(.blue)
           Text("Creates structured story outlines with plot, characters, and themes")
             .font(.caption)
             .foregroundColor(.secondary)
           Spacer()
         }
         .padding()
-        .background(Color.indigo.opacity(0.1))
+        .background(Color.blue.opacity(0.1))
         .cornerRadius(8)
 
         // Prompt Suggestions

@@ -112,6 +112,13 @@ struct ChatView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: Spacing.medium) {
+                    if viewModel.session.transcript.count == 1 {
+                        Text("How can we help you today?")
+                            .font(.title2)
+                            .foregroundStyle(.secondary)
+                            .padding(.bottom, 48)
+                    }
+                    
                     ForEach(viewModel.session.transcript) { entry in
                         TranscriptEntryView(entry: entry)
                             .id(entry.id)

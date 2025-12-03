@@ -57,7 +57,7 @@ struct PermissionRequestView: View {
             .buttonBorderShape(.roundedRectangle(radius: 12))
             .disabled(isRequestingPermissions)
             .buttonStyle(.borderedProminent)
-            .tint(.indigo)
+            .tint(.blue)
             .padding(.vertical)
         }
         .padding()
@@ -123,7 +123,7 @@ struct PermissionItemView: View {
         return HStack(spacing: 15) {
             Image(systemName: icon)
                 .font(.system(size: 20))
-                .foregroundStyle(status == .granted ? Color.indigo : Color.gray)
+                .foregroundStyle(status == .granted ? Color.blue : Color.gray)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
@@ -140,7 +140,7 @@ struct PermissionItemView: View {
             if status == .granted {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.title2)
-                    .foregroundStyle(Color.indigo.gradient)
+                    .foregroundStyle(Color.blue.gradient)
                     .transition(.scale.combined(with: .opacity))
             }
         }
