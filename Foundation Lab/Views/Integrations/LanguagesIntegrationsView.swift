@@ -35,6 +35,9 @@ struct LanguagesIntegrationsView: View {
 #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
 #endif
+        .navigationDestination(for: LanguageExample.self) { languageExample in
+            languageExample.createView()
+        }
     }
 
     private var adaptiveGridColumns: [GridItem] {

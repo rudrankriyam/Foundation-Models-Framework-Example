@@ -91,7 +91,7 @@ struct ExamplesView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
 #if os(iOS) || os(macOS)
-            .glassEffect(.clear.interactive(), in: .rect(cornerRadius: 12))
+            .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
 #endif
         }
         .buttonStyle(.plain)

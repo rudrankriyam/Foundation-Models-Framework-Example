@@ -23,6 +23,9 @@ struct ToolsView: View {
       .padding(.vertical)
     }
     .navigationTitle("Tools")
+    .navigationDestination(for: ToolExample.self) { tool in
+      tool.createView()
+    }
   }
 
   private var toolButtonsView: some View {
