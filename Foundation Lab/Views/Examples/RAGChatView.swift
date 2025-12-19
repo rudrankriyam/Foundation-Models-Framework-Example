@@ -185,7 +185,8 @@ final class RAGChatViewModel {
     func indexDocument(from url: URL) async {
         await initialize()
 
-        guard let lumoKit = lumoKit else {
+        guard let lumoKit = lumoKit,
+              let chunking = chunkingConfig else {
             errorMessage = "RAG system not initialized"
             showError = true
             return
@@ -194,7 +195,7 @@ final class RAGChatViewModel {
         isSearching = true
 
         do {
-            try await lumoKit.parseAndIndex(url: url, chunkingConfig: chunkingConfig)
+            try await lumoKit.parseAndIndex(url: url, chunkingConfig: chunking)
             indexedDocumentCount += 1
         } catch LumoKitError.fileNotFound {
             errorMessage = "File not found at specified URL"
