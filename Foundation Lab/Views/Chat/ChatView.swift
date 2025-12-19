@@ -50,20 +50,17 @@ struct ChatView: View {
                 })
                 .help("Customize AI behavior")
 
-                Button(action: { viewModel.clearChat() }) {
-                    Image(systemName: "xmark")
-                }
-                .disabled(viewModel.session.transcript.isEmpty)
+                Button(action: clearChat, label: { Image(systemName: "xmark") })
+                .disabled(isChatEffectivelyEmpty)
                 .help("Clear chat")
             }
         }
-        .alert("Error", isPresented: $viewModel.showError) {
-            Button("OK") {
-                viewModel.dismissError()
-            }
-        } message: {
-            Text(viewModel.errorMessage ?? "An unknown error occurred")
-        }
+        .alert(
+            "Error",
+            isPresented: $viewModel.showError,
+            actions: { Button("OK") { viewModel.dismissError() } },
+            message: { Text(viewModel.errorMessage ?? "An unknown error occurred") }
+        )
         .onAppear {
             // Auto-focus when chat appears
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -77,7 +74,7 @@ struct ChatView: View {
                     viewModel: $viewModel,
                     onApply: {
                         viewModel.updateInstructions(viewModel.instructions)
-                        viewModel.clearChat()
+                        clearChat()
                     }
                 )
                 .navigationTitle("Instructions")
@@ -90,7 +87,7 @@ struct ChatView: View {
                     viewModel: $viewModel,
                     onApply: {
                         viewModel.updateInstructions(viewModel.instructions)
-                        viewModel.clearChat()
+                        clearChat()
                     }
                 )
                 .navigationTitle("Instructions")
@@ -112,13 +109,13 @@ struct ChatView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: Spacing.medium) {
-                    if viewModel.session.transcript.count == 1 {
+                    if isChatEffectivelyEmpty {
                         Text("How can we help you today?")
                             .font(.title2)
                             .foregroundStyle(.secondary)
                             .padding(.bottom, 48)
                     }
-                    
+
                     ForEach(viewModel.session.transcript) { entry in
                         TranscriptEntryView(entry: entry)
                             .id(entry.id)
@@ -185,6 +182,23 @@ struct ChatView: View {
             }
         }
         .defaultScrollAnchor(.bottom)
+    }
+
+    private var isChatEffectivelyEmpty: Bool {
+        !viewModel.session.transcript.contains { entry in
+            switch entry {
+            case .instructions:
+                return false
+            default:
+                return true
+            }
+        }
+    }
+
+    private func clearChat() {
+        messageText = ""
+        scrollID = "bottom"
+        viewModel.clearChat()
     }
 }
 

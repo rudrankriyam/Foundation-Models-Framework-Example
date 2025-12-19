@@ -58,20 +58,6 @@ final class ChatViewModel {
         }
     }
 
-    // MARK: - Language Model
-
-    private func createLanguageModel() -> SystemLanguageModel {
-        let guardrails: SystemLanguageModel.Guardrails = usePermissiveGuardrails ?
-            .permissiveContentTransformations : .default
-        return SystemLanguageModel(useCase: .general, guardrails: guardrails)
-    }
-
-    private func generateAndStoreSeed() -> UInt64 {
-        let seed = UInt64.random(in: UInt64.min...UInt64.max)
-        samplingSeed = seed
-        return seed
-    }
-
     // MARK: - Sliding Window Configuration
     private let maxTokens = AppConfiguration.TokenManagement.maxTokens
     private let windowThreshold = AppConfiguration.TokenManagement.windowThreshold
@@ -139,6 +125,11 @@ final class ChatViewModel {
     func clearChat() {
         sessionCount = 1
         feedbackState.removeAll()
+        isLoading = false
+        isSummarizing = false
+        isApplyingWindow = false
+        errorMessage = nil
+        showError = false
         session = LanguageModelSession(
             model: createLanguageModel(),
             instructions: Instructions(instructions)
@@ -156,20 +147,42 @@ final class ChatViewModel {
         )
     }
 
+    @MainActor
+    func dismissError() {
+        showError = false
+        errorMessage = nil
+    }
+}
+
+private extension ChatViewModel {
+    // MARK: - Language Model
+
+    func createLanguageModel() -> SystemLanguageModel {
+        let guardrails: SystemLanguageModel.Guardrails = usePermissiveGuardrails ?
+            .permissiveContentTransformations : .default
+        return SystemLanguageModel(useCase: .general, guardrails: guardrails)
+    }
+
+    func generateAndStoreSeed() -> UInt64 {
+        let seed = UInt64.random(in: UInt64.min...UInt64.max)
+        samplingSeed = seed
+        return seed
+    }
+}
+
+private extension ChatViewModel {
     // MARK: - Sliding Window Implementation
 
-    private func shouldApplyWindow() -> Bool {
-        return session.transcript.isApproachingLimit(threshold: windowThreshold, maxTokens: maxTokens)
+    func shouldApplyWindow() -> Bool {
+        session.transcript.isApproachingLimit(threshold: windowThreshold, maxTokens: maxTokens)
     }
 
     @MainActor
-    private func applySlidingWindow() async {
+    func applySlidingWindow() async {
         isApplyingWindow = true
 
-        // Get entries that fit within our target window size
         let windowEntries = session.transcript.entriesWithinTokenBudget(targetWindowSize)
 
-        // Always preserve instructions at the beginning
         var finalEntries = windowEntries
         if let instructions = session.transcript.first(where: {
             if case .instructions = $0 { return true }
@@ -180,20 +193,20 @@ final class ChatViewModel {
             }
         }
 
-        // Create new session with windowed transcript
         let windowedTranscript = Transcript(entries: finalEntries)
         _ = windowedTranscript.estimatedTokenCount
 
         session = LanguageModelSession(model: createLanguageModel(), transcript: windowedTranscript)
-
         sessionCount += 1
 
         isApplyingWindow = false
     }
+}
 
-    // MARK: - Private Methods (Existing)
+private extension ChatViewModel {
+    // MARK: - Error Handling + Context Management
 
-    private func handleFoundationModelsError(_ error: Error) -> String {
+    func handleFoundationModelsError(_ error: Error) -> String {
         if let generationError = error as? LanguageModelSession.GenerationError {
             return FoundationModelsErrorHandler.handleGenerationError(generationError)
         } else if let toolCallError = error as? LanguageModelSession.ToolCallError {
@@ -206,7 +219,7 @@ final class ChatViewModel {
     }
 
     @MainActor
-    private func handleContextWindowExceeded(userMessage: String) async {
+    func handleContextWindowExceeded(userMessage: String) async {
         isSummarizing = true
 
         do {
@@ -222,8 +235,8 @@ final class ChatViewModel {
         }
     }
 
-    private func createConversationText() -> String {
-        return session.transcript.compactMap { entry in
+    func createConversationText() -> String {
+        session.transcript.compactMap { entry in
             switch entry {
             case .prompt(let prompt):
                 let text = prompt.segments.compactMap { segment in
@@ -248,22 +261,22 @@ final class ChatViewModel {
     }
 
     @MainActor
-    private func generateConversationSummary() async throws -> ConversationSummary {
+    func generateConversationSummary() async throws -> ConversationSummary {
         let summarySession = LanguageModelSession(
             model: createLanguageModel(),
             instructions: Instructions(
                 "You are an expert at summarizing conversations. Create comprehensive summaries that " +
-                "preserve all important context and details."
+                    "preserve all important context and details."
             )
         )
 
         let conversationText = createConversationText()
         let summaryPrompt = """
-      Please summarize the following entire conversation comprehensively. Include all key points, topics discussed, \
-      user preferences, and important context that would help continue the conversation naturally:
+        Please summarize the following entire conversation comprehensively. Include all key points, topics discussed, \
+        user preferences, and important context that would help continue the conversation naturally:
 
-      \(conversationText)
-      """
+        \(conversationText)
+        """
 
         let summaryResponse = try await summarySession.respond(
             to: Prompt(summaryPrompt),
@@ -273,25 +286,24 @@ final class ChatViewModel {
         return summaryResponse.content
     }
 
-    private func createNewSessionWithContext(summary: ConversationSummary) {
+    func createNewSessionWithContext(summary: ConversationSummary) {
         let contextInstructions = """
-      \(instructions)
+        \(instructions)
 
-      You are continuing a conversation with a user. Here's a summary of your previous conversation:
+        You are continuing a conversation with a user. Here's a summary of your previous conversation:
 
-      CONVERSATION SUMMARY:
-      \(summary.summary)
+        CONVERSATION SUMMARY:
+        \(summary.summary)
 
-      KEY TOPICS DISCUSSED:
-      \(summary.keyTopics.map { "• \($0)" }.joined(separator: "\n"))
+        KEY TOPICS DISCUSSED:
+        \(summary.keyTopics.map { "• \($0)" }.joined(separator: "\n"))
 
-      USER PREFERENCES/REQUESTS:
-      \(summary.userPreferences.map { "• \($0)" }
-        .joined(separator: "\n"))
+        USER PREFERENCES/REQUESTS:
+        \(summary.userPreferences.map { "• \($0)" }.joined(separator: "\n"))
 
-      Continue the conversation naturally, referencing this context when relevant. \
-      The user's next message is a continuation of your previous discussion.
-      """
+        Continue the conversation naturally, referencing this context when relevant. \
+        The user's next message is a continuation of your previous discussion.
+        """
 
         session = LanguageModelSession(
             model: createLanguageModel(),
@@ -301,7 +313,7 @@ final class ChatViewModel {
     }
 
     @MainActor
-    private func respondWithNewSession(to userMessage: String) async throws {
+    func respondWithNewSession(to userMessage: String) async throws {
         let responseStream = session.streamResponse(to: Prompt(userMessage), options: generationOptions)
 
         for try await _ in responseStream {
@@ -310,15 +322,9 @@ final class ChatViewModel {
     }
 
     @MainActor
-    private func handleSummarizationError(_ error: Error) {
+    func handleSummarizationError(_ error: Error) {
         isSummarizing = false
         errorMessage = error.localizedDescription
         showError = true
-    }
-
-    @MainActor
-    func dismissError() {
-        showError = false
-        errorMessage = nil
     }
 }
