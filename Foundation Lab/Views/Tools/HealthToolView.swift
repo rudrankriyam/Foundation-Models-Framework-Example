@@ -69,42 +69,50 @@ struct HealthToolView: View {
         }
     }
 
-    private func executeHealthQuery() {
-        Task {
-            let today = Date()
-            let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: today)!
+	    private func executeHealthQuery() {
+	        Task {
+	            let today = Date()
+	            let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: today)!
+	            let weekAgo = Calendar.current.date(byAdding: .day, value: -7, to: today)!
 
-            let todayString = today.formatted(.iso8601.year().month().day().dateSeparator(.dash))
-            let yesterdayString = yesterday.formatted(.iso8601.year().month().day().dateSeparator(.dash))
+	            let todayString = today.formatted(.iso8601.year().month().day().dateSeparator(.dash))
+	            let yesterdayString = yesterday.formatted(.iso8601.year().month().day().dateSeparator(.dash))
+	            let weekAgoString = weekAgo.formatted(.iso8601.year().month().day().dateSeparator(.dash))
 
-            await executor.executeWithPromptBuilder(
-                tool: HealthTool(),
-                successMessage: "Health data query completed successfully!"
-            ) {
-                query
+	            let prompt = """
+	            \(query)
 
-                """
-                Today's date is: \(todayString)
+	            Today's date is: \(todayString)
 
-                Please use the Health tool with the appropriate action and dataType based on the above query.
+	            Please use the Health tool (`accessHealth`) with the appropriate `dataType`, `startDate`, and `endDate`
+	            based on the query above.
 
-                IMPORTANT: Pay attention to time periods in the query:
-                - "today" means use startDate="\(todayString)" and endDate="\(todayString)"
-                - "yesterday" means use startDate="\(yesterdayString)" and endDate="\(yesterdayString)"
-                - "this week" means last 7 days
-                - If no time period specified, default to last 7 days
+	            Important:
+	            - Do NOT include an `action` argument (the tool does not support it).
+	            - `dataType` must be one of: steps, heartRate, workouts, sleep, activeEnergy, distance.
 
-                Examples:
-                - For steps today: action="read", dataType="steps", startDate="\(todayString)", endDate="\(todayString)"
-                - For heart rate: action="read", dataType="heartRate"
-                - For workouts: action="read", dataType="workouts"
-        - For sleep: action="read", dataType="sleep"
-        - For active energy: action="read", dataType="activeEnergy"
-        - For distance: action="read", dataType="distance"
-        """
-            }
-        }
-    }
+	            IMPORTANT: Pay attention to time periods in the query:
+	            - "today" means use startDate="\(todayString)" and endDate="\(todayString)"
+	            - "yesterday" means use startDate="\(yesterdayString)" and endDate="\(yesterdayString)"
+	            - "this week" means last 7 days: startDate="\(weekAgoString)" and endDate="\(todayString)"
+	            - If no time period specified, default to last 7 days: startDate="\(weekAgoString)" and endDate="\(todayString)"
+
+	            Examples:
+	            - steps today: dataType="steps", startDate="\(todayString)", endDate="\(todayString)"
+	            - heartRate (last 7 days): dataType="heartRate", startDate="\(weekAgoString)", endDate="\(todayString)"
+	            - workouts (last 7 days): dataType="workouts", startDate="\(weekAgoString)", endDate="\(todayString)"
+	            - sleep (last 7 days): dataType="sleep", startDate="\(weekAgoString)", endDate="\(todayString)"
+	            - activeEnergy (last 7 days): dataType="activeEnergy", startDate="\(weekAgoString)", endDate="\(todayString)"
+	            - distance (last 7 days): dataType="distance", startDate="\(weekAgoString)", endDate="\(todayString)"
+	            """
+
+	            await executor.execute(
+	                tool: HealthTool(),
+	                prompt: prompt,
+	                successMessage: "Health data query completed successfully!"
+	            )
+	        }
+	    }
 }
 
 #Preview {

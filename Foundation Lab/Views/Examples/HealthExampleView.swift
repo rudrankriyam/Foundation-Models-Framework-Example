@@ -7,12 +7,19 @@
 
 import SwiftUI
 import SwiftData
+#if os(iOS) && canImport(HealthKit)
+import HealthKit
+#endif
 
 struct HealthExampleView: View {
     var body: some View {
         Group {
-#if os(iOS)
-            HealthDashboardView()
+#if os(iOS) && canImport(HealthKit)
+            if HKHealthStore.isHealthDataAvailable() {
+                HealthDashboardView()
+            } else {
+                HealthUnavailableView()
+            }
 #else
             HealthUnavailableView()
 #endif
