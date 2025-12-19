@@ -7,15 +7,18 @@
 
 import SwiftUI
 import LumoKit
+import UniformTypeIdentifiers
 
 struct RAGDocumentPickerView: View {
     @Bindable var viewModel: RAGChatViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var selectedTab: DocumentPickerTab = .documents
+    @State private var showFilePicker = false
+    @State private var showAddTextSheet = false
 
     enum DocumentPickerTab: String, CaseIterable {
         case documents = "Documents"
-        case configuration = "Configuration"
+        case samples = "Samples"
     }
 
     var body: some View {
@@ -31,13 +34,15 @@ struct RAGDocumentPickerView: View {
 
                 switch selectedTab {
                 case .documents:
-                    DocumentListView(viewModel: viewModel)
-                case .configuration:
-                    RAGConfigurationView(viewModel: viewModel)
+                    DocumentListView(viewModel: viewModel, showFilePicker: $showFilePicker)
+                case .samples:
+                    SamplesView(viewModel: viewModel)
                 }
             }
             .navigationTitle("RAG Documents")
+#if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+#endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Done") {
@@ -46,16 +51,39 @@ struct RAGDocumentPickerView: View {
                 }
 
                 ToolbarItem(placement: .primaryAction) {
-                    Button(action: loadSampleDocuments) {
-                        Label("Add Samples", systemImage: "doc.badge.plus")
+                    Menu {
+                        Button(action: { showFilePicker = true }) {
+                            Label("Import File", systemImage: "doc")
+                        }
+
+                        Button(action: { showAddTextSheet = true }) {
+                            Label("Add Text", systemImage: "text")
+                        }
+                    } label: {
+                        Image(systemName: "plus")
                     }
                 }
             }
+            .fileImporter(
+                isPresented: $showFilePicker,
+                allowedContentTypes: [.pdf, .plainText, .html, .rtf, .text],
+                allowsMultipleSelection: false
+            ) { result in
+                switch result {
+                case .success(let urls):
+                    if let url = urls.first {
+                        Task {
+                            await viewModel.indexDocument(from: url)
+                        }
+                    }
+                case .failure:
+                    break
+                }
+            }
+            .sheet(isPresented: $showAddTextSheet) {
+                AddTextSheet(viewModel: viewModel)
+            }
         }
-    }
-
-    private func loadSampleDocuments() {
-        viewModel.loadSampleDocuments()
     }
 }
 
@@ -63,38 +91,130 @@ struct RAGDocumentPickerView: View {
 
 struct DocumentListView: View {
     @Bindable var viewModel: RAGChatViewModel
-    @State private var showAddDocumentSheet = false
+    @Binding var showFilePicker: Bool
 
     var body: some View {
         List {
-            ContentUnavailableView(
-                "No Documents",
-                systemImage: "doc.text",
-                description: Text("Add documents to enable RAG-powered conversations")
-            )
-        }
-        .listStyle(.insetGrouped)
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button(action: { showAddDocumentSheet = true }) {
-                    Image(systemName: "plus")
+            Section {
+                Button(action: { showFilePicker = true }) {
+                    HStack {
+                        Image(systemName: "doc.badge.plus")
+                            .font(.title2)
+                            .foregroundStyle(.blue)
+                            .frame(width: 40, height: 40)
+                            .background(Color.blue.opacity(0.1))
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+
+                        VStack(alignment: .leading) {
+                            Text("Import Document")
+                                .font(.headline)
+                            Text("PDF, Markdown, Text, HTML")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+
+                        Spacer()
+
+                        Image(systemName: "chevron.right")
+                            .foregroundStyle(.secondary)
+                    }
                 }
+                .buttonStyle(.plain)
+            }
+
+            Section {
+                if viewModel.indexedDocumentCount > 0 {
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                        Text("\(viewModel.indexedDocumentCount) documents indexed")
+                    }
+                } else {
+                    ContentUnavailableView(
+                        "No Documents",
+                        systemImage: "doc.text",
+                        description: Text("Import documents to enable RAG-powered conversations")
+                    )
+                }
+            } header: {
+                Text("Status")
             }
         }
-        .sheet(isPresented: $showAddDocumentSheet) {
-            AddDocumentSheet(viewModel: viewModel)
-        }
+        .listStyle(.inset)
     }
 }
 
-// MARK: - Add Document Sheet
+// MARK: - Samples View
 
-struct AddDocumentSheet: View {
+struct SamplesView: View {
+    @Bindable var viewModel: RAGChatViewModel
+
+    var body: some View {
+        List {
+            Section {
+                Button(action: {
+                    Task {
+                        await viewModel.loadSampleDocuments()
+                    }
+                }) {
+                    HStack {
+                        Image(systemName: "book.pages")
+                            .font(.title2)
+                            .foregroundStyle(.purple)
+                            .frame(width: 40, height: 40)
+                            .background(Color.purple.opacity(0.1))
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+
+                        VStack(alignment: .leading) {
+                            Text("Load Sample Documents")
+                                .font(.headline)
+                            Text("Swift Concurrency, Foundation Models, HealthKit")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+
+                        Spacer()
+
+                        if viewModel.isSearching {
+                            ProgressView()
+                        }
+                    }
+                }
+                .buttonStyle(.plain)
+                .disabled(viewModel.isSearching)
+            } header: {
+                Text("Sample Data")
+            } footer: {
+                Text("Load pre-built sample documents to test RAG functionality")
+            }
+
+            if viewModel.indexedDocumentCount > 0 {
+                Section {
+                    Button(role: .destructive, action: {
+                        Task {
+                            await viewModel.resetDatabase()
+                        }
+                    }) {
+                        HStack {
+                            Image(systemName: "trash")
+                                .foregroundStyle(.red)
+                            Text("Clear All Documents")
+                        }
+                    }
+                }
+            }
+        }
+        .listStyle(.inset)
+    }
+}
+
+// MARK: - Add Text Sheet
+
+struct AddTextSheet: View {
     @Bindable var viewModel: RAGChatViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var title = ""
     @State private var content = ""
-    @State private var sourceType: RAGDocument.SourceType = .text
     @State private var isIndexing = false
 
     var body: some View {
@@ -102,12 +222,6 @@ struct AddDocumentSheet: View {
             Form {
                 Section("Document Info") {
                     TextField("Title", text: $title)
-
-                    Picker("Source Type", selection: $sourceType) {
-                        ForEach(RAGDocument.SourceType.allCases, id: \.self) { type in
-                            Label(type.rawValue, systemImage: type.icon).tag(type)
-                        }
-                    }
                 }
 
                 Section("Content") {
@@ -115,8 +229,10 @@ struct AddDocumentSheet: View {
                         .frame(minHeight: 200)
                 }
             }
-            .navigationTitle("Add Document")
+            .navigationTitle("Add Text")
+#if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+#endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
@@ -133,7 +249,7 @@ struct AddDocumentSheet: View {
             }
             .overlay {
                 if isIndexing {
-                    ProgressView("Indexing document...")
+                    ProgressView("Indexing...")
                         .padding()
                         .background(.regularMaterial)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -145,53 +261,10 @@ struct AddDocumentSheet: View {
 
     private func addDocument() {
         isIndexing = true
-        dismiss()
-    }
-}
-
-// MARK: - RAG Configuration View
-
-struct RAGConfigurationView: View {
-    @Bindable var viewModel: RAGChatViewModel
-
-    var body: some View {
-        Text("Configuration options will appear here")
-            .padding()
-    }
-}
-
-// MARK: - RAG Document Model (for picker)
-
-struct RAGDocument: Identifiable, Equatable {
-    let id: UUID
-    let title: String
-    let content: String
-    let sourceType: SourceType
-    let chunkCount: Int
-    let createdAt: Date
-
-    enum SourceType: String, CaseIterable {
-        case pdf = "PDF"
-        case markdown = "Markdown"
-        case text = "Text"
-        case html = "HTML"
-
-        var icon: String {
-            switch self {
-            case .pdf: return "doc.fill"
-            case .markdown: return "text.markdown"
-            case .text: return "doc.text"
-            case .html: return "globe"
-            }
+        Task {
+            await viewModel.indexText(content, title: title)
+            isIndexing = false
+            dismiss()
         }
-    }
-
-    init(id: UUID = UUID(), title: String, content: String, sourceType: SourceType, chunkCount: Int? = nil) {
-        self.id = id
-        self.title = title
-        self.content = content
-        self.sourceType = sourceType
-        self.chunkCount = chunkCount ?? max(1, Int(ceil(Double(content.split(separator: " ").count) / 100.0)))
-        self.createdAt = Date()
     }
 }

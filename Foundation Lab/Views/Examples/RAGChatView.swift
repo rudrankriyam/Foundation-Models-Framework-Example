@@ -28,7 +28,9 @@ struct RAGChatView: View {
             chatInputView
         }
         .navigationTitle("RAG Chat")
+#if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+#endif
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button(action: { viewModel.showDocumentPicker = true }) {
@@ -57,11 +59,11 @@ struct RAGChatView: View {
                     RAGMessageBubble(entry: entry)
                 }
 
-                if viewModel.isGenerating {
+                if viewModel.isSearching || viewModel.isGenerating {
                     HStack {
                         ProgressView()
                             .scaleEffect(0.8)
-                        Text("Generating...")
+                        Text(viewModel.isSearching ? "Searching..." : "Generating...")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         Spacer()
@@ -120,40 +122,172 @@ final class RAGChatViewModel {
     var isSearching = false
     var isGenerating = false
     var showDocumentPicker = false
+    var indexedDocumentCount = 0
     var errorMessage: String?
+    var showError = false
 
     // LumoKit instance
     private var lumoKit: LumoKit?
+    private var vectura: VecturaKit?
     private var isInitialized = false
 
-    func initialize() async {
-        guard !isInitialized else { return }
+    // Configuration
+    private var vecturaConfig: VecturaConfig?
+    private var chunkingConfig: ChunkingConfig?
 
+    init() {
         do {
-            let vecturaConfig = try VecturaConfig(
+            let searchOptions = VecturaConfig.SearchOptions(
+                defaultNumResults: 5,
+                minThreshold: 0.5
+            )
+            vecturaConfig = try VecturaConfig(
                 name: "foundation-lab-rag",
-                searchOptions: .init(defaultNumResults: 5, minThreshold: 0.5)
+                searchOptions: searchOptions
             )
 
-            let chunkingConfig = try ChunkingConfig(
+            chunkingConfig = ChunkingConfig(
                 chunkSize: 500,
                 overlapPercentage: 0.15,
                 strategy: .semantic,
                 contentType: .prose
             )
+        } catch {
+            errorMessage = "Failed to initialize RAG configuration: \(error.localizedDescription)"
+            showError = true
+        }
+    }
 
+    func initialize() async {
+        guard !isInitialized else { return }
+
+        guard let config = vecturaConfig, let chunking = chunkingConfig else {
+            errorMessage = "RAG configuration not initialized"
+            showError = true
+            return
+        }
+
+        do {
+            let embedder = SwiftEmbedder()
+            let vecturaInstance = try await VecturaKit(config: config, embedder: embedder)
+            vectura = vecturaInstance
             lumoKit = try await LumoKit(
-                config: vecturaConfig,
-                chunkingConfig: chunkingConfig
+                config: config,
+                chunkingConfig: chunking
             )
             isInitialized = true
         } catch {
             errorMessage = "Failed to initialize RAG: \(error.localizedDescription)"
+            showError = true
         }
     }
 
-    func loadSampleDocuments() {
-        // Sample document loading - to be implemented with LumoKit API
+    func indexDocument(from url: URL) async {
+        await initialize()
+
+        guard let lumoKit = lumoKit else {
+            errorMessage = "RAG system not initialized"
+            showError = true
+            return
+        }
+
+        isSearching = true
+
+        do {
+            try await lumoKit.parseAndIndex(url: url, chunkingConfig: chunkingConfig)
+            indexedDocumentCount += 1
+        } catch LumoKitError.fileNotFound {
+            errorMessage = "File not found at specified URL"
+            showError = true
+        } catch LumoKitError.unsupportedFileType {
+            errorMessage = "Unsupported file type. Please use PDF, Markdown, or Text files."
+            showError = true
+        } catch {
+            errorMessage = "Failed to index document: \(error.localizedDescription)"
+            showError = true
+        }
+
+        isSearching = false
+    }
+
+    func indexText(_ text: String, title: String) async {
+        await initialize()
+
+        guard let lumoKit = lumoKit,
+              let vectura = vectura,
+              let chunking = chunkingConfig else {
+            errorMessage = "RAG system not initialized"
+            showError = true
+            return
+        }
+
+        isSearching = true
+
+        do {
+            let chunks = try lumoKit.chunkText(text, config: chunking)
+            let texts = chunks.map { $0.text }
+            _ = try await vectura.addDocuments(texts: texts)
+            indexedDocumentCount += 1
+        } catch {
+            errorMessage = "Failed to index text: \(error.localizedDescription)"
+            showError = true
+        }
+
+        isSearching = false
+    }
+
+    func resetDatabase() async {
+        guard let vectura = vectura else { return }
+        try? await vectura.reset()
+        indexedDocumentCount = 0
+    }
+
+    func loadSampleDocuments() async {
+        await initialize()
+
+        guard let lumoKit = lumoKit,
+              let vectura = vectura,
+              let chunking = chunkingConfig else { return }
+
+        isSearching = true
+
+        let sampleTexts = [
+            ("Swift Concurrency", """
+            Swift's concurrency model provides a safe and efficient way to write concurrent code. \
+            Key concepts include async/await, actors, and structured concurrency. \
+            The @MainActor attribute ensures code runs on the main thread. \
+            Task groups allow parallel execution of child tasks. \
+            Sendable protocol ensures data can be safely transferred between concurrent contexts.
+            """),
+            ("Foundation Models", """
+            The Foundation Models framework enables AI-powered features in iOS apps. \
+            SystemLanguageModel provides access to on-device language models. \
+            LanguageModelSession manages conversation context and history. \
+            Structured generation allows parsing responses into custom types. \
+            Streaming responses enable real-time output display.
+            """),
+            ("HealthKit", """
+            HealthKit provides a central repository for health and fitness data. \
+            HKObserverQuery monitors changes to health data in real-time. \
+            Background delivery enables efficient data synchronization. \
+            Sample types include workouts, heart rate, and sleep analysis. \
+            Authorization requires user permission for each data type.
+            """)
+        ]
+
+        do {
+            for (title, text) in sampleTexts {
+                let chunks = try lumoKit.chunkText(text, config: chunking)
+                let texts = chunks.map { $0.text }
+                _ = try await vectura.addDocuments(texts: texts)
+            }
+            indexedDocumentCount = sampleTexts.count
+        } catch {
+            errorMessage = "Failed to load samples: \(error.localizedDescription)"
+            showError = true
+        }
+
+        isSearching = false
     }
 
     func sendMessage(_ content: String) async {
@@ -163,11 +297,10 @@ final class RAGChatViewModel {
         let userEntry = RAGChatEntry(role: .user, content: content, sources: [])
         conversation.append(userEntry)
 
-        isGenerating = true
+        isSearching = true
 
-        // Generate response using LumoKit's semantic search
-        var responseContent = "RAG functionality will be demonstrated once documents are indexed."
-        var relevantSources: [RAGChunk] = []
+        // Search for relevant documents
+        var relevantChunks: [RAGChunk] = []
 
         do {
             if let lumoKit = lumoKit {
@@ -177,23 +310,72 @@ final class RAGChatViewModel {
                     threshold: 0.5
                 )
 
-                // Process search results
-                relevantSources = results.map { result in
+                relevantChunks = results.map { result in
                     RAGChunk(
                         documentId: result.id.uuidString,
-                        documentTitle: result.id.uuidString,
-                        content: result.id.uuidString,
+                        documentTitle: "Document",
+                        content: result.text,
                         chunkIndex: 0,
                         similarityScore: Double(result.score)
                     )
                 }
-
-                if !results.isEmpty {
-                    responseContent = "Found \(results.count) relevant document chunks for your query about '\(content)'."
-                }
             }
         } catch {
-            responseContent = "Search failed: \(error.localizedDescription)"
+            errorMessage = "Search failed: \(error.localizedDescription)"
+            showError = true
+        }
+
+        isSearching = false
+        isGenerating = true
+
+        // Generate response using Foundation Models
+        var responseContent = ""
+        let systemPrompt = """
+        You are a helpful assistant. Answer the user's question based on the provided \
+        context from documents. If the context doesn't contain relevant information, \
+        say so clearly. Cite specific content from the documents when possible.
+        """
+
+        let contextText = relevantChunks.isEmpty ?
+            "No relevant documents found." :
+            relevantChunks.enumerated().map { index, chunk in
+                "[Document \(index + 1)]: \(chunk.content)"
+            }.joined(separator: "\n\n")
+
+        let augmentedPrompt = """
+        \(systemPrompt)
+
+        CONTEXT:
+        \(contextText)
+
+        USER QUESTION:
+        \(content)
+        """
+
+        do {
+            let session = LanguageModelSession(
+                model: SystemLanguageModel(useCase: .general),
+                instructions: Instructions(augmentedPrompt)
+            )
+
+            let responseStream = session.streamResponse(to: Prompt(content))
+
+            for try await _ in responseStream {
+                // Streaming automatically updates the session transcript
+            }
+
+            // Extract response from transcript
+            if let lastEntry = session.transcript.last,
+               case .response(let response) = lastEntry {
+                responseContent = response.segments.compactMap { segment in
+                    if case .text(let textSegment) = segment {
+                        return textSegment.content
+                    }
+                    return nil
+                }.joined()
+            }
+        } catch {
+            responseContent = "Failed to generate response: \(error.localizedDescription)"
         }
 
         isGenerating = false
@@ -201,9 +383,14 @@ final class RAGChatViewModel {
         let assistantEntry = RAGChatEntry(
             role: .assistant,
             content: responseContent,
-            sources: relevantSources
+            sources: relevantChunks
         )
         conversation.append(assistantEntry)
+    }
+
+    func dismissError() {
+        showError = false
+        errorMessage = nil
     }
 }
 
@@ -260,22 +447,19 @@ struct RAGMessageBubble: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: Spacing.small) {
                 ForEach(Array(entry.sources.enumerated()), id: \.offset) { index, source in
-                    HStack(spacing: 4) {
-                        Text("\(index + 1)")
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("\(index + 1). \(source.documentTitle)")
                             .font(.caption2)
                             .fontWeight(.semibold)
-                            .foregroundStyle(.white)
-                            .frame(width: 16, height: 16)
-                            .background(Color.blue)
-                            .clipShape(Circle())
+                            .foregroundStyle(.blue)
 
-                        Text(source.documentTitle)
-                            .font(.caption)
+                        Text(source.content)
+                            .font(.caption2)
                             .foregroundStyle(.secondary)
-                            .lineLimit(1)
+                            .lineLimit(2)
+                            .frame(maxWidth: 200, alignment: .leading)
                     }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(8)
                     .background(Color.blue.opacity(0.1))
                     .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
