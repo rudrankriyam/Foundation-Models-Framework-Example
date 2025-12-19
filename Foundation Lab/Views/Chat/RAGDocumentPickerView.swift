@@ -76,8 +76,9 @@ struct RAGDocumentPickerView: View {
                             await viewModel.indexDocument(from: url)
                         }
                     }
-                case .failure:
-                    break
+                case .failure(let error):
+                    viewModel.errorMessage = "Failed to access file: \(error.localizedDescription)"
+                    viewModel.showError = true
                 }
             }
             .sheet(isPresented: $showAddTextSheet) {

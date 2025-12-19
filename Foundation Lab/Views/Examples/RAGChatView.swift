@@ -41,6 +41,12 @@ struct RAGChatView: View {
         .sheet(isPresented: $viewModel.showDocumentPicker) {
             RAGDocumentPickerView(viewModel: viewModel)
         }
+        .alert(
+            "Error",
+            isPresented: $viewModel.showError,
+            actions: { Button("OK") { viewModel.dismissError() } },
+            message: { Text(viewModel.errorMessage ?? "An unknown error occurred") }
+        )
     }
 
     private var messagesView: some View {
@@ -239,8 +245,14 @@ final class RAGChatViewModel {
 
     func resetDatabase() async {
         guard let vectura = vectura else { return }
-        try? await vectura.reset()
-        indexedDocumentCount = 0
+
+        do {
+            try await vectura.reset()
+            indexedDocumentCount = 0
+        } catch {
+            errorMessage = "Failed to reset database: \(error.localizedDescription)"
+            showError = true
+        }
     }
 
     func loadSampleDocuments() async {
@@ -314,7 +326,7 @@ final class RAGChatViewModel {
                 relevantChunks = results.map { result in
                     RAGChunk(
                         documentId: result.id.uuidString,
-                        documentTitle: "Document",
+                        documentTitle: "Source",
                         content: result.text,
                         chunkIndex: 0,
                         similarityScore: Double(result.score)
@@ -329,8 +341,11 @@ final class RAGChatViewModel {
         isSearching = false
         isGenerating = true
 
+        // Create assistant entry with empty content for streaming
+        let assistantEntry = RAGChatEntry(role: .assistant, content: "", sources: relevantChunks)
+        conversation.append(assistantEntry)
+
         // Generate response using Foundation Models
-        var responseContent = ""
         let systemPrompt = """
         You are a helpful assistant. Answer the user's question based on the provided \
         context from documents. If the context doesn't contain relevant information, \
@@ -348,9 +363,6 @@ final class RAGChatViewModel {
 
         CONTEXT:
         \(contextText)
-
-        USER QUESTION:
-        \(content)
         """
 
         do {
@@ -361,32 +373,16 @@ final class RAGChatViewModel {
 
             let responseStream = session.streamResponse(to: Prompt(content))
 
-            for try await _ in responseStream {
-                // Streaming automatically updates the session transcript
-            }
-
-            // Extract response from transcript
-            if let lastEntry = session.transcript.last,
-               case .response(let response) = lastEntry {
-                responseContent = response.segments.compactMap { segment in
-                    if case .text(let textSegment) = segment {
-                        return textSegment.content
-                    }
-                    return nil
-                }.joined()
+            for try await snapshot in responseStream {
+                assistantEntry.content = snapshot.content
             }
         } catch {
-            responseContent = "Failed to generate response: \(error.localizedDescription)"
+            if assistantEntry.content.isEmpty {
+                assistantEntry.content = "Failed to generate response: \(error.localizedDescription)"
+            }
         }
 
         isGenerating = false
-
-        let assistantEntry = RAGChatEntry(
-            role: .assistant,
-            content: responseContent,
-            sources: relevantChunks
-        )
-        conversation.append(assistantEntry)
     }
 
     func dismissError() {
@@ -397,11 +393,17 @@ final class RAGChatViewModel {
 
 // MARK: - Supporting Types
 
-struct RAGChatEntry: Identifiable {
+final class RAGChatEntry: Identifiable {
     let id = UUID()
     let role: Role
-    let content: String
+    var content: String
     let sources: [RAGChunk]
+
+    init(role: Role, content: String, sources: [RAGChunk]) {
+        self.role = role
+        self.content = content
+        self.sources = sources
+    }
 
     enum Role {
         case user
