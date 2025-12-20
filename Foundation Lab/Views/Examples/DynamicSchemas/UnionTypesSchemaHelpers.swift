@@ -45,13 +45,11 @@ extension UnionTypesSchemaView {
                     type: String.self,
                     description: "Person's full name"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "email",
-                    description: "Email address",
-                    schema: DynamicGenerationSchema(
-                        type: String.self,
-                        guides: [.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)]
-                    )
+                DynamicSchemaHelpers.guidedProperty(
+                    "email",
+                    type: String.self,
+                    guides: [.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)],
+                    description: "Email address"
                 ),
                 DynamicSchemaHelpers.typedProperty(
                     "role",
@@ -77,13 +75,11 @@ extension UnionTypesSchemaView {
                     description: "Industry sector",
                     isOptional: true
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "contactEmail",
+                DynamicSchemaHelpers.guidedProperty(
+                    "contactEmail",
+                    type: String.self,
+                    guides: [.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)],
                     description: "Contact email",
-                    schema: DynamicGenerationSchema(
-                        type: String.self,
-                        guides: [.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)]
-                    ),
                     isOptional: true
                 )
             ]
@@ -101,37 +97,29 @@ extension UnionTypesSchemaView {
             "CreditCard",
             description: "Credit card payment",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "type",
-                    description: "Payment type",
-                    schema: DynamicGenerationSchema(
-                        type: String.self,
-                        guides: [.constant("credit_card")]
-                    )
+                DynamicSchemaHelpers.guidedProperty(
+                    "type",
+                    type: String.self,
+                    guides: [.constant("credit_card")],
+                    description: "Payment type"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "amount",
-                    description: "Payment amount in dollars",
-                    schema: DynamicGenerationSchema(
-                        type: Double.self,
-                        guides: [.minimum(0.01)]
-                    )
+                DynamicSchemaHelpers.guidedProperty(
+                    "amount",
+                    type: Double.self,
+                    guides: [.minimum(0.01)],
+                    description: "Payment amount in dollars"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "lastFourDigits",
-                    description: "Last four digits of card",
-                    schema: DynamicGenerationSchema(
-                        type: String.self,
-                        guides: [.pattern(/^\d{4}$/)]
-                    )
+                DynamicSchemaHelpers.guidedProperty(
+                    "lastFourDigits",
+                    type: String.self,
+                    guides: [.pattern(/^\d{4}$/)],
+                    description: "Last four digits of card"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "cardType",
+                DynamicSchemaHelpers.guidedProperty(
+                    "cardType",
+                    type: String.self,
+                    guides: [.anyOf(["Visa", "MasterCard", "Amex", "Discover"])],
                     description: "Card type",
-                    schema: DynamicGenerationSchema(
-                        type: String.self,
-                        guides: [.anyOf(["Visa", "MasterCard", "Amex", "Discover"])]
-                    ),
                     isOptional: true
                 ),
                 DynamicSchemaHelpers.typedProperty(
@@ -148,38 +136,30 @@ extension UnionTypesSchemaView {
             "BankTransfer",
             description: "Bank transfer payment",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "type",
-                    description: "Payment type",
-                    schema: DynamicGenerationSchema(
-                        type: String.self,
-                        guides: [.constant("bank_transfer")]
-                    )
+                DynamicSchemaHelpers.guidedProperty(
+                    "type",
+                    type: String.self,
+                    guides: [.constant("bank_transfer")],
+                    description: "Payment type"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "amount",
-                    description: "Payment amount in dollars",
-                    schema: DynamicGenerationSchema(
-                        type: Double.self,
-                        guides: [.minimum(0.01)]
-                    )
+                DynamicSchemaHelpers.guidedProperty(
+                    "amount",
+                    type: Double.self,
+                    guides: [.minimum(0.01)],
+                    description: "Payment amount in dollars"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "accountNumber",
+                DynamicSchemaHelpers.guidedProperty(
+                    "accountNumber",
+                    type: String.self,
+                    guides: [.pattern(/^\d{4}$/)],
                     description: "Bank account last 4 digits",
-                    schema: DynamicGenerationSchema(
-                        type: String.self,
-                        guides: [.pattern(/^\d{4}$/)]
-                    ),
                     isOptional: true
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "routingNumber",
+                DynamicSchemaHelpers.guidedProperty(
+                    "routingNumber",
+                    type: String.self,
+                    guides: [.pattern(/^\d{9}$/)],
                     description: "Bank routing number",
-                    schema: DynamicGenerationSchema(
-                        type: String.self,
-                        guides: [.pattern(/^\d{9}$/)]
-                    ),
                     isOptional: true
                 ),
                 DynamicSchemaHelpers.typedProperty(
@@ -196,29 +176,23 @@ extension UnionTypesSchemaView {
             "Cryptocurrency",
             description: "Cryptocurrency payment",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "type",
-                    description: "Payment type",
-                    schema: DynamicGenerationSchema(
-                        type: String.self,
-                        guides: [.constant("cryptocurrency")]
-                    )
+                DynamicSchemaHelpers.guidedProperty(
+                    "type",
+                    type: String.self,
+                    guides: [.constant("cryptocurrency")],
+                    description: "Payment type"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "amount",
-                    description: "Payment amount in USD equivalent",
-                    schema: DynamicGenerationSchema(
-                        type: Double.self,
-                        guides: [.minimum(0.01)]
-                    )
+                DynamicSchemaHelpers.guidedProperty(
+                    "amount",
+                    type: Double.self,
+                    guides: [.minimum(0.01)],
+                    description: "Payment amount in USD equivalent"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "cryptocurrency",
-                    description: "Cryptocurrency type",
-                    schema: DynamicGenerationSchema(
-                        type: String.self,
-                        guides: [.anyOf(["Bitcoin", "Ethereum", "USDT", "USDC"])]
-                    )
+                DynamicSchemaHelpers.guidedProperty(
+                    "cryptocurrency",
+                    type: String.self,
+                    guides: [.anyOf(["Bitcoin", "Ethereum", "USDT", "USDC"])],
+                    description: "Cryptocurrency type"
                 ),
                 DynamicSchemaHelpers.typedProperty(
                     "walletAddress",
@@ -252,21 +226,17 @@ extension UnionTypesSchemaView {
             "SystemAlert",
             description: "System-generated alert",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "type",
-                    description: "Alert type",
-                    schema: DynamicGenerationSchema(
-                        type: String.self,
-                        guides: [.constant("system")]
-                    )
+                DynamicSchemaHelpers.guidedProperty(
+                    "type",
+                    type: String.self,
+                    guides: [.constant("system")],
+                    description: "Alert type"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "severity",
-                    description: "Alert severity",
-                    schema: DynamicGenerationSchema(
-                        type: String.self,
-                        guides: [.anyOf(["info", "warning", "error", "critical"])]
-                    )
+                DynamicSchemaHelpers.guidedProperty(
+                    "severity",
+                    type: String.self,
+                    guides: [.anyOf(["info", "warning", "error", "critical"])],
+                    description: "Alert severity"
                 ),
                 DynamicSchemaHelpers.typedProperty(
                     "title",
@@ -278,13 +248,11 @@ extension UnionTypesSchemaView {
                     type: String.self,
                     description: "Alert message"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "timestamp",
+                DynamicSchemaHelpers.guidedProperty(
+                    "timestamp",
+                    type: String.self,
+                    guides: [.pattern(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)],
                     description: "ISO 8601 timestamp",
-                    schema: DynamicGenerationSchema(
-                        type: String.self,
-                        guides: [.pattern(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)]
-                    ),
                     isOptional: true
                 )
             ]
@@ -296,13 +264,11 @@ extension UnionTypesSchemaView {
             "UserMessage",
             description: "User-to-user message",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "type",
-                    description: "Message type",
-                    schema: DynamicGenerationSchema(
-                        type: String.self,
-                        guides: [.constant("user_message")]
-                    )
+                DynamicSchemaHelpers.guidedProperty(
+                    "type",
+                    type: String.self,
+                    guides: [.constant("user_message")],
+                    description: "Message type"
                 ),
                 DynamicSchemaHelpers.typedProperty(
                     "from",
@@ -319,13 +285,11 @@ extension UnionTypesSchemaView {
                     type: String.self,
                     description: "Message content"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "priority",
+                DynamicSchemaHelpers.guidedProperty(
+                    "priority",
+                    type: String.self,
+                    guides: [.anyOf(["low", "normal", "high", "urgent"])],
                     description: "Message priority",
-                    schema: DynamicGenerationSchema(
-                        type: String.self,
-                        guides: [.anyOf(["low", "normal", "high", "urgent"])]
-                    ),
                     isOptional: true
                 ),
                 DynamicSchemaHelpers.typedProperty(
@@ -343,21 +307,17 @@ extension UnionTypesSchemaView {
             "ErrorNotification",
             description: "Error notification",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "type",
-                    description: "Notification type",
-                    schema: DynamicGenerationSchema(
-                        type: String.self,
-                        guides: [.constant("error")]
-                    )
+                DynamicSchemaHelpers.guidedProperty(
+                    "type",
+                    type: String.self,
+                    guides: [.constant("error")],
+                    description: "Notification type"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "code",
+                DynamicSchemaHelpers.guidedProperty(
+                    "code",
+                    type: String.self,
+                    guides: [.pattern(/^[A-Z]{3}-\d{3,4}$/)],
                     description: "Error code",
-                    schema: DynamicGenerationSchema(
-                        type: String.self,
-                        guides: [.pattern(/^[A-Z]{3}-\d{3,4}$/)]
-                    ),
                     isOptional: true
                 ),
                 DynamicSchemaHelpers.typedProperty(
