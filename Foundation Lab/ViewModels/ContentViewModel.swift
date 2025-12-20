@@ -234,16 +234,8 @@ class ContentViewModel {
 // MARK: - Error Handling
 
 extension ContentViewModel {
-  func handleFoundationModelsError(_ error: Error) -> String {
-    if let generationError = error as? LanguageModelSession.GenerationError {
-      return FoundationModelsErrorHandler.handleGenerationError(generationError)
-    } else if let toolCallError = error as? LanguageModelSession.ToolCallError {
-      return FoundationModelsErrorHandler.handleToolCallError(toolCallError)
-    } else if let customError = error as? FoundationModelsError {
-      return customError.localizedDescription
-    } else {
-      return String(localized: "Unexpected error: \(error.localizedDescription)")
-    }
+  private func handleFoundationModelsError(_ error: Error) -> String {
+    FoundationModelsErrorHandler.handleError(error)
   }
 }
 

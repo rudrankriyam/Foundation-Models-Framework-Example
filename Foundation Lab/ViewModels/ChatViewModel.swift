@@ -207,15 +207,7 @@ private extension ChatViewModel {
     // MARK: - Error Handling + Context Management
 
     func handleFoundationModelsError(_ error: Error) -> String {
-        if let generationError = error as? LanguageModelSession.GenerationError {
-            return FoundationModelsErrorHandler.handleGenerationError(generationError)
-        } else if let toolCallError = error as? LanguageModelSession.ToolCallError {
-            return FoundationModelsErrorHandler.handleToolCallError(toolCallError)
-        } else if let customError = error as? FoundationModelsError {
-            return customError.localizedDescription
-        } else {
-            return "Error: \(error)"
-        }
+        FoundationModelsErrorHandler.handleError(error)
     }
 
     @MainActor

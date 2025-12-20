@@ -167,14 +167,6 @@ final class ExampleExecutor {
 
     /// Handles various error types and returns user-friendly messages
     func handleError(_ error: Error) -> String {
-        if let generationError = error as? LanguageModelSession.GenerationError {
-            return FoundationModelsErrorHandler.handleGenerationError(generationError)
-        } else if let toolCallError = error as? LanguageModelSession.ToolCallError {
-            return FoundationModelsErrorHandler.handleToolCallError(toolCallError)
-        } else if let customError = error as? FoundationModelsError {
-            return customError.localizedDescription
-        } else {
-            return "Unexpected error: \(error.localizedDescription)"
-        }
+        FoundationModelsErrorHandler.handleError(error)
     }
 }

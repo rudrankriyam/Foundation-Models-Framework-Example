@@ -63,4 +63,17 @@ struct FoundationModelsErrorHandler: Sendable {
     static func handleToolCallError(_ error: LanguageModelSession.ToolCallError) -> String {
         return "Tool '\(error.tool.name)' failed: \(error.underlyingError.localizedDescription)"
     }
+
+    /// Consolidates error handling for LanguageModelSession operations
+    static func handleError(_ error: Error) -> String {
+        if let generationError = error as? LanguageModelSession.GenerationError {
+            return handleGenerationError(generationError)
+        } else if let toolCallError = error as? LanguageModelSession.ToolCallError {
+            return handleToolCallError(toolCallError)
+        } else if let customError = error as? FoundationModelsError {
+            return customError.localizedDescription
+        } else {
+            return "Unexpected error: \(error.localizedDescription)"
+        }
+    }
 }
