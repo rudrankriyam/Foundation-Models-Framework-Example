@@ -40,6 +40,21 @@ enum DynamicSchemaHelpers {
         )
     }
 
+    /// Creates a property for a schema reference
+    static func referenceProperty(
+        _ name: String,
+        referenceTo: String,
+        description: String? = nil,
+        isOptional: Bool = false
+    ) -> DynamicGenerationSchema.Property {
+        DynamicGenerationSchema.Property(
+            name: name,
+            description: description,
+            schema: .init(referenceTo: referenceTo),
+            isOptional: isOptional
+        )
+    }
+
     /// Creates a property for an array of schemas
     static func arrayProperty(
         _ name: String,
@@ -54,6 +69,27 @@ enum DynamicSchemaHelpers {
             description: description,
             schema: .init(
                 arrayOf: elementSchema,
+                minimumElements: minimumElements,
+                maximumElements: maximumElements
+            ),
+            isOptional: isOptional
+        )
+    }
+
+    /// Creates a property for an array of schema references
+    static func referenceArrayProperty(
+        _ name: String,
+        referenceTo: String,
+        description: String? = nil,
+        isOptional: Bool = false,
+        minimumElements: Int? = nil,
+        maximumElements: Int? = nil
+    ) -> DynamicGenerationSchema.Property {
+        DynamicGenerationSchema.Property(
+            name: name,
+            description: description,
+            schema: .init(
+                arrayOf: .init(referenceTo: referenceTo),
                 minimumElements: minimumElements,
                 maximumElements: maximumElements
             ),

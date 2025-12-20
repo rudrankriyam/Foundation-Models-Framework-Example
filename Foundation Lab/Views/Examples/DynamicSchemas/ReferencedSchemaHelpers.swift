@@ -10,33 +10,33 @@ import FoundationModels
 
 extension ReferencedSchemaView {
     private func createBlogPersonSchema() -> DynamicGenerationSchema {
-        DynamicGenerationSchema(
-            name: "Person",
+        DynamicSchemaHelpers.schema(
+            "Person",
             description: "A person with a name",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "name",
-                    description: "Person's full name",
-                    schema: .init(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "name",
+                    type: String.self,
+                    description: "Person's full name"
                 )
             ]
         )
     }
 
     private func createCommentSchema() -> DynamicGenerationSchema {
-        DynamicGenerationSchema(
-            name: "Comment",
+        DynamicSchemaHelpers.schema(
+            "Comment",
             description: "A comment on a blog post",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "author",
-                    description: "Comment author",
-                    schema: .init(referenceTo: "Person")  // Reference to Person
+                DynamicSchemaHelpers.referenceProperty(
+                    "author",
+                    referenceTo: "Person",
+                    description: "Comment author"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "content",
-                    description: "Comment text",
-                    schema: .init(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "content",
+                    type: String.self,
+                    description: "Comment text"
                 )
             ]
         )
@@ -46,34 +46,34 @@ extension ReferencedSchemaView {
         let personSchema = createBlogPersonSchema()
         let commentSchema = createCommentSchema()
 
-        let blogPostSchema = DynamicGenerationSchema(
-            name: "BlogPost",
+        let blogPostSchema = DynamicSchemaHelpers.schema(
+            "BlogPost",
             description: "A blog post with author and comments",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "title",
-                    description: "Post title",
-                    schema: .init(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "title",
+                    type: String.self,
+                    description: "Post title"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "author",
-                    description: "Post author",
-                    schema: .init(referenceTo: "Person")  // Reference to Person
+                DynamicSchemaHelpers.referenceProperty(
+                    "author",
+                    referenceTo: "Person",
+                    description: "Post author"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "date",
-                    description: "Publication date",
-                    schema: .init(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "date",
+                    type: String.self,
+                    description: "Publication date"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "comments",
-                    description: "List of comments",
-                    schema: .init(arrayOf: .init(referenceTo: "Comment"))  // Array of Comment references
+                DynamicSchemaHelpers.referenceArrayProperty(
+                    "comments",
+                    referenceTo: "Comment",
+                    description: "List of comments"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "tags",
+                DynamicSchemaHelpers.arrayProperty(
+                    "tags",
+                    elementSchema: .init(type: String.self),
                     description: "Post tags",
-                    schema: .init(arrayOf: .init(type: String.self)),
                     isOptional: true
                 )
             ]
@@ -88,19 +88,19 @@ extension ReferencedSchemaView {
     }
 
     private func createProjectPersonSchema() -> DynamicGenerationSchema {
-        DynamicGenerationSchema(
-            name: "Person",
+        DynamicSchemaHelpers.schema(
+            "Person",
             description: "Base person schema",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "name",
-                    description: "Person's name",
-                    schema: .init(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "name",
+                    type: String.self,
+                    description: "Person's name"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "role",
+                DynamicSchemaHelpers.typedProperty(
+                    "role",
+                    type: String.self,
                     description: "Role in the project",
-                    schema: .init(type: String.self),
                     isOptional: true
                 )
             ]
@@ -108,19 +108,19 @@ extension ReferencedSchemaView {
     }
 
     private func createTaskSchema() -> DynamicGenerationSchema {
-        DynamicGenerationSchema(
-            name: "Task",
+        DynamicSchemaHelpers.schema(
+            "Task",
             description: "A project task",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "description",
-                    description: "Task description",
-                    schema: .init(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "description",
+                    type: String.self,
+                    description: "Task description"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "assignee",
+                DynamicSchemaHelpers.referenceProperty(
+                    "assignee",
+                    referenceTo: "Person",
                     description: "Person assigned to this task",
-                    schema: .init(referenceTo: "Person"),  // Reference to Person
                     isOptional: true
                 )
             ]
@@ -131,29 +131,29 @@ extension ReferencedSchemaView {
         let personSchema = createProjectPersonSchema()
         let taskSchema = createTaskSchema()
 
-        let projectSchema = DynamicGenerationSchema(
-            name: "Project",
+        let projectSchema = DynamicSchemaHelpers.schema(
+            "Project",
             description: "Project with team and tasks",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "name",
-                    description: "Project name",
-                    schema: .init(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "name",
+                    type: String.self,
+                    description: "Project name"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "manager",
-                    description: "Project manager",
-                    schema: .init(referenceTo: "Person")  // Reference to Person
+                DynamicSchemaHelpers.referenceProperty(
+                    "manager",
+                    referenceTo: "Person",
+                    description: "Project manager"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "team",
-                    description: "Team members",
-                    schema: .init(arrayOf: .init(referenceTo: "Person"))  // Array of Person references
+                DynamicSchemaHelpers.referenceArrayProperty(
+                    "team",
+                    referenceTo: "Person",
+                    description: "Team members"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "tasks",
+                DynamicSchemaHelpers.referenceArrayProperty(
+                    "tasks",
+                    referenceTo: "Task",
                     description: "Project tasks",
-                    schema: .init(arrayOf: .init(referenceTo: "Task")),  // Array of Task references
                     isOptional: true
                 )
             ]
@@ -168,44 +168,44 @@ extension ReferencedSchemaView {
     }
 
     private func createLibraryPersonSchema() -> DynamicGenerationSchema {
-        DynamicGenerationSchema(
-            name: "Person",
+        DynamicSchemaHelpers.schema(
+            "Person",
             description: "Library member",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "name",
-                    description: "Member name",
-                    schema: .init(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "name",
+                    type: String.self,
+                    description: "Member name"
                 )
             ]
         )
     }
 
     private func createBookSchema() -> DynamicGenerationSchema {
-        DynamicGenerationSchema(
-            name: "Book",
+        DynamicSchemaHelpers.schema(
+            "Book",
             description: "Library book",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "title",
-                    description: "Book title",
-                    schema: .init(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "title",
+                    type: String.self,
+                    description: "Book title"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "author",
-                    description: "Book author",
-                    schema: .init(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "author",
+                    type: String.self,
+                    description: "Book author"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "borrowedBy",
+                DynamicSchemaHelpers.referenceProperty(
+                    "borrowedBy",
+                    referenceTo: "Person",
                     description: "Person who borrowed this book",
-                    schema: .init(referenceTo: "Person"),  // Reference to Person
                     isOptional: true
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "borrowDate",
+                DynamicSchemaHelpers.typedProperty(
+                    "borrowDate",
+                    type: String.self,
                     description: "Date when book was borrowed",
-                    schema: .init(type: String.self),
                     isOptional: true
                 )
             ]
@@ -216,19 +216,19 @@ extension ReferencedSchemaView {
         let personSchema = createLibraryPersonSchema()
         let bookSchema = createBookSchema()
 
-        let librarySchema = DynamicGenerationSchema(
-            name: "Library",
+        let librarySchema = DynamicSchemaHelpers.schema(
+            "Library",
             description: "Library catalog",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "books",
-                    description: "All books in the library",
-                    schema: .init(arrayOf: .init(referenceTo: "Book"))  // Array of Book references
+                DynamicSchemaHelpers.referenceArrayProperty(
+                    "books",
+                    referenceTo: "Book",
+                    description: "All books in the library"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "members",
+                DynamicSchemaHelpers.referenceArrayProperty(
+                    "members",
+                    referenceTo: "Person",
                     description: "Library members",
-                    schema: .init(arrayOf: .init(referenceTo: "Person")),  // Array of Person references
                     isOptional: true
                 )
             ]
