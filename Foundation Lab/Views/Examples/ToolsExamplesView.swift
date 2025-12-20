@@ -15,7 +15,7 @@ struct ToolsExamplesView: View {
                 GridItem(.flexible(minimum: 150), spacing: 16)
             ], spacing: 16) {
                 ForEach(ToolExample.allCases, id: \.self) { tool in
-                    NavigationLink(destination: tool.createView()) {
+                    NavigationLink(destination: Self.toolView(for: tool)) {
                         GenericCardView(
                             icon: tool.icon,
                             title: tool.displayName,
@@ -32,6 +32,32 @@ struct ToolsExamplesView: View {
 #if os(iOS) || os(visionOS)
         .navigationBarTitleDisplayMode(.large)
 #endif
+    }
+}
+
+extension ToolsExamplesView {
+    @ViewBuilder
+    private static func toolView(for tool: ToolExample) -> some View {
+        switch tool {
+        case .weather:
+            WeatherToolView()
+        case .web:
+            WebToolView()
+        case .contacts:
+            ContactsToolView()
+        case .calendar:
+            CalendarToolView()
+        case .reminders:
+            RemindersToolView()
+        case .location:
+            LocationToolView()
+        case .health:
+            HealthToolView()
+        case .music:
+            MusicToolView()
+        case .webMetadata:
+            WebMetadataToolView()
+        }
     }
 }
 

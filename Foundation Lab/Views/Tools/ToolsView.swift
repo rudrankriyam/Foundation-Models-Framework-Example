@@ -24,7 +24,26 @@ struct ToolsView: View {
     }
     .navigationTitle("Tools")
     .navigationDestination(for: ToolExample.self) { tool in
-      tool.createView()
+      switch tool {
+      case .weather:
+        WeatherToolView()
+      case .web:
+        WebToolView()
+      case .contacts:
+        ContactsToolView()
+      case .calendar:
+        CalendarToolView()
+      case .reminders:
+        RemindersToolView()
+      case .location:
+        LocationToolView()
+      case .health:
+        HealthToolView()
+      case .music:
+        MusicToolView()
+      case .webMetadata:
+        WebMetadataToolView()
+      }
     }
   }
 

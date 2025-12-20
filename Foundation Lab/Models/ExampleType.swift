@@ -7,7 +7,6 @@
 
 import Foundation
 import FoundationModels
-import SwiftUI
 
 enum ExampleType: String, CaseIterable, Identifiable {
     case basicChat = "basic_chat"
@@ -159,32 +158,6 @@ enum ToolExample: String, CaseIterable, Hashable {
         case .webMetadata: return "Extract metadata"
         }
     }
-
-    /// Creates the appropriate view for this tool
-    /// - Returns: A SwiftUI view for the tool
-    @MainActor @ViewBuilder
-    func createView() -> some View {
-        switch self {
-        case .reminders:
-            RemindersToolView()
-        case .weather:
-            WeatherToolView()
-        case .web:
-            WebToolView()
-        case .contacts:
-            ContactsToolView()
-        case .calendar:
-            CalendarToolView()
-        case .location:
-            LocationToolView()
-        case .health:
-            HealthToolView()
-        case .music:
-            MusicToolView()
-        case .webMetadata:
-            WebMetadataToolView()
-        }
-    }
 }
 
 // MARK: - Language Example Enum
@@ -233,22 +206,6 @@ enum LanguageExample: String, CaseIterable, Identifiable {
             return "arrow.triangle.2.circlepath"
         case .productionExample:
             return "app.badge"
-        }
-    }
-
-    /// Creates the appropriate view for this language example
-    /// - Returns: A SwiftUI view for the language example
-    @MainActor @ViewBuilder
-    func createView() -> some View {
-        switch self {
-        case .languageDetection:
-            LanguageDetectionView()
-        case .multilingualResponses:
-            MultilingualResponsesView()
-        case .sessionManagement:
-            SessionManagementView()
-        case .productionExample:
-            ProductionLanguageExampleView()
         }
     }
 }
