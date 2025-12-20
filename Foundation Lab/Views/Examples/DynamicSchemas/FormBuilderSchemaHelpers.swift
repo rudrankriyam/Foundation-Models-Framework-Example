@@ -22,26 +22,22 @@ extension FormBuilderSchemaView {
 
         if lowercased.contains("email") || lowercased.contains("contact") {
             properties.append(
-                DynamicGenerationSchema.Property(
-                    name: "email",
-                    description: "Email address",
-                    schema: .init(
-                        type: String.self,
-                        guides: [.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z] {2,}$/)]
-                    )
+                DynamicSchemaHelpers.guidedProperty(
+                    "email",
+                    type: String.self,
+                    guides: [.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z] {2,}$/)],
+                    description: "Email address"
                 )
             )
         }
 
         if lowercased.contains("phone") || lowercased.contains("contact") {
             properties.append(
-                DynamicGenerationSchema.Property(
-                    name: "phone",
+                DynamicSchemaHelpers.guidedProperty(
+                    "phone",
+                    type: String.self,
+                    guides: [.pattern(/\(\d {3}\) \d {3}-\d {4}/)],
                     description: "Phone number (US format)",
-                    schema: .init(
-                        type: String.self,
-                        guides: [.pattern(/\(\d {3}\) \d {3}-\d {4}/)]
-                    ),
                     isOptional: true
                 )
             )
@@ -51,13 +47,11 @@ extension FormBuilderSchemaView {
     func addExperienceFields(to properties: inout [DynamicGenerationSchema.Property], for lowercased: String) {
         if lowercased.contains("experience") || lowercased.contains("job") {
             properties.append(
-                DynamicGenerationSchema.Property(
-                    name: "yearsOfExperience",
+                DynamicSchemaHelpers.guidedProperty(
+                    "yearsOfExperience",
+                    type: Int.self,
+                    guides: [.range(0...50)],
                     description: "Years of professional experience",
-                    schema: .init(
-                        type: Int.self,
-                        guides: [.range(0...50)]
-                    ),
                     isOptional: true
                 )
             )
@@ -143,21 +137,17 @@ extension FormBuilderSchemaView {
                     type: String.self,
                     description: "Applicant's full name"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "email",
-                    description: "Email address",
-                    schema: .init(
-                        type: String.self,
-                        guides: [.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z] {2,}$/)]
-                    )
+                DynamicSchemaHelpers.guidedProperty(
+                    "email",
+                    type: String.self,
+                    guides: [.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z] {2,}$/)],
+                    description: "Email address"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "phone",
+                DynamicSchemaHelpers.guidedProperty(
+                    "phone",
+                    type: String.self,
+                    guides: [.pattern(/\(\d {3}\) \d {3}-\d {4}/)],
                     description: "Phone number",
-                    schema: .init(
-                        type: String.self,
-                        guides: [.pattern(/\(\d {3}\) \d {3}-\d {4}/)]
-                    ),
                     isOptional: true
                 )
             ]
@@ -176,13 +166,11 @@ extension FormBuilderSchemaView {
         DynamicSchemaHelpers.schema(
             "Experience",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "years",
-                    description: "Years of experience",
-                    schema: .init(
-                        type: Int.self,
-                        guides: [.range(0...50)]
-                    )
+                DynamicSchemaHelpers.guidedProperty(
+                    "years",
+                    type: Int.self,
+                    guides: [.range(0...50)],
+                    description: "Years of experience"
                 ),
                 DynamicSchemaHelpers.typedProperty(
                     "currentRole",
