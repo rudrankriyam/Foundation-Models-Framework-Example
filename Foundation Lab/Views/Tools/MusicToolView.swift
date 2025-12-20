@@ -52,8 +52,14 @@ struct MusicToolView: View {
 
   @MainActor
   private func performMusicQuery() async {
+    // Show loading state during pre-execution checks
+    executor.isRunning = true
+    executor.errorMessage = nil
+    executor.result = ""
+
     if let authorizationError = await musicAuthorizationIssueDescription() {
       executor.errorMessage = authorizationError
+      executor.isRunning = false
       return
     }
 
@@ -61,13 +67,16 @@ struct MusicToolView: View {
       let subscription = try await MusicSubscription.current
       guard subscription.canPlayCatalogContent else {
         executor.errorMessage = "An active Apple Music subscription is required to search the catalog."
+        executor.isRunning = false
         return
       }
     } catch {
       executor.errorMessage = "Unable to verify Apple Music subscription: \(error.localizedDescription)"
+      executor.isRunning = false
       return
     }
 
+    // executor.execute() will manage isRunning state for the tool execution
     await executor.execute(tool: MusicTool(), prompt: query)
   }
 
