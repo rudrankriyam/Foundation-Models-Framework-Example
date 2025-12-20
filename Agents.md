@@ -194,11 +194,11 @@ Foundation Lab/
 │   └── TabSelection.swift
 ├── Playgrounds/              # 37 learning examples (Chapter 2, 3, 8, 13)
 ├── Services/
-│   ├── HealthDataManager.swift
-│   └── LanguageService.swift
+│   ├── ConversationContextBuilder.swift
+│   ├── LanguageService.swift
+│   └── ToolExecutor.swift
 ├── ViewModels/
 │   ├── ChatViewModel.swift
-│   ├── ContentViewModel.swift
 │   └── VoiceViewModel.swift
 ├── Views/
 │   ├── AdaptiveNavigationView.swift
