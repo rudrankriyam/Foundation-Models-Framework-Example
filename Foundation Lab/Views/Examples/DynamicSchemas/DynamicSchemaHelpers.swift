@@ -40,6 +40,22 @@ enum DynamicSchemaHelpers {
         )
     }
 
+    /// Creates a property with guides for a simple type
+    static func guidedProperty<Value: Generable>(
+        _ name: String,
+        type: Value.Type,
+        guides: [GenerationGuide<Value>],
+        description: String? = nil,
+        isOptional: Bool = false
+    ) -> DynamicGenerationSchema.Property {
+        DynamicGenerationSchema.Property(
+            name: name,
+            description: description,
+            schema: .init(type: type, guides: guides),
+            isOptional: isOptional
+        )
+    }
+
     /// Creates a property for a schema reference
     static func referenceProperty(
         _ name: String,
