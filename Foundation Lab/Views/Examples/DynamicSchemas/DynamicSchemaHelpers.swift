@@ -25,6 +25,21 @@ enum DynamicSchemaHelpers {
         )
     }
 
+    /// Creates a property for a simple type
+    static func typedProperty<Value: Generable>(
+        _ name: String,
+        type: Value.Type,
+        description: String? = nil,
+        isOptional: Bool = false
+    ) -> DynamicGenerationSchema.Property {
+        DynamicGenerationSchema.Property(
+            name: name,
+            description: description,
+            schema: .init(type: type),
+            isOptional: isOptional
+        )
+    }
+
     /// Creates a property for an array of schemas
     static func arrayProperty(
         _ name: String,

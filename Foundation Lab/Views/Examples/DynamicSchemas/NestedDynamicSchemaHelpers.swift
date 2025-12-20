@@ -219,33 +219,33 @@ extension NestedDynamicSchemaView {
     }
 
     private func createCustomerSchema() -> DynamicGenerationSchema {
-        DynamicGenerationSchema(
-            name: "Customer",
+        DynamicSchemaHelpers.schema(
+            "Customer",
             properties: [
-                DynamicGenerationSchema.Property(name: "name", schema: .init(type: String.self))
+                DynamicSchemaHelpers.typedProperty("name", type: String.self)
             ]
         )
     }
 
     private func createOrderItemSchema() -> DynamicGenerationSchema {
-        DynamicGenerationSchema(
-            name: "OrderItem",
+        DynamicSchemaHelpers.schema(
+            "OrderItem",
             properties: [
-                DynamicGenerationSchema.Property(name: "name", description: "Item name", schema: .init(type: String.self)),
-                DynamicGenerationSchema.Property(name: "quantity", schema: .init(type: Int.self)),
-                DynamicGenerationSchema.Property(name: "price", schema: .init(type: Float.self))
+                DynamicSchemaHelpers.typedProperty("name", type: String.self, description: "Item name"),
+                DynamicSchemaHelpers.typedProperty("quantity", type: Int.self),
+                DynamicSchemaHelpers.typedProperty("price", type: Float.self)
             ]
         )
     }
 
     private func createOrderAddressSchema() -> DynamicGenerationSchema {
-        DynamicGenerationSchema(
-            name: "Address",
+        DynamicSchemaHelpers.schema(
+            "Address",
             properties: [
-                DynamicGenerationSchema.Property(name: "street", schema: .init(type: String.self)),
-                DynamicGenerationSchema.Property(name: "city", schema: .init(type: String.self)),
-                DynamicGenerationSchema.Property(name: "state", schema: .init(type: String.self)),
-                DynamicGenerationSchema.Property(name: "zip", schema: .init(type: String.self))
+                DynamicSchemaHelpers.typedProperty("street", type: String.self),
+                DynamicSchemaHelpers.typedProperty("city", type: String.self),
+                DynamicSchemaHelpers.typedProperty("state", type: String.self),
+                DynamicSchemaHelpers.typedProperty("zip", type: String.self)
             ]
         )
     }
@@ -261,11 +261,11 @@ extension NestedDynamicSchemaView {
     }
 
     private func createPaymentSchema() -> DynamicGenerationSchema {
-        DynamicGenerationSchema(
-            name: "PaymentInfo",
+        DynamicSchemaHelpers.schema(
+            "PaymentInfo",
             properties: [
-                DynamicGenerationSchema.Property(name: "method", schema: .init(type: String.self)),
-                DynamicGenerationSchema.Property(name: "lastFour", schema: .init(type: String.self), isOptional: true)
+                DynamicSchemaHelpers.typedProperty("method", type: String.self),
+                DynamicSchemaHelpers.typedProperty("lastFour", type: String.self, isOptional: true)
             ]
         )
     }
@@ -296,31 +296,31 @@ extension NestedDynamicSchemaView {
     }
 
     private func createVenueSchema() -> DynamicGenerationSchema {
-        DynamicGenerationSchema(
-            name: "Venue",
+        DynamicSchemaHelpers.schema(
+            "Venue",
             properties: [
-                DynamicGenerationSchema.Property(name: "name", schema: .init(type: String.self)),
-                DynamicGenerationSchema.Property(name: "location", schema: .init(type: String.self))
+                DynamicSchemaHelpers.typedProperty("name", type: String.self),
+                DynamicSchemaHelpers.typedProperty("location", type: String.self)
             ]
         )
     }
 
     private func createDateRangeSchema() -> DynamicGenerationSchema {
-        DynamicGenerationSchema(
-            name: "DateRange",
+        DynamicSchemaHelpers.schema(
+            "DateRange",
             properties: [
-                DynamicGenerationSchema.Property(name: "start", schema: .init(type: String.self)),
-                DynamicGenerationSchema.Property(name: "end", schema: .init(type: String.self))
+                DynamicSchemaHelpers.typedProperty("start", type: String.self),
+                DynamicSchemaHelpers.typedProperty("end", type: String.self)
             ]
         )
     }
 
     private func createSpeakerSchema() -> DynamicGenerationSchema {
-        DynamicGenerationSchema(
-            name: "Speaker",
+        DynamicSchemaHelpers.schema(
+            "Speaker",
             properties: [
-                DynamicGenerationSchema.Property(name: "name", schema: .init(type: String.self)),
-                DynamicGenerationSchema.Property(name: "affiliation", schema: .init(type: String.self), isOptional: true)
+                DynamicSchemaHelpers.typedProperty("name", type: String.self),
+                DynamicSchemaHelpers.typedProperty("affiliation", type: String.self, isOptional: true)
             ]
         )
     }
