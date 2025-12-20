@@ -108,19 +108,19 @@ extension NestedDynamicSchemaView {
     }
 
     private func createLocationSchema() -> DynamicGenerationSchema {
-        DynamicGenerationSchema(
-            name: "Location",
+        DynamicSchemaHelpers.schema(
+            "Location",
             description: "A geographic location",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "city",
-                    description: "City name",
-                    schema: .init(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "city",
+                    type: String.self,
+                    description: "City name"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "state",
+                DynamicSchemaHelpers.typedProperty(
+                    "state",
+                    type: String.self,
                     description: "State or region",
-                    schema: .init(type: String.self),
                     isOptional: true
                 )
             ]
@@ -128,19 +128,19 @@ extension NestedDynamicSchemaView {
     }
 
     private func createCompanyPersonSchema() -> DynamicGenerationSchema {
-        DynamicGenerationSchema(
-            name: "Person",
+        DynamicSchemaHelpers.schema(
+            "Person",
             description: "Information about a person",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "name",
-                    description: "Person's full name",
-                    schema: .init(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "name",
+                    type: String.self,
+                    description: "Person's full name"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "startYear",
+                DynamicSchemaHelpers.typedProperty(
+                    "startYear",
+                    type: Int.self,
                     description: "Year they started",
-                    schema: .init(type: Int.self),
                     isOptional: true
                 )
             ]
@@ -148,19 +148,19 @@ extension NestedDynamicSchemaView {
     }
 
     private func createDepartmentSchema() -> DynamicGenerationSchema {
-        DynamicGenerationSchema(
-            name: "Department",
+        DynamicSchemaHelpers.schema(
+            "Department",
             description: "Company department",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "name",
-                    description: "Department name",
-                    schema: .init(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "name",
+                    type: String.self,
+                    description: "Department name"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "head",
+                DynamicSchemaHelpers.typedProperty(
+                    "head",
+                    type: String.self,
                     description: "Department head name",
-                    schema: .init(type: String.self),
                     isOptional: true
                 )
             ]
@@ -176,10 +176,10 @@ extension NestedDynamicSchemaView {
             name: "Company",
             description: "Company information",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "name",
-                    description: "Company name",
-                    schema: .init(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "name",
+                    type: String.self,
+                    description: "Company name"
                 ),
                 DynamicSchemaHelpers.nestedProperty(
                     "headquarters",
@@ -191,16 +191,16 @@ extension NestedDynamicSchemaView {
                     schema: personSchema,
                     description: "Chief Executive Officer"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "foundedYear",
+                DynamicSchemaHelpers.typedProperty(
+                    "foundedYear",
+                    type: Int.self,
                     description: "Year company was founded",
-                    schema: .init(type: Int.self),
                     isOptional: true
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "employeeCount",
+                DynamicSchemaHelpers.typedProperty(
+                    "employeeCount",
+                    type: Int.self,
                     description: "Number of employees",
-                    schema: .init(type: Int.self),
                     isOptional: true
                 ),
                 DynamicSchemaHelpers.arrayProperty(
@@ -255,7 +255,7 @@ extension NestedDynamicSchemaView {
             name: "ShippingInfo",
             properties: [
                 DynamicSchemaHelpers.nestedProperty("address", schema: addressSchema),
-                DynamicGenerationSchema.Property(name: "method", schema: .init(type: String.self), isOptional: true)
+                DynamicSchemaHelpers.typedProperty("method", type: String.self, isOptional: true)
             ]
         )
     }
@@ -280,8 +280,8 @@ extension NestedDynamicSchemaView {
         let orderSchema = DynamicGenerationSchema(
             name: "Order",
             properties: [
-                DynamicGenerationSchema.Property(name: "orderNumber", schema: .init(type: String.self)),
-                DynamicGenerationSchema.Property(name: "date", schema: .init(type: String.self)),
+                DynamicSchemaHelpers.typedProperty("orderNumber", type: String.self),
+                DynamicSchemaHelpers.typedProperty("date", type: String.self),
                 DynamicSchemaHelpers.nestedProperty("customer", schema: customerSchema),
                 DynamicSchemaHelpers.arrayProperty("items", elementSchema: orderItemSchema),
                 DynamicSchemaHelpers.nestedProperty("shipping", schema: shippingSchema),
@@ -329,7 +329,7 @@ extension NestedDynamicSchemaView {
         DynamicGenerationSchema(
             name: "Session",
             properties: [
-                DynamicGenerationSchema.Property(name: "title", schema: .init(type: String.self)),
+                DynamicSchemaHelpers.typedProperty("title", type: String.self),
                 DynamicSchemaHelpers.nestedProperty("speaker", schema: speakerSchema)
             ]
         )
@@ -344,11 +344,11 @@ extension NestedDynamicSchemaView {
         let eventSchema = DynamicGenerationSchema(
             name: "Event",
             properties: [
-                DynamicGenerationSchema.Property(name: "name", schema: .init(type: String.self)),
+                DynamicSchemaHelpers.typedProperty("name", type: String.self),
                 DynamicSchemaHelpers.nestedProperty("venue", schema: venueSchema),
                 DynamicSchemaHelpers.nestedProperty("dates", schema: dateRangeSchema),
                 DynamicSchemaHelpers.arrayProperty("sessions", elementSchema: sessionSchema, isOptional: true),
-                DynamicGenerationSchema.Property(name: "registrationPrice", schema: .init(type: Float.self), isOptional: true)
+                DynamicSchemaHelpers.typedProperty("registrationPrice", type: Float.self, isOptional: true)
             ]
         )
 
