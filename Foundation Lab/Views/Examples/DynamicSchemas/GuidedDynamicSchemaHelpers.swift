@@ -108,37 +108,37 @@ extension GuidedDynamicSchemaView {
     }
 
     func createShoppingListSchema() -> DynamicGenerationSchema {
-        let shoppingItemSchema = DynamicGenerationSchema(
-            name: "ShoppingItem",
+        let shoppingItemSchema = DynamicSchemaHelpers.schema(
+            "ShoppingItem",
             description: "Individual shopping item",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "name",
-                    description: "Item name",
-                    schema: .init(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "name",
+                    type: String.self,
+                    description: "Item name"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "quantity",
-                    description: "Quantity needed",
-                    schema: .init(type: Int.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "quantity",
+                    type: Int.self,
+                    description: "Quantity needed"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "category",
-                    description: "Item category",
-                    schema: .init(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "category",
+                    type: String.self,
+                    description: "Item category"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "estimatedPrice",
-                    description: "Estimated price",
-                    schema: .init(type: Double.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "estimatedPrice",
+                    type: Double.self,
+                    description: "Estimated price"
                 )
             ]
         )
 
-        let storeNameProperty = DynamicGenerationSchema.Property(
-            name: "storeName",
-            description: "Store name",
-            schema: .init(type: String.self)
+        let storeNameProperty = DynamicSchemaHelpers.typedProperty(
+            "storeName",
+            type: String.self,
+            description: "Store name"
         )
 
         let stringSchema = DynamicGenerationSchema(type: String.self)
@@ -162,29 +162,29 @@ extension GuidedDynamicSchemaView {
     }
 
     func createCompanyDirectorySchema() -> DynamicGenerationSchema {
-        let firstNameProperty = DynamicGenerationSchema.Property(
-            name: "firstName",
-            description: "First name (capitalized)",
-            schema: .init(type: String.self)
+        let firstNameProperty = DynamicSchemaHelpers.typedProperty(
+            "firstName",
+            type: String.self,
+            description: "First name (capitalized)"
         )
-        let lastNameProperty = DynamicGenerationSchema.Property(
-            name: "lastName",
-            description: "Last name (capitalized)",
-            schema: .init(type: String.self)
+        let lastNameProperty = DynamicSchemaHelpers.typedProperty(
+            "lastName",
+            type: String.self,
+            description: "Last name (capitalized)"
         )
-        let emailProperty = DynamicGenerationSchema.Property(
-            name: "email",
-            description: "Company email address",
-            schema: .init(type: String.self)
+        let emailProperty = DynamicSchemaHelpers.typedProperty(
+            "email",
+            type: String.self,
+            description: "Company email address"
         )
-        let departmentProperty = DynamicGenerationSchema.Property(
-            name: "department",
-            description: "Department name",
-            schema: .init(type: String.self)
+        let departmentProperty = DynamicSchemaHelpers.typedProperty(
+            "department",
+            type: String.self,
+            description: "Department name"
         )
 
-        let employeeSchema = DynamicGenerationSchema(
-            name: "Employee",
+        let employeeSchema = DynamicSchemaHelpers.schema(
+            "Employee",
             description: "Employee information",
             properties: [firstNameProperty, lastNameProperty, emailProperty, departmentProperty]
         )
