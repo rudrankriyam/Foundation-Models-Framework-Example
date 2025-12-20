@@ -34,9 +34,7 @@ class InferenceService: InferenceServiceProtocol {
         You are a helpful AI assistant for voice conversations.
 
         CURRENT CONTEXT:
-        - Today's date is: \(Self.formatCurrentDate())
-        - Current time is: \(Self.formatCurrentTime())
-        - Current timezone: \(Self.formatCurrentTimezone())
+        - Use the user's current locale and time zone when giving time-related responses.
 
         You can help with:
         - Answering questions on any topic
@@ -63,26 +61,4 @@ class InferenceService: InferenceServiceProtocol {
         return response.content
     }
 
-    // MARK: - Date Formatting Utilities
-
-    private static func formatCurrentDate() -> String {
-        let formatter = DateFormatter()
-        formatter.timeZone = TimeZone.current
-        formatter.dateFormat = "EEEE, MMMM d, yyyy"
-        return formatter.string(from: Date())
-    }
-
-    private static func formatCurrentTime() -> String {
-        let formatter = DateFormatter()
-        formatter.timeZone = TimeZone.current
-        formatter.dateFormat = "h:mm a"
-        return formatter.string(from: Date())
-    }
-
-    private static func formatCurrentTimezone() -> String {
-        let formatter = DateFormatter()
-        formatter.timeZone = TimeZone.current
-        formatter.dateFormat = "zzz"
-        return formatter.string(from: Date())
-    }
 }
