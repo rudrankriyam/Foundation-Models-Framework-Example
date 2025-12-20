@@ -30,7 +30,7 @@ class InferenceService: InferenceServiceProtocol {
     public let instructions: String
 
     init() {
-        self.instructions = """
+        let instructionsText = """
         You are a helpful AI assistant for voice conversations.
 
         CURRENT CONTEXT:
@@ -51,7 +51,8 @@ class InferenceService: InferenceServiceProtocol {
         user specifically asks for more detail.
         """
 
-        self.session = LanguageModelSession()
+        self.instructions = instructionsText
+        self.session = LanguageModelSession(instructions: Instructions(instructionsText))
     }
 
     /// Process text input and return text output
