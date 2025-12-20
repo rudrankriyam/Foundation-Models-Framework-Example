@@ -10,47 +10,40 @@ import FoundationModels
 
 extension InvoiceSchemas {
     static func createSummarySchema() -> DynamicGenerationSchema {
-        let invoiceNumberProperty = DynamicGenerationSchema.Property(
-            name: "invoiceNumber",
-            description: "Invoice number",
-            schema: .init(type: String.self)
-        )
-        let totalAmountProperty = DynamicGenerationSchema.Property(
-            name: "totalAmount",
-            description: "Total amount due",
-            schema: .init(type: Double.self)
-        )
-        let dueDateProperty = DynamicGenerationSchema.Property(
-            name: "dueDate",
-            description: "Payment due date",
-            schema: .init(type: String.self)
-        )
-        let vendorNameProperty = DynamicGenerationSchema.Property(
-            name: "vendorName",
-            description: "Name of the vendor/company",
-            schema: .init(type: String.self)
-        )
-        let customerNameProperty = DynamicGenerationSchema.Property(
-            name: "customerName",
-            description: "Name of the customer",
-            schema: .init(type: String.self)
-        )
-        let itemCountProperty = DynamicGenerationSchema.Property(
-            name: "itemCount",
-            description: "Number of line items",
-            schema: .init(type: Int.self)
-        )
-
-        return DynamicGenerationSchema(
-            name: "InvoiceSummary",
+        DynamicSchemaHelpers.schema(
+            "InvoiceSummary",
             description: "Summary of key invoice information",
             properties: [
-                invoiceNumberProperty,
-                totalAmountProperty,
-                dueDateProperty,
-                vendorNameProperty,
-                customerNameProperty,
-                itemCountProperty
+                DynamicSchemaHelpers.typedProperty(
+                    "invoiceNumber",
+                    type: String.self,
+                    description: "Invoice number"
+                ),
+                DynamicSchemaHelpers.typedProperty(
+                    "totalAmount",
+                    type: Double.self,
+                    description: "Total amount due"
+                ),
+                DynamicSchemaHelpers.typedProperty(
+                    "dueDate",
+                    type: String.self,
+                    description: "Payment due date"
+                ),
+                DynamicSchemaHelpers.typedProperty(
+                    "vendorName",
+                    type: String.self,
+                    description: "Name of the vendor/company"
+                ),
+                DynamicSchemaHelpers.typedProperty(
+                    "customerName",
+                    type: String.self,
+                    description: "Name of the customer"
+                ),
+                DynamicSchemaHelpers.typedProperty(
+                    "itemCount",
+                    type: Int.self,
+                    description: "Number of line items"
+                )
             ]
         )
     }
