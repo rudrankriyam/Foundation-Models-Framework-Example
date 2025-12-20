@@ -53,7 +53,7 @@ actor HealthKitService {
         ]
 
         try await healthStore.requestAuthorization(toShare: [], read: readTypes)
-        isAuthorized = true
+        isAuthorized = healthStore.authorizationStatus(for: stepCountType) == .sharingAuthorized
     }
 
     func fetchAllTodayMetrics() async -> TodayHealthMetrics {
