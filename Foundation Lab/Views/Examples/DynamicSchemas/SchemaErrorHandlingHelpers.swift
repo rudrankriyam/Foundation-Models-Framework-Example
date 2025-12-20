@@ -10,14 +10,14 @@ import FoundationModels
 
 extension SchemaErrorHandlingView {
     func createBasicProductSchema() -> DynamicGenerationSchema {
-        DynamicGenerationSchema(
-            name: "Product",
+        DynamicSchemaHelpers.schema(
+            "Product",
             description: "Product information",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "name",
+                DynamicSchemaHelpers.typedProperty(
+                    "name",
+                    type: String.self,
                     description: "Product name",
-                    schema: DynamicGenerationSchema(type: String.self),
                     isOptional: true
                 ),
                 DynamicGenerationSchema.Property(
@@ -29,15 +29,13 @@ extension SchemaErrorHandlingView {
                     ),
                     isOptional: true
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "colors",
+                DynamicSchemaHelpers.arrayProperty(
+                    "colors",
+                    elementSchema: .init(type: String.self),
                     description: "Available colors",
-                    schema: DynamicGenerationSchema(
-                        arrayOf: DynamicGenerationSchema(type: String.self),
-                        minimumElements: 1,
-                        maximumElements: 10
-                    ),
-                    isOptional: true
+                    isOptional: true,
+                    minimumElements: 1,
+                    maximumElements: 10
                 ),
                 DynamicGenerationSchema.Property(
                     name: "weight",
@@ -53,8 +51,8 @@ extension SchemaErrorHandlingView {
     }
 
     func createStrictProductSchema() -> DynamicGenerationSchema {
-        DynamicGenerationSchema(
-            name: "StrictProduct",
+        DynamicSchemaHelpers.schema(
+            "StrictProduct",
             description: "Product with all required fields",
             properties: [
                 DynamicGenerationSchema.Property(
@@ -66,11 +64,11 @@ extension SchemaErrorHandlingView {
                     ),
                     isOptional: false  // Required!
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "name",
+                DynamicSchemaHelpers.typedProperty(
+                    "name",
+                    type: String.self,
                     description: "Product name (required)",
-                    schema: DynamicGenerationSchema(type: String.self),
-                    isOptional: false  // Required!
+                    isOptional: false
                 ),
                 DynamicGenerationSchema.Property(
                     name: "category",
@@ -81,19 +79,19 @@ extension SchemaErrorHandlingView {
                     ),
                     isOptional: false  // Required!
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "inStock",
+                DynamicSchemaHelpers.typedProperty(
+                    "inStock",
+                    type: Bool.self,
                     description: "Stock status (required)",
-                    schema: DynamicGenerationSchema(type: Bool.self),
-                    isOptional: false  // Required!
+                    isOptional: false
                 )
             ]
         )
     }
 
     func createTypeSensitiveProductSchema() -> DynamicGenerationSchema {
-        DynamicGenerationSchema(
-            name: "TypeSensitiveProduct",
+        DynamicSchemaHelpers.schema(
+            "TypeSensitiveProduct",
             description: "Product with specific type requirements",
             properties: [
                 DynamicGenerationSchema.Property(
@@ -112,26 +110,24 @@ extension SchemaErrorHandlingView {
                         guides: [.minimum(0.01)]
                     )
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "isAvailable",
-                    description: "Availability status (boolean)",
-                    schema: DynamicGenerationSchema(type: Bool.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "isAvailable",
+                    type: Bool.self,
+                    description: "Availability status (boolean)"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "tags",
+                DynamicSchemaHelpers.arrayProperty(
+                    "tags",
+                    elementSchema: .init(type: String.self),
                     description: "Product tags (array of strings)",
-                    schema: DynamicGenerationSchema(
-                        arrayOf: DynamicGenerationSchema(type: String.self),
-                        minimumElements: 1
-                    )
+                    minimumElements: 1
                 )
             ]
         )
     }
 
     func createValidatedProductSchema() -> DynamicGenerationSchema {
-        DynamicGenerationSchema(
-            name: "ValidatedProduct",
+        DynamicSchemaHelpers.schema(
+            "ValidatedProduct",
             description: "Product with strict validation rules",
             properties: [
                 DynamicGenerationSchema.Property(

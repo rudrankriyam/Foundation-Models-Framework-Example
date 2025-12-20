@@ -36,14 +36,14 @@ extension UnionTypesSchemaView {
     }
 
     func createContactSchema() -> DynamicGenerationSchema {
-        let personSchema = DynamicGenerationSchema(
-            name: "Person",
+        let personSchema = DynamicSchemaHelpers.schema(
+            "Person",
             description: "Individual person contact",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "name",
-                    description: "Person's full name",
-                    schema: DynamicGenerationSchema(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "name",
+                    type: String.self,
+                    description: "Person's full name"
                 ),
                 DynamicGenerationSchema.Property(
                     name: "email",
@@ -53,28 +53,28 @@ extension UnionTypesSchemaView {
                         guides: [.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)]
                     )
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "role",
+                DynamicSchemaHelpers.typedProperty(
+                    "role",
+                    type: String.self,
                     description: "Job title or role",
-                    schema: DynamicGenerationSchema(type: String.self),
                     isOptional: true
                 )
             ]
         )
 
-        let companySchema = DynamicGenerationSchema(
-            name: "Company",
+        let companySchema = DynamicSchemaHelpers.schema(
+            "Company",
             description: "Company contact",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "companyName",
-                    description: "Company name",
-                    schema: DynamicGenerationSchema(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "companyName",
+                    type: String.self,
+                    description: "Company name"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "industry",
+                DynamicSchemaHelpers.typedProperty(
+                    "industry",
+                    type: String.self,
                     description: "Industry sector",
-                    schema: DynamicGenerationSchema(type: String.self),
                     isOptional: true
                 ),
                 DynamicGenerationSchema.Property(
@@ -97,8 +97,8 @@ extension UnionTypesSchemaView {
     }
 
     func createCreditCardSchema() -> DynamicGenerationSchema {
-        DynamicGenerationSchema(
-            name: "CreditCard",
+        DynamicSchemaHelpers.schema(
+            "CreditCard",
             description: "Credit card payment",
             properties: [
                 DynamicGenerationSchema.Property(
@@ -134,18 +134,18 @@ extension UnionTypesSchemaView {
                     ),
                     isOptional: true
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "date",
-                    description: "Payment date",
-                    schema: DynamicGenerationSchema(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "date",
+                    type: String.self,
+                    description: "Payment date"
                 )
             ]
         )
     }
 
     func createBankTransferSchema() -> DynamicGenerationSchema {
-        DynamicGenerationSchema(
-            name: "BankTransfer",
+        DynamicSchemaHelpers.schema(
+            "BankTransfer",
             description: "Bank transfer payment",
             properties: [
                 DynamicGenerationSchema.Property(
@@ -182,18 +182,18 @@ extension UnionTypesSchemaView {
                     ),
                     isOptional: true
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "date",
-                    description: "Payment date",
-                    schema: DynamicGenerationSchema(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "date",
+                    type: String.self,
+                    description: "Payment date"
                 )
             ]
         )
     }
 
     func createCryptoSchema() -> DynamicGenerationSchema {
-        DynamicGenerationSchema(
-            name: "Cryptocurrency",
+        DynamicSchemaHelpers.schema(
+            "Cryptocurrency",
             description: "Cryptocurrency payment",
             properties: [
                 DynamicGenerationSchema.Property(
@@ -220,16 +220,16 @@ extension UnionTypesSchemaView {
                         guides: [.anyOf(["Bitcoin", "Ethereum", "USDT", "USDC"])]
                     )
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "walletAddress",
+                DynamicSchemaHelpers.typedProperty(
+                    "walletAddress",
+                    type: String.self,
                     description: "Wallet address (partial)",
-                    schema: DynamicGenerationSchema(type: String.self),
                     isOptional: true
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "date",
-                    description: "Payment date",
-                    schema: DynamicGenerationSchema(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "date",
+                    type: String.self,
+                    description: "Payment date"
                 )
             ]
         )
@@ -248,8 +248,8 @@ extension UnionTypesSchemaView {
     }
 
     func createSystemAlertSchema() -> DynamicGenerationSchema {
-        DynamicGenerationSchema(
-            name: "SystemAlert",
+        DynamicSchemaHelpers.schema(
+            "SystemAlert",
             description: "System-generated alert",
             properties: [
                 DynamicGenerationSchema.Property(
@@ -268,15 +268,15 @@ extension UnionTypesSchemaView {
                         guides: [.anyOf(["info", "warning", "error", "critical"])]
                     )
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "title",
-                    description: "Alert title",
-                    schema: DynamicGenerationSchema(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "title",
+                    type: String.self,
+                    description: "Alert title"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "message",
-                    description: "Alert message",
-                    schema: DynamicGenerationSchema(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "message",
+                    type: String.self,
+                    description: "Alert message"
                 ),
                 DynamicGenerationSchema.Property(
                     name: "timestamp",
@@ -292,8 +292,8 @@ extension UnionTypesSchemaView {
     }
 
     func createUserMessageSchema() -> DynamicGenerationSchema {
-        DynamicGenerationSchema(
-            name: "UserMessage",
+        DynamicSchemaHelpers.schema(
+            "UserMessage",
             description: "User-to-user message",
             properties: [
                 DynamicGenerationSchema.Property(
@@ -304,20 +304,20 @@ extension UnionTypesSchemaView {
                         guides: [.constant("user_message")]
                     )
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "from",
-                    description: "Sender name",
-                    schema: DynamicGenerationSchema(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "from",
+                    type: String.self,
+                    description: "Sender name"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "to",
-                    description: "Recipient name",
-                    schema: DynamicGenerationSchema(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "to",
+                    type: String.self,
+                    description: "Recipient name"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "content",
-                    description: "Message content",
-                    schema: DynamicGenerationSchema(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "content",
+                    type: String.self,
+                    description: "Message content"
                 ),
                 DynamicGenerationSchema.Property(
                     name: "priority",
@@ -328,10 +328,10 @@ extension UnionTypesSchemaView {
                     ),
                     isOptional: true
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "timestamp",
+                DynamicSchemaHelpers.typedProperty(
+                    "timestamp",
+                    type: String.self,
                     description: "Message timestamp",
-                    schema: DynamicGenerationSchema(type: String.self),
                     isOptional: true
                 )
             ]
@@ -339,8 +339,8 @@ extension UnionTypesSchemaView {
     }
 
     func createErrorNotificationSchema() -> DynamicGenerationSchema {
-        DynamicGenerationSchema(
-            name: "ErrorNotification",
+        DynamicSchemaHelpers.schema(
+            "ErrorNotification",
             description: "Error notification",
             properties: [
                 DynamicGenerationSchema.Property(
@@ -360,21 +360,21 @@ extension UnionTypesSchemaView {
                     ),
                     isOptional: true
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "message",
-                    description: "Error message",
-                    schema: DynamicGenerationSchema(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "message",
+                    type: String.self,
+                    description: "Error message"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "stackTrace",
+                DynamicSchemaHelpers.typedProperty(
+                    "stackTrace",
+                    type: String.self,
                     description: "Stack trace if available",
-                    schema: DynamicGenerationSchema(type: String.self),
                     isOptional: true
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "timestamp",
+                DynamicSchemaHelpers.typedProperty(
+                    "timestamp",
+                    type: String.self,
                     description: "Error timestamp",
-                    schema: DynamicGenerationSchema(type: String.self),
                     isOptional: true
                 )
             ]
