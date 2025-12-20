@@ -89,10 +89,6 @@ extension RemindersToolView {
         return response.content
     }
 
-    func handleFoundationModelsError(_ error: Error) -> String {
-        FoundationModelsErrorHandler.handleError(error)
-    }
-
     func validateQuickCreateInput(reminderTitle: String) -> Bool {
         return !reminderTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }

@@ -99,7 +99,7 @@ final class ChatViewModel {
 
         } catch {
             // Handle other errors by showing an error message
-            errorMessage = handleFoundationModelsError(error)
+            errorMessage = FoundationModelsErrorHandler.handleError(error)
             showError = true
         }
     }
@@ -206,10 +206,6 @@ private extension ChatViewModel {
 private extension ChatViewModel {
     // MARK: - Error Handling + Context Management
 
-    func handleFoundationModelsError(_ error: Error) -> String {
-        FoundationModelsErrorHandler.handleError(error)
-    }
-
     @MainActor
     func handleContextWindowExceeded(userMessage: String) async {
         isSummarizing = true
@@ -222,7 +218,7 @@ private extension ChatViewModel {
             try await respondWithNewSession(to: userMessage)
         } catch {
             handleSummarizationError(error)
-            errorMessage = handleFoundationModelsError(error)
+            errorMessage = FoundationModelsErrorHandler.handleError(error)
             showError = true
         }
     }

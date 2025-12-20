@@ -56,7 +56,7 @@ final class ExampleExecutor {
             }
 
         } catch {
-            errorMessage = handleError(error)
+            errorMessage = FoundationModelsErrorHandler.handleError(error)
             self.successMessage = nil
         }
 
@@ -92,7 +92,7 @@ final class ExampleExecutor {
             result = formatter(response.content)
 
         } catch {
-            errorMessage = handleError(error)
+            errorMessage = FoundationModelsErrorHandler.handleError(error)
         }
 
         isRunning = false
@@ -133,7 +133,7 @@ final class ExampleExecutor {
             }
 
         } catch {
-            errorMessage = handleError(error)
+            errorMessage = FoundationModelsErrorHandler.handleError(error)
         }
 
         isRunning = false
@@ -165,8 +165,4 @@ final class ExampleExecutor {
         }
     }
 
-    /// Handles various error types and returns user-friendly messages
-    func handleError(_ error: Error) -> String {
-        FoundationModelsErrorHandler.handleError(error)
-    }
 }

@@ -233,7 +233,7 @@ struct RemindersToolView: View {
       }
 
     } catch {
-      errorMessage = handleFoundationModelsError(error)
+      errorMessage = FoundationModelsErrorHandler.handleError(error)
       // Clear success message on error
       successMessage = nil
     }
