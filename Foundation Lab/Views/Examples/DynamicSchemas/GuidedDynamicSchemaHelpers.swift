@@ -14,26 +14,22 @@ extension GuidedDynamicSchemaView {
             "PhoneEntry",
             description: "Phone directory entry",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "name",
-                    description: "Person's name",
-                    schema: DynamicGenerationSchema(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "name",
+                    type: String.self,
+                    description: "Person's name"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "phoneNumber",
-                    description: "US phone number",
-                    schema: DynamicGenerationSchema(
-                        type: String.self,
-                        guides: [.pattern(/\(\d {3}\) \d {3}-\d {4}/)]
-                    )
+                DynamicSchemaHelpers.guidedProperty(
+                    "phoneNumber",
+                    type: String.self,
+                    guides: [.pattern(/\(\d {3}\) \d {3}-\d {4}/)],
+                    description: "US phone number"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "extension",
+                DynamicSchemaHelpers.guidedProperty(
+                    "extension",
+                    type: String.self,
+                    guides: [.pattern(/x\d {3,4}/)],
                     description: "Extension",
-                    schema: DynamicGenerationSchema(
-                        type: String.self,
-                        guides: [.pattern(/x\d {3,4}/)]
-                    ),
                     isOptional: true
                 )
             ]
@@ -59,34 +55,28 @@ extension GuidedDynamicSchemaView {
             "Product",
             description: "Product information",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "name",
-                    description: "Product name",
-                    schema: DynamicGenerationSchema(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "name",
+                    type: String.self,
+                    description: "Product name"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "price",
-                    description: "Price in USD",
-                    schema: DynamicGenerationSchema(
-                        type: Double.self,
-                        guides: [.range(10.0...100.0)]
-                    )
+                DynamicSchemaHelpers.guidedProperty(
+                    "price",
+                    type: Double.self,
+                    guides: [.range(10.0...100.0)],
+                    description: "Price in USD"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "stock",
-                    description: "Stock quantity",
-                    schema: DynamicGenerationSchema(
-                        type: Int.self,
-                        guides: [.minimum(0), .maximum(500)]
-                    )
+                DynamicSchemaHelpers.guidedProperty(
+                    "stock",
+                    type: Int.self,
+                    guides: [.minimum(0), .maximum(500)],
+                    description: "Stock quantity"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "discount",
+                DynamicSchemaHelpers.guidedProperty(
+                    "discount",
+                    type: Double.self,
+                    guides: [.range(0...50)],
                     description: "Discount percentage",
-                    schema: DynamicGenerationSchema(
-                        type: Double.self,
-                        guides: [.range(0...50)]
-                    ),
                     isOptional: true
                 )
             ]
