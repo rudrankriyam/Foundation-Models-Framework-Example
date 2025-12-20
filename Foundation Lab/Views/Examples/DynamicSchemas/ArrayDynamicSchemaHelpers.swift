@@ -13,14 +13,14 @@ extension ArrayDynamicSchemaView {
         switch index {
         case 0:
             // Todo items array
-            let todoItemSchema = DynamicGenerationSchema(
-                name: "TodoItem",
+            let todoItemSchema = DynamicSchemaHelpers.schema(
+                "TodoItem",
                 description: "A single todo task",
                 properties: [
-                    DynamicGenerationSchema.Property(
-                        name: "task",
-                        description: "The task description",
-                        schema: .init(type: String.self)
+                    DynamicSchemaHelpers.typedProperty(
+                        "task",
+                        type: String.self,
+                        description: "The task description"
                     ),
                     DynamicGenerationSchema.Property(
                         name: "priority",
@@ -41,19 +41,19 @@ extension ArrayDynamicSchemaView {
 
         case 1:
             // Recipe ingredients array
-            let ingredientSchema = DynamicGenerationSchema(
-                name: "Ingredient",
+            let ingredientSchema = DynamicSchemaHelpers.schema(
+                "Ingredient",
                 description: "A recipe ingredient",
                 properties: [
-                    DynamicGenerationSchema.Property(
-                        name: "name",
-                        description: "Ingredient name",
-                        schema: .init(type: String.self)
+                    DynamicSchemaHelpers.typedProperty(
+                        "name",
+                        type: String.self,
+                        description: "Ingredient name"
                     ),
-                    DynamicGenerationSchema.Property(
-                        name: "quantity",
+                    DynamicSchemaHelpers.typedProperty(
+                        "quantity",
+                        type: String.self,
                         description: "Amount needed",
-                        schema: .init(type: String.self),
                         isOptional: true
                     )
                 ]
