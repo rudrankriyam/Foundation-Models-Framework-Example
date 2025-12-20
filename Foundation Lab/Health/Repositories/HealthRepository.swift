@@ -40,8 +40,22 @@ final class HealthRepository {
     }
 
     func saveMetrics(_ metrics: [MetricType: Double]) {
+        guard let modelContext = modelContext else { return }
+
         for (type, value) in metrics {
-            saveMetric(type: type, value: value)
+            let metric = HealthMetric(
+                type: type,
+                value: value,
+                unit: type.defaultUnit,
+                timestamp: Date()
+            )
+            modelContext.insert(metric)
+        }
+
+        do {
+            try modelContext.save()
+        } catch {
+            logger.error("Failed to save health metrics: \(error.localizedDescription)")
         }
     }
 

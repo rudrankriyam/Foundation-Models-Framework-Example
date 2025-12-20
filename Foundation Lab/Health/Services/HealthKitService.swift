@@ -56,32 +56,6 @@ actor HealthKitService {
         isAuthorized = true
     }
 
-    func fetchTodayHealthData() async {
-        guard healthStore != nil else { return }
-
-        let calendar = Calendar.current
-        let startOfDay = calendar.startOfDay(for: Date())
-        let endOfDay = Date()
-
-        await withTaskGroup(of: Void.self) { group in
-            group.addTask {
-                await self.fetchSteps(from: startOfDay, to: endOfDay)
-            }
-            group.addTask {
-                await self.fetchActiveEnergy(from: startOfDay, to: endOfDay)
-            }
-            group.addTask {
-                await self.fetchDistance(from: startOfDay, to: endOfDay)
-            }
-            group.addTask {
-                await self.fetchLatestHeartRate()
-            }
-            group.addTask {
-                await self.fetchLastNightSleep()
-            }
-        }
-    }
-
     func fetchAllTodayMetrics() async -> TodayHealthMetrics {
         let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: Date())
