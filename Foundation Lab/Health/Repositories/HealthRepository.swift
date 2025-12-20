@@ -42,12 +42,14 @@ final class HealthRepository {
     func saveMetrics(_ metrics: [MetricType: Double]) {
         guard let modelContext = modelContext else { return }
 
+        let timestamp = Date()
+
         for (type, value) in metrics {
             let metric = HealthMetric(
                 type: type,
                 value: value,
                 unit: type.defaultUnit,
-                timestamp: Date()
+                timestamp: timestamp
             )
             modelContext.insert(metric)
         }
