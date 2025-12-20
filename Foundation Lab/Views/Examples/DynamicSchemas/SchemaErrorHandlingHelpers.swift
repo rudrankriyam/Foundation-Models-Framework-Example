@@ -20,13 +20,11 @@ extension SchemaErrorHandlingView {
                     description: "Product name",
                     isOptional: true
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "price",
+                DynamicSchemaHelpers.guidedProperty(
+                    "price",
+                    type: Double.self,
+                    guides: [.minimum(0.01)],
                     description: "Price in dollars",
-                    schema: DynamicGenerationSchema(
-                        type: Double.self,
-                        guides: [.minimum(0.01)]
-                    ),
                     isOptional: true
                 ),
                 DynamicSchemaHelpers.arrayProperty(
@@ -37,13 +35,11 @@ extension SchemaErrorHandlingView {
                     minimumElements: 1,
                     maximumElements: 10
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "weight",
+                DynamicSchemaHelpers.guidedProperty(
+                    "weight",
+                    type: Double.self,
+                    guides: [.minimum(0.001)],
                     description: "Weight in kilograms",
-                    schema: DynamicGenerationSchema(
-                        type: Double.self,
-                        guides: [.minimum(0.001)]
-                    ),
                     isOptional: true
                 )
             ]
@@ -55,13 +51,11 @@ extension SchemaErrorHandlingView {
             "StrictProduct",
             description: "Product with all required fields",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "productId",
+                DynamicSchemaHelpers.guidedProperty(
+                    "productId",
+                    type: String.self,
+                    guides: [.pattern(/^PROD-\d {6}$/)],
                     description: "Unique product identifier",
-                    schema: DynamicGenerationSchema(
-                        type: String.self,
-                        guides: [.pattern(/^PROD-\d {6}$/)]
-                    ),
                     isOptional: false  // Required!
                 ),
                 DynamicSchemaHelpers.typedProperty(
@@ -70,13 +64,11 @@ extension SchemaErrorHandlingView {
                     description: "Product name (required)",
                     isOptional: false
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "category",
+                DynamicSchemaHelpers.guidedProperty(
+                    "category",
+                    type: String.self,
+                    guides: [.anyOf(["Electronics", "Clothing", "Food", "Other"])],
                     description: "Product category (required)",
-                    schema: DynamicGenerationSchema(
-                        type: String.self,
-                        guides: [.anyOf(["Electronics", "Clothing", "Food", "Other"])]
-                    ),
                     isOptional: false  // Required!
                 ),
                 DynamicSchemaHelpers.typedProperty(
@@ -94,21 +86,17 @@ extension SchemaErrorHandlingView {
             "TypeSensitiveProduct",
             description: "Product with specific type requirements",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "itemCount",
-                    description: "Number of items (must be integer)",
-                    schema: DynamicGenerationSchema(
-                        type: Int.self,
-                        guides: [.range(1...1000)]
-                    )
+                DynamicSchemaHelpers.guidedProperty(
+                    "itemCount",
+                    type: Int.self,
+                    guides: [.range(1...1000)],
+                    description: "Number of items (must be integer)"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "price",
-                    description: "Exact price with decimals",
-                    schema: DynamicGenerationSchema(
-                        type: Decimal.self,
-                        guides: [.minimum(0.01)]
-                    )
+                DynamicSchemaHelpers.guidedProperty(
+                    "price",
+                    type: Decimal.self,
+                    guides: [.minimum(0.01)],
+                    description: "Exact price with decimals"
                 ),
                 DynamicSchemaHelpers.typedProperty(
                     "isAvailable",
@@ -130,46 +118,36 @@ extension SchemaErrorHandlingView {
             "ValidatedProduct",
             description: "Product with strict validation rules",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "sku",
-                    description: "SKU must match pattern ABC-123-XYZ",
-                    schema: DynamicGenerationSchema(
-                        type: String.self,
-                        guides: [.pattern(/^[A-Z] {3}-\d {3}-[A-Z] {3}$/)]
-                    )
+                DynamicSchemaHelpers.guidedProperty(
+                    "sku",
+                    type: String.self,
+                    guides: [.pattern(/^[A-Z] {3}-\d {3}-[A-Z] {3}$/)],
+                    description: "SKU must match pattern ABC-123-XYZ"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "price",
-                    description: "Price must be between $10 and $999.99",
-                    schema: DynamicGenerationSchema(
-                        type: Double.self,
-                        guides: [.range(10.0...999.99)]
-                    )
+                DynamicSchemaHelpers.guidedProperty(
+                    "price",
+                    type: Double.self,
+                    guides: [.range(10.0...999.99)],
+                    description: "Price must be between $10 and $999.99"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "discount",
+                DynamicSchemaHelpers.guidedProperty(
+                    "discount",
+                    type: Int.self,
+                    guides: [.range(0...50)],
                     description: "Discount percentage (0-50%)",
-                    schema: DynamicGenerationSchema(
-                        type: Int.self,
-                        guides: [.range(0...50)]
-                    ),
                     isOptional: true
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "status",
-                    description: "Product status (must be one of the allowed values)",
-                    schema: DynamicGenerationSchema(
-                        type: String.self,
-                        guides: [.anyOf(["active", "discontinued", "coming_soon"])]
-                    )
+                DynamicSchemaHelpers.guidedProperty(
+                    "status",
+                    type: String.self,
+                    guides: [.anyOf(["active", "discontinued", "coming_soon"])],
+                    description: "Product status (must be one of the allowed values)"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "rating",
+                DynamicSchemaHelpers.guidedProperty(
+                    "rating",
+                    type: Double.self,
+                    guides: [.range(1.0...5.0)],
                     description: "Product rating (1.0 to 5.0 in 0.5 increments)",
-                    schema: DynamicGenerationSchema(
-                        type: Double.self,
-                        guides: [.range(1.0...5.0)]
-                    ),
                     isOptional: true
                 )
             ]
