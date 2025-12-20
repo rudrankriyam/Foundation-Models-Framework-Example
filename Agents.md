@@ -226,10 +226,6 @@ Foundation Lab/
 │   └── Voice/
 │       ├── VoiceView.swift
 │       └── PermissionRequestView.swift
-└── Voice/                    # Voice interface module
-    ├── VoiceView.swift
-    ├── VoiceViewModel.swift
-    └── ...
 ```
 
 ### Localization (`Localizable.xcstrings`)

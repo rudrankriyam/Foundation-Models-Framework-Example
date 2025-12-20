@@ -302,10 +302,10 @@ extension ReferencedSchemaView {
             return String(bool)
         case .null:
             return "null"
-        case .structure:
-            return "<structure>"
-        case .array:
-            return "<array>"
+        // These cases should never be reached since formatPrimitiveValue is only
+        // called from the default case in formatStructureProperty
+        case .structure, .array:
+            return "unknown"
         @unknown default:
             return "unknown"
         }
