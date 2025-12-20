@@ -41,11 +41,7 @@ final class HealthChatViewModel {
         // Create session with tools and instructions for health data access
         self.session = LanguageModelSession(
             tools: tools,
-            instructions: Instructions(
-                "You are a friendly and knowledgeable health coach AI assistant. " +
-                "Based on the user's health data, provide personalized, encouraging responses. " +
-                "Be supportive and celebrate small wins. Use emojis occasionally."
-            )
+            instructions: Instructions(Self.baseInstructions)
         )
     }
 
@@ -104,11 +100,7 @@ final class HealthChatViewModel {
         sessionCount = 1
         session = LanguageModelSession(
             tools: tools,
-            instructions: Instructions(
-                "You are a friendly and knowledgeable health coach AI assistant. " +
-                "Based on the user's health data, provide personalized, encouraging responses. " +
-                "Be supportive and celebrate small wins. Use emojis occasionally."
-            )
+            instructions: Instructions(Self.baseInstructions)
         )
     }
 
@@ -129,45 +121,33 @@ final class HealthChatViewModel {
 }
 
 private extension HealthChatViewModel {
+    static let baseInstructions = """
+    You are a friendly and knowledgeable health coach AI assistant.
+    Based on the user's health data, provide personalized, encouraging responses.
+    Be supportive and celebrate small wins. Use emojis occasionally.
+    """
+
     func shouldGenerateInsight(from response: String) -> Bool {
         let insightKeywords = ["goal", "achieve", "progress", "improve", "recommend", "suggest", "tip", "advice"]
         return insightKeywords.contains { response.lowercased().contains($0) }
     }
 
     func createConversationText() -> String {
-        return session.transcript.compactMap { entry in
-            switch entry {
-            case .prompt:
-                guard let text = entry.textContent() else { return nil }
-                return String(localized: "User:") + " \(text)"
-            case .response:
-                guard let text = entry.textContent() else { return nil }
-                return String(localized: "Health AI:") + " \(text)"
-            default:
-                return nil
-            }
-        }.joined(separator: "\n\n")
+        ConversationContextBuilder.conversationText(
+            from: session.transcript,
+            userLabel: String(localized: "User:"),
+            assistantLabel: String(localized: "Health AI:")
+        )
     }
 
     func createNewSessionWithContext(summary: HealthConversationSummary) {
-        let contextInstructions = """
-        You are a friendly and knowledgeable health coach AI assistant.
-        Based on the user's health data, provide personalized, encouraging responses.
-        Be supportive and celebrate small wins. Use emojis occasionally.
-
-        You are continuing a conversation with a user. Here's a summary of your previous conversation:
-
-        CONVERSATION SUMMARY:
-        \(summary.summary)
-
-        KEY TOPICS DISCUSSED:
-        \(summary.keyTopics.bulletList())
-
-        USER PREFERENCES/REQUESTS:
-        \(summary.userPreferences.bulletList())
-
-        Continue the conversation naturally, referencing this context when relevant.
-        """
+        let contextInstructions = ConversationContextBuilder.contextInstructions(
+            baseInstructions: Self.baseInstructions,
+            summary: summary.summary,
+            keyTopics: summary.keyTopics,
+            userPreferences: summary.userPreferences,
+            continuationNote: "Continue the conversation naturally, referencing this context when relevant."
+        )
 
         session = LanguageModelSession(
             tools: tools,

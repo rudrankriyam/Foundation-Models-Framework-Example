@@ -228,18 +228,11 @@ private extension ChatViewModel {
     }
 
     func createConversationText() -> String {
-        session.transcript.compactMap { entry in
-            switch entry {
-            case .prompt(let prompt):
-                guard let text = prompt.segments.textContentJoined() else { return nil }
-                return "User: \(text)"
-            case .response(let response):
-                guard let text = response.segments.textContentJoined() else { return nil }
-                return "Assistant: \(text)"
-            default:
-                return nil
-            }
-        }.joined(separator: "\n\n")
+        ConversationContextBuilder.conversationText(
+            from: session.transcript,
+            userLabel: "User:",
+            assistantLabel: "Assistant:"
+        )
     }
 
     @MainActor
@@ -269,23 +262,18 @@ private extension ChatViewModel {
     }
 
     func createNewSessionWithContext(summary: ConversationSummary) {
-        let contextInstructions = """
-        \(instructions)
-
-        You are continuing a conversation with a user. Here's a summary of your previous conversation:
-
-        CONVERSATION SUMMARY:
-        \(summary.summary)
-
-        KEY TOPICS DISCUSSED:
-        \(summary.keyTopics.bulletList())
-
-        USER PREFERENCES/REQUESTS:
-        \(summary.userPreferences.bulletList())
-
+        let continuationNote = """
         Continue the conversation naturally, referencing this context when relevant. \
         The user's next message is a continuation of your previous discussion.
         """
+
+        let contextInstructions = ConversationContextBuilder.contextInstructions(
+            baseInstructions: instructions,
+            summary: summary.summary,
+            keyTopics: summary.keyTopics,
+            userPreferences: summary.userPreferences,
+            continuationNote: continuationNote
+        )
 
         session = LanguageModelSession(
             model: createLanguageModel(),
