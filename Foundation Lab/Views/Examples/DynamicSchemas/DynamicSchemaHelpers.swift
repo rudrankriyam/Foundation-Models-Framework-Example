@@ -30,12 +30,18 @@ enum DynamicSchemaHelpers {
         _ name: String,
         elementSchema: DynamicGenerationSchema,
         description: String? = nil,
-        isOptional: Bool = false
+        isOptional: Bool = false,
+        minimumElements: Int? = nil,
+        maximumElements: Int? = nil
     ) -> DynamicGenerationSchema.Property {
         DynamicGenerationSchema.Property(
             name: name,
             description: description,
-            schema: .init(arrayOf: elementSchema),
+            schema: .init(
+                arrayOf: elementSchema,
+                minimumElements: minimumElements,
+                maximumElements: maximumElements
+            ),
             isOptional: isOptional
         )
     }

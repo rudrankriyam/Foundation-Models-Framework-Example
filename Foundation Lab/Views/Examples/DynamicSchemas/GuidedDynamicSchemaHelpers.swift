@@ -10,8 +10,8 @@ import FoundationModels
 
 extension GuidedDynamicSchemaView {
     func createPhoneDirectorySchema() -> DynamicGenerationSchema {
-        let phoneEntrySchema = DynamicGenerationSchema(
-            name: "PhoneEntry",
+        let phoneEntrySchema = DynamicSchemaHelpers.schema(
+            "PhoneEntry",
             description: "Phone directory entry",
             properties: [
                 DynamicGenerationSchema.Property(
@@ -39,26 +39,24 @@ extension GuidedDynamicSchemaView {
             ]
         )
 
-        return DynamicGenerationSchema(
-            name: "PhoneDirectory",
+        return DynamicSchemaHelpers.schema(
+            "PhoneDirectory",
             description: "Phone directory",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "entries",
+                DynamicSchemaHelpers.arrayProperty(
+                    "entries",
+                    elementSchema: phoneEntrySchema,
                     description: "Phone directory entries",
-                    schema: DynamicGenerationSchema(
-                        arrayOf: phoneEntrySchema,
-                        minimumElements: 3,
-                        maximumElements: 7
-                    )
+                    minimumElements: 3,
+                    maximumElements: 7
                 )
             ]
         )
     }
 
     func createProductCatalogSchema() -> DynamicGenerationSchema {
-        let productSchema = DynamicGenerationSchema(
-            name: "Product",
+        let productSchema = DynamicSchemaHelpers.schema(
+            "Product",
             description: "Product information",
             properties: [
                 DynamicGenerationSchema.Property(
@@ -94,18 +92,16 @@ extension GuidedDynamicSchemaView {
             ]
         )
 
-        return DynamicGenerationSchema(
-            name: "ProductCatalog",
+        return DynamicSchemaHelpers.schema(
+            "ProductCatalog",
             description: "Product catalog",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "products",
+                DynamicSchemaHelpers.arrayProperty(
+                    "products",
+                    elementSchema: productSchema,
                     description: "Product list",
-                    schema: DynamicGenerationSchema(
-                        arrayOf: productSchema,
-                        minimumElements: 3,
-                        maximumElements: 8
-                    )
+                    minimumElements: 3,
+                    maximumElements: 8
                 )
             ]
         )
@@ -144,20 +140,22 @@ extension GuidedDynamicSchemaView {
             description: "Store name",
             schema: .init(type: String.self)
         )
-        let itemsProperty = DynamicGenerationSchema.Property(
-            name: "items",
-            description: "Shopping list items",
-            schema: .init(arrayOf: shoppingItemSchema)
+
+        let stringSchema = DynamicGenerationSchema(type: String.self)
+        let itemsProperty = DynamicSchemaHelpers.arrayProperty(
+            "items",
+            elementSchema: shoppingItemSchema,
+            description: "Shopping list items"
         )
-        let categoriesProperty = DynamicGenerationSchema.Property(
-            name: "categories",
+        let categoriesProperty = DynamicSchemaHelpers.arrayProperty(
+            "categories",
+            elementSchema: stringSchema,
             description: "Item categories",
-            schema: .init(arrayOf: .init(type: String.self)),
             isOptional: true
         )
 
-        return DynamicGenerationSchema(
-            name: "ShoppingList",
+        return DynamicSchemaHelpers.schema(
+            "ShoppingList",
             description: "Shopping list with constraints",
             properties: [storeNameProperty, itemsProperty, categoriesProperty]
         )
@@ -191,14 +189,14 @@ extension GuidedDynamicSchemaView {
             properties: [firstNameProperty, lastNameProperty, emailProperty, departmentProperty]
         )
 
-        let employeesProperty = DynamicGenerationSchema.Property(
-            name: "employees",
-            description: "Employee records",
-            schema: .init(arrayOf: employeeSchema)
+        let employeesProperty = DynamicSchemaHelpers.arrayProperty(
+            "employees",
+            elementSchema: employeeSchema,
+            description: "Employee records"
         )
 
-        return DynamicGenerationSchema(
-            name: "CompanyDirectory",
+        return DynamicSchemaHelpers.schema(
+            "CompanyDirectory",
             description: "Company employee directory",
             properties: [employeesProperty]
         )
