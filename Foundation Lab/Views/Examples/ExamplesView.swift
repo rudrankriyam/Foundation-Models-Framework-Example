@@ -9,7 +9,6 @@ import SwiftUI
 import FoundationModels
 
 struct ExamplesView: View {
-    @Binding var viewModel: ContentViewModel
     @State private var showChatFullscreen = false
 
     var body: some View {
@@ -17,8 +16,6 @@ struct ExamplesView: View {
             VStack(alignment: .leading, spacing: Spacing.large) {
                 chatSection
                 examplesGridView
-                responseView
-                loadingView
             }
             .padding(.vertical)
         }
@@ -133,35 +130,8 @@ struct ExamplesView: View {
         ]
 #endif
     }
-
-    @ViewBuilder
-    private var responseView: some View {
-        if let requestResponse = viewModel.requestResponse {
-            ResponseDisplayView(
-                requestResponse: requestResponse,
-                onClear: viewModel.clearResults
-            )
-        }
-    }
-
-    @ViewBuilder
-    private var loadingView: some View {
-        if viewModel.isLoading {
-            HStack {
-                ProgressView()
-                    .scaleEffect(0.8)
-                Text("Generating response...")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            .padding(.horizontal)
-#if os(iOS) || os(macOS)
-            .glassEffect(.regular, in: .capsule)
-#endif
-        }
-    }
 }
 
 #Preview {
-    ExamplesView(viewModel: .constant(ContentViewModel()))
+    ExamplesView()
 }
