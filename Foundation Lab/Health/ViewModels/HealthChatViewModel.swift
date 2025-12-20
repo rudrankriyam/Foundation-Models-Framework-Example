@@ -161,10 +161,10 @@ private extension HealthChatViewModel {
         \(summary.summary)
 
         KEY TOPICS DISCUSSED:
-        \(summary.keyTopics.map { "• \($0)" }.joined(separator: "\n"))
+        \(summary.keyTopics.bulletList())
 
         USER PREFERENCES/REQUESTS:
-        \(summary.userPreferences.map { "• \($0)" }.joined(separator: "\n"))
+        \(summary.userPreferences.bulletList())
 
         Continue the conversation naturally, referencing this context when relevant.
         """
