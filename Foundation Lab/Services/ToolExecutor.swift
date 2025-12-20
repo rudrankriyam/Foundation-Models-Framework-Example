@@ -19,88 +19,52 @@ final class ToolExecutor {
   var successMessage: String?
 
   /// Executes a tool operation with standardized state management
-  /// - Parameters:
-  ///   - operation: The async operation to execute
-  ///   - successMessage: Optional success message to display
-  ///   - clearForm: Optional closure to clear form data on success
   func execute<T: Tool>(
     tool: T,
     prompt: String,
     successMessage: String? = nil,
     clearForm: (() -> Void)? = nil
   ) async {
-    isRunning = true
-    errorMessage = nil
-    self.successMessage = nil
-    result = ""
-
-    do {
+    await performExecution(successMessage: successMessage, clearForm: clearForm) {
       let session = LanguageModelSession(tools: [tool])
       let response = try await session.respond(to: Prompt(prompt))
-      result = response.content
-
-      if let successMessage = successMessage {
-        self.successMessage = successMessage
-      }
-
-      clearForm?()
-
-    } catch {
-      errorMessage = FoundationModelsErrorHandler.handleError(error)
-      // Clear success message on error
-      self.successMessage = nil
+      return response.content
     }
-
-    isRunning = false
   }
 
   /// Executes a tool operation using PromptBuilder
-  /// - Parameters:
-  ///   - tool: The tool to execute
-  ///   - successMessage: Optional success message to display
-  ///   - clearForm: Optional closure to clear form data on success
-  ///   - promptBuilder: A closure that builds the prompt using @PromptBuilder
   func executeWithPromptBuilder<T: Tool>(
     tool: T,
     successMessage: String? = nil,
     clearForm: (() -> Void)? = nil,
     @PromptBuilder promptBuilder: () -> Prompt
   ) async {
-    isRunning = true
-    errorMessage = nil
-    self.successMessage = nil
-    result = ""
-
-    do {
+    await performExecution(successMessage: successMessage, clearForm: clearForm) {
       let session = LanguageModelSession(tools: [tool])
       let response = try await session.respond(to: promptBuilder())
-      result = response.content
-
-      if let successMessage = successMessage {
-        self.successMessage = successMessage
-      }
-
-      clearForm?()
-
-    } catch {
-      errorMessage = FoundationModelsErrorHandler.handleError(error)
-      // Clear success message on error
-      self.successMessage = nil
+      return response.content
     }
-
-    isRunning = false
   }
 
   /// Executes a tool operation with a custom session configuration
-  /// - Parameters:
-  ///   - sessionBuilder: Custom session builder closure
-  ///   - successMessage: Optional success message to display
-  ///   - clearForm: Optional closure to clear form data on success
   func executeWithCustomSession(
     sessionBuilder: () -> LanguageModelSession,
     prompt: String,
     successMessage: String? = nil,
     clearForm: (() -> Void)? = nil
+  ) async {
+    await performExecution(successMessage: successMessage, clearForm: clearForm) {
+      let session = sessionBuilder()
+      let response = try await session.respond(to: Prompt(prompt))
+      return response.content
+    }
+  }
+
+  /// Private helper that encapsulates common state management logic
+  private func performExecution(
+    successMessage: String? = nil,
+    clearForm: (() -> Void)? = nil,
+    operation: () async throws -> String
   ) async {
     isRunning = true
     errorMessage = nil
@@ -108,9 +72,7 @@ final class ToolExecutor {
     result = ""
 
     do {
-      let session = sessionBuilder()
-      let response = try await session.respond(to: Prompt(prompt))
-      result = response.content
+      result = try await operation()
 
       if let successMessage = successMessage {
         self.successMessage = successMessage
@@ -120,7 +82,6 @@ final class ToolExecutor {
 
     } catch {
       errorMessage = FoundationModelsErrorHandler.handleError(error)
-      // Clear success message on error
       self.successMessage = nil
     }
 

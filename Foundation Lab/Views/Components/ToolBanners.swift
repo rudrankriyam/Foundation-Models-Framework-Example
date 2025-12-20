@@ -47,27 +47,6 @@ struct BannerView: View {
   let message: String
   let type: BannerType
 
-  // Custom initializer for backwards compatibility
-  init(message: String, iconName: String, color: Color) {
-    self.message = message
-    // Determine type based on icon name for backwards compatibility
-    if iconName.contains("exclamation") && iconName.contains("triangle.fill") {
-      self.type = .error
-    } else if iconName.contains("checkmark") {
-      self.type = .success
-    } else if iconName.contains("exclamation") && iconName.contains("triangle") {
-      self.type = .warning
-    } else {
-      self.type = .info
-    }
-  }
-
-  // Preferred initializer using enum
-  init(message: String, type: BannerType) {
-    self.message = message
-    self.type = type
-  }
-
   var body: some View {
     HStack {
       Image(systemName: type.iconName)

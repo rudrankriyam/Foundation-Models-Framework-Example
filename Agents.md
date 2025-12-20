@@ -52,7 +52,6 @@ let structured = try await session.respond(to: "Suggest a book", generating: Boo
 | ViewModel | Purpose |
 |-----------|---------|
 | `ChatViewModel.swift` | Multi-turn chat with sliding window context management, streaming responses |
-| `ContentViewModel.swift` | Manages examples and playground content |
 | `VoiceViewModel.swift` | Voice input/output state machine, permission handling |
 | `HealthChatViewModel.swift` | Health-specific chat with HealthKit tool integration |
 | `DynamicSchemaViewModel.swift` | Dynamic schema builder state management |
