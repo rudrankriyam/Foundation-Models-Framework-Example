@@ -66,7 +66,7 @@ struct ExamplesView: View {
     // MARK: - View Components
 
     private var chatSection: some View {
-        Button(action: { showChatFullscreen = true }) {
+        Button(action: { showChatFullscreen = true }, label: {
             HStack(spacing: Spacing.medium) {
                 Image(systemName: "bubble.left.and.bubble.right.fill")
                     .font(.title2)
@@ -90,7 +90,7 @@ struct ExamplesView: View {
 #if os(iOS) || os(macOS)
             .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
 #endif
-        }
+        })
         .buttonStyle(.plain)
         .padding(.horizontal, Spacing.medium)
     }

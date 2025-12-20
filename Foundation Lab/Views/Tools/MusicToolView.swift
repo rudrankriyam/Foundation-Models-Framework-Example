@@ -11,9 +11,7 @@ import MusicKit
 import SwiftUI
 
 struct MusicToolView: View {
-  @State private var isRunning = false
-  @State private var result: String = ""
-  @State private var errorMessage: String?
+  @State private var executor = ToolExecutor()
   @State private var query: String = "Search for songs by Taylor Swift"
 
   var body: some View {
@@ -21,44 +19,26 @@ struct MusicToolView: View {
       title: "Music",
       icon: "music.note",
       description: "Search and play music, manage playlists, get recommendations",
-      isRunning: isRunning,
-      errorMessage: errorMessage
+      isRunning: executor.isRunning,
+      errorMessage: executor.errorMessage
     ) {
       VStack(alignment: .leading, spacing: Spacing.large) {
-        VStack(alignment: .leading, spacing: 8) {
-          Text("MUSIC QUERY")
-            .font(.footnote)
-            .fontWeight(.medium)
-            .foregroundColor(.secondary)
+        ToolInputField(
+          label: "Music Query",
+          text: $query,
+          placeholder: "Search for songs, artists, or albums"
+        )
 
-          TextEditor(text: $query)
-            .scrollContentBackground(.hidden)
-            .padding(Spacing.medium)
-            .frame(height: 50)
-            .background(Color.gray.opacity(0.1))
-            .cornerRadius(12)
-        }
+        ToolExecuteButton(
+          "Search Music",
+          systemImage: "music.note",
+          isRunning: executor.isRunning,
+          action: executeMusicQuery
+        )
+        .disabled(executor.isRunning || query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
 
-        Button(action: executeMusicQuery) {
-          HStack(spacing: Spacing.small) {
-            if isRunning {
-              ProgressView()
-                .scaleEffect(0.8)
-            } else {
-              Image(systemName: "music.note")
-            }
-
-            Text(isRunning ? "Searching..." : "Search Music")
-              .fontWeight(.medium)
-          }
-          .frame(maxWidth: .infinity)
-          .padding(.vertical, Spacing.small)
-        }
-        .buttonStyle(.glassProminent)
-        .disabled(isRunning || query.isEmpty)
-
-        if !result.isEmpty {
-          ResultDisplay(result: result, isSuccess: errorMessage == nil)
+        if !executor.result.isEmpty {
+          ResultDisplay(result: executor.result, isSuccess: executor.errorMessage == nil)
         }
       }
     }
@@ -72,34 +52,32 @@ struct MusicToolView: View {
 
   @MainActor
   private func performMusicQuery() async {
-    isRunning = true
-    errorMessage = nil
-    result = ""
-    defer { isRunning = false }
+    executor.isRunning = true
+    executor.errorMessage = nil
+    executor.result = ""
+    executor.successMessage = nil
 
     if let authorizationError = await musicAuthorizationIssueDescription() {
-      errorMessage = authorizationError
+      executor.errorMessage = authorizationError
+      executor.isRunning = false
       return
     }
 
     do {
       let subscription = try await MusicSubscription.current
       guard subscription.canPlayCatalogContent else {
-        errorMessage = "An active Apple Music subscription is required to search the catalog."
+        executor.errorMessage = "An active Apple Music subscription is required to search the catalog."
+        executor.isRunning = false
         return
       }
     } catch {
-      errorMessage = "Unable to verify Apple Music subscription: \(error.localizedDescription)"
+      executor.errorMessage = "Unable to verify Apple Music subscription: \(error.localizedDescription)"
+      executor.isRunning = false
       return
     }
 
-    do {
-      let session = LanguageModelSession(tools: [MusicTool()])
-      let response = try await session.respond(to: Prompt(query))
-      result = response.content
-    } catch {
-      errorMessage = "Failed to search music: \(error.localizedDescription)"
-    }
+    executor.isRunning = false
+    await executor.execute(tool: MusicTool(), prompt: query)
   }
 
   @MainActor

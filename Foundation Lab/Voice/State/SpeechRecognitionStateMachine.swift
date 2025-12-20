@@ -245,6 +245,9 @@ final class SpeechRecognitionStateMachine {
         scheduleIdleReset()
     }
 
+}
+
+extension SpeechRecognitionStateMachine {
     // MARK: - Cleanup
 
     func cleanup() {

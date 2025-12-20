@@ -231,20 +231,10 @@ private extension ChatViewModel {
         session.transcript.compactMap { entry in
             switch entry {
             case .prompt(let prompt):
-                let text = prompt.segments.compactMap { segment in
-                    if case .text(let textSegment) = segment {
-                        return textSegment.content
-                    }
-                    return nil
-                }.joined(separator: " ")
+                guard let text = prompt.segments.textContentJoined() else { return nil }
                 return "User: \(text)"
             case .response(let response):
-                let text = response.segments.compactMap { segment in
-                    if case .text(let textSegment) = segment {
-                        return textSegment.content
-                    }
-                    return nil
-                }.joined(separator: " ")
+                guard let text = response.segments.textContentJoined() else { return nil }
                 return "Assistant: \(text)"
             default:
                 return nil

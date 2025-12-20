@@ -73,13 +73,8 @@ final class HealthChatViewModel {
 
             // Extract the response text from the transcript
             if let lastEntry = session.transcript.last,
-               case .response(let response) = lastEntry {
-                responseText = response.segments.compactMap { segment in
-                    if case .text(let textSegment) = segment {
-                        return textSegment.content
-                    }
-                    return nil
-                }.joined(separator: " ")
+               case .response = lastEntry {
+                responseText = lastEntry.textContent() ?? ""
             }
 
             // Save AI response to session history
@@ -142,21 +137,11 @@ private extension HealthChatViewModel {
     func createConversationText() -> String {
         return session.transcript.compactMap { entry in
             switch entry {
-            case .prompt(let prompt):
-                let text = prompt.segments.compactMap { segment in
-                    if case .text(let textSegment) = segment {
-                        return textSegment.content
-                    }
-                    return nil
-                }.joined(separator: " ")
+            case .prompt:
+                guard let text = entry.textContent() else { return nil }
                 return String(localized: "User:") + " \(text)"
-            case .response(let response):
-                let text = response.segments.compactMap { segment in
-                    if case .text(let textSegment) = segment {
-                        return textSegment.content
-                    }
-                    return nil
-                }.joined(separator: " ")
+            case .response:
+                guard let text = entry.textContent() else { return nil }
                 return String(localized: "Health AI:") + " \(text)"
             default:
                 return nil
@@ -296,13 +281,8 @@ private extension HealthChatViewModel {
         }
 
         if let lastEntry = session.transcript.last,
-           case .response(let response) = lastEntry {
-            responseText = response.segments.compactMap { segment in
-                if case .text(let textSegment) = segment {
-                    return textSegment.content
-                }
-                return nil
-            }.joined(separator: " ")
+           case .response = lastEntry {
+            responseText = lastEntry.textContent() ?? ""
         }
 
         if !responseText.isEmpty {
