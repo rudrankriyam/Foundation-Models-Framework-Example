@@ -9,12 +9,13 @@ import Foundation
 import SwiftData
 import Observation
 
+@MainActor
 @Observable
 final class HealthDataManager {
     // MARK: - Services
 
-    let healthKitService = HealthKitService()
-    let healthRepository = HealthRepository()
+    let healthKitService: HealthKitService
+    private(set) var healthRepository: HealthRepository
 
     // MARK: - Observable State
 
@@ -27,7 +28,10 @@ final class HealthDataManager {
 
     // MARK: - Initialization
 
-    init() {}
+    init() {
+        self.healthKitService = HealthKitService()
+        self.healthRepository = HealthRepository()
+    }
 
     // MARK: - Authorization
 
@@ -39,17 +43,21 @@ final class HealthDataManager {
     // MARK: - Fetch Today's Data
 
     func fetchTodayHealthData() async {
-        await healthKitService.fetchTodayHealthData()
+        let metrics = await healthKitService.fetchAllTodayMetrics()
 
-        // Update observable state
-        todaySteps = await healthKitService.fetchSteps(from: startOfDay, to: Date())
-        todayActiveEnergy = await healthKitService.fetchActiveEnergy(from: startOfDay, to: Date())
-        todayDistance = await healthKitService.fetchDistance(from: startOfDay, to: Date())
-        currentHeartRate = await healthKitService.fetchLatestHeartRate()
-        lastNightSleep = await healthKitService.fetchLastNightSleep()
+        todaySteps = metrics.steps
+        todayActiveEnergy = metrics.activeEnergy
+        todayDistance = metrics.distance
+        currentHeartRate = metrics.heartRate
+        lastNightSleep = metrics.sleep
 
-        // Save to SwiftData
-        await saveCurrentMetrics()
+        healthRepository.saveMetrics([
+            .steps: metrics.steps,
+            .activeEnergy: metrics.activeEnergy,
+            .distance: metrics.distance,
+            .heartRate: metrics.heartRate,
+            .sleep: metrics.sleep
+        ])
     }
 
     // MARK: - Fetch Weekly Data
@@ -58,27 +66,10 @@ final class HealthDataManager {
         await healthKitService.fetchWeeklyData()
     }
 
-    // MARK: - Private Helpers
+    // MARK: - SwiftData Context
 
-    private var startOfDay: Date {
-        Calendar.current.startOfDay(for: Date())
-    }
-
-    private func saveCurrentMetrics() async {
-        await healthRepository.saveMetric(type: .steps, value: todaySteps)
-        await healthRepository.saveMetric(type: .activeEnergy, value: todayActiveEnergy)
-        await healthRepository.saveMetric(type: .heartRate, value: currentHeartRate)
-        await healthRepository.saveMetric(type: .sleep, value: lastNightSleep)
-    }
-}
-
-// MARK: - SwiftData Context
-
-extension HealthDataManager {
-    func setModelContext(_ context: ModelContext) {
-        Task {
-            await healthRepository.setModelContext(context)
-        }
+    func configureModelContext(_ context: ModelContext) {
+        healthRepository.setModelContext(context)
     }
 }
 

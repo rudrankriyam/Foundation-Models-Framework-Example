@@ -9,7 +9,10 @@ import Foundation
 import SwiftData
 import OSLog
 
-actor HealthRepository {
+/// Repository for persisting health metrics to SwiftData.
+/// Must be used on MainActor since ModelContext is not Sendable.
+@MainActor
+final class HealthRepository {
     private var modelContext: ModelContext?
     private let logger = VoiceLogging.health
 
@@ -17,7 +20,7 @@ actor HealthRepository {
         self.modelContext = context
     }
 
-    func saveMetric(type: MetricType, value: Double) async {
+    func saveMetric(type: MetricType, value: Double) {
         guard let modelContext = modelContext else { return }
 
         let metric = HealthMetric(
@@ -36,7 +39,13 @@ actor HealthRepository {
         }
     }
 
-    func fetchRecentMetrics(days: Int = 7) async -> [HealthMetric] {
+    func saveMetrics(_ metrics: [MetricType: Double]) {
+        for (type, value) in metrics {
+            saveMetric(type: type, value: value)
+        }
+    }
+
+    func fetchRecentMetrics(days: Int = 7) -> [HealthMetric] {
         guard let modelContext = modelContext else { return [] }
 
         let calendar = Calendar.current

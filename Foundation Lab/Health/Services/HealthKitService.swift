@@ -82,6 +82,26 @@ actor HealthKitService {
         }
     }
 
+    func fetchAllTodayMetrics() async -> TodayHealthMetrics {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: Date())
+        let endOfDay = Date()
+
+        async let steps = fetchSteps(from: startOfDay, to: endOfDay)
+        async let activeEnergy = fetchActiveEnergy(from: startOfDay, to: endOfDay)
+        async let distance = fetchDistance(from: startOfDay, to: endOfDay)
+        async let heartRate = fetchLatestHeartRate()
+        async let sleep = fetchLastNightSleep()
+
+        return await TodayHealthMetrics(
+            steps: steps,
+            activeEnergy: activeEnergy,
+            distance: distance,
+            heartRate: heartRate,
+            sleep: sleep
+        )
+    }
+
     func fetchWeeklyData() async -> [MetricType: [DailyMetricData]] {
         let calendar = Calendar.current
         let endDate = Date()
@@ -309,6 +329,14 @@ actor HealthKitService {
 }
 
 // MARK: - Supporting Types
+
+struct TodayHealthMetrics {
+    let steps: Double
+    let activeEnergy: Double
+    let distance: Double
+    let heartRate: Double
+    let sleep: Double
+}
 
 enum HealthKitError: LocalizedError {
     case unavailable
