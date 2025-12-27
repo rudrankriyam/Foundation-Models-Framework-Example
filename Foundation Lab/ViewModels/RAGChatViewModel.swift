@@ -57,7 +57,6 @@ final class RAGChatViewModel {
     private var config: RAGConfig?
 
     // Store titles per source key (for text/samples) and per chunk UUID (for files)
-    // chunkTitles is smaller since we only store when needed for search results
     private var sourceTitles: [String: String] = [:]
     private var chunkTitles: [String: String] = [:]
     private var indexedURLs: Set<String> = []
@@ -65,15 +64,11 @@ final class RAGChatViewModel {
     private let userDefaults = UserDefaults.standard
     private let indexedURLsKey = "ragIndexedURLs"
     private let sourceTitlesKey = "ragSourceTitles"
-    private let chunkTitlesKey = "ragChunkTitles"
 
     init() {
         indexedURLs = Set(userDefaults.stringArray(forKey: indexedURLsKey) ?? [])
         if let titlesData = userDefaults.dictionary(forKey: sourceTitlesKey) {
             sourceTitles = titlesData.compactMapValues { $0 as? String }
-        }
-        if let chunksData = userDefaults.dictionary(forKey: chunkTitlesKey) {
-            chunkTitles = chunksData.compactMapValues { $0 as? String }
         }
         indexedDocumentCount = indexedURLs.count
         hasIndexedContent = indexedDocumentCount > 0
@@ -83,7 +78,6 @@ final class RAGChatViewModel {
     private func saveState() {
         userDefaults.set(Array(indexedURLs), forKey: indexedURLsKey)
         userDefaults.set(sourceTitles, forKey: sourceTitlesKey)
-        userDefaults.set(chunkTitles, forKey: chunkTitlesKey)
     }
 
     func loadFromDatabase() async {
@@ -101,6 +95,7 @@ final class RAGChatViewModel {
             if dbCount == 0 && !indexedURLs.isEmpty {
                 indexedURLs.removeAll()
                 sourceTitles.removeAll()
+                chunkTitles.removeAll()
                 saveState()
             }
             indexedDocumentCount = indexedURLs.count
@@ -190,43 +185,34 @@ final class RAGChatViewModel {
 
         isSearching = true
         var newCount = 0
-        var indexedSamples: [String] = []
-        var indexedChunkIds: [String] = []
+        var firstError: Error?
 
-        do {
-            for (title, text) in SampleDocuments.texts {
-                let urlKey = "sample://\(title)"
-                guard !indexedURLs.contains(urlKey) else { continue }
+        for (title, text) in SampleDocuments.texts {
+            let urlKey = "sample://\(title)"
+            guard !indexedURLs.contains(urlKey) else { continue }
 
+            do {
                 let ids = try await service.indexText(text)
                 indexedURLs.insert(urlKey)
                 sourceTitles[urlKey] = title
                 for id in ids {
                     chunkTitles[id.uuidString] = title
-                    indexedChunkIds.append(id.uuidString)
                 }
-                indexedSamples.append(urlKey)
                 newCount += 1
-
-                // Save state after each successful index to avoid partial state
                 saveState()
+            } catch {
+                if firstError == nil {
+                    firstError = error
+                }
             }
-            indexedDocumentCount += newCount
-            if newCount > 0 {
-                hasIndexedContent = true
-            }
-        } catch {
-            // On error, clean up any samples that were indexed
-            for urlKey in indexedSamples {
-                indexedURLs.remove(urlKey)
-                sourceTitles.removeValue(forKey: urlKey)
-            }
-            for chunkId in indexedChunkIds {
-                chunkTitles.removeValue(forKey: chunkId)
-            }
-            // Revert indexedDocumentCount if we had incremented it
-            indexedDocumentCount -= newCount
-            saveState()
+        }
+
+        indexedDocumentCount += newCount
+        if newCount > 0 {
+            hasIndexedContent = true
+        }
+
+        if let error = firstError {
             errorMessage = "Failed to load samples: \(error.localizedDescription)"
             showError = true
         }
@@ -269,12 +255,8 @@ final class RAGChatViewModel {
     }
 
     private func sourceTitlesForChunk(_ chunkId: String) -> String {
-        // Fallback: derive title from sourceTitles using URL pattern matching
-        // This handles the case where we didn't store per-chunk titles
-        for (key, title) in sourceTitles {
-            if key.hasPrefix("sample://") || key.hasPrefix("text://") {
-                return title
-            }
+        if sourceTitles.count == 1 {
+            return sourceTitles.values.first ?? "Source"
         }
         return "Source"
     }
