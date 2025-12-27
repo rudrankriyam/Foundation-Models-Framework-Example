@@ -52,13 +52,8 @@ struct RAGDocumentPickerView: View {
 
                 ToolbarItem(placement: .primaryAction) {
                     Menu {
-                        Button(action: { showFilePicker = true }) {
-                            Label("Import File", systemImage: "doc")
-                        }
-
-                        Button(action: { showAddTextSheet = true }) {
-                            Label("Add Text", systemImage: "text")
-                        }
+                        Button("Import File", action: { showFilePicker = true })
+                        Button("Add Text", action: { showAddTextSheet = true })
                     } label: {
                         Image(systemName: "plus")
                     }
@@ -97,7 +92,9 @@ struct DocumentListView: View {
     var body: some View {
         List {
             Section {
-                Button(action: { showFilePicker = true }) {
+                Button {
+                    showFilePicker = true
+                } label: {
                     HStack {
                         Image(systemName: "doc.badge.plus")
                             .font(.title2)
@@ -150,14 +147,16 @@ struct DocumentListView: View {
 struct SamplesView: View {
     @Bindable var viewModel: RAGChatViewModel
 
+    @State private var showClearConfirmation = false
+
     var body: some View {
         List {
             Section {
-                Button(action: {
+                Button {
                     Task {
                         await viewModel.loadSampleDocuments()
                     }
-                }) {
+                } label: {
                     HStack {
                         Image(systemName: "book.pages")
                             .font(.title2)
@@ -191,11 +190,9 @@ struct SamplesView: View {
 
             if viewModel.indexedDocumentCount > 0 {
                 Section {
-                    Button(role: .destructive, action: {
-                        Task {
-                            await viewModel.resetDatabase()
-                        }
-                    }) {
+                    Button(role: .destructive) {
+                        showClearConfirmation = true
+                    } label: {
                         HStack {
                             Image(systemName: "trash")
                                 .foregroundStyle(.red)
@@ -206,6 +203,16 @@ struct SamplesView: View {
             }
         }
         .listStyle(.inset)
+        .alert("Clear All Documents?", isPresented: $showClearConfirmation) {
+            Button("Clear All", role: .destructive) {
+                Task {
+                    await viewModel.resetDatabase()
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This will permanently delete all indexed documents. This action cannot be undone.")
+        }
     }
 }
 
