@@ -8,34 +8,78 @@ Transform the current modal voice mode into an inline voice experience similar t
 
 ---
 
-## User Experience Flow
+## Step 1: Voice State Enum (Current Focus)
 
-### State Machine for Voice Button
+### Smallest Possible Step
+
+Add ONLY the state enum to ChatViewModel - no methods yet.
+
+```swift
+// In ViewModels/ChatViewModel.swift
+
+/// Voice mode state machine
+enum VoiceState: Equatable {
+    case idle
+    case loading
+    case listening(partialText: String)
+    case processing(response: String)
+    case speaking(response: String)
+
+    var isActive: Bool {
+        switch self {
+        case .idle: return false
+        default: return true
+        }
+    }
+}
+
+/// In ChatViewModel class:
+@MainActor var voiceState: VoiceState = .idle
+@MainActor var voicePartialText: String = ""
+```
+
+**Why enum instead of booleans:**
+- Single source of truth
+- Impossible invalid states (e.g., loading + listening)
+- Easy to add new states
+- Pattern matches existing `SpeechRecognitionStateMachine`
+
+---
+
+## User Experience Flow (Full State Diagram)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                      Voice Button States                         │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  [MICROPHONE] ──tap──→ [LOADING with Cancel] ──done──→ [END]  │
-│       ▲                                      │        │         │
-│       │                                      │        │         │
-│       └──────────tap────────────────────────┘        │         │
-│                     (Cancel during loading)          │         │
-│                                                      │         │
-│              tap──────────────────────────────────────┘         │
+│  [idle] ───tap──→ [loading] ──done──→ [listening("")]          │
+│       ▲                     │cancel            │                │
+│       │                     ▼                  │tap             │
+│       └──────────────── [listening] ←──────────┘                │
+│                              │                                   │
+│                              │tap End                            │
+│                              ▼                                   │
+│                      [processing]                                │
+│                              │                                   │
+│                              ▼                                   │
+│                      [speaking]                                   │
+│                              │                                   │
+│                              ▼                                   │
+│                           [idle]                                 │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ### State Descriptions
 
-| State | Trigger | UI | Actions |
-|-------|---------|-----|---------|
-| **Idle** | Default, text input empty | Microphone button | Tap → start loading |
-| **Loading** | After tapping microphone | Progress bar + "Cancel" | Pre-warming model & STT |
-| **Listening** | Loading complete | "End" button | Tap → stop, send input |
-| **Processing** | After "End" tapped | Thinking indicator | AI response + TTS |
+| State | UI | Actions |
+|-------|-----|---------|
+| **idle** | Microphone button | Tap → start loading |
+| **loading** | ProgressView + "Cancel" | Pre-warming model & STT, or Cancel → idle |
+| **listening("")** | "End" button | Show partial text, tap End → processing |
+| **processing** | Thinking indicator | AI generating response |
+| **speaking("")** | Text visible | TTS playing response |
 
 ---
 
