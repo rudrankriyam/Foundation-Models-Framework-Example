@@ -26,41 +26,19 @@ struct ContactsToolView: View {
           SuccessBanner(message: successMessage)
         }
 
-        VStack(alignment: .leading, spacing: 8) {
-          Text("SEARCH CONTACTS")
-            .font(.footnote)
-            .fontWeight(.medium)
-            .foregroundColor(.secondary)
+        ToolInputField(
+          label: "SEARCH CONTACTS",
+          text: $searchQuery,
+          placeholder: "Enter contact name"
+        )
 
-          TextEditor(text: $searchQuery)
-            .scrollContentBackground(.hidden)
-            .padding(Spacing.medium)
-            .frame(height: 50)
-            .background(Color.gray.opacity(0.1))
-            .cornerRadius(12)
-        }
-
-        Button(action: executeContactsSearch) {
-          HStack(spacing: Spacing.small) {
-            if executor.isRunning {
-              ProgressView()
-                .scaleEffect(0.8)
-                .accessibilityLabel("Processing")
-            } else {
-              Image(systemName: "person.2")
-                .accessibilityHidden(true)
-            }
-
-            Text(executor.isRunning ? "Searching..." : "Search Contacts")
-              .fontWeight(.medium)
-          }
-          .frame(maxWidth: .infinity)
-          .padding(.vertical, Spacing.small)
-        }
-        .buttonStyle(.glassProminent)
-        .disabled(executor.isRunning || searchQuery.isEmpty)
-        .accessibilityLabel("Search contacts")
-        .accessibilityHint(executor.isRunning ? "Processing request" : "Tap to search contacts")
+        ToolExecuteButton(
+          "Search Contacts",
+          systemImage: "person.2",
+          isRunning: executor.isRunning,
+          action: executeContactsSearch
+        )
+        .disabled(executor.isRunning || searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
 
         if !executor.result.isEmpty {
           ResultDisplay(result: executor.result, isSuccess: executor.errorMessage == nil)
