@@ -17,13 +17,16 @@ Add ONLY the state enum to ChatViewModel - no methods yet.
 ```swift
 // In ViewModels/ChatViewModel.swift
 
-/// Voice mode state machine
+/// Voice mode state machine - matches pattern from SpeechRecognitionStateMachine
 enum VoiceState: Equatable {
     case idle
     case loading
     case listening(partialText: String)
-    case processing(response: String)
+    case processing
     case speaking(response: String)
+    case error(message: String)
+
+    // MARK: - UI Helper Properties
 
     var isActive: Bool {
         switch self {
@@ -31,18 +34,82 @@ enum VoiceState: Equatable {
         default: return true
         }
     }
+
+    var isLoading: Bool {
+        if case .loading = self { return true }
+        return false
+    }
+
+    var isListening: Bool {
+        if case .listening = self { return true }
+        return false
+    }
+
+    var isProcessing: Bool {
+        if case .processing = self { return true }
+        return false
+    }
+
+    var isSpeaking: Bool {
+        if case .speaking = self { return true }
+        return false
+    }
+
+    var isError: Bool {
+        if case .error = self { return true }
+        return false
+    }
+
+    var canCancel: Bool {
+        if case .loading = self { return true }
+        return false
+    }
+
+    var partialText: String {
+        if case .listening(let text) = self { return text }
+        return ""
+    }
+
+    var responseText: String {
+        if case .speaking(let text) = self { return text }
+        return ""
+    }
+
+    var errorMessage: String? {
+        if case .error(let message) = self { return message }
+        return nil
+    }
 }
 
 /// In ChatViewModel class:
 @MainActor var voiceState: VoiceState = .idle
-@MainActor var voicePartialText: String = ""
 ```
 
-**Why enum instead of booleans:**
-- Single source of truth
+**Code Enhancement Notes (inspired by existing patterns):**
+
+1. **`didSet` pattern** (from SpeechRecognitionStateMachine line 19-21):
+   ```swift
+   private(set) var voiceState: VoiceState = .idle {
+       didSet { notifyVoiceStateChange() }
+   }
+   var onVoiceStateChange: ((VoiceState) -> Void)?
+   ```
+
+2. **Computed helpers** (like `canStartListening` in SpeechRecognitionStateMachine):
+   - `canCancel`, `canEnd`, `canStartListening` booleans
+
+3. **Error case** - Added `.error(message: String)` for robust error handling
+
+4. **Equatable** - Already included for state comparison
+
+5. **Private extensions** - Will organize voice methods like ChatViewModel does
+
+**Why this approach:**
+- Single source of truth (no contradictory boolean states)
 - Impossible invalid states (e.g., loading + listening)
-- Easy to add new states
-- Pattern matches existing `SpeechRecognitionStateMachine`
+- Matches existing `SpeechRecognitionStateMachine` patterns
+- Clean computed properties for UI binding
+- Error handling built-in
 
 ---
 
