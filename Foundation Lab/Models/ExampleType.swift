@@ -104,9 +104,9 @@ enum ExampleType: String, CaseIterable, Identifiable {
         }
     }
 
-    /// Static property for examples displayed in the grid (excludes chat and rag)
+    /// Static property for examples displayed in the grid (excludes chat)
     static var gridExamples: [ExampleType] {
-        allCases.filter { $0 != .chat && $0 != .rag }
+        allCases.filter { $0 != .chat }
     }
 
 }

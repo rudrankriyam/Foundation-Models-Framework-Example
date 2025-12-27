@@ -21,6 +21,11 @@ struct RAGDocumentPickerView: View {
         case samples = "Samples"
     }
 
+    private var allowedDocumentTypes: [UTType] {
+        let markdown = UTType(filenameExtension: "md") ?? .plainText
+        return [.pdf, .plainText, .html, .rtf, .text, markdown]
+    }
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
@@ -61,7 +66,7 @@ struct RAGDocumentPickerView: View {
             }
             .fileImporter(
                 isPresented: $showFilePicker,
-                allowedContentTypes: [.pdf, .plainText, .html, .rtf, .text],
+                allowedContentTypes: allowedDocumentTypes,
                 allowsMultipleSelection: false
             ) { result in
                 switch result {
@@ -106,7 +111,7 @@ struct DocumentListView: View {
                         VStack(alignment: .leading) {
                             Text("Import Document")
                                 .font(.headline)
-                            Text("PDF, Markdown, Text, HTML")
+                            Text("PDF, Text, HTML")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }

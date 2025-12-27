@@ -124,6 +124,7 @@ struct RAGChatView: View {
 
 // MARK: - RAG Chat View Model
 
+@MainActor
 @Observable
 final class RAGChatViewModel {
     var conversation: [RAGChatEntry] = []
