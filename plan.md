@@ -1,4 +1,4 @@
-# Inline Voice Mode - Detailed Implementation Plan
+# Inline Voice Mode - Implementation Complete ✅
 
 ## Overview
 
@@ -6,242 +6,73 @@ Transform the current modal voice mode into an inline voice experience similar t
 
 **Reference:** [TechCrunch: ChatGPT's voice mode is no longer a separate interface](https://techcrunch.com/2025/11/25/chatgpts-voice-mode-is-no-longer-a-separate-interface/)
 
+**Status:** ✅ COMPLETED - All phases implemented and verified
+
 ---
 
-## Step 1: Voice State Enum (Current Focus)
-
-### Smallest Possible Step
-
-Add ONLY the state enum to ChatViewModel - no methods yet.
+## Voice State Enum ✅ DONE
 
 ```swift
-// In ViewModels/ChatViewModel.swift
-
-/// Voice mode state machine - matches pattern from SpeechRecognitionStateMachine
+/// Voice mode state machine for multi-turn conversations
 enum VoiceState: Equatable {
     case idle
-    case loading
+    case preparing
     case listening(partialText: String)
     case processing
     case speaking(response: String)
     case error(message: String)
 
-    // MARK: - UI Helper Properties
-
     var isActive: Bool {
-        switch self {
-        case .idle: return false
-        default: return true
-        }
-    }
-
-    var isLoading: Bool {
-        if case .loading = self { return true }
-        return false
-    }
-
-    var isListening: Bool {
-        if case .listening = self { return true }
-        return false
-    }
-
-    var isProcessing: Bool {
-        if case .processing = self { return true }
-        return false
-    }
-
-    var isSpeaking: Bool {
-        if case .speaking = self { return true }
-        return false
-    }
-
-    var isError: Bool {
-        if case .error = self { return true }
-        return false
-    }
-
-    var canCancel: Bool {
-        if case .loading = self { return true }
-        return false
-    }
-
-    var partialText: String {
-        if case .listening(let text) = self { return text }
-        return ""
-    }
-
-    var responseText: String {
-        if case .speaking(let text) = self { return text }
-        return ""
-    }
-
-    var errorMessage: String? {
-        if case .error(let message) = self { return message }
-        return nil
+        self != .idle
     }
 }
 
-/// In ChatViewModel class:
 @MainActor var voiceState: VoiceState = .idle
 ```
 
-**Code Enhancement Notes (inspired by existing patterns):**
+---
 
-1. **`didSet` pattern** (from SpeechRecognitionStateMachine line 19-21):
-   ```swift
-   private(set) var voiceState: VoiceState = .idle {
-       didSet { notifyVoiceStateChange() }
-   }
-   var onVoiceStateChange: ((VoiceState) -> Void)?
-   ```
+## ChatGPT Inline Voice Mode UX ✅ DONE
 
-2. **Computed helpers** (like `canStartListening` in SpeechRecognitionStateMachine):
-   - `canCancel`, `canEnd`, `canStartListening` booleans
-
-3. **Error case** - Added `.error(message: String)` for robust error handling
-
-4. **Equatable** - Already included for state comparison
-
-5. **Private extensions** - Will organize voice methods like ChatViewModel does
-
-**Why this approach:**
-- Single source of truth (no contradictory boolean states)
-- Impossible invalid states (e.g., loading + listening)
-- Matches existing `SpeechRecognitionStateMachine` patterns
-- Clean computed properties for UI binding
-- Error handling built-in
+| Requirement | Status |
+|-------------|--------|
+| Tap voice icon → starts inline (NOT separate screen) | ✅ DONE |
+| Microphone icon (bottom-left) | ✅ DONE |
+| Exit/End icon (bottom-right, tap to end) | ✅ DONE |
+| Can still type - tap text field | ✅ DONE |
+| Visuals appear inline | ✅ DONE |
+| Navigation title changes "Chat" ↔ "Voice" | ✅ DONE |
+| Settings toggle for "Separate Mode" | ⚪ Future phase |
 
 ---
 
-## User Experience Flow (Full State Diagram)
+## Detailed UX Requirements ✅ DONE
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                      Voice Button States                         │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  [idle] ───tap──→ [loading] ──done──→ [listening("")]          │
-│       ▲                     │cancel            │                │
-│       │                     ▼                  │tap             │
-│       └──────────────── [listening] ←──────────┘                │
-│                              │                                   │
-│                              │tap End                            │
-│                              ▼                                   │
-│                      [processing]                                │
-│                              │                                   │
-│                              ▼                                   │
-│                      [speaking]                                   │
-│                              │                                   │
-│                              ▼                                   │
-│                           [idle]                                 │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
+### 1. Pre-warm on Voice Button Tap ✅
+- Permissions checked before starting
+- `session.prewarm()` called
+- ProgressView shown during preparation
 
-### State Descriptions
+### 2. Loading State (Progress + Cancel) ✅
+- ProgressView spinner shown
+- "Cancel" button appears
+- Returns to idle on cancel
 
-| State | UI | Actions |
-|-------|-----|---------|
-| **idle** | Microphone button | Tap → start loading |
-| **loading** | ProgressView + "Cancel" | Pre-warming model & STT, or Cancel → idle |
-| **listening("")** | "End" button | Show partial text, tap End → processing |
-| **processing** | Thinking indicator | AI generating response |
-| **speaking("")** | Text visible | TTS playing response |
+### 3. Listening State (End Button) ✅
+- "End" button with red glass effect
+- Partial text displayed in input area
+- User can tap to switch to typing
 
----
-
-## Detailed UX Requirements
-
-### 1. Pre-warm on Voice Button Tap
-
-**When user taps microphone:**
-1. Dismiss keyboard (if focused)
-2. Start pre-warming the Foundation Models session
-3. Show loading state
-
-**Pre-warm API (from FoundationModels):**
+### 4. Navigation Title Change ✅
 ```swift
-// Basic prewarming
-session.prewarm()
-
-// With prompt prefix for better caching
-session.prewarm(promptPrefix: Prompt(instructions))
+.navigationTitle(viewModel.voiceState.isActive ? "Voice" : "Chat")
 ```
 
-**Existing code reference:**
-- `Foundation Lab/Voice/Services/InferenceService.swift` - has `session.prewarm()` call
-- `Foundation Lab/Voice/VoiceViewModel.swift:176-192` - `prewarmAndGreet()` method
-
-### 2. Loading State (Progress + Cancel)
-
-**UI Elements:**
-- **Indeterminate ProgressView** (spinner)
-- "Cancel" button (same position as voice button)
-
-**Behavior:**
-- Show while pre-warming model AND loading speech-to-text
-- Tapping "Cancel":
-  - Cancels pre-warm task
-  - Dismisses keyboard (if opened)
-  - Returns to Idle state
-
-**Implementation:**
-```swift
-@MainActor var isVoiceLoading: Bool = false
-@MainActor var voiceLoadingProgress: Double = 0.0  // Optional: for determinate progress
-
-func startVoiceLoading() async {
-    // Dismiss keyboard
-    isTextFieldFocused = false
-
-    // Start loading
-    isVoiceLoading = true
-
-    // Pre-warm model (concurrent with STT initialization)
-    await withTaskGroup(of: Void.self) { group in
-        group.addTask {
-            await self.prewarmModel()
-        }
-        group.addTask {
-            await self.initializeSpeechRecognizer()
-        }
-    }
-
-    isVoiceLoading = false
-    isListening = true  // Ready for input
-}
-
-func cancelVoiceLoading() {
-    isVoiceLoading = false
-    isListening = false
-    isTextFieldFocused = false  // Ensure keyboard is dismissed
-}
-```
-
-### 3. Listening State (End Button)
-
-**When ready to listen:**
-- Show "End" button
-- Optionally show live partial transcript in input area
-- User can tap text field to switch to text input
-
-### 4. Navigation Title Change
-
-**When voice mode is active:**
-- Change navigation title from "Chat" to "Voice"
-- When voice ends, change back to "Chat"
-
-**Implementation in ChatView:**
-```swift
-.navigationTitle(viewModel.isVoiceModeActive ? "Voice" : "Chat")
-```
-
-### 5. Message Flow
-
+### 5. Message Flow ✅
 ```
 User speaks
     ↓
-Speech recognized (partial updates)
+Speech recognized (partial updates shown inline)
     ↓
 User taps "End"
     ↓
@@ -252,172 +83,107 @@ AI generates response
 Add ASSISTANT message to transcript
     ↓
 Play TTS audio for response
+    ↓
+Auto-return to listening (multi-turn!)
 ```
 
 ---
 
-## Files to Modify
+## Files Modified ✅
 
-### 1. `ViewModels/ChatViewModel.swift`
-
-**Add voice state:**
-```swift
-// Voice mode state
-@MainActor var isVoiceModeActive: Bool = false
-@MainActor var isVoiceLoading: Bool = false
-@MainActor var isListening: Bool = false
-@MainActor var voicePartialText: String = ""
-
-// Voice methods
-func startVoiceMode() async
-func cancelVoiceMode()
-func stopVoiceModeAndSend() async
-func handleVoicePartialUpdate(_ text: String)
-```
-
-**Add services:**
-- `SpeechRecognizer` (reuse from Voice/VoiceViewModel)
-- `SpeechSynthesizer` (reuse `shared`)
-- `PermissionManager`
-
-**Modify message sending:**
-- Add `sendVoiceMessage(_ text: String)` method that:
-  1. Adds user message to transcript
-  2. Calls AI for response
-  3. Plays TTS
-  4. Adds assistant message to transcript
-
-### 2. `Views/Components/ChatInputView.swift`
-
-**Add voice state parameter:**
-```swift
-@Binding var isVoiceModeActive: Bool
-@Binding var isVoiceLoading: Bool
-@Binding var isListening: Bool
-@Binding var voicePartialText: String
-```
-
-**Voice button behavior (lines 35-47):**
-```swift
-if viewModel.isVoiceLoading {
-    // Loading state: Progress bar + Cancel
-    ProgressView()
-    Button("Cancel") {
-        viewModel.cancelVoiceMode()
-    }
-} else if viewModel.isVoiceModeActive && viewModel.isListening {
-    // Listening state: End button
-    Button("End") {
-        await viewModel.stopVoiceModeAndSend()
-    }
-} else if messageText.isEmpty {
-    // Idle state: Microphone
-    Button(action: {
-        await viewModel.startVoiceMode()
-    }) {
-        Image(systemName: "waveform")
-    }
-} else {
-    // Text mode: Send button
-    Button(action: sendMessage) { ... }
-}
-```
-
-### 3. `Views/Chat/ChatView.swift`
-
-**Remove modal sheet:**
-- Remove `.sheet(isPresented: $showVoiceSheet)` (lines 98-103)
-- Remove `showVoiceSheet` state variable
-
-**Pass voice state to ChatInputView:**
-```swift
-ChatInputView(
-    messageText: $messageText,
-    isTextFieldFocused: $isTextFieldFocused,
-    isVoiceModeActive: $viewModel.isVoiceModeActive,
-    isVoiceLoading: $viewModel.isVoiceLoading,
-    isListening: $viewModel.isListening,
-    voicePartialText: $viewModel.voicePartialText,
-    onVoiceTap: { /* No longer needed */ }
-)
-```
-
-**Dynamic navigation title:**
-```swift
-.navigationTitle(viewModel.isVoiceModeActive ? "Voice" : "Chat")
-```
-
-### 4. `Views/Components/MessageBubbleView.swift` (Optional)
-
-May need styling adjustments for voice messages if distinguishable from text messages.
+| File | Status |
+|------|--------|
+| `ViewModels/ChatViewModel.swift` | ✅ VoiceState, methods, AsyncStream observer |
+| `Views/Components/ChatInputView.swift` | ✅ Inline voice UI, partial text, Stop button |
+| `Views/Chat/ChatView.swift` | ✅ Removed modal, dynamic title |
+| `Voice/Services/SpeechRecognizer.swift` | ✅ Added `stateValues` AsyncStream |
 
 ---
 
-## Existing Code to Reuse
+## Architecture: Shared Session ✅ DONE
 
-| Component | Location | Reuse Strategy |
-|-----------|----------|----------------|
-| `SpeechRecognizer` | `Voice/Services/` | Copy or import |
-| `SpeechSynthesizer.shared` | `Voice/Services/` | Use singleton |
-| `PermissionManager` | `Voice/Services/` | Share instance |
-| `SpeechRecognitionStateMachine` | `Voice/State/` | Reference patterns |
-| `prewarm(promptPrefix:)` | `FoundationModels` | Call on session |
+Voice uses EXISTING `viewModel.session` directly (NOT separate InferenceService):
+- Full chat history preserved
+- Seamless text ↔ voice switching
+- Each voice turn adds `.prompt` + `.response` to same transcript
 
 ---
 
-## Implementation Order
+## Multi-Turn Voice Conversations ✅ DONE
 
-### Phase 1: State & Services
-1. Add voice state properties to `ChatViewModel`
-2. Add/create `SpeechRecognizer` instance
-3. Integrate `PermissionManager` check
-4. Implement `startVoiceMode()` with pre-warm
+```
+[idle] ───tap──→ [preparing] ──done──→ [listening]
+     ▲                        │                │
+     │                        │                │TTS done
+     │                        │                ▼
+     │                        │        [speaking]
+     │                        │                │
+     │                        │                │TTS done
+     │                        │                ▼
+     │                        └──────←── [listening]
+     │                                   │
+     │                                   │tap End
+     └───────────────────────────────────┘
+                   (exit to idle)
+```
 
-### Phase 2: Loading UI
-1. Add loading state to `ChatInputView`
-2. Implement progress bar + Cancel button
-3. Handle Cancel action (dismiss keyboard)
-4. Connect `isVoiceLoading` binding
-
-### Phase 3: Listening UI
-1. Add "End" button state
-2. Add `voicePartialText` display
-3. Implement text field focus switch
-
-### Phase 4: Transcript Integration
-1. Implement `sendVoiceMessage()`
-2. Connect to `session.respond()`
-3. Add messages to transcript
-4. Add TTS playback
-
-### Phase 5: Navigation & Cleanup
-1. Dynamic navigation title
-2. Remove modal sheet code
-3. Test full flow
+**Auto-loop behavior:** TTS finishes → returns to `[listening]` automatically
 
 ---
 
-## Testing Checklist
+## Implementation Phases ✅ ALL COMPLETED
 
-- [ ] Voice permissions requested correctly
-- [ ] Tap microphone → progress bar + Cancel appears
-- [ ] Tap Cancel → keyboard dismissed, returns to idle
-- [ ] Loading completes → "End" button appears
-- [ ] Tap End → message added to transcript
-- [ ] AI response appears in transcript
-- [ ] TTS plays for AI response
-- [ ] Navigation title changes to "Voice" and back
-- [ ] Can switch to text input during voice mode
-- [ ] Chat history preserved
+| Phase | Description | Status |
+|-------|-------------|--------|
+| Phase 1 | State & Services (VoiceState, speechRecognizer) | ✅ DONE |
+| Phase 2 | Loading UI (startVoiceMode, cancelVoiceMode) | ✅ DONE |
+| Phase 3 | Listening UI (End button, partial text) | ✅ DONE |
+| Phase 4 | Transcript Integration (stopVoiceModeAndSend, TTS) | ✅ DONE |
+| Phase 5 | Navigation & Cleanup (remove modal, dynamic title) | ✅ DONE |
 
 ---
 
-## Rollback Strategy
+## Additional Features ✅ DONE
 
-Keep copies of:
-- `VoiceView.swift` (can restore as "Separate Mode" option)
-- Original `ChatView.swift` sheet code
-- Original `ChatInputView.swift` voice button
+| Feature | Status |
+|---------|--------|
+| AsyncStream state observation | ✅ DONE |
+| Permission pre-check | ✅ DONE |
+| Partial text display | ✅ DONE |
+| Stop speaking during TTS | ✅ DONE |
+| Documentation comments | ✅ DONE |
+
+---
+
+## Testing Checklist ✅ VERIFIED
+
+| Test | Status |
+|------|--------|
+| Voice permissions requested correctly | ✅ PASS |
+| Tap microphone → progress + Cancel appears | ✅ PASS |
+| Tap Cancel → returns to idle | ✅ PASS |
+| Loading completes → "End" button appears | ✅ PASS |
+| Tap End → message added to transcript | ✅ PASS |
+| AI response appears in transcript | ✅ PASS |
+| TTS plays for AI response | ✅ PASS |
+| Navigation title changes to "Voice" | ✅ PASS |
+| Can switch to text input during voice | ✅ PASS |
+| Chat history preserved | ✅ PASS |
+| Multi-turn conversation works | ✅ PASS |
+| Partial text updates live | ✅ PASS |
+| Stop speaking interrupts TTS | ✅ PASS |
+
+---
+
+## Code Quality ✅ VERIFIED
+
+- **Swift Concurrency:** Modern AsyncStream pattern, `@MainActor` annotations correct
+- **Memory Safety:** `[weak self]` in all closures, no retain cycles
+- **Error Handling:** Proper error propagation with user feedback
+- **SwiftLint:** Compliant with project configuration
+- **Architecture:** Clean separation, single source of truth
+
+**Final Review:** ✅ LGTM (Approved by Senior iOS Engineer)
 
 ---
 
@@ -426,4 +192,42 @@ Keep copies of:
 - **Foundation Models pre-warm API:** `session.prewarm(promptPrefix: Prompt?)`
 - **ChatGPT inline voice mode:** https://techcrunch.com/2025/11/25/chatgpts-voice-mode-is-no-longer-a-separate-interface/
 - **Existing pre-warm example:** `Foundation Lab/Playgrounds/02_GettingStartedWithSessions/11_BasicPrewarming.swift`
-- **VoiceViewModel pre-warm:** `Foundation Lab/Voice/VoiceViewModel.swift:176-192`
+
+---
+
+## Key Implementation Details
+
+### AsyncStream State Observation
+```swift
+var stateValues: AsyncStream<SpeechRecognitionState> {
+    AsyncStream { [weak self] continuation in
+        let token = self?.addStateChangeHandler { state in
+            continuation.yield(state)
+        }
+        continuation.onTermination = { @Sendable _ in
+            if let token = token {
+                Task { @MainActor in
+                    self?.removeStateChangeHandler(token)
+                }
+            }
+        }
+    }
+}
+```
+
+### Voice State UI Mapping
+| State | UI Element |
+|-------|------------|
+| `.idle` + empty input | Microphone (waveform) button |
+| `.preparing` | ProgressView + "Cancel" button |
+| `.listening` | "End" button + partial text display |
+| `.speaking` | "Stop" button (orange) |
+| `.error` | Alert dialog |
+
+---
+
+## Rollback (If Needed)
+
+Keep copies of:
+- `VoiceView.swift` (can restore as "Separate Mode" option in Settings)
+- Git history preserves all original implementations
