@@ -13,7 +13,6 @@ struct ChatView: View {
     @State private var scrollID: String?
     @State private var messageText = ""
     @State private var showInstructionsSheet = false
-    @State private var showVoiceSheet = false
     @FocusState private var isTextFieldFocused: Bool
     @Environment(\.dismiss) private var dismiss
 
@@ -27,12 +26,11 @@ struct ChatView: View {
 
             ChatInputView(
                 messageText: $messageText,
-                isTextFieldFocused: $isTextFieldFocused,
-                onVoiceTap: { showVoiceSheet = true }
+                isTextFieldFocused: $isTextFieldFocused
             )
         }
         .environment(viewModel)
-        .navigationTitle("Chat")
+        .navigationTitle(viewModel.voiceState.isActive ? "Voice" : "Chat")
 #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
 #endif
@@ -95,12 +93,6 @@ struct ChatView: View {
             }
         }
 #endif
-        .sheet(isPresented: $showVoiceSheet) {
-            VoiceView()
-#if os(macOS)
-            .frame(minWidth: 700, minHeight: 500)
-#endif
-        }
     }
 
     // MARK: - View Components

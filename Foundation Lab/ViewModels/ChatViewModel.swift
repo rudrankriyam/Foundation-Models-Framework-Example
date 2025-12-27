@@ -8,6 +8,7 @@
 import Foundation
 import FoundationModels
 import Observation
+import Speech
 
 enum SamplingStrategy: Int, CaseIterable {
     case `default`
@@ -15,12 +16,33 @@ enum SamplingStrategy: Int, CaseIterable {
     case sampling
 }
 
+/// Voice mode state machine for multi-turn conversations
+enum VoiceState: Equatable {
+    case idle
+    case preparing
+    case listening(partialText: String)
+    case processing
+    case speaking(response: String)
+    case error(message: String)
+
+    var isActive: Bool {
+        self != .idle
+    }
+}
+
+@MainActor
 @Observable
 final class ChatViewModel {
 
     // MARK: - Published Properties
 
     var isLoading: Bool = false
+
+    // MARK: - Voice State
+
+    var voiceState: VoiceState = .idle
+    private(set) var speechRecognizer: SpeechRecognizer?
+    private let permissionManager = PermissionManager()
     var isSummarizing: Bool = false
     var isApplyingWindow: Bool = false
     var sessionCount: Int = 1
@@ -152,9 +174,148 @@ final class ChatViewModel {
         showError = false
         errorMessage = nil
     }
+
+    // MARK: - Voice Methods
+
+    /// Starts inline voice mode for hands-free conversation.
+    /// Requests microphone and speech recognition permissions if needed.
+    /// Transitions through: idle -> preparing -> listening
+    @MainActor
+    func startVoiceMode() async {
+        // Check permissions first
+        if !permissionManager.allPermissionsGranted {
+            let granted = await permissionManager.requestAllPermissions()
+            if !granted {
+                errorMessage = permissionManager.permissionAlertMessage
+                showError = true
+                return
+            }
+        }
+
+        isLoading = false
+        voiceState = .preparing
+
+        // Pre-warm the model
+        session.prewarm()
+
+        // Initialize speech recognizer
+        await initializeSpeechRecognizer()
+
+        // Only transition to listening if still in preparing state
+        if case .preparing = voiceState {
+            voiceState = .listening(partialText: "")
+        }
+
+        // Observe speech state changes in the background
+        Task {
+            await observeSpeechState()
+        }
+    }
+
+    /// Cancels the current voice mode session and resets to idle state.
+    /// Clears any error messages and stops speech recognition.
+    @MainActor
+    func cancelVoiceMode() {
+        voiceState = .idle
+        errorMessage = nil
+        showError = false
+        if let recognizer = speechRecognizer {
+            recognizer.stopRecognition()
+        }
+    }
+
+    /// Interrupts the AI's speech response and returns to listening mode.
+    /// Allows the user to speak immediately without waiting for TTS to finish.
+    @MainActor
+    func stopSpeaking() {
+        if case .speaking = voiceState {
+            SpeechSynthesizer.shared.cancelSpeaking()
+            voiceState = .listening(partialText: "")
+        }
+    }
+
+    /// Stops listening and sends the recognized text to the AI.
+    /// Sends the voice input to the session, plays TTS response, and
+    /// auto-returns to listening for multi-turn conversation.
+    @MainActor
+    func stopVoiceModeAndSend() async {
+        guard case .listening(let text) = voiceState else { return }
+
+        let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedText.isEmpty else {
+            voiceState = .idle
+            return
+        }
+
+        if let recognizer = speechRecognizer {
+            recognizer.stopRecognition()
+        } else {
+            errorMessage = "Speech recognizer not initialized"
+            showError = true
+            voiceState = .error(message: errorMessage!)
+            return
+        }
+
+        do {
+            let response = try await session.respond(to: Prompt(trimmedText))
+            voiceState = .speaking(response: response.content)
+
+            do {
+                try await SpeechSynthesizer.shared.synthesizeAndSpeak(text: response.content)
+            } catch {
+                errorMessage = error.localizedDescription
+                showError = true
+                voiceState = .error(message: errorMessage!)
+                return
+            }
+
+            // Auto-return to listening for multi-turn!
+            voiceState = .listening(partialText: "")
+        } catch {
+            errorMessage = error.localizedDescription
+            showError = true
+            voiceState = .error(message: errorMessage!)
+        }
+    }
 }
 
 private extension ChatViewModel {
+    // MARK: - Voice Helpers
+
+    @MainActor
+    private func initializeSpeechRecognizer() async {
+        speechRecognizer = SpeechRecognizer()
+
+        do {
+            try speechRecognizer?.startRecognition()
+        } catch {
+            voiceState = .error(message: error.localizedDescription)
+        }
+    }
+
+    /// Observes speech recognizer state changes and updates voiceState accordingly
+    @MainActor
+    private func observeSpeechState() async {
+        guard let recognizer = speechRecognizer else { return }
+
+        for await state in recognizer.stateValues {
+            switch state {
+            case .listening(let partialText):
+                if case .listening = voiceState {
+                    voiceState = .listening(partialText: partialText)
+                }
+            case .completed(let finalText):
+                if case .listening = voiceState {
+                    voiceState = .listening(partialText: finalText)
+                }
+            case .error(let speechError):
+                voiceState = .error(message: speechError.localizedDescription)
+            case .idle:
+                break
+            }
+        }
+    }
+
     // MARK: - Language Model
 
     func createLanguageModel() -> SystemLanguageModel {
