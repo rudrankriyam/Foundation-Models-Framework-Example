@@ -67,6 +67,7 @@ final class RAGChatViewModel {
         if let titlesData = userDefaults.dictionary(forKey: documentTitlesKey) {
             documentTitles = titlesData.compactMapValues { $0 as? String }
         }
+        indexedDocumentCount = indexedURLs.count
         config = RAGConfig.default
     }
 
@@ -75,7 +76,7 @@ final class RAGChatViewModel {
         userDefaults.set(documentTitles, forKey: documentTitlesKey)
     }
 
-    private func ensureInitialized() async {
+    func loadFromDatabase() async {
         guard !isInitialized else { return }
         guard let config = config else { return }
 
@@ -85,6 +86,15 @@ final class RAGChatViewModel {
                 chunkingConfig: config.chunkingConfig
             )
             service = RAGService(lumoKit: lumoKit, chunkingConfig: config.chunkingConfig)
+
+            // Reconcile persisted state with database
+            let dbCount = try await lumoKit.documentCount()
+            if dbCount == 0 && !indexedURLs.isEmpty {
+                // Database is empty but we have persisted URLs - clear them
+                indexedURLs.removeAll()
+                documentTitles.removeAll()
+                saveState()
+            }
             indexedDocumentCount = indexedURLs.count
             isInitialized = true
         } catch {
@@ -94,7 +104,7 @@ final class RAGChatViewModel {
     }
 
     func indexDocument(from url: URL) async {
-        await ensureInitialized()
+        await loadFromDatabase()
         guard let service = service else { return }
 
         let urlKey = url.absoluteString
@@ -119,7 +129,7 @@ final class RAGChatViewModel {
     }
 
     func indexText(_ text: String, title: String) async {
-        await ensureInitialized()
+        await loadFromDatabase()
         guard let service = service else { return }
 
         let urlKey = "text://\(title)"
@@ -144,7 +154,7 @@ final class RAGChatViewModel {
     }
 
     func resetDatabase() async {
-        await ensureInitialized()
+        await loadFromDatabase()
         guard let service = service else { return }
 
         do {
@@ -160,7 +170,7 @@ final class RAGChatViewModel {
     }
 
     func loadSampleDocuments() async {
-        await ensureInitialized()
+        await loadFromDatabase()
         guard let service = service else { return }
 
         isSearching = true
@@ -186,7 +196,7 @@ final class RAGChatViewModel {
     }
 
     func sendMessage(_ content: String) async {
-        await ensureInitialized()
+        await loadFromDatabase()
         guard let service = service else { return }
 
         let userEntry = RAGChatEntry(role: .user, content: content, sources: [])

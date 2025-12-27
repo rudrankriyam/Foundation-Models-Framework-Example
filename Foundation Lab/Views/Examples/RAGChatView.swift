@@ -7,8 +7,6 @@
 
 import SwiftUI
 import FoundationModels
-import LumoKit
-import VecturaKit
 
 struct RAGChatView: View {
     @State private var viewModel = RAGChatViewModel()
@@ -17,17 +15,20 @@ struct RAGChatView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Messages
             messagesView
                 .contentShape(Rectangle())
                 .onTapGesture {
                     isTextFieldFocused = false
                 }
 
-            // Input
             chatInputView
         }
         .navigationTitle("RAG Chat")
+        .onAppear {
+            Task {
+                await viewModel.loadFromDatabase()
+            }
+        }
 #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
 #endif
