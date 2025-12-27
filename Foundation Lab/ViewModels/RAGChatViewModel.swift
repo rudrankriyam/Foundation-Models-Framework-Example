@@ -48,6 +48,7 @@ final class RAGChatViewModel {
     var isGenerating = false
     var showDocumentPicker = false
     var indexedDocumentCount = 0
+    var hasIndexedContent = false
     var errorMessage: String?
     var showError = false
 
@@ -55,25 +56,34 @@ final class RAGChatViewModel {
     private var isInitialized = false
     private var config: RAGConfig?
 
+    // Store titles per source key (for text/samples) and per chunk UUID (for files)
+    // chunkTitles is smaller since we only store when needed for search results
+    private var sourceTitles: [String: String] = [:]
+    private var chunkTitles: [String: String] = [:]
     private var indexedURLs: Set<String> = []
-    private var documentTitles: [String: String] = [:]
 
     private let userDefaults = UserDefaults.standard
     private let indexedURLsKey = "ragIndexedURLs"
-    private let documentTitlesKey = "ragDocumentTitles"
+    private let sourceTitlesKey = "ragSourceTitles"
+    private let chunkTitlesKey = "ragChunkTitles"
 
     init() {
         indexedURLs = Set(userDefaults.stringArray(forKey: indexedURLsKey) ?? [])
-        if let titlesData = userDefaults.dictionary(forKey: documentTitlesKey) {
-            documentTitles = titlesData.compactMapValues { $0 as? String }
+        if let titlesData = userDefaults.dictionary(forKey: sourceTitlesKey) {
+            sourceTitles = titlesData.compactMapValues { $0 as? String }
+        }
+        if let chunksData = userDefaults.dictionary(forKey: chunkTitlesKey) {
+            chunkTitles = chunksData.compactMapValues { $0 as? String }
         }
         indexedDocumentCount = indexedURLs.count
+        hasIndexedContent = indexedDocumentCount > 0
         config = RAGConfig.default
     }
 
     private func saveState() {
         userDefaults.set(Array(indexedURLs), forKey: indexedURLsKey)
-        userDefaults.set(documentTitles, forKey: documentTitlesKey)
+        userDefaults.set(sourceTitles, forKey: sourceTitlesKey)
+        userDefaults.set(chunkTitles, forKey: chunkTitlesKey)
     }
 
     func loadFromDatabase() async {
@@ -87,15 +97,14 @@ final class RAGChatViewModel {
             )
             service = RAGService(lumoKit: lumoKit, chunkingConfig: config.chunkingConfig)
 
-            // Reconcile persisted state with database
             let dbCount = try await lumoKit.documentCount()
             if dbCount == 0 && !indexedURLs.isEmpty {
-                // Database is empty but we have persisted URLs - clear them
                 indexedURLs.removeAll()
-                documentTitles.removeAll()
+                sourceTitles.removeAll()
                 saveState()
             }
             indexedDocumentCount = indexedURLs.count
+            hasIndexedContent = dbCount > 0
             isInitialized = true
         } catch {
             errorMessage = "Failed to initialize RAG: \(error.localizedDescription)"
@@ -118,9 +127,11 @@ final class RAGChatViewModel {
         do {
             let ids = try await service.indexDocument(url: url)
             indexedURLs.insert(urlKey)
-            for id in ids { documentTitles[id.uuidString] = url.lastPathComponent }
+            sourceTitles[urlKey] = url.lastPathComponent
+            for id in ids { chunkTitles[id.uuidString] = url.lastPathComponent }
             saveState()
             indexedDocumentCount += 1
+            hasIndexedContent = true
         } catch {
             errorMessage = "Failed to index document: \(error.localizedDescription)"
             showError = true
@@ -143,9 +154,11 @@ final class RAGChatViewModel {
         do {
             let ids = try await service.indexText(text)
             indexedURLs.insert(urlKey)
-            for id in ids { documentTitles[id.uuidString] = title }
+            sourceTitles[urlKey] = title
+            for id in ids { chunkTitles[id.uuidString] = title }
             saveState()
             indexedDocumentCount += 1
+            hasIndexedContent = true
         } catch {
             errorMessage = "Failed to index text: \(error.localizedDescription)"
             showError = true
@@ -160,9 +173,11 @@ final class RAGChatViewModel {
         do {
             try await service.resetDatabase()
             indexedURLs.removeAll()
-            documentTitles.removeAll()
+            sourceTitles.removeAll()
+            chunkTitles.removeAll()
             saveState()
             indexedDocumentCount = 0
+            hasIndexedContent = false
         } catch {
             errorMessage = "Failed to reset database: \(error.localizedDescription)"
             showError = true
@@ -175,6 +190,8 @@ final class RAGChatViewModel {
 
         isSearching = true
         var newCount = 0
+        var indexedSamples: [String] = []
+        var indexedChunkIds: [String] = []
 
         do {
             for (title, text) in SampleDocuments.texts {
@@ -183,12 +200,33 @@ final class RAGChatViewModel {
 
                 let ids = try await service.indexText(text)
                 indexedURLs.insert(urlKey)
-                for id in ids { documentTitles[id.uuidString] = title }
+                sourceTitles[urlKey] = title
+                for id in ids {
+                    chunkTitles[id.uuidString] = title
+                    indexedChunkIds.append(id.uuidString)
+                }
+                indexedSamples.append(urlKey)
                 newCount += 1
+
+                // Save state after each successful index to avoid partial state
+                saveState()
             }
-            saveState()
             indexedDocumentCount += newCount
+            if newCount > 0 {
+                hasIndexedContent = true
+            }
         } catch {
+            // On error, clean up any samples that were indexed
+            for urlKey in indexedSamples {
+                indexedURLs.remove(urlKey)
+                sourceTitles.removeValue(forKey: urlKey)
+            }
+            for chunkId in indexedChunkIds {
+                chunkTitles.removeValue(forKey: chunkId)
+            }
+            // Revert indexedDocumentCount if we had incremented it
+            indexedDocumentCount -= newCount
+            saveState()
             errorMessage = "Failed to load samples: \(error.localizedDescription)"
             showError = true
         }
@@ -216,7 +254,8 @@ final class RAGChatViewModel {
         do {
             let results = try await service.search(query: query)
             chunks = results.map { result in
-                let title = documentTitles[result.id.uuidString] ?? "Source"
+                // Look up title from chunk ID mapping
+                let title = chunkTitles[result.id.uuidString] ?? sourceTitlesForChunk(result.id.uuidString)
                 return RAGChunk(documentId: result.id.uuidString, documentTitle: title,
                                content: result.text, chunkIndex: 0, similarityScore: Double(result.score))
             }
@@ -227,6 +266,17 @@ final class RAGChatViewModel {
 
         isSearching = false
         return chunks
+    }
+
+    private func sourceTitlesForChunk(_ chunkId: String) -> String {
+        // Fallback: derive title from sourceTitles using URL pattern matching
+        // This handles the case where we didn't store per-chunk titles
+        for (key, title) in sourceTitles {
+            if key.hasPrefix("sample://") || key.hasPrefix("text://") {
+                return title
+            }
+        }
+        return "Source"
     }
 
     private func generateResponse(for entry: RAGChatEntry, query: String, chunks: [RAGChunk]) async {

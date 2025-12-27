@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import LumoKit
 import UniformTypeIdentifiers
 
 struct RAGDocumentPickerView: View {
@@ -132,6 +131,12 @@ struct DocumentListView: View {
                             .foregroundStyle(.green)
                         Text("\(viewModel.indexedDocumentCount) sources indexed")
                     }
+                } else if viewModel.hasIndexedContent {
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                        Text("Indexed content present")
+                    }
                 } else {
                     ContentUnavailableView(
                         "No Documents",
@@ -193,7 +198,7 @@ struct SamplesView: View {
                 Text("Load pre-built sample documents to test RAG functionality")
             }
 
-            if viewModel.indexedDocumentCount > 0 {
+            if viewModel.indexedDocumentCount > 0 || viewModel.hasIndexedContent {
                 Section {
                     Button(role: .destructive) {
                         showClearConfirmation = true
