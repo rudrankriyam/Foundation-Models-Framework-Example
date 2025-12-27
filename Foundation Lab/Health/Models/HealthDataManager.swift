@@ -51,13 +51,20 @@ final class HealthDataManager {
         currentHeartRate = metrics.heartRate
         lastNightSleep = metrics.sleep
 
-        healthRepository.saveMetrics([
+        // Only save metrics with positive values to avoid polluting historical data
+        var metricsToSave: [MetricType: Double] = [
             .steps: metrics.steps,
             .activeEnergy: metrics.activeEnergy,
             .distance: metrics.distance,
-            .heartRate: metrics.heartRate,
-            .sleep: metrics.sleep
-        ])
+            .heartRate: metrics.heartRate
+        ]
+
+        // Only save sleep if we have a valid reading
+        if metrics.sleep > 0 {
+            metricsToSave[.sleep] = metrics.sleep
+        }
+
+        healthRepository.saveMetrics(metricsToSave)
     }
 
     // MARK: - Fetch Weekly Data
@@ -70,6 +77,12 @@ final class HealthDataManager {
 
     func configureModelContext(_ context: ModelContext) {
         healthRepository.setModelContext(context)
+    }
+
+    // MARK: - Fetch Recent Metrics
+
+    func fetchRecentMetrics(days: Int = 7) -> [HealthMetric] {
+        healthRepository.fetchRecentMetrics(days: days)
     }
 }
 
