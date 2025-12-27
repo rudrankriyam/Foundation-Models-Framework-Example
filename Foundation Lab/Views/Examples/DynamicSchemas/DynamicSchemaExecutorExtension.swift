@@ -29,7 +29,7 @@ extension ExampleExecutor {
         do {
             result = try await operation()
         } catch {
-            errorMessage = handleError(error)
+            errorMessage = FoundationModelsErrorHandler.handleError(error)
         }
 
         isRunning = false
@@ -60,7 +60,7 @@ extension ExampleExecutor {
                 result = formatGeneratedContent(output.content)
             }
         } catch {
-            errorMessage = handleError(error)
+            errorMessage = FoundationModelsErrorHandler.handleError(error)
         }
 
         isRunning = false

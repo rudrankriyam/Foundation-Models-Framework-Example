@@ -12,13 +12,13 @@ struct ToolsExamplesView: View {
         ScrollView {
             LazyVGrid(columns: [
                 GridItem(.flexible(minimum: 150), spacing: 16),
-                GridItem(.flexible(minimum: 150), spacing: 16)
-            ], spacing: 16) {
-                ForEach(ToolExample.allCases, id: \.self) { tool in
-                    NavigationLink(destination: tool.createView()) {
-                        GenericCardView(
-                            icon: tool.icon,
-                            title: tool.displayName,
+            GridItem(.flexible(minimum: 150), spacing: 16)
+        ], spacing: 16) {
+            ForEach(ToolExample.allCases, id: \.self) { tool in
+                NavigationLink(value: tool) {
+                    GenericCardView(
+                        icon: tool.icon,
+                        title: tool.displayName,
                             subtitle: tool.shortDescription
                         )
                         .contentShape(.rect)
@@ -32,6 +32,9 @@ struct ToolsExamplesView: View {
 #if os(iOS) || os(visionOS)
         .navigationBarTitleDisplayMode(.large)
 #endif
+        .navigationDestination(for: ToolExample.self) { tool in
+            tool.destination
+        }
     }
 }
 

@@ -89,18 +89,6 @@ extension RemindersToolView {
         return response.content
     }
 
-    func handleFoundationModelsError(_ error: Error) -> String {
-        if let generationError = error as? LanguageModelSession.GenerationError {
-            return FoundationModelsErrorHandler.handleGenerationError(generationError)
-        } else if let toolCallError = error as? LanguageModelSession.ToolCallError {
-            return FoundationModelsErrorHandler.handleToolCallError(toolCallError)
-        } else if let customError = error as? FoundationModelsError {
-            return customError.localizedDescription
-        } else {
-            return "Unexpected error: \(error.localizedDescription)"
-        }
-    }
-
     func validateQuickCreateInput(reminderTitle: String) -> Bool {
         return !reminderTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }

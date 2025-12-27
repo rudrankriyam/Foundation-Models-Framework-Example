@@ -14,13 +14,13 @@ struct TranscriptEntryView: View {
     var body: some View {
         switch entry {
         case .prompt(let prompt):
-            if let text = extractText(from: prompt.segments), !text.isEmpty {
+            if let text = prompt.segments.textContentJoined() {
                 MessageBubbleView(message: ChatMessage(content: text, isFromUser: true))
                     .id(entry.id)
             }
 
         case .response(let response):
-            if let text = extractText(from: response.segments), !text.isEmpty {
+            if let text = response.segments.textContentJoined() {
                 MessageBubbleView(message: ChatMessage(entryID: entry.id, content: text, isFromUser: false))
                     .id(entry.id)
             }
@@ -36,7 +36,7 @@ struct TranscriptEntryView: View {
             }
 
         case .toolOutput(let toolOutput):
-            if let text = extractText(from: toolOutput.segments), !text.isEmpty {
+            if let text = toolOutput.segments.textContentJoined() {
                 MessageBubbleView(message: ChatMessage(
                     entryID: entry.id,
                     content: "🔧 Tool result: \(text)",
@@ -54,14 +54,4 @@ struct TranscriptEntryView: View {
         }
     }
 
-    private func extractText(from segments: [Transcript.Segment]) -> String? {
-        let text = segments.compactMap { segment in
-            if case .text(let textSegment) = segment {
-                return textSegment.content
-            }
-            return nil
-        }.joined(separator: " ")
-
-        return text.isEmpty ? nil : text
-    }
 }

@@ -26,41 +26,19 @@ struct HealthToolView: View {
                     SuccessBanner(message: successMessage)
                 }
 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("HEALTH QUERY")
-                        .font(.footnote)
-                        .fontWeight(.medium)
-                        .foregroundColor(.secondary)
+                ToolInputField(
+                    label: "HEALTH QUERY",
+                    text: $query,
+                    placeholder: "How many steps have I taken today?"
+                )
 
-                    TextEditor(text: $query)
-                        .scrollContentBackground(.hidden)
-                        .padding(Spacing.medium)
-                        .frame(height: 50)
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(12)
-                }
-
-                Button(action: executeHealthQuery) {
-                    HStack(spacing: Spacing.small) {
-                        if executor.isRunning {
-                            ProgressView()
-                                .scaleEffect(0.8)
-                                .accessibilityLabel("Processing")
-                        } else {
-                            Image(systemName: "heart")
-                                .accessibilityHidden(true)
-                        }
-
-                        Text(executor.isRunning ? "Querying..." : "Query Health Data")
-                            .fontWeight(.medium)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, Spacing.small)
-                }
-                .buttonStyle(.glassProminent)
-                .disabled(executor.isRunning || query.isEmpty)
-                .accessibilityLabel("Query health data")
-                .accessibilityHint(executor.isRunning ? "Processing request" : "Tap to query health data")
+                ToolExecuteButton(
+                    "Query Health Data",
+                    systemImage: "heart",
+                    isRunning: executor.isRunning,
+                    action: executeHealthQuery
+                )
+                .disabled(executor.isRunning || query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
 
                 if !executor.result.isEmpty {
                     ResultDisplay(result: executor.result, isSuccess: executor.errorMessage == nil)

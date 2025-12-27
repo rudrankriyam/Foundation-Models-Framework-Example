@@ -99,7 +99,7 @@ final class ChatViewModel {
 
         } catch {
             // Handle other errors by showing an error message
-            errorMessage = handleFoundationModelsError(error)
+            errorMessage = FoundationModelsErrorHandler.handleError(error)
             showError = true
         }
     }
@@ -206,18 +206,6 @@ private extension ChatViewModel {
 private extension ChatViewModel {
     // MARK: - Error Handling + Context Management
 
-    func handleFoundationModelsError(_ error: Error) -> String {
-        if let generationError = error as? LanguageModelSession.GenerationError {
-            return FoundationModelsErrorHandler.handleGenerationError(generationError)
-        } else if let toolCallError = error as? LanguageModelSession.ToolCallError {
-            return FoundationModelsErrorHandler.handleToolCallError(toolCallError)
-        } else if let customError = error as? FoundationModelsError {
-            return customError.localizedDescription
-        } else {
-            return "Error: \(error)"
-        }
-    }
-
     @MainActor
     func handleContextWindowExceeded(userMessage: String) async {
         isSummarizing = true
@@ -230,34 +218,17 @@ private extension ChatViewModel {
             try await respondWithNewSession(to: userMessage)
         } catch {
             handleSummarizationError(error)
-            errorMessage = handleFoundationModelsError(error)
+            errorMessage = FoundationModelsErrorHandler.handleError(error)
             showError = true
         }
     }
 
     func createConversationText() -> String {
-        session.transcript.compactMap { entry in
-            switch entry {
-            case .prompt(let prompt):
-                let text = prompt.segments.compactMap { segment in
-                    if case .text(let textSegment) = segment {
-                        return textSegment.content
-                    }
-                    return nil
-                }.joined(separator: " ")
-                return "User: \(text)"
-            case .response(let response):
-                let text = response.segments.compactMap { segment in
-                    if case .text(let textSegment) = segment {
-                        return textSegment.content
-                    }
-                    return nil
-                }.joined(separator: " ")
-                return "Assistant: \(text)"
-            default:
-                return nil
-            }
-        }.joined(separator: "\n\n")
+        ConversationContextBuilder.conversationText(
+            from: session.transcript,
+            userLabel: "User:",
+            assistantLabel: "Assistant:"
+        )
     }
 
     @MainActor
@@ -287,23 +258,18 @@ private extension ChatViewModel {
     }
 
     func createNewSessionWithContext(summary: ConversationSummary) {
-        let contextInstructions = """
-        \(instructions)
-
-        You are continuing a conversation with a user. Here's a summary of your previous conversation:
-
-        CONVERSATION SUMMARY:
-        \(summary.summary)
-
-        KEY TOPICS DISCUSSED:
-        \(summary.keyTopics.map { "• \($0)" }.joined(separator: "\n"))
-
-        USER PREFERENCES/REQUESTS:
-        \(summary.userPreferences.map { "• \($0)" }.joined(separator: "\n"))
-
+        let continuationNote = """
         Continue the conversation naturally, referencing this context when relevant. \
         The user's next message is a continuation of your previous discussion.
         """
+
+        let contextInstructions = ConversationContextBuilder.contextInstructions(
+            baseInstructions: instructions,
+            summary: summary.summary,
+            keyTopics: summary.keyTopics,
+            userPreferences: summary.userPreferences,
+            continuationNote: continuationNote
+        )
 
         session = LanguageModelSession(
             model: createLanguageModel(),

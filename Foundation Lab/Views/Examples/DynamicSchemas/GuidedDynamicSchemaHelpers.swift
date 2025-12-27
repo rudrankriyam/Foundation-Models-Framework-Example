@@ -10,195 +10,183 @@ import FoundationModels
 
 extension GuidedDynamicSchemaView {
     func createPhoneDirectorySchema() -> DynamicGenerationSchema {
-        let phoneEntrySchema = DynamicGenerationSchema(
-            name: "PhoneEntry",
+        let phoneEntrySchema = DynamicSchemaHelpers.schema(
+            "PhoneEntry",
             description: "Phone directory entry",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "name",
-                    description: "Person's name",
-                    schema: DynamicGenerationSchema(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "name",
+                    type: String.self,
+                    description: "Person's name"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "phoneNumber",
-                    description: "US phone number",
-                    schema: DynamicGenerationSchema(
-                        type: String.self,
-                        guides: [.pattern(/\(\d {3}\) \d {3}-\d {4}/)]
-                    )
+                DynamicSchemaHelpers.guidedProperty(
+                    "phoneNumber",
+                    type: String.self,
+                    guides: [.pattern(/\(\d {3}\) \d {3}-\d {4}/)],
+                    description: "US phone number"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "extension",
+                DynamicSchemaHelpers.guidedProperty(
+                    "extension",
+                    type: String.self,
+                    guides: [.pattern(/x\d {3,4}/)],
                     description: "Extension",
-                    schema: DynamicGenerationSchema(
-                        type: String.self,
-                        guides: [.pattern(/x\d {3,4}/)]
-                    ),
                     isOptional: true
                 )
             ]
         )
 
-        return DynamicGenerationSchema(
-            name: "PhoneDirectory",
+        return DynamicSchemaHelpers.schema(
+            "PhoneDirectory",
             description: "Phone directory",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "entries",
+                DynamicSchemaHelpers.arrayProperty(
+                    "entries",
+                    elementSchema: phoneEntrySchema,
                     description: "Phone directory entries",
-                    schema: DynamicGenerationSchema(
-                        arrayOf: phoneEntrySchema,
-                        minimumElements: 3,
-                        maximumElements: 7
-                    )
+                    minimumElements: 3,
+                    maximumElements: 7
                 )
             ]
         )
     }
 
     func createProductCatalogSchema() -> DynamicGenerationSchema {
-        let productSchema = DynamicGenerationSchema(
-            name: "Product",
+        let productSchema = DynamicSchemaHelpers.schema(
+            "Product",
             description: "Product information",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "name",
-                    description: "Product name",
-                    schema: DynamicGenerationSchema(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "name",
+                    type: String.self,
+                    description: "Product name"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "price",
-                    description: "Price in USD",
-                    schema: DynamicGenerationSchema(
-                        type: Double.self,
-                        guides: [.range(10.0...100.0)]
-                    )
+                DynamicSchemaHelpers.guidedProperty(
+                    "price",
+                    type: Double.self,
+                    guides: [.range(10.0...100.0)],
+                    description: "Price in USD"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "stock",
-                    description: "Stock quantity",
-                    schema: DynamicGenerationSchema(
-                        type: Int.self,
-                        guides: [.minimum(0), .maximum(500)]
-                    )
+                DynamicSchemaHelpers.guidedProperty(
+                    "stock",
+                    type: Int.self,
+                    guides: [.minimum(0), .maximum(500)],
+                    description: "Stock quantity"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "discount",
+                DynamicSchemaHelpers.guidedProperty(
+                    "discount",
+                    type: Double.self,
+                    guides: [.range(0...50)],
                     description: "Discount percentage",
-                    schema: DynamicGenerationSchema(
-                        type: Double.self,
-                        guides: [.range(0...50)]
-                    ),
                     isOptional: true
                 )
             ]
         )
 
-        return DynamicGenerationSchema(
-            name: "ProductCatalog",
+        return DynamicSchemaHelpers.schema(
+            "ProductCatalog",
             description: "Product catalog",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "products",
+                DynamicSchemaHelpers.arrayProperty(
+                    "products",
+                    elementSchema: productSchema,
                     description: "Product list",
-                    schema: DynamicGenerationSchema(
-                        arrayOf: productSchema,
-                        minimumElements: 3,
-                        maximumElements: 8
-                    )
+                    minimumElements: 3,
+                    maximumElements: 8
                 )
             ]
         )
     }
 
     func createShoppingListSchema() -> DynamicGenerationSchema {
-        let shoppingItemSchema = DynamicGenerationSchema(
-            name: "ShoppingItem",
+        let shoppingItemSchema = DynamicSchemaHelpers.schema(
+            "ShoppingItem",
             description: "Individual shopping item",
             properties: [
-                DynamicGenerationSchema.Property(
-                    name: "name",
-                    description: "Item name",
-                    schema: .init(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "name",
+                    type: String.self,
+                    description: "Item name"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "quantity",
-                    description: "Quantity needed",
-                    schema: .init(type: Int.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "quantity",
+                    type: Int.self,
+                    description: "Quantity needed"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "category",
-                    description: "Item category",
-                    schema: .init(type: String.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "category",
+                    type: String.self,
+                    description: "Item category"
                 ),
-                DynamicGenerationSchema.Property(
-                    name: "estimatedPrice",
-                    description: "Estimated price",
-                    schema: .init(type: Double.self)
+                DynamicSchemaHelpers.typedProperty(
+                    "estimatedPrice",
+                    type: Double.self,
+                    description: "Estimated price"
                 )
             ]
         )
 
-        let storeNameProperty = DynamicGenerationSchema.Property(
-            name: "storeName",
-            description: "Store name",
-            schema: .init(type: String.self)
+        let storeNameProperty = DynamicSchemaHelpers.typedProperty(
+            "storeName",
+            type: String.self,
+            description: "Store name"
         )
-        let itemsProperty = DynamicGenerationSchema.Property(
-            name: "items",
-            description: "Shopping list items",
-            schema: .init(arrayOf: shoppingItemSchema)
+
+        let stringSchema = DynamicGenerationSchema(type: String.self)
+        let itemsProperty = DynamicSchemaHelpers.arrayProperty(
+            "items",
+            elementSchema: shoppingItemSchema,
+            description: "Shopping list items"
         )
-        let categoriesProperty = DynamicGenerationSchema.Property(
-            name: "categories",
+        let categoriesProperty = DynamicSchemaHelpers.arrayProperty(
+            "categories",
+            elementSchema: stringSchema,
             description: "Item categories",
-            schema: .init(arrayOf: .init(type: String.self)),
             isOptional: true
         )
 
-        return DynamicGenerationSchema(
-            name: "ShoppingList",
+        return DynamicSchemaHelpers.schema(
+            "ShoppingList",
             description: "Shopping list with constraints",
             properties: [storeNameProperty, itemsProperty, categoriesProperty]
         )
     }
 
     func createCompanyDirectorySchema() -> DynamicGenerationSchema {
-        let firstNameProperty = DynamicGenerationSchema.Property(
-            name: "firstName",
-            description: "First name (capitalized)",
-            schema: .init(type: String.self)
+        let firstNameProperty = DynamicSchemaHelpers.typedProperty(
+            "firstName",
+            type: String.self,
+            description: "First name (capitalized)"
         )
-        let lastNameProperty = DynamicGenerationSchema.Property(
-            name: "lastName",
-            description: "Last name (capitalized)",
-            schema: .init(type: String.self)
+        let lastNameProperty = DynamicSchemaHelpers.typedProperty(
+            "lastName",
+            type: String.self,
+            description: "Last name (capitalized)"
         )
-        let emailProperty = DynamicGenerationSchema.Property(
-            name: "email",
-            description: "Company email address",
-            schema: .init(type: String.self)
+        let emailProperty = DynamicSchemaHelpers.typedProperty(
+            "email",
+            type: String.self,
+            description: "Company email address"
         )
-        let departmentProperty = DynamicGenerationSchema.Property(
-            name: "department",
-            description: "Department name",
-            schema: .init(type: String.self)
+        let departmentProperty = DynamicSchemaHelpers.typedProperty(
+            "department",
+            type: String.self,
+            description: "Department name"
         )
 
-        let employeeSchema = DynamicGenerationSchema(
-            name: "Employee",
+        let employeeSchema = DynamicSchemaHelpers.schema(
+            "Employee",
             description: "Employee information",
             properties: [firstNameProperty, lastNameProperty, emailProperty, departmentProperty]
         )
 
-        let employeesProperty = DynamicGenerationSchema.Property(
-            name: "employees",
-            description: "Employee records",
-            schema: .init(arrayOf: employeeSchema)
+        let employeesProperty = DynamicSchemaHelpers.arrayProperty(
+            "employees",
+            elementSchema: employeeSchema,
+            description: "Employee records"
         )
 
-        return DynamicGenerationSchema(
-            name: "CompanyDirectory",
+        return DynamicSchemaHelpers.schema(
+            "CompanyDirectory",
             description: "Company employee directory",
             properties: [employeesProperty]
         )
