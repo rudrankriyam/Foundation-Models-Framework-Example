@@ -136,7 +136,6 @@ final class RAGChatViewModel {
 
     // LumoKit instance
     private var lumoKit: LumoKit?
-    private var vectura: VecturaKit?
     private var isInitialized = false
 
     // Configuration
@@ -154,7 +153,7 @@ final class RAGChatViewModel {
                 searchOptions: searchOptions
             )
 
-            chunkingConfig = ChunkingConfig(
+            chunkingConfig = try ChunkingConfig(
                 chunkSize: 500,
                 overlapPercentage: 0.15,
                 strategy: .semantic,
@@ -176,9 +175,6 @@ final class RAGChatViewModel {
         }
 
         do {
-            let embedder = SwiftEmbedder()
-            let vecturaInstance = try await VecturaKit(config: config, embedder: embedder)
-            vectura = vecturaInstance
             lumoKit = try await LumoKit(
                 config: config,
                 chunkingConfig: chunking
@@ -231,7 +227,6 @@ final class RAGChatViewModel {
         await initialize()
 
         guard let lumoKit = lumoKit,
-              let vectura = vectura,
               let chunking = chunkingConfig else {
             errorMessage = "RAG system not initialized"
             showError = true
@@ -243,7 +238,7 @@ final class RAGChatViewModel {
         do {
             let chunks = try lumoKit.chunkText(text, config: chunking)
             let texts = chunks.map { $0.text }
-            _ = try await vectura.addDocuments(texts: texts)
+            try await lumoKit.addDocuments(texts: texts)
             indexedDocumentCount += 1
         } catch {
             errorMessage = "Failed to index text: \(error.localizedDescription)"
@@ -254,10 +249,10 @@ final class RAGChatViewModel {
     }
 
     func resetDatabase() async {
-        guard let vectura = vectura else { return }
+        guard let lumoKit = lumoKit else { return }
 
         do {
-            try await vectura.reset()
+            try await lumoKit.resetDB()
             indexedDocumentCount = 0
         } catch {
             errorMessage = "Failed to reset database: \(error.localizedDescription)"
@@ -269,7 +264,6 @@ final class RAGChatViewModel {
         await initialize()
 
         guard let lumoKit = lumoKit,
-              let vectura = vectura,
               let chunking = chunkingConfig else { return }
 
         isSearching = true
@@ -299,10 +293,10 @@ final class RAGChatViewModel {
         ]
 
         do {
-            for (title, text) in sampleTexts {
+            for (_, text) in sampleTexts {
                 let chunks = try lumoKit.chunkText(text, config: chunking)
                 let texts = chunks.map { $0.text }
-                _ = try await vectura.addDocuments(texts: texts)
+                try await lumoKit.addDocuments(texts: texts)
             }
             indexedDocumentCount += sampleTexts.count
         } catch {
