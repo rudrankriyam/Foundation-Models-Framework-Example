@@ -111,7 +111,7 @@ struct DocumentListView: View {
                         VStack(alignment: .leading) {
                             Text("Import Document")
                                 .font(.headline)
-                            Text("PDF, Text, HTML")
+                            Text("PDF, Markdown, Text, HTML, RTF")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -130,7 +130,7 @@ struct DocumentListView: View {
                     HStack {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundStyle(.green)
-                        Text("\(viewModel.indexedDocumentCount) documents indexed")
+                        Text("\(viewModel.indexedDocumentCount) sources indexed")
                     }
                 } else {
                     ContentUnavailableView(
