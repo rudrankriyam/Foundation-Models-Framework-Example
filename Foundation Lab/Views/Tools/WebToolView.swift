@@ -22,20 +22,11 @@ struct WebToolView: View {
       errorMessage: executor.errorMessage
     ) {
       VStack(alignment: .leading, spacing: Spacing.large) {
-        VStack(alignment: .leading, spacing: Spacing.small) {
-          Text("SEARCH QUERY")
-            .font(.footnote)
-            .fontWeight(.medium)
-            .foregroundColor(.secondary)
-
-          TextEditor(text: $searchQuery)
-            .font(.body)
-            .scrollContentBackground(.hidden)
-            .padding(Spacing.medium)
-            .frame(height: 50)
-            .background(Color.gray.opacity(0.1))
-            .cornerRadius(12)
-        }
+        ToolInputField(
+          label: "SEARCH QUERY",
+          text: $searchQuery,
+          placeholder: "Enter your search query"
+        )
 
         ToolExecuteButton(
           "Search Web",
