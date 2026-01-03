@@ -219,9 +219,8 @@ final class ChatViewModel {
         voiceState = .idle
         errorMessage = nil
         showError = false
-        if let recognizer = speechRecognizer {
-            recognizer.stopRecognition()
-        }
+        speechRecognizer?.stopRecognition()
+        speechRecognizer = nil
     }
 
     /// Interrupts the AI's speech response and returns to listening mode.
