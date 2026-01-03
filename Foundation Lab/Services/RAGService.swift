@@ -65,14 +65,15 @@ struct RAGConfig {
     let searchOptions: VecturaConfig.SearchOptions
     let chunkingConfig: ChunkingConfig
 
-    static var `default`: RAGConfig {
+    static var `default`: RAGConfig? {
         let options = VecturaConfig.SearchOptions(defaultNumResults: 5, minThreshold: 0.5)
-        let chunking: ChunkingConfig
-        do {
-            chunking = try ChunkingConfig(chunkSize: 500, overlapPercentage: 0.15,
-                                           strategy: .semantic, contentType: .prose)
-        } catch {
-            fatalError("Invalid chunking configuration: \(error)")
+        guard let chunking = try? ChunkingConfig(
+            chunkSize: 500,
+            overlapPercentage: 0.15,
+            strategy: .semantic,
+            contentType: .prose
+        ) else {
+            return nil
         }
         return RAGConfig(searchOptions: options, chunkingConfig: chunking)
     }
