@@ -1,4 +1,6 @@
 # Foundation Models Framework Example
+[![Star History Chart](https://api.star-history.com/svg?repos=rudrankriyam/Foundation-Models-Framework-Example&type=Date)](https://star-history.com/#rudrankriyam/Foundation-Models-Framework-Example&Date)
+
 
 <div align="center">
   <table>
