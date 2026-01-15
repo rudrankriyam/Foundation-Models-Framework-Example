@@ -1,5 +1,4 @@
 # Foundation Models Framework Example
-[![Star History Chart](https://api.star-history.com/svg?repos=rudrankriyam/Foundation-Models-Framework-Example&type=Date)](https://star-history.com/#rudrankriyam/Foundation-Models-Framework-Example&Date)
 
 
 <div align="center">
@@ -402,3 +401,5 @@ Contributions are welcome! Please feel free to submit a pull request.
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+[![Star History Chart](https://api.star-history.com/svg?repos=rudrankriyam/Foundation-Models-Framework-Example&type=Date)](https://star-history.com/#rudrankriyam/Foundation-Models-Framework-Example&Date)
