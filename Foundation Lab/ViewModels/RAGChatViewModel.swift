@@ -64,11 +64,15 @@ final class RAGChatViewModel {
     private let userDefaults = UserDefaults.standard
     private let indexedURLsKey = "ragIndexedURLs"
     private let sourceTitlesKey = "ragSourceTitles"
+    private let chunkTitlesKey = "ragChunkTitles"
 
     init() {
         indexedURLs = Set(userDefaults.stringArray(forKey: indexedURLsKey) ?? [])
         if let titlesData = userDefaults.dictionary(forKey: sourceTitlesKey) {
             sourceTitles = titlesData.compactMapValues { $0 as? String }
+        }
+        if let chunkData = userDefaults.dictionary(forKey: chunkTitlesKey) {
+            chunkTitles = chunkData.compactMapValues { $0 as? String }
         }
         indexedDocumentCount = indexedURLs.count
         hasIndexedContent = indexedDocumentCount > 0
@@ -214,20 +218,20 @@ final class RAGChatViewModel {
         isSearching = false
     }
 
-    func sendMessage(_ content: String) async {
+    func sendMessage(_ content: String) async -> Bool {
         await loadFromDatabase()
-        guard let service = service else { return }
+        guard let service = service else { return false }
 
         let trimmedContent = content.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedContent.isEmpty else { return }
+        guard !trimmedContent.isEmpty else { return false }
 
         guard hasIndexedContent || indexedDocumentCount > 0 else {
             errorMessage = "Index documents before starting a RAG chat."
             showError = true
-            return
+            return false
         }
 
-        guard !isSearching && !isGenerating else { return }
+        guard !isSearching && !isGenerating else { return false }
 
         let userEntry = RAGChatEntry(role: .user, content: trimmedContent, sources: [])
         conversation.append(userEntry)
@@ -237,6 +241,7 @@ final class RAGChatViewModel {
         conversation.append(assistantEntry)
 
         await generateResponse(for: assistantEntry, query: trimmedContent, chunks: chunks)
+        return true
     }
 
     func dismissError() {
@@ -249,6 +254,7 @@ private extension RAGChatViewModel {
     func saveState() {
         userDefaults.set(Array(indexedURLs), forKey: indexedURLsKey)
         userDefaults.set(sourceTitles, forKey: sourceTitlesKey)
+        userDefaults.set(chunkTitles, forKey: chunkTitlesKey)
     }
 
     func searchDocuments(service: RAGService, query: String) async -> [RAGChunk] {
