@@ -43,6 +43,8 @@ struct ExamplesView: View {
                 GenerationOptionsView()
             case .health:
                 HealthExampleView()
+            case .rag:
+                RAGChatView()
             case .chat:
                 EmptyView()
             }

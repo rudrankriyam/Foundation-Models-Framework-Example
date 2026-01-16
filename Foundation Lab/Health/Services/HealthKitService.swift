@@ -9,6 +9,7 @@ import Foundation
 import HealthKit
 import OSLog
 
+// swiftlint:disable type_body_length
 actor HealthKitService {
     private let healthStore: HKHealthStore?
     private let logger = VoiceLogging.health
@@ -301,6 +302,7 @@ actor HealthKitService {
         return 0
     }
 }
+// swiftlint:enable type_body_length
 
 // MARK: - Supporting Types
 
