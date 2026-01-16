@@ -273,6 +273,7 @@ final class ChatViewModel {
             return
         }
         recognizer.stopRecognition()
+        voiceState = .processing
 
         do {
             let response = try await session.respond(to: Prompt(trimmedText))
@@ -280,6 +281,13 @@ final class ChatViewModel {
 
             do {
                 try await SpeechSynthesizer.shared.synthesizeAndSpeak(text: response.content)
+            } catch let synthError as SpeechSynthesizerError {
+                if case .cancelled = synthError {
+                    // User-initiated cancellation; stopSpeaking already restarted listening.
+                    return
+                }
+                handleVoiceError(synthError.localizedDescription)
+                return
             } catch {
                 handleVoiceError(error.localizedDescription)
                 return
@@ -365,7 +373,7 @@ private extension ChatViewModel {
                     voiceState = .listening(partialText: finalText)
                 }
             case .error(let speechError):
-                voiceState = .error(message: speechError.localizedDescription)
+                handleVoiceError(speechError.localizedDescription)
             case .idle:
                 break
             }

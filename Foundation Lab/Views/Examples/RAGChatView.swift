@@ -132,9 +132,11 @@ struct RAGChatView: View {
         let trimmed = trimmedMessage
         guard !trimmed.isEmpty else { return }
 
-        messageText = ""
         Task {
-            await viewModel.sendMessage(trimmed)
+            let success = await viewModel.sendMessage(trimmed)
+            if success {
+                messageText = ""
+            }
         }
     }
 
