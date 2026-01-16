@@ -101,7 +101,7 @@ Three sections for exploring advanced features:
 - **Languages** - Multilingual features and language detection
 
 ### Examples
-Nine different example types showing framework capabilities:
+Ten different example types showing framework capabilities:
 - One-shot prompts
 - Business idea generation
 - Creative writing
@@ -111,6 +111,7 @@ Nine different example types showing framework capabilities:
 - Generation guides
 - Generation options (temperature, tokens, fitness)
 - Health dashboard
+- RAG chat with document indexing and search
 
 ## Features
 
@@ -120,6 +121,7 @@ Nine different example types showing framework capabilities:
 - **Structured Generation**: Type-safe data with `@Generable`
 - **Generation Guides**: Constrained outputs with `@Guide`
 - **Tool Calling**: System integrations for extended functionality
+- **RAG**: Document indexing and semantic search with LumoKit/VecturaKit
 - **Voice**: Speech-to-text and text-to-speech
 - **Health**: HealthKit integration with AI insights
 - **Multilingual**: Works in 10 languages (English, German, Spanish, French, Italian, Japanese, Korean, Portuguese, Chinese)
@@ -199,11 +201,10 @@ for try await partialText in stream {
 ```swift
 // Speech recognition
 let recognizer = SpeechRecognizer()
-await recognizer.startRecording()
+try recognizer.startRecognition()
 
 // Text-to-speech
-let synthesizer = SpeechSynthesizer()
-synthesizer.speak("Hello, how can I help you?")
+try await SpeechSynthesizer.shared.synthesizeAndSpeak(text: "Hello, how can I help you?")
 ```
 
 ### Health Data
