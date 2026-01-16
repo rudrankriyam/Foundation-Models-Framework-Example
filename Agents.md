@@ -8,6 +8,7 @@ Foundation Lab is an iOS/macOS app demonstrating Apple's Foundation Models frame
 - Multi-turn chat with streaming responses using `LanguageModelSession`
 - 9 system integration tools (Weather, Web Search, Contacts, Calendar, Reminders, Location, Health, Music, Web Metadata)
 - Voice interface with speech-to-text (`SpeechRecognitionStateMachine`) and text-to-speech
+- RAG chat with document indexing and semantic search (LumoKit/VecturaKit)
 - AI-powered Health Dashboard with HealthKit integration via `HealthDataManager`
 - Dynamic schema examples for structured data generation using `@Generable` and `DynamicSchemaBuilder`
 - Multilingual support (10 languages) via `LanguageService` and `Localizable.xcstrings`
@@ -19,10 +20,10 @@ Foundation Lab is an iOS/macOS app demonstrating Apple's Foundation Models frame
 open FoundationLab.xcodeproj
 
 # Build from command line
-xcodebuild -project FoundationLab.xcodeproj -scheme "Foundation Lab" -destination 'platform=iOS Simulator,name=iPhone 16' build
+xcodebuild -project FoundationLab.xcodeproj -scheme "Foundation Lab" -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
 
 # Run on specific simulator
-xcodebuild -project FoundationLab.xcodeproj -scheme "Foundation Lab" -destination 'platform=iOS Simulator,name=iPhone 16' -derivedDataPath ./build test
+xcodebuild -project FoundationLab.xcodeproj -scheme "Foundation Lab" -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath ./build test
 ```
 
 **Requirements:** Xcode 26.0+, iOS 26.0+/macOS 26.0+, Apple Silicon device with Apple Intelligence.
@@ -31,6 +32,8 @@ xcodebuild -project FoundationLab.xcodeproj -scheme "Foundation Lab" -destinatio
 - `HighlightSwift` - Syntax highlighting
 - `FoundationModelsTools` - Foundation Models utilities
 - `LiquidGlasKit` - UI styling
+- `LumoKit` - RAG document indexing and retrieval
+- `VecturaKit` - Vector search backend
 
 ## Architecture
 
@@ -55,6 +58,7 @@ let structured = try await session.respond(to: "Suggest a book", generating: Boo
 | `VoiceViewModel.swift` | Voice input/output state machine, permission handling |
 | `HealthChatViewModel.swift` | Health-specific chat with HealthKit tool integration |
 | `DynamicSchemaViewModel.swift` | Dynamic schema builder state management |
+| `RAGChatViewModel.swift` | RAG chat with document indexing and retrieval |
 
 All ViewModels use `@Observable` macro and `@MainActor` annotation.
 
@@ -125,6 +129,7 @@ Examples demonstrate framework capabilities with `ExampleViewBase`:
 - `GenerationGuidesView.swift` - Constrained outputs with `@Guide`
 - `GenerationOptionsView.swift` - Temperature, tokens, fitness
 - `HealthExampleView.swift` - Health dashboard example
+- `RAGChatView.swift` - Retrieval-augmented chat with documents
 
 ### Navigation Architecture
 
@@ -196,16 +201,19 @@ Foundation Lab/
 ├── Services/
 │   ├── ConversationContextBuilder.swift
 │   ├── LanguageService.swift
+│   ├── RAGService.swift
 │   └── ToolExecutor.swift
 ├── ViewModels/
 │   ├── ChatViewModel.swift
+│   ├── RAGChatViewModel.swift
 │   └── VoiceViewModel.swift
 ├── Views/
 │   ├── AdaptiveNavigationView.swift
 │   ├── Chat/
 │   │   ├── ChatView.swift
 │   │   ├── ChatInputView.swift
-│   │   └── ChatInstructionsView.swift
+│   │   ├── ChatInstructionsView.swift
+│   │   └── RAGDocumentPickerView.swift
 │   ├── Components/
 │   │   ├── CodeDisclosure.swift
 │   │   ├── GenericCardView.swift
@@ -214,6 +222,8 @@ Foundation Lab/
 │   ├── Examples/
 │   │   ├── ExamplesView.swift
 │   │   ├── BasicChatView.swift
+│   │   ├── RAGChatView.swift
+│   │   ├── RAGChatView+Types.swift
 │   │   ├── DynamicSchemas/
 │   │   └── ...
 │   ├── Languages/
