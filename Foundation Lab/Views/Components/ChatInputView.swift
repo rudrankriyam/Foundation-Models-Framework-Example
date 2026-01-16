@@ -11,29 +11,76 @@ struct ChatInputView: View {
     @Binding var messageText: String
     @Environment(ChatViewModel.self) var chatViewModel
     @FocusState.Binding var isTextFieldFocused: Bool
-    var onVoiceTap: () -> Void = {}
     @Namespace private var glassNamespace
 
     var body: some View {
 #if os(iOS) || os(macOS)
         GlassEffectContainer(spacing: Spacing.medium) {
             HStack(spacing: Spacing.medium) {
-                TextField("Type your message...", text: $messageText, axis: .vertical)
-                    .textFieldStyle(.plain)
-                    .focused($isTextFieldFocused)
-                    .padding(.horizontal, Spacing.medium)
-                    .padding(.vertical, Spacing.medium)
-                    .glassEffect(.regular, in: .rect(cornerRadius: CornerRadius.xLarge))
-                    .glassEffectID("textField", in: glassNamespace)
-                    .onSubmit {
-                        sendMessage()
-                    }
+                Group {
+                    if case .listening(let partialText) = chatViewModel.voiceState {
+                        Text(partialText.isEmpty ? "Listening..." : partialText)
+                            .foregroundStyle(.secondary)
+                            .italic()
+                    } else {
+                        TextField("Type your message...", text: $messageText, axis: .vertical)
+                            .textFieldStyle(.plain)
+                            .focused($isTextFieldFocused)
+                            .onSubmit {
+                                sendMessage()
+                            }
 #if os(iOS)
-                    .submitLabel(.send)
+                            .submitLabel(.send)
 #endif
+                    }
+                }
+                .padding(.horizontal, Spacing.medium)
+                .padding(.vertical, Spacing.medium)
+                .glassEffect(.regular, in: .rect(cornerRadius: CornerRadius.xLarge))
+                .glassEffectID("textField", in: glassNamespace)
 
-                if messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    Button(action: onVoiceTap) {
+                if chatViewModel.voiceState == .preparing {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .padding(Spacing.medium)
+
+                    Button("Cancel") {
+                        chatViewModel.cancelVoiceMode()
+                    }
+                    .foregroundStyle(.white)
+                    .padding(Spacing.medium)
+                } else if case .listening = chatViewModel.voiceState {
+                    Button("End") {
+                        Task {
+                            await chatViewModel.stopVoiceModeAndSend()
+                        }
+                    }
+                    .foregroundStyle(.white)
+                    .font(.subheadline.weight(.medium))
+                    .padding(Spacing.medium)
+                    .glassEffect(
+                        .regular
+                            .tint(.red)
+                            .interactive(true), in: .circle
+                    )
+                } else if case .speaking = chatViewModel.voiceState {
+                    Button("Stop") {
+                        chatViewModel.stopSpeaking()
+                    }
+                    .foregroundStyle(.white)
+                    .font(.subheadline.weight(.medium))
+                    .padding(Spacing.medium)
+                    .glassEffect(
+                        .regular
+                            .tint(.orange)
+                            .interactive(true), in: .circle
+                    )
+                } else if messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    Button {
+                        Task {
+                            await chatViewModel.startVoiceMode()
+                        }
+                    } label: {
                         Image(systemName: "waveform")
                             .font(.subheadline)
                             .foregroundStyle(.white)
@@ -45,6 +92,7 @@ struct ChatInputView: View {
                             .interactive(true), in: .circle
                     )
                     .glassEffectID("voiceButton", in: glassNamespace)
+                    .disabled(chatViewModel.voiceState.isActive && !chatViewModel.voiceState.isError)
                 } else {
                     Button(action: sendMessage) {
                         Image(systemName: "arrow.up")
@@ -68,37 +116,72 @@ struct ChatInputView: View {
         .padding()
 #else
         HStack(spacing: Spacing.medium) {
-            TextField("Type your message...", text: $messageText, axis: .vertical)
-                .textFieldStyle(.plain)
-                .focused($isTextFieldFocused)
-                .padding(.horizontal, Spacing.medium)
-                .padding(.vertical, Spacing.small)
-                .onSubmit {
-                    sendMessage()
+            Group {
+                if case .listening(let partialText) = chatViewModel.voiceState {
+                    Text(partialText.isEmpty ? "Listening..." : partialText)
+                        .foregroundStyle(.secondary)
+                        .italic()
+                } else {
+                    TextField("Type your message...", text: $messageText, axis: .vertical)
+                        .textFieldStyle(.plain)
+                        .focused($isTextFieldFocused)
+                        .onSubmit {
+                            sendMessage()
+                        }
                 }
-
-            Button(action: sendMessage) {
-                Image(systemName: "arrow.up.circle.fill")
-                    .font(.title2)
-                    .foregroundStyle(
-                        messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .gray : Color.accentColor
-                    )
             }
-            .buttonStyle(.plain)
-            .padding(Spacing.small)
-            .disabled(
-                messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
-                chatViewModel.isLoading ||
-                chatViewModel.isSummarizing
-            )
+            .padding(.horizontal, Spacing.medium)
+            .padding(.vertical, Spacing.small)
 
-            Button(action: onVoiceTap) {
-                Image(systemName: "waveform.circle.fill")
-                    .font(.title2)
-                    .foregroundStyle(.blue)
+            if chatViewModel.voiceState == .preparing {
+                ProgressView()
+                    .padding(.vertical, Spacing.small)
+
+                Button("Cancel") {
+                    chatViewModel.cancelVoiceMode()
+                }
+                .padding(Spacing.small)
+            } else if case .listening = chatViewModel.voiceState {
+                Button("End") {
+                    Task {
+                        await chatViewModel.stopVoiceModeAndSend()
+                    }
+                }
+                .padding(Spacing.small)
+            } else if case .speaking = chatViewModel.voiceState {
+                Button("Stop") {
+                    chatViewModel.stopSpeaking()
+                }
+                .padding(Spacing.small)
+            } else if messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                Button {
+                    Task {
+                        await chatViewModel.startVoiceMode()
+                    }
+                } label: {
+                    Image(systemName: "waveform.circle.fill")
+                        .font(.title2)
+                        .foregroundStyle(.blue)
+                }
+                .buttonStyle(.plain)
+                .padding(Spacing.small)
+                .disabled(chatViewModel.voiceState.isActive && !chatViewModel.voiceState.isError)
+            } else {
+                Button(action: sendMessage) {
+                    Image(systemName: "arrow.up.circle.fill")
+                        .font(.title2)
+                        .foregroundStyle(
+                            messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .gray : Color.accentColor
+                        )
+                }
+                .buttonStyle(.plain)
+                .padding(Spacing.small)
+                .disabled(
+                    messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+                    chatViewModel.isLoading ||
+                    chatViewModel.isSummarizing
+                )
             }
-            .buttonStyle(.plain)
-            .padding(Spacing.small)
         }
         .padding()
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: messageText.isEmpty)

@@ -124,6 +124,27 @@ class SpeechRecognizer: NSObject, SpeechRecognitionService {
     var state: SpeechRecognitionState = .idle {
         didSet { notifyStateHandlers() }
     }
+
+    /// Async sequence of state changes for Swift concurrency
+    var stateValues: AsyncStream<SpeechRecognitionState> {
+        AsyncStream { [weak self] continuation in
+            guard let self = self else {
+                continuation.finish()
+                return
+            }
+
+            let token = addStateChangeHandler { state in
+                continuation.yield(state)
+            }
+            continuation.onTermination = { [weak self] _ in
+                guard let self = self else { return }
+                Task { @MainActor in
+                    self.removeStateChangeHandler(token)
+                }
+            }
+        }
+    }
+
     var hasPermission = false
     var currentAmplitude: Double = 0
 
