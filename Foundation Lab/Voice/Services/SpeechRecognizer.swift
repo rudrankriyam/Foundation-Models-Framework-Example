@@ -128,15 +128,19 @@ class SpeechRecognizer: NSObject, SpeechRecognitionService {
     /// Async sequence of state changes for Swift concurrency
     var stateValues: AsyncStream<SpeechRecognitionState> {
         AsyncStream { [weak self] continuation in
-            let recognizer = self
-            let token = recognizer?.addStateChangeHandler { state in
+            guard let recognizer = self else {
+                continuation.finish()
+                return
+            }
+            let streamID = UUID()
+            recognizer.streamContinuations[streamID] = continuation
+            let token = recognizer.addStateChangeHandler { state in
                 continuation.yield(state)
             }
             continuation.onTermination = { @Sendable _ in
-                if let token = token {
-                    Task { @MainActor in
-                        recognizer?.removeStateChangeHandler(token)
-                    }
+                Task { @MainActor in
+                    recognizer.streamContinuations[streamID] = nil
+                    recognizer.removeStateChangeHandler(token)
                 }
             }
         }
@@ -151,6 +155,7 @@ class SpeechRecognizer: NSObject, SpeechRecognitionService {
     var recognitionTask: SFSpeechRecognitionTask?
     let audioEngine = AVAudioEngine()
     private var stateHandlers: [UUID: (SpeechRecognitionState) -> Void] = [:]
+    private var streamContinuations: [UUID: AsyncStream<SpeechRecognitionState>.Continuation] = [:]
     var audioBufferCount = 0
 
     // Simple flag to prevent double processing
@@ -349,6 +354,12 @@ class SpeechRecognizer: NSObject, SpeechRecognitionService {
         }
 
         hasProcessedFinalResult = true
+
+        // Finish all stream continuations to allow observation tasks to exit
+        for (streamID, continuation) in streamContinuations {
+            continuation.finish()
+            streamContinuations[streamID] = nil
+        }
 
         logger.debug("CLEANUP COMPLETED")
     }

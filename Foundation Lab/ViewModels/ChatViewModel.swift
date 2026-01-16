@@ -42,6 +42,7 @@ final class ChatViewModel {
 
     var voiceState: VoiceState = .idle
     private(set) var speechRecognizer: SpeechRecognizer?
+    private var observationTask: Task<Void, Never>?
     private let permissionManager = PermissionManager()
     var isSummarizing: Bool = false
     var isApplyingWindow: Bool = false
@@ -207,7 +208,7 @@ final class ChatViewModel {
         }
 
         // Observe speech state changes in the background
-        Task {
+        observationTask = Task {
             await observeSpeechState()
         }
     }
@@ -216,6 +217,8 @@ final class ChatViewModel {
     /// Clears any error messages and stops speech recognition.
     @MainActor
     func cancelVoiceMode() {
+        observationTask?.cancel()
+        observationTask = nil
         voiceState = .idle
         errorMessage = nil
         showError = false
@@ -242,6 +245,10 @@ final class ChatViewModel {
 
         let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedText.isEmpty else {
+            observationTask?.cancel()
+            observationTask = nil
+            speechRecognizer?.stopRecognition()
+            speechRecognizer = nil
             voiceState = .idle
             return
         }
