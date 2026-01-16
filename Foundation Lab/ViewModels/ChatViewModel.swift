@@ -28,6 +28,13 @@ enum VoiceState: Equatable {
     var isActive: Bool {
         self != .idle
     }
+
+    var isError: Bool {
+        if case .error = self {
+            return true
+        }
+        return false
+    }
 }
 
 @MainActor
@@ -42,6 +49,7 @@ final class ChatViewModel {
 
     var voiceState: VoiceState = .idle
     private(set) var speechRecognizer: SpeechRecognizer?
+    private var speechObservationTask: Task<Void, Never>?
     private let permissionManager = PermissionManager()
     var isSummarizing: Bool = false
     var isApplyingWindow: Bool = false
@@ -173,6 +181,9 @@ final class ChatViewModel {
     func dismissError() {
         showError = false
         errorMessage = nil
+        if case .error = voiceState {
+            voiceState = .idle
+        }
     }
 
     // MARK: - Voice Methods
@@ -182,6 +193,14 @@ final class ChatViewModel {
     /// Transitions through: idle -> preparing -> listening
     @MainActor
     func startVoiceMode() async {
+        if case .error = voiceState {
+            errorMessage = nil
+            showError = false
+            voiceState = .idle
+        } else if voiceState.isActive {
+            return
+        }
+
         // Check permissions first
         if !permissionManager.allPermissionsGranted {
             let granted = await permissionManager.requestAllPermissions()
@@ -198,8 +217,13 @@ final class ChatViewModel {
         // Pre-warm the model
         session.prewarm()
 
+        stopSpeechObservation()
+        speechRecognizer?.stopRecognition()
+        speechRecognizer = nil
+
         // Initialize speech recognizer
-        await initializeSpeechRecognizer()
+        let didStart = await initializeSpeechRecognizer()
+        guard didStart else { return }
 
         // Only transition to listening if still in preparing state
         if case .preparing = voiceState {
@@ -207,15 +231,14 @@ final class ChatViewModel {
         }
 
         // Observe speech state changes in the background
-        Task {
-            await observeSpeechState()
-        }
+        startSpeechObservation()
     }
 
     /// Cancels the current voice mode session and resets to idle state.
     /// Clears any error messages and stops speech recognition.
     @MainActor
     func cancelVoiceMode() {
+        stopSpeechObservation()
         voiceState = .idle
         errorMessage = nil
         showError = false
@@ -227,10 +250,9 @@ final class ChatViewModel {
     /// Allows the user to speak immediately without waiting for TTS to finish.
     @MainActor
     func stopSpeaking() {
-        if case .speaking = voiceState {
-            SpeechSynthesizer.shared.cancelSpeaking()
-            voiceState = .listening(partialText: "")
-        }
+        guard case .speaking = voiceState else { return }
+        SpeechSynthesizer.shared.cancelSpeaking()
+        restartListening()
     }
 
     /// Stops listening and sends the recognized text to the AI.
@@ -242,18 +264,15 @@ final class ChatViewModel {
 
         let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedText.isEmpty else {
-            voiceState = .idle
+            cancelVoiceMode()
             return
         }
 
-        if let recognizer = speechRecognizer {
-            recognizer.stopRecognition()
-        } else {
-            errorMessage = "Speech recognizer not initialized"
-            showError = true
-            voiceState = .error(message: errorMessage!)
+        guard let recognizer = speechRecognizer else {
+            handleVoiceError("Speech recognizer not initialized")
             return
         }
+        recognizer.stopRecognition()
 
         do {
             let response = try await session.respond(to: Prompt(trimmedText))
@@ -262,18 +281,14 @@ final class ChatViewModel {
             do {
                 try await SpeechSynthesizer.shared.synthesizeAndSpeak(text: response.content)
             } catch {
-                errorMessage = error.localizedDescription
-                showError = true
-                voiceState = .error(message: errorMessage!)
+                handleVoiceError(error.localizedDescription)
                 return
             }
 
             // Auto-return to listening for multi-turn!
-            voiceState = .listening(partialText: "")
+            restartListening()
         } catch {
-            errorMessage = error.localizedDescription
-            showError = true
-            voiceState = .error(message: errorMessage!)
+            handleVoiceError(error.localizedDescription)
         }
     }
 }
@@ -282,14 +297,56 @@ private extension ChatViewModel {
     // MARK: - Voice Helpers
 
     @MainActor
-    private func initializeSpeechRecognizer() async {
-        speechRecognizer = SpeechRecognizer()
+    private func initializeSpeechRecognizer() async -> Bool {
+        let recognizer = SpeechRecognizer()
+        speechRecognizer = recognizer
 
         do {
-            try speechRecognizer?.startRecognition()
+            try recognizer.startRecognition()
+            return true
         } catch {
-            voiceState = .error(message: error.localizedDescription)
+            handleVoiceError(error.localizedDescription)
+            return false
         }
+    }
+
+    @MainActor
+    private func startSpeechObservation() {
+        stopSpeechObservation()
+        speechObservationTask = Task { [weak self] in
+            await self?.observeSpeechState()
+        }
+    }
+
+    @MainActor
+    private func stopSpeechObservation() {
+        speechObservationTask?.cancel()
+        speechObservationTask = nil
+    }
+
+    @MainActor
+    private func restartListening() {
+        guard let recognizer = speechRecognizer else {
+            handleVoiceError("Speech recognizer not initialized")
+            return
+        }
+
+        do {
+            try recognizer.startRecognition()
+            voiceState = .listening(partialText: "")
+        } catch {
+            handleVoiceError(error.localizedDescription)
+        }
+    }
+
+    @MainActor
+    private func handleVoiceError(_ message: String) {
+        stopSpeechObservation()
+        speechRecognizer?.stopRecognition()
+        speechRecognizer = nil
+        errorMessage = message
+        showError = true
+        voiceState = .error(message: message)
     }
 
     /// Observes speech recognizer state changes and updates voiceState accordingly
