@@ -75,11 +75,6 @@ final class RAGChatViewModel {
         config = RAGConfig.default
     }
 
-    private func saveState() {
-        userDefaults.set(Array(indexedURLs), forKey: indexedURLsKey)
-        userDefaults.set(sourceTitles, forKey: sourceTitlesKey)
-    }
-
     func loadFromDatabase() async {
         guard !isInitialized else { return }
         guard let config = config else { return }
@@ -223,18 +218,42 @@ final class RAGChatViewModel {
         await loadFromDatabase()
         guard let service = service else { return }
 
-        let userEntry = RAGChatEntry(role: .user, content: content, sources: [])
+        let trimmedContent = content.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedContent.isEmpty else { return }
+
+        guard hasIndexedContent || indexedDocumentCount > 0 else {
+            errorMessage = "Index documents before starting a RAG chat."
+            showError = true
+            return
+        }
+
+        guard !isSearching && !isGenerating else { return }
+
+        let userEntry = RAGChatEntry(role: .user, content: trimmedContent, sources: [])
         conversation.append(userEntry)
 
-        let chunks = await searchDocuments(service: service, query: content)
+        let chunks = await searchDocuments(service: service, query: trimmedContent)
         let assistantEntry = RAGChatEntry(role: .assistant, content: "", sources: chunks)
         conversation.append(assistantEntry)
 
-        await generateResponse(for: assistantEntry, query: content, chunks: chunks)
+        await generateResponse(for: assistantEntry, query: trimmedContent, chunks: chunks)
     }
 
-    private func searchDocuments(service: RAGService, query: String) async -> [RAGChunk] {
+    func dismissError() {
+        showError = false
+        errorMessage = nil
+    }
+}
+
+private extension RAGChatViewModel {
+    func saveState() {
+        userDefaults.set(Array(indexedURLs), forKey: indexedURLsKey)
+        userDefaults.set(sourceTitles, forKey: sourceTitlesKey)
+    }
+
+    func searchDocuments(service: RAGService, query: String) async -> [RAGChunk] {
         isSearching = true
+        defer { isSearching = false }
         var chunks: [RAGChunk] = []
 
         do {
@@ -242,46 +261,47 @@ final class RAGChatViewModel {
             chunks = results.map { result in
                 // Look up title from chunk ID mapping
                 let title = chunkTitles[result.id.uuidString] ?? sourceTitlesForChunk(result.id.uuidString)
-                return RAGChunk(documentId: result.id.uuidString, documentTitle: title,
-                               content: result.text, chunkIndex: 0, similarityScore: Double(result.score))
+                return RAGChunk(
+                    documentId: result.id.uuidString,
+                    documentTitle: title,
+                    content: result.text,
+                    chunkIndex: 0,
+                    similarityScore: Double(result.score)
+                )
             }
         } catch {
             errorMessage = "Search failed: \(error.localizedDescription)"
             showError = true
         }
 
-        isSearching = false
         return chunks
     }
 
-    private func sourceTitlesForChunk(_ chunkId: String) -> String {
+    func sourceTitlesForChunk(_ chunkId: String) -> String {
         if sourceTitles.count == 1 {
             return sourceTitles.values.first ?? "Source"
         }
         return "Source"
     }
 
-    private func generateResponse(for entry: RAGChatEntry, query: String, chunks: [RAGChunk]) async {
+    func generateResponse(for entry: RAGChatEntry, query: String, chunks: [RAGChunk]) async {
         isGenerating = true
+        defer { isGenerating = false }
         let systemPrompt = "You are a helpful assistant. Answer based on context. Cite content when possible."
         let contextText = chunks.isEmpty ? "No relevant documents found." :
             chunks.enumerated().map { index, chunk in "[Document \(index + 1)]: \(chunk.content)" }.joined(separator: "\n\n")
         let prompt = "\(systemPrompt)\n\nCONTEXT:\n\(contextText)"
 
         do {
-            let session = LanguageModelSession(model: SystemLanguageModel(useCase: .general),
-                                               instructions: Instructions(prompt))
+            let session = LanguageModelSession(
+                model: SystemLanguageModel(useCase: .general),
+                instructions: Instructions(prompt)
+            )
             for try await snapshot in session.streamResponse(to: Prompt(query)) {
                 entry.content = snapshot.content
             }
         } catch {
             if entry.content.isEmpty { entry.content = "Failed: \(error.localizedDescription)" }
         }
-        isGenerating = false
-    }
-
-    func dismissError() {
-        showError = false
-        errorMessage = nil
     }
 }
