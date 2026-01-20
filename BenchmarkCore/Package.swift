@@ -14,11 +14,19 @@ let package = Package(
         .library(
             name: "BenchmarkCore",
             targets: ["BenchmarkCore"]
+        ),
+        .executable(
+            name: "BenchmarkCLI",
+            targets: ["BenchmarkCLI"]
         )
     ],
     targets: [
         .target(
             name: "BenchmarkCore"
+        ),
+        .executableTarget(
+            name: "BenchmarkCLI",
+            dependencies: ["BenchmarkCore"]
         )
     ]
 )

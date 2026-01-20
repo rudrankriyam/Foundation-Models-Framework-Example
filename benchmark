@@ -1,0 +1,46 @@
+#!/bin/sh
+
+# Wrapper to build and run the BenchmarkCLI tool.
+# Automatically builds, finds build path, and runs - all in one step.
+#
+# Usage:
+#   ./benchmark                   # Run normal benchmark
+#   ./benchmark parse-xml <file>  # Parse token export XML
+#   ./benchmark --debug           # Build and run with debug configuration
+
+CONFIGURATION=Release
+
+# Parse flags
+if [ "$1" = "--debug" ]; then
+	CONFIGURATION=Debug
+	shift
+fi
+
+PROJECT_DIR="BenchmarkCore"
+PACKAGE_FILE="$PROJECT_DIR/Package.swift"
+
+# Check if Package.swift exists
+if [ ! -f "$PACKAGE_FILE" ]; then
+	echo "Error: $PACKAGE_FILE not found."
+	echo "Run this script from the project root directory."
+	exit 1
+fi
+
+# Build first
+echo "Building BenchmarkCLI ($CONFIGURATION)..."
+cd "$PROJECT_DIR"
+if ! swift build -c "$CONFIGURATION"; then
+	echo "Build failed"
+	exit 1
+fi
+
+# Find the build directory
+BUILD_DIR=".build/$CONFIGURATION"
+
+if [ -f "$BUILD_DIR/BenchmarkCLI" ]; then
+	export DYLD_FRAMEWORK_PATH="$BUILD_DIR/PackageFrameworks:$BUILD_DIR"
+	exec "$BUILD_DIR/BenchmarkCLI" "$@"
+else
+	echo "Error: $BUILD_DIR/BenchmarkCLI does not exist"
+	exit 1
+fi

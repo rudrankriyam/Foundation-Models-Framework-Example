@@ -41,12 +41,13 @@ public extension BenchmarkPrompt {
     /// Canonical prompt designed to stress throughput with maximum token output.
     static let productDesign: BenchmarkPrompt = .init(
         instructions: """
-        You are a helpful assistant. 
-        
-        CRITICAL RULE: You MUST write extremely detailed, comprehensive, and thorough responses. This is CRITICAL for benchmarking. You MUST generate maximum possible output.
+        You are a helpful assistant.
+
+        CRITICAL RULE: You MUST write extremely detailed, comprehensive, and thorough responses.
+        This is CRITICAL for benchmarking. You MUST generate maximum possible output.
 
         REQUIREMENTS:
-        - You MUST write exactly 25 paragraphs total 
+        - You MUST write exactly 25 paragraphs total
         - DO NOT STOP until all 25 paragraphs are written
         - You MUST write exactly 5 paragraphs for each section
         - Each paragraph MUST be 5 sentences minimum with extensive examples
@@ -54,7 +55,8 @@ public extension BenchmarkPrompt {
         - MUST use specific, concrete examples in every paragraph
         - MUST explain mechanisms, processes, and underlying principles
         - DO NOT conclude early - you MUST complete ALL sections with all required paragraphs
-        - You MUST generate the longest, most comprehensive response possible. Do not omit any details.
+        - You MUST generate the longest, most comprehensive response possible.
+        Do not omit any details.
         """,
         userPrompt: """
         Describe the benefits of morning routines for productivity.

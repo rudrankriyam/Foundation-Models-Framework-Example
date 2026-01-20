@@ -10,15 +10,31 @@
 		0A2230E72EACD3C900E09810 /* BenchmarkCore in Frameworks */ = {isa = PBXBuildFile; productRef = 0A2230E62EACD3C900E09810 /* BenchmarkCore */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		8F9333B12EDC957C001D8D8F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0A2230C82EACD0FC00E09810 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 0A2230CF2EACD0FC00E09810;
+			remoteInfo = FoundationStudio;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		0A2230D02EACD0FC00E09810 /* FoundationStudio.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FoundationStudio.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0A2230E42EACD14800E09810 /* BenchmarkCore */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = BenchmarkCore; path = ../BenchmarkCore; sourceTree = SOURCE_ROOT; };
+		8F9333AD2EDC957C001D8D8F /* FoundationStudioTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FoundationStudioTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		0A2230D22EACD0FC00E09810 /* FoundationStudio */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = FoundationStudio;
+			sourceTree = "<group>";
+		};
+		8F9333AE2EDC957C001D8D8F /* FoundationStudioTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = FoundationStudioTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -32,6 +48,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		8F9333AA2EDC957C001D8D8F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -40,6 +63,7 @@
 			children = (
 				0A2230E42EACD14800E09810 /* BenchmarkCore */,
 				0A2230D22EACD0FC00E09810 /* FoundationStudio */,
+				8F9333AE2EDC957C001D8D8F /* FoundationStudioTests */,
 				0A2230E52EACD3C900E09810 /* Frameworks */,
 				0A2230D12EACD0FC00E09810 /* Products */,
 			);
@@ -49,6 +73,7 @@
 			isa = PBXGroup;
 			children = (
 				0A2230D02EACD0FC00E09810 /* FoundationStudio.app */,
+				8F9333AD2EDC957C001D8D8F /* FoundationStudioTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -86,6 +111,29 @@
 			productReference = 0A2230D02EACD0FC00E09810 /* FoundationStudio.app */;
 			productType = "com.apple.product-type.application";
 		};
+		8F9333AC2EDC957C001D8D8F /* FoundationStudioTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8F9333B32EDC957C001D8D8F /* Build configuration list for PBXNativeTarget "FoundationStudioTests" */;
+			buildPhases = (
+				8F9333A92EDC957C001D8D8F /* Sources */,
+				8F9333AA2EDC957C001D8D8F /* Frameworks */,
+				8F9333AB2EDC957C001D8D8F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				8F9333B22EDC957C001D8D8F /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				8F9333AE2EDC957C001D8D8F /* FoundationStudioTests */,
+			);
+			name = FoundationStudioTests;
+			packageProductDependencies = (
+			);
+			productName = FoundationStudioTests;
+			productReference = 8F9333AD2EDC957C001D8D8F /* FoundationStudioTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -93,11 +141,15 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2600;
+				LastSwiftUpdateCheck = 2610;
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					0A2230CF2EACD0FC00E09810 = {
 						CreatedOnToolsVersion = 26.0.1;
+					};
+					8F9333AC2EDC957C001D8D8F = {
+						CreatedOnToolsVersion = 26.1.1;
+						TestTargetID = 0A2230CF2EACD0FC00E09810;
 					};
 				};
 			};
@@ -116,12 +168,20 @@
 			projectRoot = "";
 			targets = (
 				0A2230CF2EACD0FC00E09810 /* FoundationStudio */,
+				8F9333AC2EDC957C001D8D8F /* FoundationStudioTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		0A2230CE2EACD0FC00E09810 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8F9333AB2EDC957C001D8D8F /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -138,7 +198,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		8F9333A92EDC957C001D8D8F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		8F9333B22EDC957C001D8D8F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 0A2230CF2EACD0FC00E09810 /* FoundationStudio */;
+			targetProxy = 8F9333B12EDC957C001D8D8F /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		0A2230D92EACD0FD00E09810 /* Debug */ = {
@@ -347,6 +422,73 @@
 			};
 			name = Release;
 		};
+		8F9333B42EDC957C001D8D8F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = YQZQG7N4WG;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.rudrankriyam.FoundationStudioTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FoundationStudio.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FoundationStudio";
+				XROS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Debug;
+		};
+		8F9333B52EDC957C001D8D8F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = YQZQG7N4WG;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.rudrankriyam.FoundationStudioTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FoundationStudio.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FoundationStudio";
+				VALIDATE_PRODUCT = YES;
+				XROS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -364,6 +506,15 @@
 			buildConfigurations = (
 				0A2230DC2EACD0FD00E09810 /* Debug */,
 				0A2230DD2EACD0FD00E09810 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		8F9333B32EDC957C001D8D8F /* Build configuration list for PBXNativeTarget "FoundationStudioTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8F9333B42EDC957C001D8D8F /* Debug */,
+				8F9333B52EDC957C001D8D8F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
