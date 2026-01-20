@@ -103,7 +103,7 @@ The product design is clean and modern...
 | Device | CPU | GPU | RAM | OS | Input Tokens | Output Tokens | Total Tokens | Duration | Tokens/sec |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | iPhone 17 Pro Max | Apple A19 Pro 6‑core | Apple A19 Pro 6‑core | 12 GB | iOS 26.1 | 228 | 3,040 | 3,268 | 31.88s | **102.50** |
-| iPhone 16 Pro Max | Apple A18 Pro 6‑core | Apple A18 Pro 6‑core | 8 GB | iOS 26.2 | 125 | 1,069 | 1,194 | 17.53s | **68.13** |
+| iPhone 16 Pro Max | Apple A18 Pro 6‑core | Apple GPU | 8 GB | iOS 26.2 | 125 | 1,069 | 1,194 | 17.53s | **68.13** |
 | iPhone 17 Pro | Apple A19 Pro 6‑core | Apple A19 Pro 6‑core | 12 GB | iOS 26.1 | 125 | 1,069 | 1,194 | 11.93s | **100.08** |
 | Rudrank 17 Pro | Apple A18 Pro 6‑core | Apple GPU | 10 GB | iOS 18.1 | 125 | 1,069 | 1,194 | 17.53s | **68.13** |
 
