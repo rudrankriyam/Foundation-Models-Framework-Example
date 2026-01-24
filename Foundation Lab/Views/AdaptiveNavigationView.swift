@@ -11,49 +11,54 @@ import FoundationModels
 struct AdaptiveNavigationView: View {
     @State private var languageService = LanguageService()
     @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
+    @State private var navigationCoordinator = NavigationCoordinator.shared
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    private let navigationCoordinator = NavigationCoordinator.shared
 
     var body: some View {
+        Group {
 #if os(iOS)
-        if horizontalSizeClass == .compact {
-            // iPhone or iPad in compact width (portrait on smaller iPads)
-            tabBasedNavigation
-        } else {
-            // iPad in regular width (landscape or larger iPads)
-            splitViewNavigation
-        }
+            if horizontalSizeClass == .compact {
+                // iPhone or iPad in compact width (portrait on smaller iPads)
+                tabBasedNavigation
+            } else {
+                // iPad in regular width (landscape or larger iPads)
+                splitViewNavigation
+            }
 #else
-        // macOS always uses split view
-        splitViewNavigation
+            // macOS always uses split view
+            splitViewNavigation
 #endif
+        }
+        .environment(languageService)
+        .environment(navigationCoordinator)
     }
 
     private var tabBasedNavigation: some View {
+        @Bindable var navigationCoordinator = navigationCoordinator
         TabView(selection: .init(
             get: { navigationCoordinator.tabSelection },
             set: { navigationCoordinator.tabSelection = $0 }
         )) {
             Tab(TabSelection.examples.displayName, systemImage: "sparkles", value: .examples) {
-                NavigationStack {
+                NavigationStack(path: $navigationCoordinator.examplesPath) {
                     ExamplesView()
                 }
             }
 
             Tab(TabSelection.tools.displayName, systemImage: "wrench.and.screwdriver", value: .tools) {
-                NavigationStack {
+                NavigationStack(path: $navigationCoordinator.toolsPath) {
                     ToolsView()
                 }
             }
 
             Tab(TabSelection.schemas.displayName, systemImage: "doc.text", value: .schemas) {
-                NavigationStack {
+                NavigationStack(path: $navigationCoordinator.schemasPath) {
                     SchemaExamplesView()
                 }
             }
 
             Tab(TabSelection.languages.displayName, systemImage: "globe.badge.chevron.backward", value: .languages) {
-                NavigationStack {
+                NavigationStack(path: $navigationCoordinator.languagesPath) {
                     LanguagesIntegrationsView()
                 }
             }
@@ -71,10 +76,10 @@ struct AdaptiveNavigationView: View {
         .onChange(of: navigationCoordinator.tabSelection) { _, newValue in
             navigationCoordinator.splitViewSelection = newValue
         }
-        .environment(languageService)
     }
 
     private var splitViewNavigation: some View {
+        @Bindable var navigationCoordinator = navigationCoordinator
         NavigationSplitView(
             columnVisibility: $columnVisibility
         ) {
@@ -91,26 +96,26 @@ struct AdaptiveNavigationView: View {
                 navigationCoordinator.tabSelection = newValue
             }
         }
-        .environment(languageService)
     }
 
     @ViewBuilder
     private var detailView: some View {
+        @Bindable var navigationCoordinator = navigationCoordinator
         switch navigationCoordinator.splitViewSelection ?? .examples {
         case .examples:
-            NavigationStack {
+            NavigationStack(path: $navigationCoordinator.examplesPath) {
                 ExamplesView()
             }
         case .tools:
-            NavigationStack {
+            NavigationStack(path: $navigationCoordinator.toolsPath) {
                 ToolsView()
             }
         case .schemas:
-            NavigationStack {
+            NavigationStack(path: $navigationCoordinator.schemasPath) {
                 SchemaExamplesView()
             }
         case .languages:
-            NavigationStack {
+            NavigationStack(path: $navigationCoordinator.languagesPath) {
                 LanguagesIntegrationsView()
             }
         case .settings:
