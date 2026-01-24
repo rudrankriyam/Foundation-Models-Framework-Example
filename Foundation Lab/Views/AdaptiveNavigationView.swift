@@ -33,6 +33,7 @@ struct AdaptiveNavigationView: View {
         .environment(navigationCoordinator)
     }
 
+    @ViewBuilder
     private var tabBasedNavigation: some View {
         @Bindable var navigationCoordinator = navigationCoordinator
         TabView(selection: .init(
@@ -78,6 +79,7 @@ struct AdaptiveNavigationView: View {
         }
     }
 
+    @ViewBuilder
     private var splitViewNavigation: some View {
         @Bindable var navigationCoordinator = navigationCoordinator
         NavigationSplitView(

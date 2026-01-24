@@ -7,7 +7,7 @@
 
 import AppIntents
 
-nonisolated struct OpenLanguageIntent: AppIntent {
+struct OpenLanguageIntent: AppIntent {
     static let title: LocalizedStringResource = "Open Language Example"
     static let description = IntentDescription("Opens a language integration example in Foundation Lab")
     static let supportedModes: IntentModes = .foreground

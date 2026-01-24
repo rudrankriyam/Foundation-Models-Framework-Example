@@ -7,7 +7,7 @@
 
 import AppIntents
 
-nonisolated struct OpenExampleIntent: AppIntent {
+struct OpenExampleIntent: AppIntent {
     static let title: LocalizedStringResource = "Open Example"
     static let description = IntentDescription("Opens a specific Foundation Lab example")
     static let supportedModes: IntentModes = .foreground

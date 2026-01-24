@@ -12,6 +12,7 @@ import SwiftData
 import SwiftUI
 import OSLog
 
+@MainActor
 @Observable
 final class HealthChatViewModel {
 

@@ -7,7 +7,7 @@
 
 import AppIntents
 
-nonisolated struct OpenSchemaIntent: AppIntent {
+struct OpenSchemaIntent: AppIntent {
     static let title: LocalizedStringResource = "Open Schema Example"
     static let description = IntentDescription("Opens a dynamic schema example in Foundation Lab")
     static let supportedModes: IntentModes = .foreground
