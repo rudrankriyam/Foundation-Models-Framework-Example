@@ -40,6 +40,7 @@ final class NavigationCoordinator {
     public func navigateToTool(_ tool: ToolExample) {
         tabSelection = .tools
         splitViewSelection = .tools
+        showChat = false
         toolsPath = [tool]
     }
 
@@ -47,6 +48,7 @@ final class NavigationCoordinator {
     public func navigateToSchema(_ schema: DynamicSchemaExampleType) {
         tabSelection = .schemas
         splitViewSelection = .schemas
+        showChat = false
         schemasPath = [schema]
     }
 
@@ -54,6 +56,7 @@ final class NavigationCoordinator {
     public func navigateToLanguage(_ language: LanguageExample) {
         tabSelection = .languages
         splitViewSelection = .languages
+        showChat = false
         languagesPath = [language]
     }
 
