@@ -32,6 +32,7 @@ final class NavigationCoordinator {
     public func navigateToExample(_ example: ExampleType) {
         tabSelection = .examples
         splitViewSelection = .examples
+        showChat = false
         examplesPath = [example]
     }
 
