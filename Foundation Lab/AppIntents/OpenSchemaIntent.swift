@@ -1,0 +1,27 @@
+//
+//  OpenSchemaIntent.swift
+//  FoundationLab
+//
+//  Created by Rudrank Riyam on 1/24/26.
+//
+
+import AppIntents
+
+nonisolated struct OpenSchemaIntent: AppIntent {
+    static let title: LocalizedStringResource = "Open Schema Example"
+    static let description = IntentDescription("Opens a dynamic schema example in Foundation Lab")
+    static let supportedModes: IntentModes = .foreground
+
+    @Parameter(title: "Schema Example")
+    var schema: SchemaDestination
+
+    static var parameterSummary: some ParameterSummary {
+        Summary("Open \(\.$schema)")
+    }
+
+    @MainActor
+    func perform() async throws -> some IntentResult {
+        NavigationCoordinator.shared.navigateToSchema(schema.schemaExample)
+        return .result()
+    }
+}

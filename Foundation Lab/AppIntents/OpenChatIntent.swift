@@ -9,14 +9,14 @@ import AppIntents
 import SwiftUI
 
 nonisolated struct OpenChatIntent: AppIntent {
-    static let title: LocalizedStringResource = "Open Foundation Lab Examples"
-    static let description = IntentDescription("Opens the FoundationLab examples section")
+    static let title: LocalizedStringResource = "Open Foundation Lab Chat"
+    static let description = IntentDescription("Opens the Foundation Lab chat experience")
 
     static let supportedModes: IntentModes = .foreground
 
     @MainActor
     func perform() async throws -> some IntentResult {
-        NavigationCoordinator.shared.navigate(to: .examples)
+        NavigationCoordinator.shared.openChat()
         return .result()
     }
 }
