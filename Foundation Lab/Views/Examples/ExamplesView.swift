@@ -9,9 +9,10 @@ import SwiftUI
 import FoundationModels
 
 struct ExamplesView: View {
-    @State private var showChatFullscreen = false
+    @Environment(NavigationCoordinator.self) private var navigationCoordinator
 
     var body: some View {
+        @Bindable var navigationCoordinator = navigationCoordinator
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.large) {
                 chatSection
@@ -50,13 +51,13 @@ struct ExamplesView: View {
             }
         }
 #if os(iOS)
-        .fullScreenCover(isPresented: $showChatFullscreen) {
+        .fullScreenCover(isPresented: $navigationCoordinator.showChat) {
             NavigationStack {
                 ChatView()
             }
         }
 #elseif os(macOS)
-        .sheet(isPresented: $showChatFullscreen) {
+        .sheet(isPresented: $navigationCoordinator.showChat) {
             NavigationStack {
                 ChatView()
             }
@@ -68,7 +69,7 @@ struct ExamplesView: View {
     // MARK: - View Components
 
     private var chatSection: some View {
-        Button(action: { showChatFullscreen = true }, label: {
+        Button(action: { navigationCoordinator.showChat = true }, label: {
             HStack(spacing: Spacing.medium) {
                 Image(systemName: "bubble.left.and.bubble.right.fill")
                     .font(.title2)
@@ -136,4 +137,5 @@ struct ExamplesView: View {
 
 #Preview {
     ExamplesView()
+        .environment(NavigationCoordinator.shared)
 }
