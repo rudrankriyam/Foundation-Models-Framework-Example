@@ -44,7 +44,7 @@ enum ExampleType: String, CaseIterable, Identifiable {
         case .health:
             return "Health Dashboard"
         case .rag:
-            return "RAG Chat"
+            return "Doc Q&A"
         case .chat:
             return "Chat"
         }
@@ -71,7 +71,7 @@ enum ExampleType: String, CaseIterable, Identifiable {
         case .health:
             return "AI-powered health insights and tracking"
         case .rag:
-            return "Chat with your documents"
+            return "Ask questions with source citations"
         case .chat:
             return "Multi-turn conversation with AI assistant"
         }
