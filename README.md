@@ -259,7 +259,10 @@ struct StoryOutline {
 @Generable
 struct JournalEntrySummary {
     let prompt: String
+    let upliftingMessage: String
+    let sentenceStarters: [String]
     let summaryBullets: [String]
+    let themes: [String]
 }
 ```
 

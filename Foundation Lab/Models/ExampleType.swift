@@ -55,7 +55,7 @@ enum ExampleType: String, CaseIterable, Identifiable {
         case .basicChat:
             return "Single prompt-response interaction"
         case .journaling:
-            return "Gentle prompts and reflective summaries"
+            return "Prompts, starters, and reflective summaries"
         case .creativeWriting:
             return "Stories, poems, and creative content"
         case .structuredData:

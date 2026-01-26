@@ -29,7 +29,7 @@ struct JournalingView: View {
                 HStack {
                     Image(systemName: "info.circle")
                         .foregroundColor(.purple)
-                    Text("Generates a gentle prompt and a 3-bullet summary of the entry")
+                    Text("Generates a prompt, uplifting message, starters, summary, and themes")
                         .font(.caption)
                         .foregroundColor(.secondary)
                     Spacer()
@@ -55,7 +55,7 @@ struct JournalingView: View {
                 // Result Display
                 if !executor.result.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
-                        Label("Prompt + Summary", systemImage: "square.and.pencil")
+                        Label("Reflection", systemImage: "square.and.pencil")
                             .font(.headline)
 
                         ResultDisplay(
@@ -72,7 +72,8 @@ struct JournalingView: View {
         Task {
             await executor.executeStructured(
                 prompt: currentPrompt,
-                type: JournalEntrySummary.self
+                type: JournalEntrySummary.self,
+                instructions: DefaultPrompts.journalingInstructions
             ) { summary in
                 formattedSummary(summary)
             }
@@ -87,13 +88,24 @@ struct JournalingView: View {
 
 private extension JournalingView {
     func formattedSummary(_ summary: JournalEntrySummary) -> String {
+        let starters = summary.sentenceStarters.map { "- \($0)" }.joined(separator: "\n")
         let bullets = summary.summaryBullets.map { "- \($0)" }.joined(separator: "\n")
+        let themes = summary.themes.map { "- \($0)" }.joined(separator: "\n")
         return """
+        Uplifting Message:
+        \(summary.upliftingMessage)
+
         Prompt:
         \(summary.prompt)
 
+        Sentence Starters:
+        \(starters)
+
         Summary:
         \(bullets)
+
+        Themes:
+        \(themes)
         """
     }
 }

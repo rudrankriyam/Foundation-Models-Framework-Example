@@ -171,7 +171,10 @@ let response = try await session.generate(
 @Generable
 struct JournalEntrySummary {
     let prompt: String
+    let upliftingMessage: String
+    let sentenceStarters: [String]
     let summaryBullets: [String]
+    let themes: [String]
 }
 
 let summary = try await session.generate(

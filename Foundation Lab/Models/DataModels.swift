@@ -177,9 +177,18 @@ enum StoryGenre {
 
 @Generable
 struct JournalEntrySummary {
-    @Guide(description: "A gentle journaling prompt tailored to the user's mood.")
+    @Guide(description: "A gentle journaling prompt inspired by the user's mood, sleep, and any quote or affirmation.")
     let prompt: String
 
-    @Guide(description: "Exactly three bullet points summarizing the entry.")
+    @Guide(description: "A short, compassionate message that acknowledges the user's mood.")
+    let upliftingMessage: String
+
+    @Guide(.count(2...3), description: "Short sentence starters that make it easier to begin writing.")
+    let sentenceStarters: [String]
+
+    @Guide(.count(3...3), description: "Exactly three bullet points summarizing the entry.")
     let summaryBullets: [String]
+
+    @Guide(.count(3...5), description: "Themes or tags that describe the entry.")
+    let themes: [String]
 }
