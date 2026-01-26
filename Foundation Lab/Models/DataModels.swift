@@ -173,28 +173,22 @@ enum StoryGenre {
     case comedy
 }
 
-// MARK: - Business Models
+// MARK: - Journaling Models
 
 @Generable
-struct BusinessIdea {
-    @Guide(description: "Name of the business")
-    let name: String
+struct JournalEntrySummary {
+    @Guide(description: "A gentle journaling prompt inspired by the user's mood, sleep, and any quote or affirmation.")
+    let prompt: String
 
-    @Guide(description: "Brief description of what the business does")
-    let description: String
+    @Guide(description: "A short, compassionate message that acknowledges the user's mood.")
+    let upliftingMessage: String
 
-    @Guide(description: "Target market or customer base")
-    let targetMarket: String
+    @Guide(description: "Short sentence starters that make it easier to begin writing.", .count(2...3))
+    let sentenceStarters: [String]
 
-    @Guide(description: "Primary revenue model")
-    let revenueModel: String
+    @Guide(description: "Exactly three bullet points summarizing the entry.", .count(3...3))
+    let summaryBullets: [String]
 
-    @Guide(description: "Key advantages or unique selling points")
-    let advantages: [String]
-
-    @Guide(description: "Initial startup costs estimate")
-    let estimatedStartupCost: String
-
-    @Guide(description: "Expected timeline or phases for launch and growth")
-    let timeline: String?
+    @Guide(description: "Themes or tags that describe the entry.", .count(3...5))
+    let themes: [String]
 }

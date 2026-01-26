@@ -10,7 +10,7 @@ import FoundationModels
 
 enum ExampleType: String, CaseIterable, Identifiable {
     case basicChat = "basic_chat"
-    case businessIdeas = "business_ideas"
+    case journaling = "journaling"
     case creativeWriting = "creative_writing"
     case structuredData = "structured_data"
     case streamingResponse = "streaming_response"
@@ -27,8 +27,8 @@ enum ExampleType: String, CaseIterable, Identifiable {
         switch self {
         case .basicChat:
             return "One-shot"
-        case .businessIdeas:
-            return "Business Ideas"
+        case .journaling:
+            return "Journaling"
         case .creativeWriting:
             return "Creative Writing"
         case .structuredData:
@@ -54,8 +54,8 @@ enum ExampleType: String, CaseIterable, Identifiable {
         switch self {
         case .basicChat:
             return "Single prompt-response interaction"
-        case .businessIdeas:
-            return "Generate creative business concepts"
+        case .journaling:
+            return "Prompts, starters, and reflective summaries"
         case .creativeWriting:
             return "Stories, poems, and creative content"
         case .structuredData:
@@ -81,8 +81,8 @@ enum ExampleType: String, CaseIterable, Identifiable {
         switch self {
         case .basicChat:
             return "ellipsis.message"
-        case .businessIdeas:
-            return "lightbulb"
+        case .journaling:
+            return "square.and.pencil"
         case .creativeWriting:
             return "pencil.and.outline"
         case .structuredData:

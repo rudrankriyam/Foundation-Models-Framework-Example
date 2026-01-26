@@ -103,7 +103,7 @@ Three sections for exploring advanced features:
 ### Examples
 Ten different example types showing framework capabilities:
 - One-shot prompts
-- Business idea generation
+- Journaling
 - Creative writing
 - Structured data generation
 - Streaming responses
@@ -257,14 +257,12 @@ struct StoryOutline {
 }
 
 @Generable
-struct BusinessIdea {
-    let name: String
-    let description: String
-    let targetMarket: String
-    let revenueModel: String
-    let advantages: [String]
-    let estimatedStartupCost: String
-    let timeline: String
+struct JournalEntrySummary {
+    let prompt: String
+    let upliftingMessage: String
+    let sentenceStarters: [String]
+    let summaryBullets: [String]
+    let themes: [String]
 }
 ```
 

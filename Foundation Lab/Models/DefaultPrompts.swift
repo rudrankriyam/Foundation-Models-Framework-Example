@@ -58,16 +58,46 @@ enum DefaultPrompts {
     "Write a free verse poem about dreams"
   ]
 
-  // MARK: - Business Ideas
+  // MARK: - Journaling
 
-  static let businessIdeas = "Generate an innovative startup idea in the health tech industry."
+  static let journaling = """
+  Mood: A bit anxious and overwhelmed by deadlines.
+  Sleep: Restless, woke up twice.
+  Quote: "Enjoy when you can, and endure when you must."
+  Entry: I tried to focus today but kept jumping between tasks and felt guilty about not finishing. I want a calmer rhythm tomorrow.
+  """
 
-  static let businessIdeasSuggestions = [
-    "Create a business idea for sustainable fashion",
-    "Generate a fintech startup concept",
-    "Suggest an edtech business idea",
-    "Create a food tech startup idea",
-    "Generate a green energy business concept"
+  static let journalingSuggestions = [
+    """
+    Mood: Grateful but tired.
+    Sleep: Light, not fully rested.
+    Quote: "Small steps every day."
+    Entry: I had a good day with family, but I'm feeling low energy and want to slow down this week.
+    """,
+    """
+    Mood: Restless and distracted.
+    Sleep: Late night, low quality.
+    Affirmation: "I can focus on one thing at a time."
+    Entry: My mind kept drifting. I want to feel more present and finish what I start.
+    """,
+    """
+    Mood: Hopeful but unsure.
+    Sleep: Fine.
+    Quote: "Courage grows in uncertainty."
+    Entry: I'm excited about a new project, yet I'm worried about getting it right.
+    """,
+    """
+    Mood: Calm and reflective.
+    Sleep: Deep and steady.
+    Quote: "Let the day unfold without rushing it."
+    Entry: I enjoyed a quiet morning and want to keep this sense of balance.
+    """,
+    """
+    Mood: Stressed and tense.
+    Sleep: Fragmented.
+    Affirmation: "I can handle what's in front of me."
+    Entry: Deadlines are piling up and I need a kinder way to handle the pressure.
+    """
   ]
 
   // MARK: - Creative Writing
@@ -82,17 +112,6 @@ enum DefaultPrompts {
     "Write a fantasy adventure concept"
   ]
 
-  // MARK: - Optional Semantics
-
-  static let optionalSemantics = "Prepare a regional expansion plan for our subscription service."
-
-  static let optionalSemanticsSuggestions = [
-    optionalSemantics,
-    "Draft an expansion plan for a food delivery startup",
-    "Outline a launch strategy for a wearable device",
-    "Plan a service rollout for a productivity app"
-  ]
-
   // MARK: - Model Availability
 
   static let modelAvailability = "Check if Apple Intelligence is available on this device."
@@ -105,8 +124,11 @@ enum DefaultPrompts {
   static let creativeWritingInstructions =
     "You are a creative writing assistant. Help users develop compelling stories, characters, and narratives."
 
-  static let businessIdeasInstructions =
-    "You are a business strategy consultant. Generate innovative, practical, and market-viable business ideas."
+  static let journalingInstructions =
+    """
+    You are a gentle journaling coach. Offer empathetic prompts, a short uplifting message,
+    2-3 sentence starters, 3 summary bullets, and a few themes without judgment.
+    """
 
   // Model Availability
   static let modelAvailabilitySuggestions = [
@@ -183,40 +205,20 @@ for try await partialResponse in stream {
 """
   }
 
-  static func businessIdeasCode(prompt: String) -> String {
+  static func journalingCode(prompt: String) -> String {
     return """
 import FoundationModels
 
-// Uses BusinessIdea struct from DataModels.swift
-let session = LanguageModelSession()
+// Uses JournalEntrySummary struct from DataModels.swift
+let session = LanguageModelSession(
+    instructions: Instructions("\(journalingInstructions)")
+)
 let response = try await session.respond(
     to: "\(prompt)",
-    generating: BusinessIdea.self
+    generating: JournalEntrySummary.self
 )
-let idea = response.content
+let summary = response.content
 
-"""
-  }
-
-  static func optionalSemanticsCode(prompt: String) -> String {
-    return """
-import FoundationModels
-
-if #available(iOS 26.1, macOS 26.1, *) {
-    let session = LanguageModelSession()
-
-    let businessResponse = try await session.respond(
-        to: "\(prompt)",
-        generating: BusinessIdeaOptionalSemantics.self
-    )
-    let businessIdea = businessResponse.content
-
-    let expansionResponse = try await session.respond(
-        to: "\(prompt)",
-        generating: EnterpriseExpansionPlan.self
-    )
-    let expansionPlan = expansionResponse.content
-}
 """
   }
 
