@@ -6,7 +6,6 @@
 //
 
 import FoundationModels
-import FoundationModelsTools
 import SwiftUI
 
 struct WebToolView: View {
@@ -17,13 +16,18 @@ struct WebToolView: View {
     ToolViewBase(
       title: "Web Search",
       icon: "magnifyingglass",
-      description: "Search the web for any topic using AI-powered search",
+      description: "Search the web using a free keyless endpoint (limited)",
       isRunning: executor.isRunning,
       errorMessage: executor.errorMessage
     ) {
       VStack(alignment: .leading, spacing: Spacing.large) {
+        BannerView(
+          message: "Keyless Search1API (free, limited to 20 requests/day).",
+          type: .info
+        )
+
         ToolInputField(
-          label: "SEARCH QUERY",
+          label: "Search Query",
           text: $searchQuery,
           placeholder: "Enter your search query"
         )
@@ -46,7 +50,7 @@ struct WebToolView: View {
   private func executeWebSearch() {
     Task {
       await executor.execute(
-        tool: WebTool(),
+        tool: Search1WebSearchTool(),
         prompt: searchQuery
       )
     }
@@ -54,7 +58,7 @@ struct WebToolView: View {
 }
 
 #Preview {
-    NavigationStack {
-        WebToolView()
-    }
+  NavigationStack {
+    WebToolView()
+  }
 }

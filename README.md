@@ -53,10 +53,6 @@ You can now try Foundation Lab on TestFlight! Join the beta: [https://testflight
 - Open `FoundationLab.xcodeproj` in Xcode
 - Ensure you have a device with Apple Intelligence enabled
 - Build and run the project
-- (Optional) For web search functionality:
-  - Get an API key from [Exa AI](https://exa.ai)
-  - Tap the gear icon in the app to access Settings
-  - Enter your Exa API key in the settings screen
 - Explore the different capabilities through the examples!
 
 ## What's Inside
@@ -69,7 +65,7 @@ Multi-turn conversations with context management, streaming responses, and a fee
 ### Tools
 Nine system integration tools that extend the model's capabilities:
 - **Weather** - Current weather for any location (OpenMeteo API)
-- **Web Search** - Real-time search via Exa AI (requires API key)
+- **Web Search** - Keyless Search1API (free, limited)
 - **Contacts** - Search and access system contacts
 - **Calendar** - Create and manage calendar events
 - **Reminders** - AI-assisted reminder creation with priority levels
@@ -179,11 +175,11 @@ let response = try await weatherSession.respond(
 // Multiple tools
 let multiSession = LanguageModelSession(tools: [
     WeatherTool(),
-    WebTool(),
+    Search1WebSearchTool(),
     ContactsTool()
 ])
 let multiResponse = try await multiSession.respond(
-    to: "Check the weather and find my friend John's contact"
+    to: "Check the weather, search the web, and find my friend John's contact"
 )
 ```
 
@@ -320,10 +316,9 @@ struct ConversationSummary {
 - No API key required
 
 ### Web Search Tool
-- Real-time search via Exa AI
-- Returns text content from pages
-- Requires API key from [Exa AI](https://exa.ai)
-- Configure in Settings
+- Uses Search1API keyless endpoint
+- Returns search results with snippets
+- No API key required (free tier limits)
 
 ### Contacts Tool
 - Search system contacts
