@@ -156,12 +156,15 @@ private enum Search1WebSearchError: LocalizedError {
             return "Invalid Search1API URL."
         case .invalidResponse:
             return "Invalid response from Search1API."
-        case let .httpStatus(code, body):
-            let trimmedBody = body.trimmingCharacters(in: .whitespacesAndNewlines)
-            if trimmedBody.isEmpty {
+        case let .httpStatus(code, _):
+            switch code {
+            case 401, 403:
+                return "Search1API keyless access is unavailable right now. Please try again later."
+            case 429:
+                return "Search1API keyless access is rate-limited. Please wait and try again."
+            default:
                 return "Search1API returned HTTP \(code)."
             }
-            return "Search1API returned HTTP \(code): \(trimmedBody)"
         }
     }
 }
