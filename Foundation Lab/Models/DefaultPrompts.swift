@@ -141,13 +141,24 @@ enum DefaultPrompts {
 // MARK: - Dynamic Code Examples
 
 extension DefaultPrompts {
+  private static func codeEscaped(_ value: String) -> String {
+    value
+      .replacingOccurrences(of: "\\", with: "\\\\")
+      .replacingOccurrences(of: "\"", with: "\\\"")
+      .replacingOccurrences(of: "\r\n", with: "\\n")
+      .replacingOccurrences(of: "\n", with: "\\n")
+      .replacingOccurrences(of: "\r", with: "\\n")
+  }
+
   static func basicChatCode(prompt: String, instructions: String? = nil) -> String {
     var code = "import FoundationModels\n\n"
+    let escapedPrompt = codeEscaped(prompt)
 
     if let instructions = instructions, !instructions.isEmpty {
+      let escapedInstructions = codeEscaped(instructions)
       code += "// Create a session with custom instructions\n"
       code += "let session = LanguageModelSession(\n"
-      code += "    instructions: Instructions(\"\(instructions)\")\n"
+      code += "    instructions: Instructions(\"\(escapedInstructions)\")\n"
       code += ")\n"
     } else {
       code += "// Create a basic language model session\n"
@@ -155,13 +166,14 @@ extension DefaultPrompts {
     }
 
     code += "\n// Generate a response\n"
-    code += "let response = try await session.respond(to: \"\(prompt)\")\n"
+    code += "let response = try await session.respond(to: \"\(escapedPrompt)\")\n"
     code += "print(response.content)"
 
     return code
   }
 
   static func structuredDataCode(prompt: String) -> String {
+    let escapedPrompt = codeEscaped(prompt)
     return """
 import FoundationModels
 
@@ -169,7 +181,7 @@ import FoundationModels
 // Generate structured data
 let session = LanguageModelSession()
 let response = try await session.respond(
-    to: "\(prompt)",
+    to: "\(escapedPrompt)",
     generating: BookRecommendation.self
 )
 let book = response.content
@@ -178,13 +190,14 @@ let book = response.content
   }
 
   static func generationGuidesCode(prompt: String) -> String {
+    let escapedPrompt = codeEscaped(prompt)
     return """
 import FoundationModels
 
 // Uses ProductReview struct from DataModels.swift
 let session = LanguageModelSession()
 let response = try await session.respond(
-    to: "\(prompt)",
+    to: "\(escapedPrompt)",
     generating: ProductReview.self
 )
 let review = response.content
@@ -193,19 +206,21 @@ let review = response.content
   }
 
   static func streamingResponseCode(prompt: String) -> String {
+    let escapedPrompt = codeEscaped(prompt)
     return """
 import FoundationModels
 
 let session = LanguageModelSession()
 
 // Stream the response token by token
-let stream = session.streamResponse(to: "\(prompt)")
+let stream = session.streamResponse(to: "\(escapedPrompt)")
 for try await partialResponse in stream {
 }
 """
   }
 
   static func journalingCode(prompt: String) -> String {
+    let escapedPrompt = codeEscaped(prompt)
     return """
 import FoundationModels
 
@@ -214,7 +229,7 @@ let session = LanguageModelSession(
     instructions: Instructions("\(journalingInstructions)")
 )
 let response = try await session.respond(
-    to: "\(prompt)",
+    to: "\(escapedPrompt)",
     generating: JournalEntrySummary.self
 )
 let summary = response.content
@@ -225,18 +240,20 @@ let summary = response.content
   static func creativeWritingCode(prompt: String, instructions: String? = nil) -> String {
     var code = "import FoundationModels\n\n"
     code += "// Uses StoryOutline struct from DataModels.swift\n"
+    let escapedPrompt = codeEscaped(prompt)
 
     if let instructions = instructions, !instructions.isEmpty {
+      let escapedInstructions = codeEscaped(instructions)
       code += "// Create session with creative writing instructions\n"
       code += "let session = LanguageModelSession(\n"
-      code += "    instructions: Instructions(\"\(instructions)\")\n"
+      code += "    instructions: Instructions(\"\(escapedInstructions)\")\n"
       code += ")\n\n"
     } else {
       code += "let session = LanguageModelSession()\n\n"
     }
 
     code += "let response = try await session.respond(\n"
-    code += "    to: \"\(prompt)\",\n"
+    code += "    to: \"\(escapedPrompt)\",\n"
     code += "    generating: StoryOutline.self\n"
     code += ")\n\n"
     code += "let story = response.content\n"
