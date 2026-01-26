@@ -183,12 +183,12 @@ struct JournalEntrySummary {
     @Guide(description: "A short, compassionate message that acknowledges the user's mood.")
     let upliftingMessage: String
 
-    @Guide(.count(2...3), description: "Short sentence starters that make it easier to begin writing.")
+    @Guide(description: "Short sentence starters that make it easier to begin writing.", .count(2...3))
     let sentenceStarters: [String]
 
-    @Guide(.count(3...3), description: "Exactly three bullet points summarizing the entry.")
+    @Guide(description: "Exactly three bullet points summarizing the entry.", .count(3...3))
     let summaryBullets: [String]
 
-    @Guide(.count(3...5), description: "Themes or tags that describe the entry.")
+    @Guide(description: "Themes or tags that describe the entry.", .count(3...5))
     let themes: [String]
 }

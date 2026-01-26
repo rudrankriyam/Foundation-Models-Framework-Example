@@ -68,11 +68,36 @@ enum DefaultPrompts {
   """
 
   static let journalingSuggestions = [
-    "Mood: Grateful but tired.\nSleep: Light, not fully rested.\nQuote: \"Small steps every day.\"\nEntry: I had a good day with family, but I'm feeling low energy and want to slow down this week.",
-    "Mood: Restless and distracted.\nSleep: Late night, low quality.\nAffirmation: \"I can focus on one thing at a time.\"\nEntry: My mind kept drifting. I want to feel more present and finish what I start.",
-    "Mood: Hopeful but unsure.\nSleep: Fine.\nQuote: \"Courage grows in uncertainty.\"\nEntry: I'm excited about a new project, yet I'm worried about getting it right.",
-    "Mood: Calm and reflective.\nSleep: Deep and steady.\nQuote: \"Let the day unfold without rushing it.\"\nEntry: I enjoyed a quiet morning and want to keep this sense of balance.",
-    "Mood: Stressed and tense.\nSleep: Fragmented.\nAffirmation: \"I can handle what's in front of me.\"\nEntry: Deadlines are piling up and I need a kinder way to handle the pressure."
+    """
+    Mood: Grateful but tired.
+    Sleep: Light, not fully rested.
+    Quote: "Small steps every day."
+    Entry: I had a good day with family, but I'm feeling low energy and want to slow down this week.
+    """,
+    """
+    Mood: Restless and distracted.
+    Sleep: Late night, low quality.
+    Affirmation: "I can focus on one thing at a time."
+    Entry: My mind kept drifting. I want to feel more present and finish what I start.
+    """,
+    """
+    Mood: Hopeful but unsure.
+    Sleep: Fine.
+    Quote: "Courage grows in uncertainty."
+    Entry: I'm excited about a new project, yet I'm worried about getting it right.
+    """,
+    """
+    Mood: Calm and reflective.
+    Sleep: Deep and steady.
+    Quote: "Let the day unfold without rushing it."
+    Entry: I enjoyed a quiet morning and want to keep this sense of balance.
+    """,
+    """
+    Mood: Stressed and tense.
+    Sleep: Fragmented.
+    Affirmation: "I can handle what's in front of me."
+    Entry: Deadlines are piling up and I need a kinder way to handle the pressure.
+    """
   ]
 
   // MARK: - Creative Writing
@@ -100,7 +125,10 @@ enum DefaultPrompts {
     "You are a creative writing assistant. Help users develop compelling stories, characters, and narratives."
 
   static let journalingInstructions =
-    "You are a gentle journaling coach. Offer empathetic prompts, a short uplifting message, 2-3 sentence starters, 3 summary bullets, and a few themes without judgment."
+    """
+    You are a gentle journaling coach. Offer empathetic prompts, a short uplifting message,
+    2-3 sentence starters, 3 summary bullets, and a few themes without judgment.
+    """
 
   // Model Availability
   static let modelAvailabilitySuggestions = [
