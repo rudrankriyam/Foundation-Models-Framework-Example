@@ -176,13 +176,19 @@ for try await partialResponse in stream {
   }
 
   static func journalingCode(prompt: String) -> String {
+    let escapedPrompt = prompt
+      .replacingOccurrences(of: "\\", with: "\\\\")
+      .replacingOccurrences(of: "\"", with: "\\\"")
+      .replacingOccurrences(of: "\r\n", with: "\\n")
+      .replacingOccurrences(of: "\n", with: "\\n")
+      .replacingOccurrences(of: "\r", with: "\\n")
     return """
 import FoundationModels
 
 // Uses JournalEntrySummary struct from DataModels.swift
 let session = LanguageModelSession()
 let response = try await session.respond(
-    to: "\(prompt)",
+    to: "\(escapedPrompt)",
     generating: JournalEntrySummary.self
 )
 let summary = response.content
