@@ -331,14 +331,14 @@ private extension RAGChatViewModel {
         """
         let contextText = chunks.isEmpty ? "No sources available." :
             chunks.enumerated().map { index, chunk in "[\(index + 1)] \(chunk.content)" }.joined(separator: "\n\n")
-        let prompt = "\(systemPrompt)\n\nSOURCES:\n\(contextText)"
+        let prompt = "SOURCES:\n\(contextText)\n\nQUESTION:\n\(query)"
 
         do {
             let session = LanguageModelSession(
                 model: SystemLanguageModel(useCase: .general),
-                instructions: Instructions(prompt)
+                instructions: Instructions(systemPrompt)
             )
-            for try await snapshot in session.streamResponse(to: Prompt(query)) {
+            for try await snapshot in session.streamResponse(to: Prompt(prompt)) {
                 onUpdate(snapshot.content)
             }
         } catch {
@@ -352,14 +352,14 @@ private extension RAGChatViewModel {
         let systemPrompt = "You are a helpful assistant. Answer based on context. Cite content when possible."
         let contextText = chunks.isEmpty ? "No relevant documents found." :
             chunks.enumerated().map { index, chunk in "[Document \(index + 1)]: \(chunk.content)" }.joined(separator: "\n\n")
-        let prompt = "\(systemPrompt)\n\nCONTEXT:\n\(contextText)"
+        let prompt = "CONTEXT:\n\(contextText)\n\nQUESTION:\n\(query)"
 
         do {
             let session = LanguageModelSession(
                 model: SystemLanguageModel(useCase: .general),
-                instructions: Instructions(prompt)
+                instructions: Instructions(systemPrompt)
             )
-            for try await snapshot in session.streamResponse(to: Prompt(query)) {
+            for try await snapshot in session.streamResponse(to: Prompt(prompt)) {
                 entry.content = snapshot.content
             }
         } catch {
