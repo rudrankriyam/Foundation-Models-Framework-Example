@@ -9,7 +9,7 @@ import AppIntents
 
 enum ExampleDestination: String, AppEnum, CaseIterable {
     case basicChat
-    case businessIdeas
+    case journaling
     case creativeWriting
     case structuredData
     case streamingResponse
@@ -23,7 +23,7 @@ enum ExampleDestination: String, AppEnum, CaseIterable {
 
     static var caseDisplayRepresentations: [ExampleDestination: DisplayRepresentation] = [
         .basicChat: DisplayRepresentation(title: "One-shot"),
-        .businessIdeas: DisplayRepresentation(title: "Business Ideas"),
+        .journaling: DisplayRepresentation(title: "Journaling"),
         .creativeWriting: DisplayRepresentation(title: "Creative Writing"),
         .structuredData: DisplayRepresentation(title: "Structured Data"),
         .streamingResponse: DisplayRepresentation(title: "Streaming Response"),
@@ -38,8 +38,8 @@ enum ExampleDestination: String, AppEnum, CaseIterable {
         switch self {
         case .basicChat:
             return .basicChat
-        case .businessIdeas:
-            return .businessIdeas
+        case .journaling:
+            return .journaling
         case .creativeWriting:
             return .creativeWriting
         case .structuredData:

@@ -169,17 +169,14 @@ let response = try await session.generate(
       CodeDisclosure(code: """
 // Structured data example
 @Generable
-struct BusinessIdea {
-    let name: String
-    let description: String
-    let targetMarket: String
-    let advantages: [String]
-    let challenges: [String]
+struct JournalEntrySummary {
+    let prompt: String
+    let summaryBullets: [String]
 }
 
-let idea = try await session.generate(
+let summary = try await session.generate(
     prompt: prompt,
-    as: BusinessIdea.self
+    as: JournalEntrySummary.self
 )
 """)
     }

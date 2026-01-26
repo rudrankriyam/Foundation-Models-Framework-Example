@@ -122,7 +122,7 @@ DynamicSchemas/
 
 Examples demonstrate framework capabilities with `ExampleViewBase`:
 - `BasicChatView.swift` - One-shot prompts
-- `BusinessIdeasView.swift` - Structured business data
+- `JournalingView.swift` - Prompts and reflective summaries
 - `CreativeWritingView.swift` - Creative generation
 - `StructuredGenerationView.swift` - Type-safe generation
 - `StreamingView.swift` - Real-time streaming
