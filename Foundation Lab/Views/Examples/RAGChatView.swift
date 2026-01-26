@@ -200,7 +200,7 @@ struct RAGChatView: View {
 
     private func askQuestion() {
         let trimmed = trimmedQuestion
-        guard !trimmed.isEmpty else { return }
+        guard hasDocuments, !trimmed.isEmpty, !isWorking else { return }
         isTextFieldFocused = false
         answer = ""
         sources = []
