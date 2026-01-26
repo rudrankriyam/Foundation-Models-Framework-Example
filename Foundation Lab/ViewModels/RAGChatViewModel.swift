@@ -218,6 +218,37 @@ final class RAGChatViewModel {
         isSearching = false
     }
 
+    func askQuestion(
+        _ content: String,
+        onSources: @escaping @MainActor ([RAGChunk]) -> Void,
+        onUpdate: @escaping @MainActor (String) -> Void
+    ) async {
+        await loadFromDatabase()
+        guard let service = service else { return }
+
+        let trimmedContent = content.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedContent.isEmpty else { return }
+
+        guard hasIndexedContent || indexedDocumentCount > 0 else {
+            errorMessage = "Index documents before asking a question."
+            showError = true
+            return
+        }
+
+        guard !isSearching && !isGenerating else { return }
+
+        let chunks = await searchDocuments(service: service, query: trimmedContent)
+        let topChunks = Array(chunks.prefix(2))
+        onSources(topChunks)
+
+        guard !topChunks.isEmpty else {
+            onUpdate("No sources found for that question. Try asking about a specific section or rephrase your question.")
+            return
+        }
+
+        await generateAnswer(query: trimmedContent, chunks: topChunks, onUpdate: onUpdate)
+    }
+
     func sendMessage(_ content: String) async -> Bool {
         await loadFromDatabase()
         guard let service = service else { return false }
@@ -290,20 +321,45 @@ private extension RAGChatViewModel {
         return "Source"
     }
 
+    func generateAnswer(query: String, chunks: [RAGChunk], onUpdate: @escaping @MainActor (String) -> Void) async {
+        isGenerating = true
+        defer { isGenerating = false }
+
+        let systemPrompt = """
+        You are a helpful assistant. Answer using only the sources provided.
+        Cite sources with [1], [2]. If the sources do not contain the answer, say you don't know.
+        """
+        let contextText = chunks.isEmpty ? "No sources available." :
+            chunks.enumerated().map { index, chunk in "[\(index + 1)] \(chunk.content)" }.joined(separator: "\n\n")
+        let prompt = "SOURCES:\n\(contextText)\n\nQUESTION:\n\(query)"
+
+        do {
+            let session = LanguageModelSession(
+                model: SystemLanguageModel(useCase: .general),
+                instructions: Instructions(systemPrompt)
+            )
+            for try await snapshot in session.streamResponse(to: Prompt(prompt)) {
+                onUpdate(snapshot.content)
+            }
+        } catch {
+            onUpdate("Failed to answer: \(error.localizedDescription)")
+        }
+    }
+
     func generateResponse(for entry: RAGChatEntry, query: String, chunks: [RAGChunk]) async {
         isGenerating = true
         defer { isGenerating = false }
         let systemPrompt = "You are a helpful assistant. Answer based on context. Cite content when possible."
         let contextText = chunks.isEmpty ? "No relevant documents found." :
             chunks.enumerated().map { index, chunk in "[Document \(index + 1)]: \(chunk.content)" }.joined(separator: "\n\n")
-        let prompt = "\(systemPrompt)\n\nCONTEXT:\n\(contextText)"
+        let prompt = "CONTEXT:\n\(contextText)\n\nQUESTION:\n\(query)"
 
         do {
             let session = LanguageModelSession(
                 model: SystemLanguageModel(useCase: .general),
-                instructions: Instructions(prompt)
+                instructions: Instructions(systemPrompt)
             )
-            for try await snapshot in session.streamResponse(to: Prompt(query)) {
+            for try await snapshot in session.streamResponse(to: Prompt(prompt)) {
                 entry.content = snapshot.content
             }
         } catch {

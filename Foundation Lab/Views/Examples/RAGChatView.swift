@@ -6,33 +6,55 @@
 //
 
 import SwiftUI
-import FoundationModels
 
 struct RAGChatView: View {
     @State private var viewModel = RAGChatViewModel()
-    @State private var messageText = ""
     @FocusState private var isTextFieldFocused: Bool
-    @State private var scrollID: String?
+    @State private var question = ""
+    @State private var answer = ""
+    @State private var sources: [RAGChunk] = []
+
+    private let suggestions = [
+        "Summarize the main points of this document.",
+        "What does the document say about its goals?",
+        "List the key takeaways in bullets.",
+        "Where does it mention requirements or constraints?"
+    ]
 
     var body: some View {
-        VStack(spacing: 0) {
-            messagesView
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    isTextFieldFocused = false
+        ScrollView {
+            VStack(alignment: .leading, spacing: Spacing.large) {
+                documentsSection
+                questionSection
+
+                if isWorking {
+                    statusRow
                 }
 
-            chatInputView
+                if !answer.isEmpty {
+                    ResultDisplay(result: answer, isSuccess: true)
+                }
+
+                if !sources.isEmpty {
+                    sourcesSection
+                }
+            }
+            .padding(.horizontal, Spacing.medium)
+            .padding(.vertical, Spacing.large)
         }
-        .navigationTitle("RAG Chat")
+        .navigationTitle("Doc Q&A")
         .onAppear {
             Task {
                 await viewModel.loadFromDatabase()
             }
         }
 #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarTitleDisplayMode(.large)
+        .scrollDismissesKeyboard(.interactively)
 #endif
+        .onTapGesture {
+            isTextFieldFocused = false
+        }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
@@ -53,94 +75,146 @@ struct RAGChatView: View {
         )
     }
 
-    private var messagesView: some View {
-        ScrollViewReader { proxy in
-            ScrollView {
-                LazyVStack(spacing: Spacing.medium) {
-                    if viewModel.conversation.isEmpty {
-                        ContentUnavailableView(
-                            "RAG Chat",
-                            systemImage: "doc.text.magnifyingglass",
-                            description: Text("Ask questions about your indexed documents")
-                        )
-                        .padding(.top, 100)
-                    }
+    private var documentsSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.small) {
+            Text("DOCUMENTS")
+                .font(.footnote)
+                .fontWeight(.medium)
+                .foregroundStyle(.secondary)
 
-                    ForEach(viewModel.conversation) { entry in
-                        RAGMessageBubble(entry: entry)
-                    }
+            HStack(spacing: Spacing.medium) {
+                Image(systemName: "doc.text.magnifyingglass")
+                    .font(.title3)
+                    .foregroundStyle(.tint)
 
-                    if viewModel.isSearching || viewModel.isGenerating {
-                        HStack {
-                            ProgressView()
-                                .scaleEffect(0.8)
-                            Text(viewModel.isSearching ? "Searching..." : "Generating...")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            Spacer()
-                        }
-                        .padding(.horizontal)
-                    }
-
-                    Rectangle()
-                        .fill(.clear)
-                        .frame(height: 1)
-                        .id("bottom")
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(documentStatusTitle)
+                        .font(.headline)
+                    Text(documentStatusSubtitle)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
-                .padding(.vertical)
+
+                Spacer()
+
+                Button("Manage") {
+                    viewModel.showDocumentPicker = true
+                }
+                .buttonStyle(.glassProminent)
             }
-            .defaultScrollAnchor(.bottom)
-            .scrollPosition(id: $scrollID, anchor: .bottom)
-            .onChange(of: viewModel.conversation.count) { _, _ in
-                withAnimation(.easeOut(duration: 0.2)) {
-                    proxy.scrollTo("bottom", anchor: .bottom)
-                }
-            }
-            .onChange(of: viewModel.isGenerating) { _, isGenerating in
-                if isGenerating {
-                    withAnimation(.easeOut(duration: 0.2)) {
-                        proxy.scrollTo("bottom", anchor: .bottom)
+            .padding(Spacing.medium)
+            .background(Color.gray.opacity(0.1))
+            .cornerRadius(12)
+        }
+    }
+
+    private var questionSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.medium) {
+            VStack(alignment: .leading, spacing: Spacing.small) {
+                Text("QUESTION")
+                    .font(.footnote)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.secondary)
+
+                TextField("Ask a question about your documents...", text: $question, axis: .vertical)
+                    .textFieldStyle(.plain)
+                    .focused($isTextFieldFocused)
+                    .padding(Spacing.medium)
+                    .background(Color.gray.opacity(0.1))
+                    .cornerRadius(12)
+                    .onSubmit {
+                        askQuestion()
                     }
-                }
+            }
+
+            PromptSuggestions(suggestions: suggestions) { selected in
+                question = selected
+            }
+
+            ToolExecuteButton("Ask", systemImage: "arrow.up.circle.fill", isRunning: isWorking) {
+                askQuestion()
+            }
+            .disabled(!canAskQuestion)
+        }
+    }
+
+    private var statusRow: some View {
+        HStack(spacing: Spacing.small) {
+            ProgressView()
+                .scaleEffect(0.8)
+            Text(statusText)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Spacer()
+        }
+    }
+
+    private var sourcesSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.small) {
+            Text("SOURCES")
+                .font(.footnote)
+                .fontWeight(.medium)
+                .foregroundStyle(.secondary)
+
+            ForEach(Array(sources.enumerated()), id: \.offset) { index, source in
+                RAGSourceCard(index: index + 1, source: source)
             }
         }
     }
 
-    private var chatInputView: some View {
-        HStack(spacing: Spacing.medium) {
-            TextField("Ask about your documents...", text: $messageText, axis: .vertical)
-                .textFieldStyle(.plain)
-                .focused($isTextFieldFocused)
-                .padding()
-                .background(Color.gray.opacity(0.1))
-                .cornerRadius(12)
-                .onSubmit {
-                    sendMessage()
-                }
-
-            Button(action: sendMessage) {
-                Image(systemName: "arrow.up.circle.fill")
-                    .font(.title2)
-                    .foregroundStyle(trimmedMessage.isEmpty ? .gray : .blue)
-            }
-            .disabled(trimmedMessage.isEmpty || viewModel.isSearching || viewModel.isGenerating)
-        }
-        .padding()
+    private var hasDocuments: Bool {
+        viewModel.indexedDocumentCount > 0 || viewModel.hasIndexedContent
     }
 
-    private func sendMessage() {
-        let trimmed = trimmedMessage
+    private var documentStatusTitle: String {
+        if viewModel.indexedDocumentCount > 0 {
+            return "\(viewModel.indexedDocumentCount) sources indexed"
+        }
+        if viewModel.hasIndexedContent {
+            return "Indexed content available"
+        }
+        return "No documents indexed"
+    }
+
+    private var documentStatusSubtitle: String {
+        hasDocuments
+            ? "Ask a question and we'll cite the top sources."
+            : "Import a PDF or text file to get started."
+    }
+
+    private var statusText: String {
+        viewModel.isSearching ? "Processing..." : "Generating answer..."
+    }
+
+    private var trimmedQuestion: String {
+        question.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var isWorking: Bool {
+        viewModel.isSearching || viewModel.isGenerating
+    }
+
+    private var canAskQuestion: Bool {
+        hasDocuments && !trimmedQuestion.isEmpty && !isWorking
+    }
+
+    private func askQuestion() {
+        let trimmed = trimmedQuestion
         guard !trimmed.isEmpty else { return }
+        isTextFieldFocused = false
+        answer = ""
+        sources = []
 
         Task {
-            let success = await viewModel.sendMessage(trimmed)
-            if success {
-                messageText = ""
-            }
+            await viewModel.askQuestion(
+                trimmed,
+                onSources: { sources in
+                    self.sources = sources
+                },
+                onUpdate: { updated in
+                    answer = updated
+                }
+            )
         }
-    }
-
-    private var trimmedMessage: String {
-        messageText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
