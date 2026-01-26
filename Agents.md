@@ -66,7 +66,7 @@ All ViewModels use `@Observable` macro and `@MainActor` annotation.
 
 Tools implement a custom `Tool` protocol. Files follow `*Tool.swift` naming:
 - `WeatherTool.swift` - OpenMeteo API, no API key required
-- `WebSearchTool.swift` - Exa AI, requires API key configured in Settings
+- `Search1WebSearchTool.swift` - Search1API keyless web search
 - `ContactsTool.swift` - System contacts search
 - `CalendarTool.swift` - Event creation/management with `EventKit`
 - `RemindersTool.swift` - AI-assisted reminder creation
@@ -122,7 +122,7 @@ DynamicSchemas/
 
 Examples demonstrate framework capabilities with `ExampleViewBase`:
 - `BasicChatView.swift` - One-shot prompts
-- `BusinessIdeasView.swift` - Structured business data
+- `JournalingView.swift` - Prompts and reflective summaries
 - `CreativeWritingView.swift` - Creative generation
 - `StructuredGenerationView.swift` - Type-safe generation
 - `StreamingView.swift` - Real-time streaming

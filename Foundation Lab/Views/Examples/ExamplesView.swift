@@ -34,8 +34,8 @@ struct ExamplesView: View {
                 GenerationGuidesView()
             case .streamingResponse:
                 StreamingResponseView()
-            case .businessIdeas:
-                BusinessIdeasView()
+            case .journaling:
+                JournalingView()
             case .creativeWriting:
                 CreativeWritingView()
             case .modelAvailability:
