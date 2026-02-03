@@ -35,7 +35,6 @@ struct ToolsView: View {
         .font(.footnote)
         .fontWeight(.medium)
         .foregroundColor(.secondary)
-        .padding(.horizontal)
 
       TripBriefWorkflowView()
     }

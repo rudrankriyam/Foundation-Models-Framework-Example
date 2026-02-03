@@ -282,7 +282,7 @@ struct TripBriefResultView: View {
     let afterPrefix = result[range.upperBound...]
 
     // Find next section
-    let endMarkers = ["**Source:**", "##"]
+    let endMarkers = ["**Weather:**", "**Key Insights:**", "**Source:**", "##"]
     var endIndex = afterPrefix.endIndex
 
     for marker in endMarkers {
