@@ -69,10 +69,7 @@ final class HealthChatViewModel {
             }
 
             // Extract the response text from the transcript
-            if let lastEntry = session.transcript.last,
-               case .response = lastEntry {
-                responseText = lastEntry.textContent() ?? ""
-            }
+            responseText = latestResponseText()
 
             // Save AI response to session history
             if !responseText.isEmpty {
@@ -139,6 +136,15 @@ private extension HealthChatViewModel {
             userLabel: String(localized: "User:"),
             assistantLabel: String(localized: "Health AI:")
         )
+    }
+
+    func latestResponseText() -> String {
+        for entry in session.transcript.reversed() {
+            if case .response = entry {
+                return entry.textContent() ?? ""
+            }
+        }
+        return ""
     }
 
     func createNewSessionWithContext(summary: HealthConversationSummary) {
@@ -216,9 +222,13 @@ private extension HealthChatViewModel {
             createNewSessionWithContext(summary: summary)
             isSummarizing = false
 
-            try await respondWithNewSession(to: userMessage)
+            try await respondWithNewSession(to: userMessage, shouldSaveUserMessage: false)
         } catch {
             isSummarizing = false
+            session = LanguageModelSession(
+                tools: tools,
+                instructions: Instructions(Self.baseInstructions)
+            )
             let restartMessage = "I need to start a fresh conversation. Please repeat your question."
             await saveMessageToSession(restartMessage, isFromUser: false)
         }
@@ -251,8 +261,10 @@ private extension HealthChatViewModel {
         return summaryResponse.content
     }
 
-    func respondWithNewSession(to userMessage: String) async throws {
-        await saveMessageToSession(userMessage, isFromUser: true)
+    func respondWithNewSession(to userMessage: String, shouldSaveUserMessage: Bool = true) async throws {
+        if shouldSaveUserMessage {
+            await saveMessageToSession(userMessage, isFromUser: true)
+        }
 
         let responseStream = session.streamResponse(to: Prompt(userMessage))
 
@@ -261,10 +273,7 @@ private extension HealthChatViewModel {
             // The streaming automatically updates the session transcript
         }
 
-        if let lastEntry = session.transcript.last,
-           case .response = lastEntry {
-            responseText = lastEntry.textContent() ?? ""
-        }
+        responseText = latestResponseText()
 
         if !responseText.isEmpty {
             await saveMessageToSession(responseText, isFromUser: false)
