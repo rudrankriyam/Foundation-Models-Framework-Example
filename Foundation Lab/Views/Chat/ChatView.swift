@@ -65,6 +65,9 @@ struct ChatView: View {
                 isTextFieldFocused = true
             }
         }
+        .onDisappear {
+            viewModel.tearDown()
+        }
 #if os(iOS)
         .fullScreenCover(isPresented: $showInstructionsSheet) {
             NavigationStack {

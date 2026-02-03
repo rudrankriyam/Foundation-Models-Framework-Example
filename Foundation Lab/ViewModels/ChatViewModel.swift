@@ -186,6 +186,15 @@ final class ChatViewModel {
         }
     }
 
+    /// Cleans up resources when the view disappears.
+    /// Cancels any running tasks and stops speech recognition.
+    @MainActor
+    func tearDown() {
+        stopSpeechObservation()
+        speechRecognizer?.stopRecognition()
+        speechRecognizer = nil
+    }
+
     // MARK: - Voice Methods
 
     /// Starts inline voice mode for hands-free conversation.
