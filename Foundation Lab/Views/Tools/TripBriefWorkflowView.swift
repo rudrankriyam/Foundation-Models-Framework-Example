@@ -13,8 +13,8 @@ import SwiftUI
 /// by combining Weather and Web Metadata tools to generate trip briefs.
 struct TripBriefWorkflowView: View {
   @State private var executor = ToolExecutor()
-  @State private var destination: String = ""
-  @State private var guideURL: String = ""
+  @State private var destination: String = "Tokyo, Japan"
+  @State private var guideURL: String = "https://www.lonelyplanet.com/japan/tokyo"
 
   var body: some View {
     VStack(alignment: .leading, spacing: Spacing.medium) {
@@ -104,7 +104,7 @@ struct TripBriefWorkflowView: View {
       isRunning: executor.isRunning,
       action: executeTripBrief
     )
-    .disabled(!isInputValid || executor.isRunning)
+    .disabled(!isInputValid)
   }
 
   private var isInputValid: Bool {
