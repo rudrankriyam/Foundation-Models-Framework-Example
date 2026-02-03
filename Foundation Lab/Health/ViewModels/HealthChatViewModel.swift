@@ -140,8 +140,13 @@ private extension HealthChatViewModel {
 
     func latestResponseText() -> String {
         for entry in session.transcript.reversed() {
-            if case .response = entry {
+            switch entry {
+            case .response:
                 return entry.textContent() ?? ""
+            case .prompt:
+                return ""
+            default:
+                continue
             }
         }
         return ""
