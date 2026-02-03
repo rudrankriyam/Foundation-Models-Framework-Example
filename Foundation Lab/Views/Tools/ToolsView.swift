@@ -18,6 +18,7 @@ struct ToolsView: View {
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 20) {
+        workflowSection
         toolButtonsView
       }
       .padding(.vertical)
@@ -26,6 +27,19 @@ struct ToolsView: View {
     .navigationDestination(for: ToolExample.self) { tool in
       tool.destination
     }
+  }
+
+  private var workflowSection: some View {
+    VStack(alignment: .leading, spacing: Spacing.small) {
+      Text("WORKFLOWS")
+        .font(.footnote)
+        .fontWeight(.medium)
+        .foregroundColor(.secondary)
+        .padding(.horizontal)
+
+      TripBriefWorkflowView()
+    }
+    .padding(.horizontal)
   }
 
   private var toolButtonsView: some View {
