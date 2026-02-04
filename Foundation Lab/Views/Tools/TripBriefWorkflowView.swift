@@ -257,11 +257,13 @@ struct TripBriefResultView: View {
       || extractSection(prefix: "**Source:**") != nil
   }
 
-  private func extractSection(prefix: String) -> String? {
+  private func extractSection(
+    prefix: String,
+    endMarkers: [String] = ["**Weather:**", "**Key Insights:**", "**Source:**", "##"]
+  ) -> String? {
     guard let range = result.range(of: prefix) else { return nil }
     let afterPrefix = result[range.upperBound...]
     // Find next section or end
-    let endMarkers = ["**Weather:**", "**Key Insights:**", "**Source:**", "##"]
     var endIndex = afterPrefix.endIndex
 
     for marker in endMarkers {
@@ -278,24 +280,10 @@ struct TripBriefResultView: View {
   }
 
   private func extractInsights() -> String? {
-    guard let range = result.range(of: "**Key Insights:**") else { return nil }
-    let afterPrefix = result[range.upperBound...]
-
-    // Find next section
-    let endMarkers = ["**Source:**", "##"]
-    var endIndex = afterPrefix.endIndex
-
-    for marker in endMarkers {
-      if let markerRange = afterPrefix.range(of: marker) {
-        if markerRange.lowerBound < endIndex {
-          endIndex = markerRange.lowerBound
-        }
-      }
-    }
-
-    let content = String(afterPrefix[..<endIndex])
-      .trimmingCharacters(in: .whitespacesAndNewlines)
-    return content.isEmpty ? nil : content
+    extractSection(
+      prefix: "**Key Insights:**",
+      endMarkers: ["**Source:**", "##"]
+    )
   }
 
   private func copyToClipboard() {

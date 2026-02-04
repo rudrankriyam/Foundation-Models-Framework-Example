@@ -191,6 +191,8 @@ final class ChatViewModel {
     @MainActor
     func tearDown() {
         stopSpeechObservation()
+        SpeechSynthesizer.shared.cancelSpeaking()
+        voiceState = .idle
         speechRecognizer?.stopRecognition()
         speechRecognizer = nil
     }
