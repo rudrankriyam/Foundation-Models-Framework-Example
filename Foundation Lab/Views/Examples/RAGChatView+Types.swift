@@ -11,6 +11,7 @@ import SwiftUI
 // MARK: - RAG Chat Entry
 
 @Observable
+@MainActor
 final class RAGChatEntry: Identifiable {
     let id = UUID()
     let role: Role

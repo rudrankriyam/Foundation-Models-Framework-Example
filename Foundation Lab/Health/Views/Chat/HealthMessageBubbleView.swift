@@ -6,6 +6,11 @@
 //
 
 import SwiftUI
+#if os(iOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
 
 struct HealthMessageBubbleView: View {
     let content: String
@@ -21,9 +26,10 @@ struct HealthMessageBubbleView: View {
                         .frame(width: 28, height: 28)
 
                     Image(systemName: "heart.fill")
-                        .font(.system(size: 14))
+                        .font(.caption)
                         .foregroundStyle(.secondary)
                 }
+                .accessibilityHidden(true)
             }
 
             VStack(alignment: isFromUser ? .trailing : .leading, spacing: 4) {
@@ -51,13 +57,28 @@ struct HealthMessageBubbleView: View {
                     .frame(width: 28, height: 28)
                     .overlay(
                         Image(systemName: "person.fill")
-                            .font(.system(size: 14))
+                            .font(.caption)
                             .foregroundStyle(.secondary)
                     )
+                    .accessibilityHidden(true)
             }
         }
         .padding(.horizontal)
         .frame(maxWidth: .infinity, alignment: isFromUser ? .trailing : .leading)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(isFromUser ? "You said" : "Health AI replied")
+        .accessibilityValue(content)
+        .accessibilityActions {
+            Button("Copy message") {
+                #if os(iOS)
+                UIPasteboard.general.string = content
+                UIAccessibility.post(notification: .announcement, argument: "Message copied to clipboard")
+                #elseif os(macOS)
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(content, forType: .string)
+                #endif
+            }
+        }
     }
 }
 

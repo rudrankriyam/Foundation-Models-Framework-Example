@@ -27,7 +27,8 @@ struct FeedbackView: View {
                 if assistantEntries.isEmpty {
                     VStack(spacing: Spacing.large) {
                         Image(systemName: "bubble.left.and.bubble.right")
-                            .font(.system(size: 60))
+                            .font(.largeTitle)
+                            .imageScale(.large)
                             .foregroundStyle(.secondary)
 
                         Text("No responses to provide feedback on")

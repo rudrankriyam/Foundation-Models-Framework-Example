@@ -23,7 +23,7 @@ final class ToolExecutor {
     tool: T,
     prompt: String,
     successMessage: String? = nil,
-    clearForm: (() -> Void)? = nil
+    clearForm: (@MainActor () -> Void)? = nil
   ) async {
     await performExecution(successMessage: successMessage, clearForm: clearForm) {
       let session = LanguageModelSession(tools: [tool])
@@ -36,7 +36,7 @@ final class ToolExecutor {
   func executeWithPromptBuilder<T: Tool>(
     tool: T,
     successMessage: String? = nil,
-    clearForm: (() -> Void)? = nil,
+    clearForm: (@MainActor () -> Void)? = nil,
     @PromptBuilder promptBuilder: () -> Prompt
   ) async {
     await performExecution(successMessage: successMessage, clearForm: clearForm) {
@@ -51,7 +51,7 @@ final class ToolExecutor {
     sessionBuilder: () -> LanguageModelSession,
     prompt: String,
     successMessage: String? = nil,
-    clearForm: (() -> Void)? = nil
+    clearForm: (@MainActor () -> Void)? = nil
   ) async {
     await performExecution(successMessage: successMessage, clearForm: clearForm) {
       let session = sessionBuilder()
@@ -63,7 +63,7 @@ final class ToolExecutor {
   /// Private helper that encapsulates common state management logic
   private func performExecution(
     successMessage: String? = nil,
-    clearForm: (() -> Void)? = nil,
+    clearForm: (@MainActor () -> Void)? = nil,
     operation: () async throws -> String
   ) async {
     isRunning = true

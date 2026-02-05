@@ -73,6 +73,8 @@ struct VoiceView: View {
                                         )
                                 }
                             }
+                            .accessibilityLabel("Listening for speech")
+                            .accessibilityAddTraits(.updatesFrequently)
                             .padding()
                         } else {
                             Text(viewModel.partialText.isEmpty ? viewModel.recognizedText : viewModel.partialText)

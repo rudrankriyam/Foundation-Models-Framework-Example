@@ -188,26 +188,20 @@ class SpeechRecognizer: NSObject, SpeechRecognitionService {
     func requestPermission() async -> Bool {
         return await withCheckedContinuation { continuation in
             SFSpeechRecognizer.requestAuthorization { authStatus in
-                switch authStatus {
-                case .authorized:
-                    DispatchQueue.main.async {
-                        self.hasPermission = true
+                Task { @MainActor [weak self] in
+                    switch authStatus {
+                    case .authorized:
+                        self?.hasPermission = true
                         continuation.resume(returning: true)
-                    }
-                case .denied, .restricted:
-                    DispatchQueue.main.async {
-                        self.hasPermission = false
-                        self.state = .error(.notAuthorized)
+                    case .denied, .restricted:
+                        self?.hasPermission = false
+                        self?.state = .error(.notAuthorized)
                         continuation.resume(returning: false)
-                    }
-                case .notDetermined:
-                    DispatchQueue.main.async {
-                        self.hasPermission = false
+                    case .notDetermined:
+                        self?.hasPermission = false
                         continuation.resume(returning: false)
-                    }
-                @unknown default:
-                    DispatchQueue.main.async {
-                        self.hasPermission = false
+                    @unknown default:
+                        self?.hasPermission = false
                         continuation.resume(returning: false)
                     }
                 }

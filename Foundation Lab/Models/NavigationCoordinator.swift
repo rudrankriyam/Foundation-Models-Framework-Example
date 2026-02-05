@@ -9,8 +9,9 @@ import SwiftUI
 import Observation
 
 @Observable
+@MainActor
 final class NavigationCoordinator {
-    @MainActor static let shared = NavigationCoordinator()
+    static let shared = NavigationCoordinator()
 
     var tabSelection: TabSelection = .examples
     var splitViewSelection: TabSelection? = .examples
@@ -22,13 +23,11 @@ final class NavigationCoordinator {
 
     private init() {}
 
-    @MainActor
     public func navigate(to tab: TabSelection) {
         tabSelection = tab
         splitViewSelection = tab
     }
 
-    @MainActor
     public func navigateToExample(_ example: ExampleType) {
         tabSelection = .examples
         splitViewSelection = .examples
@@ -36,7 +35,6 @@ final class NavigationCoordinator {
         examplesPath = [example]
     }
 
-    @MainActor
     public func navigateToTool(_ tool: ToolExample) {
         tabSelection = .tools
         splitViewSelection = .tools
@@ -44,7 +42,6 @@ final class NavigationCoordinator {
         toolsPath = [tool]
     }
 
-    @MainActor
     public func navigateToSchema(_ schema: DynamicSchemaExampleType) {
         tabSelection = .schemas
         splitViewSelection = .schemas
@@ -52,7 +49,6 @@ final class NavigationCoordinator {
         schemasPath = [schema]
     }
 
-    @MainActor
     public func navigateToLanguage(_ language: LanguageExample) {
         tabSelection = .languages
         splitViewSelection = .languages
@@ -60,7 +56,6 @@ final class NavigationCoordinator {
         languagesPath = [language]
     }
 
-    @MainActor
     public func openChat() {
         tabSelection = .examples
         splitViewSelection = .examples

@@ -106,7 +106,7 @@ struct ToolButton: View {
     VStack(spacing: 12) {
       ZStack {
         Image(systemName: tool.icon)
-          .font(.system(size: 28))
+          .font(.title)
           .foregroundStyle(isSelected ? .white : .main)
           .opacity(isRunning ? 0 : 1)
 
@@ -143,6 +143,9 @@ struct ToolButton: View {
     #endif
     .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isSelected)
     .animation(.spring(response: 0.3, dampingFraction: 0.9), value: isRunning)
+    .accessibilityElement(children: .combine)
+    .accessibilityLabel("\(tool.displayName). \(tool.shortDescription)")
+    .accessibilityAddTraits(.isButton)
   }
 }
 

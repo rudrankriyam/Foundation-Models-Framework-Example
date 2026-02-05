@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ChatInputView: View {
     @Binding var messageText: String
-    @Environment(ChatViewModel.self) var chatViewModel
+    var chatViewModel: ChatViewModel
     @FocusState.Binding var isTextFieldFocused: Bool
     @Namespace private var glassNamespace
 
@@ -85,6 +85,7 @@ struct ChatInputView: View {
                             .font(.subheadline)
                             .foregroundStyle(.white)
                     }
+                    .accessibilityLabel("Voice mode")
                     .padding(Spacing.medium)
                     .glassEffect(
                         .regular
@@ -99,6 +100,7 @@ struct ChatInputView: View {
                             .font(.headline)
                             .foregroundStyle(.white)
                     }
+                    .accessibilityLabel("Send message")
                     .padding(Spacing.medium)
                     .glassEffect(
                         .regular
@@ -163,6 +165,7 @@ struct ChatInputView: View {
                         .font(.title2)
                         .foregroundStyle(.blue)
                 }
+                .accessibilityLabel("Voice mode")
                 .buttonStyle(.plain)
                 .padding(Spacing.small)
                 .disabled(chatViewModel.voiceState.isActive && !chatViewModel.voiceState.isError)
@@ -174,6 +177,7 @@ struct ChatInputView: View {
                             messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .gray : Color.accentColor
                         )
                 }
+                .accessibilityLabel("Send message")
                 .buttonStyle(.plain)
                 .padding(Spacing.small)
                 .disabled(

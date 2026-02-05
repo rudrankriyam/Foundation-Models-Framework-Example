@@ -43,5 +43,6 @@ struct GenericCardView: View {
 #if os(iOS) || os(macOS)
         .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
 #endif
+        .accessibilityElement(children: .combine)
     }
 }

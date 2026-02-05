@@ -267,19 +267,19 @@ final class SpeechSynthesizer: NSObject, SpeechSynthesisService {
 extension SpeechSynthesizer: AVSpeechSynthesizerDelegate {
 
     nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didStart utterance: AVSpeechUtterance) {
-        DispatchQueue.main.async {
+        Task { @MainActor in
             self.isSpeaking = true
         }
     }
 
     nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
-        DispatchQueue.main.async {
+        Task { @MainActor in
             self.handleSuccess()
         }
     }
 
     nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
-        DispatchQueue.main.async {
+        Task { @MainActor in
             self.handleError(.cancelled)
         }
     }

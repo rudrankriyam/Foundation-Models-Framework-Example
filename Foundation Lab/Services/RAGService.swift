@@ -10,6 +10,7 @@ import LumoKit
 import VecturaKit
 
 /// Service handling RAG indexing operations.
+@MainActor
 final class RAGService {
     private let lumoKit: LumoKit
     private let chunkingConfig: ChunkingConfig
@@ -65,16 +66,14 @@ struct RAGConfig {
     let searchOptions: VecturaConfig.SearchOptions
     let chunkingConfig: ChunkingConfig
 
-    static var `default`: RAGConfig? {
+    static func makeDefault() throws -> RAGConfig {
         let options = VecturaConfig.SearchOptions(defaultNumResults: 5, minThreshold: 0.5)
-        guard let chunking = try? ChunkingConfig(
+        let chunking = try ChunkingConfig(
             chunkSize: 500,
             overlapPercentage: 0.15,
             strategy: .semantic,
             contentType: .prose
-        ) else {
-            return nil
-        }
+        )
         return RAGConfig(searchOptions: options, chunkingConfig: chunking)
     }
 }

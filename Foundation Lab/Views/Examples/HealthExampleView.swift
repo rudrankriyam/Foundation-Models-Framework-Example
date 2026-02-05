@@ -35,7 +35,8 @@ struct HealthUnavailableView: View {
     var body: some View {
         VStack {
             Image(systemName: "heart.slash")
-                .font(.system(size: 60))
+                .font(.largeTitle)
+                .imageScale(.large)
                 .foregroundColor(.secondary)
                 .padding()
 

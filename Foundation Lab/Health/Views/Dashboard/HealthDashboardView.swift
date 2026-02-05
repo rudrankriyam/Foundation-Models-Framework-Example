@@ -55,6 +55,7 @@ struct HealthDashboardView: View {
                     Image(systemName: "bubble.left.and.bubble.right.fill")
                         .foregroundStyle(.primary)
                 }
+                .accessibilityLabel("Open Health AI chat")
             }
             #else
             ToolbarItem(placement: .automatic) {
@@ -64,6 +65,7 @@ struct HealthDashboardView: View {
                     Image(systemName: "bubble.left.and.bubble.right.fill")
                         .foregroundStyle(.primary)
                 }
+                .accessibilityLabel("Open Health AI chat")
             }
             #endif
         }
@@ -102,6 +104,9 @@ private extension HealthDashboardView {
 
                 HealthScoreRing(score: calculateHealthScore())
                     .frame(width: 80, height: 80)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Health score")
+                    .accessibilityValue("\(Int(calculateHealthScore())) out of 100")
             }
 
             Text(encouragementMessage)
@@ -147,6 +152,8 @@ private extension HealthDashboardView {
                         value: todayMetrics[type] ?? 0,
                         isSelected: selectedMetricType == type
                     )
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityHint(selectedMetricType == type ? "Double-tap to deselect" : "Double-tap to select")
                     .onTapGesture {
                         withAnimation(.spring()) {
                             selectedMetricType = selectedMetricType == type ? nil : type
@@ -267,7 +274,12 @@ private extension HealthDashboardView {
             }
         }
 
-        await healthDataManager.fetchTodayHealthData()
+        do {
+            try await healthDataManager.fetchTodayHealthData()
+        } catch {
+            isLoading = false
+            return
+        }
 
         todayMetrics = [
             .steps: healthDataManager.todaySteps,

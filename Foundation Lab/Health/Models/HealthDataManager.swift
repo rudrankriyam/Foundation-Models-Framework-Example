@@ -42,7 +42,11 @@ final class HealthDataManager {
 
     // MARK: - Fetch Today's Data
 
-    func fetchTodayHealthData() async {
+    func fetchTodayHealthData() async throws {
+        guard isAuthorized else {
+            throw HealthDataManagerError.notAuthorized
+        }
+
         let metrics = await healthKitService.fetchAllTodayMetrics()
 
         todaySteps = metrics.steps
@@ -90,4 +94,17 @@ final class HealthDataManager {
 
 extension HealthDataManager {
     static let shared = HealthDataManager()
+}
+
+// MARK: - Errors
+
+enum HealthDataManagerError: LocalizedError {
+    case notAuthorized
+
+    var errorDescription: String? {
+        switch self {
+        case .notAuthorized:
+            return "HealthKit authorization is required to fetch health data"
+        }
+    }
 }

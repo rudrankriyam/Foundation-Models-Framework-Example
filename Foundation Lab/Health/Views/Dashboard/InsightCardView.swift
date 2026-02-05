@@ -15,122 +15,152 @@ struct InsightCardView: View {
     @State private var showCelebration = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Header
-            HStack(alignment: .top) {
-                HStack(spacing: 8) {
-                    Image(systemName: insight.category.icon)
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                        .frame(width: 20, height: 20)
+        styledCard
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(accessibilityLabelText)
+            .accessibilityValue(insight.isRead ? "Read" : "Unread")
+            .accessibilityHint(isExpanded ? "Double-tap to collapse" : "Double-tap to expand")
+            .accessibilityAddTraits(.isButton)
+    }
 
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(insight.title)
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .lineLimit(isExpanded ? nil : 1)
+    private var accessibilityLabelText: String {
+        "\(insight.title). \(insight.content)"
+    }
 
-                        Text(timeAgo(from: insight.generatedAt))
-                            .font(.caption2)
-                            .foregroundStyle(.tertiary)
+    private var styledCard: some View {
+        cardContent
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .glassEffect(
+                .regular,
+                in: .rect(cornerRadius: 16)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(insight.isRead ? Color.clear : Color.primary.opacity(0.1), lineWidth: 1)
+            )
+            .onTapGesture {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                    isExpanded.toggle()
+                    if !insight.isRead {
+                        markAsRead()
                     }
                 }
+            }
+            .overlay(
+                Group {
+                    if showCelebration && insight.category == .achievement {
+                        Color.clear.modifier(CelebrationEffect())
+                    }
+                }
+            )
+    }
 
-                Spacer()
+    private var cardContent: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            headerSection
+            contentSection
+            if isExpanded && !insight.actionItems.isEmpty {
+                actionItemsSection
+            }
+            if insight.priority == .urgent || insight.priority == .high {
+                prioritySection
+            }
+        }
+    }
 
-                if !insight.isRead {
-                    Circle()
-                        .fill(Color.primary.opacity(0.3))
-                        .frame(width: 6, height: 6)
+    private var headerSection: some View {
+        HStack(alignment: .top) {
+            HStack(spacing: 8) {
+                Image(systemName: insight.category.icon)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 20, height: 20)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(insight.title)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .lineLimit(isExpanded ? nil : 1)
+
+                    Text(timeAgo(from: insight.generatedAt))
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
                 }
             }
 
-            // Content
-            Text(insight.content)
-                .font(.callout)
-                .foregroundStyle(.primary.opacity(0.8))
-                .lineLimit(isExpanded ? nil : 2)
-                .animation(.easeInOut, value: isExpanded)
+            Spacer()
 
-            // Action Items
-            if isExpanded && !insight.actionItems.isEmpty {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Action Items")
+            if !insight.isRead {
+                Circle()
+                    .fill(Color.primary.opacity(0.3))
+                    .frame(width: 6, height: 6)
+                    .accessibilityLabel("Unread")
+            }
+        }
+    }
+
+    private var contentSection: some View {
+        Text(insight.content)
+            .font(.callout)
+            .foregroundStyle(.primary.opacity(0.8))
+            .lineLimit(isExpanded ? nil : 2)
+            .animation(.easeInOut, value: isExpanded)
+    }
+
+    private var actionItemsSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Action Items")
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundStyle(.secondary)
+
+            ForEach(insight.actionItems, id: \.self) { item in
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: "circle.fill")
+                        .font(.caption2)
+                        .scaleEffect(0.3)
+                        .foregroundStyle(.secondary)
+                        .padding(.top, 4)
+                        .accessibilityHidden(true)
+
+                    Text(item)
+                        .font(.caption)
+                        .foregroundStyle(.primary.opacity(0.8))
+                }
+                .accessibilityElement(children: .combine)
+            }
+        }
+        .padding(.top, 4)
+    }
+
+    private var prioritySection: some View {
+        HStack {
+            Text(insight.priority.rawValue)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Color.primary.opacity(0.06))
+                .clipShape(Capsule())
+
+            Spacer()
+
+            if isExpanded {
+                Button {
+                    markAsRead()
+                } label: {
+                    Text("Got it")
                         .font(.caption)
                         .fontWeight(.medium)
-                        .foregroundStyle(.secondary)
-
-                    ForEach(insight.actionItems, id: \.self) { item in
-                        HStack(alignment: .top, spacing: 8) {
-                            Image(systemName: "circle.fill")
-                                .font(.system(size: 4))
-                                .foregroundStyle(.secondary)
-                                .padding(.top, 4)
-
-                            Text(item)
-                                .font(.caption)
-                                .foregroundStyle(.primary.opacity(0.8))
-                        }
-                    }
-                }
-                .padding(.top, 4)
-            }
-
-            // Priority Badge
-            if insight.priority == .urgent || insight.priority == .high {
-                HStack {
-                    Text(insight.priority.rawValue)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.primary.opacity(0.06))
+                        .foregroundStyle(.primary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color.primary.opacity(0.1))
                         .clipShape(Capsule())
-
-                    Spacer()
-
-                    if isExpanded {
-                        Button {
-                            markAsRead()
-                        } label: {
-                            Text("Got it")
-                                .font(.caption)
-                                .fontWeight(.medium)
-                                .foregroundStyle(.primary)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(Color.primary.opacity(0.1))
-                                .clipShape(Capsule())
-                        }
-                    }
                 }
             }
         }
-        .padding()
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .glassEffect(
-            .regular,
-            in: .rect(cornerRadius: 16)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(insight.isRead ? Color.clear : Color.primary.opacity(0.1), lineWidth: 1)
-        )
-        .onTapGesture {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                isExpanded.toggle()
-                if !insight.isRead {
-                    markAsRead()
-                }
-            }
-        }
-        .overlay(
-            Group {
-                if showCelebration && insight.category == .achievement {
-                    Color.clear.modifier(CelebrationEffect())
-                }
-            }
-        )
     }
 
     private var categoryColor: Color {

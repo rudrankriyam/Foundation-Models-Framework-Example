@@ -71,6 +71,9 @@ struct DailyProgressCard: View {
         }
         .padding()
         .frame(width: 180)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(metricType.rawValue): \(formattedValue) of \(formattedGoal)")
+        .accessibilityValue("\(progressPercentage) percent complete")
         .onAppear {
             animatedProgress = progress
         }
@@ -144,6 +147,9 @@ struct ActivityRingsView: View {
         .frame(width: 140, height: 140)
         .scaleEffect(animateRings ? 1.0 : 0.8)
         .opacity(animateRings ? 1.0 : 0.0)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Activity rings")
+        .accessibilityValue("Steps \(Int(min(steps / 10000, 1.0) * 100)) percent, Active energy \(Int(min(activeEnergy / 500, 1.0) * 100)) percent, Stand hours \(standHours) of 12")
         .onAppear {
             withAnimation(.spring(response: 0.8, dampingFraction: 0.6).delay(0.2)) {
                 animateRings = true
@@ -176,6 +182,7 @@ struct ActivityRing: View {
                 .rotationEffect(.degrees(-90))
                 .animation(.easeOut(duration: 1.2).delay(0.1), value: animatedProgress)
         }
+        .accessibilityHidden(true)
         .onAppear {
             animatedProgress = min(progress, 1.0)
         }
