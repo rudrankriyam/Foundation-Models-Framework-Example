@@ -69,17 +69,7 @@ struct CodeViewer: View {
   }
 
   private func copyToClipboard() {
-    #if os(iOS)
-    UIPasteboard.general.string = code
-    #elseif os(macOS)
-    NSPasteboard.general.clearContents()
-    NSPasteboard.general.setString(code, forType: .string)
-    #endif
-
-    isCopied = true
-    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-      isCopied = false
-    }
+    ClipboardUtility.copyWithFeedback(code, isCopied: $isCopied)
   }
 }
 
