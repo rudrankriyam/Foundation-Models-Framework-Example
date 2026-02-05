@@ -299,17 +299,7 @@ struct TripBriefResultView: View {
   }
 
   private func copyToClipboard() {
-    #if os(iOS)
-      UIPasteboard.general.string = result
-    #elseif os(macOS)
-      NSPasteboard.general.clearContents()
-      NSPasteboard.general.setString(result, forType: .string)
-    #endif
-
-    isCopied = true
-    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-      isCopied = false
-    }
+    ClipboardUtility.copyWithFeedback(result, isCopied: $isCopied)
   }
 }
 
