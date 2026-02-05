@@ -148,51 +148,37 @@ class PermissionManager: PermissionServiceProtocol {
     }
 
     private func testMicrophoneAccess() async -> Bool {
-        return await withCheckedContinuation { continuation in
-            let audioEngine = AVAudioEngine()
-            let inputNode = audioEngine.inputNode
+        let audioEngine = AVAudioEngine()
+        let inputNode = audioEngine.inputNode
 
-            // Use a safer format check
-            let inputFormat = inputNode.outputFormat(forBus: 0)
-            let recordingFormat: AVAudioFormat
+        let inputFormat = inputNode.outputFormat(forBus: 0)
+        let recordingFormat: AVAudioFormat
 
-            if inputFormat.sampleRate > 0 && inputFormat.channelCount > 0 {
-                recordingFormat = inputFormat
-            } else {
-                guard let fallbackFormat = AVAudioFormat(standardFormatWithSampleRate: 16000, channels: 1) else {
-                    DispatchQueue.main.async {
-                        self.microphonePermissionStatus = .denied
-                        continuation.resume(returning: false)
-                    }
-                    return
-                }
-                recordingFormat = fallbackFormat
+        if inputFormat.sampleRate > 0 && inputFormat.channelCount > 0 {
+            recordingFormat = inputFormat
+        } else {
+            guard let fallbackFormat = AVAudioFormat(standardFormatWithSampleRate: 16000, channels: 1) else {
+                self.microphonePermissionStatus = .denied
+                return false
             }
+            recordingFormat = fallbackFormat
+        }
 
-            inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { _, _ in
-                // Empty tap
-            }
+        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { _, _ in
+            // Empty tap
+        }
 
-            do {
-                try audioEngine.start()
-                // Success - microphone access is granted
-                audioEngine.stop()
-                inputNode.removeTap(onBus: 0)
-
-                DispatchQueue.main.async {
-                    self.microphonePermissionStatus = .granted
-                    continuation.resume(returning: true)
-                }
-            } catch {
-                // Failed - microphone access denied
-                audioEngine.stop()
-                inputNode.removeTap(onBus: 0)
-
-                DispatchQueue.main.async {
-                    self.microphonePermissionStatus = .denied
-                    continuation.resume(returning: false)
-                }
-            }
+        do {
+            try audioEngine.start()
+            audioEngine.stop()
+            inputNode.removeTap(onBus: 0)
+            self.microphonePermissionStatus = .granted
+            return true
+        } catch {
+            audioEngine.stop()
+            inputNode.removeTap(onBus: 0)
+            self.microphonePermissionStatus = .denied
+            return false
         }
     }
 

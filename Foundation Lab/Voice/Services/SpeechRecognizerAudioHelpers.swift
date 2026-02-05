@@ -68,18 +68,16 @@ extension SpeechRecognizer {
             bufferSize: 1024,
             format: tapFormat
         ) { [weak self] (buffer: AVAudioPCMBuffer, _: AVAudioTime) in
-            guard let self, !self.hasProcessedFinalResult else { return }
-
-            self.recognitionRequest?.append(buffer)
-
-            DispatchQueue.main.async {
+            Task { @MainActor [weak self] in
+                guard let self, !self.hasProcessedFinalResult else { return }
+                self.recognitionRequest?.append(buffer)
                 self.processAudioBuffer(buffer)
-            }
 
-            if VoiceLogging.isVerboseEnabled {
-                self.audioBufferCount += 1
-                if self.audioBufferCount % 200 == 0 {
-                    self.logger.debug("Processed \(self.audioBufferCount) audio buffers (frameLength=\(buffer.frameLength))")
+                if VoiceLogging.isVerboseEnabled {
+                    self.audioBufferCount += 1
+                    if self.audioBufferCount % 200 == 0 {
+                        self.logger.debug("Processed \(self.audioBufferCount) audio buffers (frameLength=\(buffer.frameLength))")
+                    }
                 }
             }
         }
@@ -172,19 +170,15 @@ extension SpeechRecognizer {
     func configureRecognitionTask(with request: SFSpeechAudioBufferRecognitionRequest) {
         logger.debug("Starting recognition task")
         recognitionTask = speechRecognizer?.recognitionTask(with: request) { [weak self] result, error in
-            guard let self else {
-                return
-            }
-
-            Task { @MainActor in
-                guard !self.hasProcessedFinalResult else {
+            Task { @MainActor [weak self] in
+                guard let self, !self.hasProcessedFinalResult else {
                     if VoiceLogging.isVerboseEnabled {
                         if let error {
-                            self.logger.debug("Callback ignored (already processed) error: \(error.localizedDescription, privacy: .public)")
+                            VoiceLogging.recognition.debug("Callback ignored (already processed) error: \(error.localizedDescription, privacy: .public)")
                         } else if let result {
-                            self.logger.debug("Callback ignored (already processed) result final=\(result.isFinal)")
+                            VoiceLogging.recognition.debug("Callback ignored (already processed) result final=\(result.isFinal)")
                         } else {
-                            self.logger.debug("Callback ignored (already processed) unknown payload")
+                            VoiceLogging.recognition.debug("Callback ignored (already processed) unknown payload")
                         }
                     }
                     return

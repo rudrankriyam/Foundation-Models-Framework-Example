@@ -122,8 +122,9 @@ struct PermissionItemView: View {
     var body: some View {
         return HStack(spacing: 15) {
             Image(systemName: icon)
-                .font(.system(size: 20))
+                .font(.title3)
                 .foregroundStyle(status == .granted ? Color.blue : Color.gray)
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
@@ -142,8 +143,12 @@ struct PermissionItemView: View {
                     .font(.title2)
                     .foregroundStyle(Color.blue.gradient)
                     .transition(.scale.combined(with: .opacity))
+                    .accessibilityHidden(true)
             }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(title)
+        .accessibilityValue(status == .granted ? "Granted" : "Not granted")
     }
 }
 

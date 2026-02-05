@@ -83,7 +83,11 @@ struct HealthDataTool: Tool {
 
     private func fetchTodayData(healthManager: HealthDataManager, refresh: Bool) async -> GeneratedContent {
         if refresh {
-            await healthManager.fetchTodayHealthData()
+            do {
+                try await healthManager.fetchTodayHealthData()
+            } catch {
+                return createErrorOutput(error: error.localizedDescription)
+            }
         }
 
         let metricsJSON = await MainActor.run {
@@ -143,7 +147,11 @@ struct HealthDataTool: Tool {
         refresh: Bool
     ) async -> GeneratedContent {
         if refresh {
-            await healthManager.fetchTodayHealthData()
+            do {
+                try await healthManager.fetchTodayHealthData()
+            } catch {
+                return createErrorOutput(error: error.localizedDescription)
+            }
         }
 
         let value: Double = await MainActor.run {
