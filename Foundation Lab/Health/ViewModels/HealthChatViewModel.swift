@@ -89,8 +89,11 @@ final class HealthChatViewModel {
             await handleContextWindowExceeded(userMessage: content)
 
         } catch {
-            // Handle other errors
-            await saveMessageToSession("I apologize, but I encountered an error. Please try again.", isFromUser: false)
+            // Log the error for debugging purposes
+            logger.error("Failed to generate response: \(error.localizedDescription, privacy: .public)")
+            // Show user-friendly error message
+            let userMessage = "I apologize, but I encountered an error. Please try again."
+            await saveMessageToSession(userMessage, isFromUser: false)
         }
 
         isLoading = false
