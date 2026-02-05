@@ -377,9 +377,12 @@ private extension RAGChatViewModel {
                 model: SystemLanguageModel(useCase: .general),
                 instructions: Instructions(systemPrompt)
             )
-            for try await snapshot in session.streamResponse(to: Prompt(prompt)) {
-                onUpdate(snapshot.content)
+            streamingTask = Task {
+                for try await snapshot in session.streamResponse(to: Prompt(prompt)) {
+                    onUpdate(snapshot.content)
+                }
             }
+            try await streamingTask?.value
         } catch {
             onUpdate("Failed to answer: \(error.localizedDescription)")
         }
@@ -398,9 +401,12 @@ private extension RAGChatViewModel {
                 model: SystemLanguageModel(useCase: .general),
                 instructions: Instructions(systemPrompt)
             )
-            for try await snapshot in session.streamResponse(to: Prompt(prompt)) {
-                entry.content = snapshot.content
+            streamingTask = Task {
+                for try await snapshot in session.streamResponse(to: Prompt(prompt)) {
+                    entry.content = snapshot.content
+                }
             }
+            try await streamingTask?.value
         } catch {
             if entry.content.isEmpty { entry.content = "Failed: \(error.localizedDescription)" }
         }

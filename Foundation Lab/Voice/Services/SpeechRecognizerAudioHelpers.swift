@@ -68,9 +68,11 @@ extension SpeechRecognizer {
             bufferSize: 1024,
             format: tapFormat
         ) { [weak self] (buffer: AVAudioPCMBuffer, _: AVAudioTime) in
+            // Append buffer synchronously on the audio thread before the buffer's data is recycled
+            self?.recognitionRequest?.append(buffer)
+
             Task { @MainActor [weak self] in
                 guard let self, !self.hasProcessedFinalResult else { return }
-                self.recognitionRequest?.append(buffer)
                 self.processAudioBuffer(buffer)
 
                 if VoiceLogging.isVerboseEnabled {

@@ -101,9 +101,12 @@ final class ChatViewModel {
             // Stream response from current session
             let responseStream = session.streamResponse(to: Prompt(content), options: generationOptions)
 
-            for try await _ in responseStream {
-                // The streaming automatically updates the session transcript
+            streamingTask = Task {
+                for try await _ in responseStream {
+                    // The streaming automatically updates the session transcript
+                }
             }
+            try await streamingTask?.value
 
         } catch LanguageModelSession.GenerationError.exceededContextWindowSize {
             // Fallback: Handle context window exceeded by summarizing and creating new session
@@ -508,9 +511,12 @@ private extension ChatViewModel {
     func respondWithNewSession(to userMessage: String) async throws {
         let responseStream = session.streamResponse(to: Prompt(userMessage), options: generationOptions)
 
-        for try await _ in responseStream {
-            // The streaming automatically updates the session transcript
+        streamingTask = Task {
+            for try await _ in responseStream {
+                // The streaming automatically updates the session transcript
+            }
         }
+        try await streamingTask?.value
     }
 
     @MainActor
