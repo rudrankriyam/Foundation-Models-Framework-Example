@@ -68,9 +68,12 @@ final class HealthChatViewModel {
             let responseStream = session.streamResponse(to: Prompt(content))
 
             var responseText = ""
-            for try await _ in responseStream {
-                // The streaming automatically updates the session transcript
+            streamingTask = Task {
+                for try await _ in responseStream {
+                    // The streaming automatically updates the session transcript
+                }
             }
+            try await streamingTask?.value
 
             // Extract the response text from the transcript
             if let lastEntry = session.transcript.last,
@@ -276,9 +279,12 @@ private extension HealthChatViewModel {
         let responseStream = session.streamResponse(to: Prompt(userMessage))
 
         var responseText = ""
-        for try await _ in responseStream {
-            // The streaming automatically updates the session transcript
+        streamingTask = Task {
+            for try await _ in responseStream {
+                // The streaming automatically updates the session transcript
+            }
         }
+        try await streamingTask?.value
 
         if let lastEntry = session.transcript.last,
            case .response = lastEntry {
