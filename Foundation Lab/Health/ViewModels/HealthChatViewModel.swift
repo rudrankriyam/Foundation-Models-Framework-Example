@@ -101,6 +101,7 @@ final class HealthChatViewModel {
             await handleContextWindowExceeded(userMessage: content)
 
         } catch {
+            logger.error("Failed to generate response: \(error.localizedDescription, privacy: .public)")
             let errorText = FoundationModelsErrorHandler.handleError(error)
             await saveMessageToSession(errorText, isFromUser: false)
         }

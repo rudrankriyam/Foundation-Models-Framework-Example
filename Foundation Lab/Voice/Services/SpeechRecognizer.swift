@@ -351,7 +351,9 @@ class SpeechRecognizer: NSObject, SpeechRecognitionService {
     }
 
     private func notifyStateHandlers() {
-        for handler in stateHandlers.values {
+        // Copy handlers to avoid "Dictionary was modified during iteration" crash
+        let handlers = Array(stateHandlers.values)
+        for handler in handlers {
             handler(state)
         }
     }

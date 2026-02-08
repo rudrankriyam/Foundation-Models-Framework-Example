@@ -180,6 +180,8 @@ final class ChatViewModel {
         }
     }
 
+    /// Cleans up resources when the view disappears.
+    /// Cancels any running tasks and stops speech recognition.
     @MainActor
     func tearDown() {
         streamingTask?.cancel()

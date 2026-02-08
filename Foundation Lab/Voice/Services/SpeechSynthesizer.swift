@@ -115,6 +115,12 @@ final class SpeechSynthesizer: NSObject, SpeechSynthesisService {
             throw SpeechSynthesizerError.alreadySpeaking
         }
 
+        // Prevent concurrent continuation overwrites - if a continuation is pending,
+        // another synthesis call is in-flight and we should reject this one
+        guard pendingContinuation == nil else {
+            throw SpeechSynthesizerError.alreadySpeaking
+        }
+
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             self.pendingContinuation = continuation
 
