@@ -54,8 +54,11 @@ actor HealthKitService {
         ]
 
         try await healthStore.requestAuthorization(toShare: [], read: readTypes)
-        let authorizationStatuses = readTypes.map { healthStore.authorizationStatus(for: $0) }
-        isAuthorized = authorizationStatuses.allSatisfy { $0 == .sharingAuthorized }
+        // For read-only types, HealthKit never reveals whether the user granted read access.
+        // authorizationStatus(for:) only returns meaningful values for write types.
+        // If requestAuthorization succeeds without throwing, the prompt was presented successfully,
+        // which is the best signal available for read-only authorization.
+        isAuthorized = true
     }
 
     func fetchAllTodayMetrics() async -> TodayHealthMetrics {
