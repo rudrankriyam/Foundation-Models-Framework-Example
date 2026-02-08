@@ -6,6 +6,9 @@
 //
 
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 /// Result display component
 struct ResultDisplay: View {
@@ -29,6 +32,7 @@ struct ResultDisplay: View {
             .padding(.horizontal, Spacing.small)
             .padding(.vertical, 4)
         }
+        .accessibilityLabel(isCopied ? "Copied" : "Copy result")
         .buttonStyle(.glass)
       }
 
@@ -48,6 +52,7 @@ struct ResultDisplay: View {
   private func copyToClipboard() {
     #if os(iOS)
     UIPasteboard.general.string = result
+    UIAccessibility.post(notification: .announcement, argument: "Result copied to clipboard")
     #elseif os(macOS)
     NSPasteboard.general.clearContents()
     NSPasteboard.general.setString(result, forType: .string)

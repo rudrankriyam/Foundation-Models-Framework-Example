@@ -52,6 +52,7 @@ final class RAGChatViewModel {
     var errorMessage: String?
     var showError = false
 
+    private var streamingTask: Task<Void, Error>?
     private var service: RAGService?
     private var isInitialized = false
     private var config: RAGConfig?
@@ -76,12 +77,22 @@ final class RAGChatViewModel {
         }
         indexedDocumentCount = indexedURLs.count
         hasIndexedContent = indexedDocumentCount > 0
-        config = RAGConfig.default
+        do {
+            config = try RAGConfig.makeDefault()
+        } catch {
+            config = nil
+            errorMessage = "Failed to initialize RAG configuration: \(error.localizedDescription)"
+            showError = true
+        }
     }
 
     func loadFromDatabase() async {
         guard !isInitialized else { return }
-        guard let config = config else { return }
+        guard let config = config else {
+            errorMessage = errorMessage ?? "RAG configuration is not available"
+            showError = true
+            return
+        }
 
         do {
             let lumoKit = try await LumoKit(
@@ -108,7 +119,10 @@ final class RAGChatViewModel {
 
     func indexDocument(from url: URL) async {
         await loadFromDatabase()
-        guard let service = service else { return }
+        guard let service = service else {
+            showServiceUnavailableError()
+            return
+        }
 
         let urlKey = url.absoluteString
         guard !indexedURLs.contains(urlKey) else {
@@ -135,7 +149,10 @@ final class RAGChatViewModel {
 
     func indexText(_ text: String, title: String) async {
         await loadFromDatabase()
-        guard let service = service else { return }
+        guard let service = service else {
+            showServiceUnavailableError()
+            return
+        }
 
         let urlKey = "text://\(title)"
         guard !indexedURLs.contains(urlKey) else {
@@ -162,7 +179,10 @@ final class RAGChatViewModel {
 
     func resetDatabase() async {
         await loadFromDatabase()
-        guard let service = service else { return }
+        guard let service = service else {
+            showServiceUnavailableError()
+            return
+        }
 
         do {
             try await service.resetDatabase()
@@ -180,7 +200,10 @@ final class RAGChatViewModel {
 
     func loadSampleDocuments() async {
         await loadFromDatabase()
-        guard let service = service else { return }
+        guard let service = service else {
+            showServiceUnavailableError()
+            return
+        }
 
         isSearching = true
         var newCount = 0
@@ -224,7 +247,10 @@ final class RAGChatViewModel {
         onUpdate: @escaping @MainActor (String) -> Void
     ) async {
         await loadFromDatabase()
-        guard let service = service else { return }
+        guard let service = service else {
+            showServiceUnavailableError()
+            return
+        }
 
         let trimmedContent = content.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedContent.isEmpty else { return }
@@ -251,7 +277,10 @@ final class RAGChatViewModel {
 
     func sendMessage(_ content: String) async -> Bool {
         await loadFromDatabase()
-        guard let service = service else { return false }
+        guard let service = service else {
+            showServiceUnavailableError()
+            return false
+        }
 
         let trimmedContent = content.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedContent.isEmpty else { return false }
@@ -279,9 +308,19 @@ final class RAGChatViewModel {
         showError = false
         errorMessage = nil
     }
+
+    func tearDown() {
+        streamingTask?.cancel()
+        streamingTask = nil
+    }
 }
 
 private extension RAGChatViewModel {
+    func showServiceUnavailableError() {
+        errorMessage = "RAG service is not available. Please restart the app."
+        showError = true
+    }
+
     func saveState() {
         userDefaults.set(Array(indexedURLs), forKey: indexedURLsKey)
         userDefaults.set(sourceTitles, forKey: sourceTitlesKey)
@@ -338,8 +377,18 @@ private extension RAGChatViewModel {
                 model: SystemLanguageModel(useCase: .general),
                 instructions: Instructions(systemPrompt)
             )
-            for try await snapshot in session.streamResponse(to: Prompt(prompt)) {
-                onUpdate(snapshot.content)
+            streamingTask?.cancel()
+            let task = Task { @MainActor in
+                for try await snapshot in session.streamResponse(to: Prompt(prompt)) {
+                    onUpdate(snapshot.content)
+                }
+            }
+            streamingTask = task
+            defer { streamingTask = nil }
+            do {
+                try await task.value
+            } catch is CancellationError {
+                return
             }
         } catch {
             onUpdate("Failed to answer: \(error.localizedDescription)")
@@ -359,8 +408,18 @@ private extension RAGChatViewModel {
                 model: SystemLanguageModel(useCase: .general),
                 instructions: Instructions(systemPrompt)
             )
-            for try await snapshot in session.streamResponse(to: Prompt(prompt)) {
-                entry.content = snapshot.content
+            streamingTask?.cancel()
+            let task = Task { @MainActor in
+                for try await snapshot in session.streamResponse(to: Prompt(prompt)) {
+                    entry.content = snapshot.content
+                }
+            }
+            streamingTask = task
+            defer { streamingTask = nil }
+            do {
+                try await task.value
+            } catch is CancellationError {
+                return
             }
         } catch {
             if entry.content.isEmpty { entry.content = "Failed: \(error.localizedDescription)" }

@@ -83,10 +83,11 @@ struct HealthChatInputView: View {
                             .frame(width: 36, height: 36)
 
                         Image(systemName: "arrow.up")
-                            .font(.system(size: 16, weight: .medium))
+                            .font(.callout.weight(.medium))
                             .foregroundStyle(messageText.isEmpty ? .tertiary : .primary)
                     }
                 }
+                .accessibilityLabel("Send message")
                 .disabled(
                     messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
                     chatViewModel.isLoading ||
@@ -132,5 +133,6 @@ struct QuickActionChip: View {
                 .clipShape(Capsule())
         }
         .buttonStyle(.plain)
+        .accessibilityHint("Double-tap to send this message")
     }
 }

@@ -8,8 +8,38 @@
 import Foundation
 import Speech
 import AVFoundation
+import AVFAudio
 import Accelerate
 import OSLog
+
+private func copyAudioBuffer(_ buffer: AVAudioPCMBuffer) -> AVAudioPCMBuffer? {
+    guard let copiedBuffer = AVAudioPCMBuffer(
+        pcmFormat: buffer.format,
+        frameCapacity: buffer.frameCapacity
+    ) else {
+        return nil
+    }
+
+    copiedBuffer.frameLength = buffer.frameLength
+    let sourceList = UnsafeMutableAudioBufferListPointer(
+        UnsafeMutablePointer(mutating: buffer.audioBufferList)
+    )
+    let destinationList = UnsafeMutableAudioBufferListPointer(
+        UnsafeMutablePointer(mutating: copiedBuffer.audioBufferList)
+    )
+
+    for index in 0..<sourceList.count {
+        let source = sourceList[index]
+        var destination = destinationList[index]
+        destination.mDataByteSize = source.mDataByteSize
+        if let sourceData = source.mData, let destinationData = destination.mData {
+            memcpy(destinationData, sourceData, Int(source.mDataByteSize))
+        }
+        destinationList[index] = destination
+    }
+
+    return copiedBuffer
+}
 
 extension SpeechRecognizer {
     func configureAudioSessionIfNeeded() throws {
@@ -68,18 +98,18 @@ extension SpeechRecognizer {
             bufferSize: 1024,
             format: tapFormat
         ) { [weak self] (buffer: AVAudioPCMBuffer, _: AVAudioTime) in
-            guard let self, !self.hasProcessedFinalResult else { return }
+            let bufferCopy = copyAudioBuffer(buffer)
+            Task { @MainActor [weak self] in
+                guard let self, !self.hasProcessedFinalResult else { return }
+                guard let bufferCopy else { return }
+                self.recognitionRequest?.append(bufferCopy)
+                self.processAudioBuffer(bufferCopy)
 
-            self.recognitionRequest?.append(buffer)
-
-            DispatchQueue.main.async {
-                self.processAudioBuffer(buffer)
-            }
-
-            if VoiceLogging.isVerboseEnabled {
-                self.audioBufferCount += 1
-                if self.audioBufferCount % 200 == 0 {
-                    self.logger.debug("Processed \(self.audioBufferCount) audio buffers (frameLength=\(buffer.frameLength))")
+                if VoiceLogging.isVerboseEnabled {
+                    self.audioBufferCount += 1
+                    if self.audioBufferCount % 200 == 0 {
+                        self.logger.debug("Processed \(self.audioBufferCount) audio buffers (frameLength=\(buffer.frameLength))")
+                    }
                 }
             }
         }
@@ -172,19 +202,15 @@ extension SpeechRecognizer {
     func configureRecognitionTask(with request: SFSpeechAudioBufferRecognitionRequest) {
         logger.debug("Starting recognition task")
         recognitionTask = speechRecognizer?.recognitionTask(with: request) { [weak self] result, error in
-            guard let self else {
-                return
-            }
-
-            Task { @MainActor in
-                guard !self.hasProcessedFinalResult else {
+            Task { @MainActor [weak self] in
+                guard let self, !self.hasProcessedFinalResult else {
                     if VoiceLogging.isVerboseEnabled {
                         if let error {
-                            self.logger.debug("Callback ignored (already processed) error: \(error.localizedDescription, privacy: .public)")
+                            VoiceLogging.recognition.debug("Callback ignored (already processed) error: \(error.localizedDescription, privacy: .public)")
                         } else if let result {
-                            self.logger.debug("Callback ignored (already processed) result final=\(result.isFinal)")
+                            VoiceLogging.recognition.debug("Callback ignored (already processed) result final=\(result.isFinal)")
                         } else {
-                            self.logger.debug("Callback ignored (already processed) unknown payload")
+                            VoiceLogging.recognition.debug("Callback ignored (already processed) unknown payload")
                         }
                     }
                     return

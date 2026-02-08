@@ -10,33 +10,6 @@ import FoundationModels
 import Observation
 import Speech
 
-enum SamplingStrategy: Int, CaseIterable {
-    case `default`
-    case greedy
-    case sampling
-}
-
-/// Voice mode state machine for multi-turn conversations
-enum VoiceState: Equatable {
-    case idle
-    case preparing
-    case listening(partialText: String)
-    case processing
-    case speaking(response: String)
-    case error(message: String)
-
-    var isActive: Bool {
-        self != .idle
-    }
-
-    var isError: Bool {
-        if case .error = self {
-            return true
-        }
-        return false
-    }
-}
-
 @MainActor
 @Observable
 final class ChatViewModel {
@@ -50,7 +23,8 @@ final class ChatViewModel {
     var voiceState: VoiceState = .idle
     private(set) var speechRecognizer: SpeechRecognizer?
     private var speechObservationTask: Task<Void, Never>?
-    private let permissionManager = PermissionManager()
+    private let permissionManager: PermissionManager
+    private let speechSynthesizer: SpeechSynthesisService
     var isSummarizing: Bool = false
     var isApplyingWindow: Bool = false
     var sessionCount: Int = 1
@@ -65,6 +39,10 @@ final class ChatViewModel {
     private var samplingSeed: UInt64?
     var errorMessage: String?
     var showError: Bool = false
+
+    // MARK: - Streaming Task
+
+    private var streamingTask: Task<Void, Error>?
 
     // MARK: - Public Properties
 
@@ -95,8 +73,12 @@ final class ChatViewModel {
 
     // MARK: - Initialization
 
-    init() {
-        // Initialize session with proper language model and instructions
+    init(
+        permissionManager: PermissionManager? = nil,
+        speechSynthesizer: SpeechSynthesisService? = nil
+    ) {
+        self.permissionManager = permissionManager ?? PermissionManager()
+        self.speechSynthesizer = speechSynthesizer ?? SpeechSynthesizer.shared
         session = LanguageModelSession(
             model: createLanguageModel(),
             instructions: Instructions(instructions)
@@ -119,8 +101,18 @@ final class ChatViewModel {
             // Stream response from current session
             let responseStream = session.streamResponse(to: Prompt(content), options: generationOptions)
 
-            for try await _ in responseStream {
-                // The streaming automatically updates the session transcript
+            streamingTask?.cancel()
+            let task = Task { @MainActor in
+                for try await _ in responseStream {
+                    // The streaming automatically updates the session transcript
+                }
+            }
+            streamingTask = task
+            defer { streamingTask = nil }
+            do {
+                try await task.value
+            } catch is CancellationError {
+                return
             }
 
         } catch LanguageModelSession.GenerationError.exceededContextWindowSize {
@@ -153,6 +145,8 @@ final class ChatViewModel {
 
     @MainActor
     func clearChat() {
+        streamingTask?.cancel()
+        streamingTask = nil
         sessionCount = 1
         feedbackState.removeAll()
         isLoading = false
@@ -184,6 +178,15 @@ final class ChatViewModel {
         if case .error = voiceState {
             voiceState = .idle
         }
+    }
+
+    @MainActor
+    func tearDown() {
+        streamingTask?.cancel()
+        streamingTask = nil
+        stopSpeechObservation()
+        speechRecognizer?.stopRecognition()
+        speechRecognizer = nil
     }
 
     // MARK: - Voice Methods
@@ -251,7 +254,7 @@ final class ChatViewModel {
     @MainActor
     func stopSpeaking() {
         guard case .speaking = voiceState else { return }
-        SpeechSynthesizer.shared.cancelSpeaking()
+        speechSynthesizer.cancelSpeaking()
         restartListening()
     }
 
@@ -280,7 +283,7 @@ final class ChatViewModel {
             voiceState = .speaking(response: response.content)
 
             do {
-                try await SpeechSynthesizer.shared.synthesizeAndSpeak(text: response.content)
+                try await speechSynthesizer.synthesizeAndSpeak(text: response.content)
             } catch let synthError as SpeechSynthesizerError {
                 if case .cancelled = synthError {
                     // User-initiated cancellation; stopSpeaking already restarted listening.
@@ -435,14 +438,22 @@ private extension ChatViewModel {
     func handleContextWindowExceeded(userMessage: String) async {
         isSummarizing = true
 
+        let summary: ConversationSummary
         do {
-            let summary = try await generateConversationSummary()
-            createNewSessionWithContext(summary: summary)
-            isSummarizing = false
-
-            try await respondWithNewSession(to: userMessage)
+            summary = try await generateConversationSummary()
         } catch {
             handleSummarizationError(error)
+            errorMessage = FoundationModelsErrorHandler.handleError(error)
+            showError = true
+            return
+        }
+
+        createNewSessionWithContext(summary: summary)
+        isSummarizing = false
+
+        do {
+            try await respondWithNewSession(to: userMessage)
+        } catch {
             errorMessage = FoundationModelsErrorHandler.handleError(error)
             showError = true
         }
@@ -507,8 +518,18 @@ private extension ChatViewModel {
     func respondWithNewSession(to userMessage: String) async throws {
         let responseStream = session.streamResponse(to: Prompt(userMessage), options: generationOptions)
 
-        for try await _ in responseStream {
-            // The streaming automatically updates the session transcript
+        streamingTask?.cancel()
+        let task = Task { @MainActor in
+            for try await _ in responseStream {
+                // The streaming automatically updates the session transcript
+            }
+        }
+        streamingTask = task
+        defer { streamingTask = nil }
+        do {
+            try await task.value
+        } catch is CancellationError {
+            return
         }
     }
 

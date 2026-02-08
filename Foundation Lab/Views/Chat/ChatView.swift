@@ -26,6 +26,7 @@ struct ChatView: View {
 
             ChatInputView(
                 messageText: $messageText,
+                chatViewModel: viewModel,
                 isTextFieldFocused: $isTextFieldFocused
             )
         }
@@ -64,6 +65,9 @@ struct ChatView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 isTextFieldFocused = true
             }
+        }
+        .onDisappear {
+            viewModel.tearDown()
         }
 #if os(iOS)
         .fullScreenCover(isPresented: $showInstructionsSheet) {
