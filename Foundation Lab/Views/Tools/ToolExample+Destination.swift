@@ -14,6 +14,8 @@ extension ToolExample {
         switch self {
         case .weather:
             WeatherToolView()
+        case .web:
+            WebToolView()
         case .contacts:
             ContactsToolView()
         case .calendar:
