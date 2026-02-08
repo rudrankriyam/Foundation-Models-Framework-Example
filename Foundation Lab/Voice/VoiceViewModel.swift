@@ -208,7 +208,7 @@ class VoiceViewModel {
 
         hideErrorTask?.cancel()
         guard autoDismiss else { return }
-        hideErrorTask = Task { [weak self] in
+        hideErrorTask = Task { @MainActor [weak self] in
             try? await Task.sleep(for: .seconds(2))
             guard !Task.isCancelled else { return }
             withAnimation(.easeInOut(duration: 0.3)) {
