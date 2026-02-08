@@ -52,7 +52,7 @@ final class RAGChatViewModel {
     var errorMessage: String?
     var showError = false
 
-    private var streamingTask: Task<Void, Never>?
+    private var streamingTask: Task<Void, Error>?
     private var service: RAGService?
     private var isInitialized = false
     private var config: RAGConfig?
@@ -377,8 +377,18 @@ private extension RAGChatViewModel {
                 model: SystemLanguageModel(useCase: .general),
                 instructions: Instructions(systemPrompt)
             )
-            for try await snapshot in session.streamResponse(to: Prompt(prompt)) {
-                onUpdate(snapshot.content)
+            streamingTask?.cancel()
+            let task = Task { @MainActor in
+                for try await snapshot in session.streamResponse(to: Prompt(prompt)) {
+                    onUpdate(snapshot.content)
+                }
+            }
+            streamingTask = task
+            defer { streamingTask = nil }
+            do {
+                try await task.value
+            } catch is CancellationError {
+                return
             }
         } catch {
             onUpdate("Failed to answer: \(error.localizedDescription)")
@@ -398,8 +408,18 @@ private extension RAGChatViewModel {
                 model: SystemLanguageModel(useCase: .general),
                 instructions: Instructions(systemPrompt)
             )
-            for try await snapshot in session.streamResponse(to: Prompt(prompt)) {
-                entry.content = snapshot.content
+            streamingTask?.cancel()
+            let task = Task { @MainActor in
+                for try await snapshot in session.streamResponse(to: Prompt(prompt)) {
+                    entry.content = snapshot.content
+                }
+            }
+            streamingTask = task
+            defer { streamingTask = nil }
+            do {
+                try await task.value
+            } catch is CancellationError {
+                return
             }
         } catch {
             if entry.content.isEmpty { entry.content = "Failed: \(error.localizedDescription)" }
