@@ -442,7 +442,7 @@ private extension ChatViewModel {
         do {
             summary = try await generateConversationSummary()
         } catch {
-            handleSummarizationError(error)
+            isSummarizing = false
             errorMessage = FoundationModelsErrorHandler.handleError(error)
             showError = true
             return

@@ -108,7 +108,7 @@ extension SpeechRecognizer {
                 if VoiceLogging.isVerboseEnabled {
                     self.audioBufferCount += 1
                     if self.audioBufferCount % 200 == 0 {
-                        self.logger.debug("Processed \(self.audioBufferCount) audio buffers (frameLength=\(buffer.frameLength))")
+                        self.logger.debug("Processed \(self.audioBufferCount) audio buffers (frameLength=\(bufferCopy.frameLength))")
                     }
                 }
             }

@@ -134,7 +134,7 @@ final class HealthChatViewModel {
         } catch {
             logger.error("Failed to load health data: \(error.localizedDescription, privacy: .public)")
             await saveMessageToSession(
-                FoundationModelsErrorHandler.handleError(error),
+                error.localizedDescription,
                 isFromUser: false
             )
         }
