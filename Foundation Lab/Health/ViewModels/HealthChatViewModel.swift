@@ -27,7 +27,7 @@ final class HealthChatViewModel {
     var currentHealthMetrics: [MetricType: Double] = [:]
 
     // MARK: - Streaming Task
-    private var streamingTask: Task<Void, Never>?
+    private var streamingTask: Task<Void, Error>?
 
     // MARK: - Public Properties
     private(set) var session: LanguageModelSession
@@ -59,6 +59,7 @@ final class HealthChatViewModel {
     @MainActor
     func sendMessage(_ content: String) async {
         isLoading = true
+        defer { isLoading = false }
 
         do {
             // Save user message to session history
@@ -68,12 +69,19 @@ final class HealthChatViewModel {
             let responseStream = session.streamResponse(to: Prompt(content))
 
             var responseText = ""
-            streamingTask = Task {
+            streamingTask?.cancel()
+            let task = Task { @MainActor in
                 for try await _ in responseStream {
                     // The streaming automatically updates the session transcript
                 }
             }
-            try await streamingTask?.value
+            streamingTask = task
+            defer { streamingTask = nil }
+            do {
+                try await task.value
+            } catch is CancellationError {
+                return
+            }
 
             // Extract the response text from the transcript
             if let lastEntry = session.transcript.last,
@@ -100,7 +108,6 @@ final class HealthChatViewModel {
             await saveMessageToSession(errorText, isFromUser: false)
         }
 
-        isLoading = false
     }
 
     @MainActor
@@ -279,12 +286,19 @@ private extension HealthChatViewModel {
         let responseStream = session.streamResponse(to: Prompt(userMessage))
 
         var responseText = ""
-        streamingTask = Task {
+        streamingTask?.cancel()
+        let task = Task { @MainActor in
             for try await _ in responseStream {
                 // The streaming automatically updates the session transcript
             }
         }
-        try await streamingTask?.value
+        streamingTask = task
+        defer { streamingTask = nil }
+        do {
+            try await task.value
+        } catch is CancellationError {
+            return
+        }
 
         if let lastEntry = session.transcript.last,
            case .response = lastEntry {

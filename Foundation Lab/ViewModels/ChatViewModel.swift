@@ -42,7 +42,7 @@ final class ChatViewModel {
 
     // MARK: - Streaming Task
 
-    private var streamingTask: Task<Void, Never>?
+    private var streamingTask: Task<Void, Error>?
 
     // MARK: - Public Properties
 
@@ -101,12 +101,19 @@ final class ChatViewModel {
             // Stream response from current session
             let responseStream = session.streamResponse(to: Prompt(content), options: generationOptions)
 
-            streamingTask = Task {
+            streamingTask?.cancel()
+            let task = Task { @MainActor in
                 for try await _ in responseStream {
                     // The streaming automatically updates the session transcript
                 }
             }
-            try await streamingTask?.value
+            streamingTask = task
+            defer { streamingTask = nil }
+            do {
+                try await task.value
+            } catch is CancellationError {
+                return
+            }
 
         } catch LanguageModelSession.GenerationError.exceededContextWindowSize {
             // Fallback: Handle context window exceeded by summarizing and creating new session
@@ -511,12 +518,19 @@ private extension ChatViewModel {
     func respondWithNewSession(to userMessage: String) async throws {
         let responseStream = session.streamResponse(to: Prompt(userMessage), options: generationOptions)
 
-        streamingTask = Task {
+        streamingTask?.cancel()
+        let task = Task { @MainActor in
             for try await _ in responseStream {
                 // The streaming automatically updates the session transcript
             }
         }
-        try await streamingTask?.value
+        streamingTask = task
+        defer { streamingTask = nil }
+        do {
+            try await task.value
+        } catch is CancellationError {
+            return
+        }
     }
 
     @MainActor

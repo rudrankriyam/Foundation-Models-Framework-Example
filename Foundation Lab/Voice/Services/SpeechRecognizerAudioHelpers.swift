@@ -8,8 +8,38 @@
 import Foundation
 import Speech
 import AVFoundation
+import AVFAudio
 import Accelerate
 import OSLog
+
+private func copyAudioBuffer(_ buffer: AVAudioPCMBuffer) -> AVAudioPCMBuffer? {
+    guard let copiedBuffer = AVAudioPCMBuffer(
+        pcmFormat: buffer.format,
+        frameCapacity: buffer.frameCapacity
+    ) else {
+        return nil
+    }
+
+    copiedBuffer.frameLength = buffer.frameLength
+    let sourceList = UnsafeMutableAudioBufferListPointer(
+        UnsafeMutablePointer(mutating: buffer.audioBufferList)
+    )
+    let destinationList = UnsafeMutableAudioBufferListPointer(
+        UnsafeMutablePointer(mutating: copiedBuffer.audioBufferList)
+    )
+
+    for index in 0..<sourceList.count {
+        let source = sourceList[index]
+        var destination = destinationList[index]
+        destination.mDataByteSize = source.mDataByteSize
+        if let sourceData = source.mData, let destinationData = destination.mData {
+            memcpy(destinationData, sourceData, Int(source.mDataByteSize))
+        }
+        destinationList[index] = destination
+    }
+
+    return copiedBuffer
+}
 
 extension SpeechRecognizer {
     func configureAudioSessionIfNeeded() throws {
@@ -68,12 +98,12 @@ extension SpeechRecognizer {
             bufferSize: 1024,
             format: tapFormat
         ) { [weak self] (buffer: AVAudioPCMBuffer, _: AVAudioTime) in
-            // Append buffer synchronously on the audio thread before the buffer's data is recycled
-            self?.recognitionRequest?.append(buffer)
-
+            let bufferCopy = copyAudioBuffer(buffer)
             Task { @MainActor [weak self] in
                 guard let self, !self.hasProcessedFinalResult else { return }
-                self.processAudioBuffer(buffer)
+                guard let bufferCopy else { return }
+                self.recognitionRequest?.append(bufferCopy)
+                self.processAudioBuffer(bufferCopy)
 
                 if VoiceLogging.isVerboseEnabled {
                     self.audioBufferCount += 1
