@@ -13,7 +13,6 @@ import FoundationModels
 final class LanguageService {
     private(set) var supportedLanguages: [Locale.Language] = []
     private(set) var isLoading = false
-    private(set) var errorMessage: String?
 
     init(autoLoad: Bool = true) {
         if autoLoad {
@@ -25,7 +24,6 @@ final class LanguageService {
 
     func loadSupportedLanguages() async {
         isLoading = true
-        errorMessage = nil
 
         let model = SystemLanguageModel.default
         supportedLanguages = Array(model.supportedLanguages)

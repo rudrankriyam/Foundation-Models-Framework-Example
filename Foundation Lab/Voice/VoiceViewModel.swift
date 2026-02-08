@@ -47,6 +47,7 @@ class VoiceViewModel {
     private let logger = VoiceLogging.state
 
     private var recognitionHandlerToken: UUID?
+    private var hideErrorTask: Task<Void, Never>?
 
     // MARK: - Initialization
 
@@ -146,7 +147,8 @@ class VoiceViewModel {
 
         case .error(let error):
             isListening = false
-            showError(error.localizedDescription)
+            let isPermissionError = isPermissionRelatedError(error)
+            showError(error.localizedDescription, autoDismiss: !isPermissionError)
         default:
             break // Handle other states as needed
         }
@@ -193,7 +195,7 @@ class VoiceViewModel {
 
     // MARK: - UI Feedback Methods
 
-    private func showError(_ message: String) {
+    private func showError(_ message: String, autoDismiss: Bool = true) {
         errorMessage = message
 
         withAnimation(.easeInOut(duration: 0.3)) {
@@ -204,13 +206,13 @@ class VoiceViewModel {
         provideHapticFeedback(.error)
 #endif
 
-        // Hide after delay
-        Task { [weak self] in
+        hideErrorTask?.cancel()
+        guard autoDismiss else { return }
+        hideErrorTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(2))
-            await MainActor.run {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    self?.showError = false
-                }
+            guard !Task.isCancelled else { return }
+            withAnimation(.easeInOut(duration: 0.3)) {
+                self?.showError = false
             }
         }
     }
@@ -243,6 +245,12 @@ class VoiceViewModel {
 
     func openSettings() {
         permissionManager.openSettings()
+    }
+
+    private func isPermissionRelatedError(_ error: Error) -> Bool {
+        let description = error.localizedDescription.lowercased()
+        return description.contains("permission") || description.contains("denied")
+            || description.contains("not authorized") || description.contains("restricted")
     }
 
     private func syncPermissionState() {

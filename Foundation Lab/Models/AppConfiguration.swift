@@ -23,7 +23,7 @@ enum AppConfiguration {
 
     /// Health module configuration
     enum Health {
-        /// Session timeout in seconds (1 hour)
-        static let sessionTimeoutHours: TimeInterval = 3600
+        /// Session timeout interval (1 hour)
+        static let sessionTimeout: TimeInterval = 3600
     }
 }

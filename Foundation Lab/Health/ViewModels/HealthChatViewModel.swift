@@ -17,7 +17,7 @@ import OSLog
 final class HealthChatViewModel {
 
     // Constants
-    private let sessionTimeoutHours: TimeInterval = AppConfiguration.Health.sessionTimeoutHours
+    private let sessionTimeout: TimeInterval = AppConfiguration.Health.sessionTimeout
     private let logger = Logger(subsystem: "com.foundationlab.health", category: "HealthChatViewModel")
 
     // MARK: - Published Properties
@@ -26,10 +26,13 @@ final class HealthChatViewModel {
     var sessionCount: Int = 1
     var currentHealthMetrics: [MetricType: Double] = [:]
 
+    // MARK: - Streaming Task
+    private var streamingTask: Task<Void, Error>?
+
     // MARK: - Public Properties
     private(set) var session: LanguageModelSession
     private var modelContext: ModelContext?
-    private let healthDataManager = HealthDataManager.shared
+    private let healthDataManager: HealthDataManager
 
     // MARK: - Tools
     private let tools: [any Tool] = [
@@ -38,7 +41,8 @@ final class HealthChatViewModel {
     ]
 
     // MARK: - Initialization
-    init() {
+    init(healthDataManager: HealthDataManager? = nil) {
+        self.healthDataManager = healthDataManager ?? .shared
         // Create session with tools and instructions for health data access
         self.session = LanguageModelSession(
             tools: tools,
@@ -55,6 +59,7 @@ final class HealthChatViewModel {
     @MainActor
     func sendMessage(_ content: String) async {
         isLoading = true
+        defer { isLoading = false }
 
         do {
             // Save user message to session history
@@ -64,15 +69,22 @@ final class HealthChatViewModel {
             let responseStream = session.streamResponse(to: Prompt(content))
 
             var responseText = ""
-            for try await _ in responseStream {
-                // The streaming automatically updates the session transcript
+            streamingTask?.cancel()
+            let task = Task { @MainActor in
+                for try await _ in responseStream {
+                    // The streaming automatically updates the session transcript
+                }
+            }
+            streamingTask = task
+            defer { streamingTask = nil }
+            do {
+                try await task.value
+            } catch is CancellationError {
+                return
             }
 
             // Extract the response text from the transcript
-            if let lastEntry = session.transcript.last,
-               case .response = lastEntry {
-                responseText = lastEntry.textContent() ?? ""
-            }
+            responseText = latestResponseText()
 
             // Save AI response to session history
             if !responseText.isEmpty {
@@ -89,18 +101,17 @@ final class HealthChatViewModel {
             await handleContextWindowExceeded(userMessage: content)
 
         } catch {
-            // Log the error for debugging purposes
             logger.error("Failed to generate response: \(error.localizedDescription, privacy: .public)")
-            // Show user-friendly error message
-            let userMessage = "I apologize, but I encountered an error. Please try again."
-            await saveMessageToSession(userMessage, isFromUser: false)
+            let errorText = FoundationModelsErrorHandler.handleError(error)
+            await saveMessageToSession(errorText, isFromUser: false)
         }
 
-        isLoading = false
     }
 
     @MainActor
     func clearChat() {
+        streamingTask?.cancel()
+        streamingTask = nil
         sessionCount = 1
         session = LanguageModelSession(
             tools: tools,
@@ -109,9 +120,22 @@ final class HealthChatViewModel {
     }
 
     @MainActor
+    func tearDown() {
+        streamingTask?.cancel()
+        streamingTask = nil
+    }
+
+    @MainActor
     func loadInitialHealthData() async {
-        // Fetch current health data
-        await healthDataManager.fetchTodayHealthData()
+        do {
+            try await healthDataManager.fetchTodayHealthData()
+        } catch {
+            logger.error("Failed to load health data: \(error.localizedDescription, privacy: .public)")
+            await saveMessageToSession(
+                FoundationModelsErrorHandler.handleError(error),
+                isFromUser: false
+            )
+        }
 
         currentHealthMetrics = [
             .steps: healthDataManager.todaySteps,
@@ -142,6 +166,20 @@ private extension HealthChatViewModel {
             userLabel: String(localized: "User:"),
             assistantLabel: String(localized: "Health AI:")
         )
+    }
+
+    func latestResponseText() -> String {
+        for entry in session.transcript.reversed() {
+            switch entry {
+            case .response:
+                return entry.textContent() ?? ""
+            case .prompt:
+                return ""
+            default:
+                continue
+            }
+        }
+        return ""
     }
 
     func createNewSessionWithContext(summary: HealthConversationSummary) {
@@ -175,7 +213,7 @@ private extension HealthChatViewModel {
             let activeSession: HealthSession
 
             if let existingSession = sessions.first,
-               existingSession.startDate.timeIntervalSinceNow > -sessionTimeoutHours {
+               existingSession.startDate.timeIntervalSinceNow > -sessionTimeout {
                 activeSession = existingSession
             } else {
                 activeSession = HealthSession(sessionType: .coaching)
@@ -219,9 +257,13 @@ private extension HealthChatViewModel {
             createNewSessionWithContext(summary: summary)
             isSummarizing = false
 
-            try await respondWithNewSession(to: userMessage)
+            try await respondWithNewSession(to: userMessage, shouldSaveUserMessage: false)
         } catch {
             isSummarizing = false
+            session = LanguageModelSession(
+                tools: tools,
+                instructions: Instructions(Self.baseInstructions)
+            )
             let restartMessage = "I need to start a fresh conversation. Please repeat your question."
             await saveMessageToSession(restartMessage, isFromUser: false)
         }
@@ -254,20 +296,29 @@ private extension HealthChatViewModel {
         return summaryResponse.content
     }
 
-    func respondWithNewSession(to userMessage: String) async throws {
-        await saveMessageToSession(userMessage, isFromUser: true)
+    func respondWithNewSession(to userMessage: String, shouldSaveUserMessage: Bool = true) async throws {
+        if shouldSaveUserMessage {
+            await saveMessageToSession(userMessage, isFromUser: true)
+        }
 
         let responseStream = session.streamResponse(to: Prompt(userMessage))
 
         var responseText = ""
-        for try await _ in responseStream {
-            // The streaming automatically updates the session transcript
+        streamingTask?.cancel()
+        let task = Task { @MainActor in
+            for try await _ in responseStream {
+                // The streaming automatically updates the session transcript
+            }
+        }
+        streamingTask = task
+        defer { streamingTask = nil }
+        do {
+            try await task.value
+        } catch is CancellationError {
+            return
         }
 
-        if let lastEntry = session.transcript.last,
-           case .response = lastEntry {
-            responseText = lastEntry.textContent() ?? ""
-        }
+        responseText = latestResponseText()
 
         if !responseText.isEmpty {
             await saveMessageToSession(responseText, isFromUser: false)

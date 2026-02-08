@@ -38,12 +38,6 @@ struct LanguageDetectionView: View {
                     .padding(.horizontal)
                 }
 
-                if let errorMessage = languageService.errorMessage {
-                    Text(errorMessage)
-                        .foregroundColor(.red)
-                        .padding(.horizontal)
-                }
-
                 if !languageService.supportedLanguages.isEmpty {
                     languageListSection
                 }

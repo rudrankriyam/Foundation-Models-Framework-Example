@@ -237,6 +237,8 @@ struct WelcomeMessageView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .glassEffect(.regular, in: .rect(cornerRadius: 16))
         .padding(.horizontal)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Welcome to Health AI. I'm your personal health coach.")
     }
 }
 
@@ -259,6 +261,9 @@ struct ToolCallView: View {
         .padding(.vertical, 8)
         .glassEffect(.regular, in: .rect(cornerRadius: 12))
         .padding(.horizontal)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Analyzing your \(formatToolName(toolName))")
+        .accessibilityAddTraits(.updatesFrequently)
     }
 
     private func formatToolName(_ name: String) -> String {

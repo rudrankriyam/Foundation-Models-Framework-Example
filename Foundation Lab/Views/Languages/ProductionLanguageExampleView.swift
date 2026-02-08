@@ -110,11 +110,6 @@ struct ProductionLanguageExampleView: View {
                     .pickerStyle(.menu)
                 }
 
-                if let errorMessage = languageService.errorMessage {
-                    Text("Language loading error: \(errorMessage)")
-                        .font(.caption)
-                        .foregroundColor(.red)
-                }
             }
             .padding(.horizontal)
         }

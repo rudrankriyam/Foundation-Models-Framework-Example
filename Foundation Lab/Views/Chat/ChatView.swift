@@ -26,6 +26,7 @@ struct ChatView: View {
 
             ChatInputView(
                 messageText: $messageText,
+                chatViewModel: viewModel,
                 isTextFieldFocused: $isTextFieldFocused
             )
         }

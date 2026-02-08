@@ -50,6 +50,9 @@ struct MetricCardView: View {
         )
         .scaleEffect(isSelected ? 1.02 : 1.0)
         .animation(.easeInOut(duration: 0.2), value: isSelected)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(metricType.rawValue): \(formattedValue)")
+        .accessibilityValue(isSelected ? "Selected" : "")
     }
 
     private var formattedValue: String {
