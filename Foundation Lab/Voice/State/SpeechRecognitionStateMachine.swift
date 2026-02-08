@@ -209,7 +209,7 @@ final class SpeechRecognitionStateMachine {
     }
 
     private func processRecognizedText(_ text: String) {
-        currentSpeechTask = Task { [weak self] in
+        currentSpeechTask = Task { @MainActor [weak self] in
             guard let self = self else { return }
 
             do {
@@ -268,7 +268,7 @@ extension SpeechRecognitionStateMachine {
     func simulateGreeting(_ text: String) {
         state = .synthesizingResponse(text)
 
-        Task { [weak self] in
+        Task { @MainActor [weak self] in
             guard let self else { return }
 
             do {
@@ -286,7 +286,7 @@ extension SpeechRecognitionStateMachine {
 
     private func scheduleIdleReset() {
         idleResetTask?.cancel()
-        idleResetTask = Task { [weak self] in
+        idleResetTask = Task { @MainActor [weak self] in
             try? await Task.sleep(for: .seconds(0.5))
             self?.state = .idle
         }

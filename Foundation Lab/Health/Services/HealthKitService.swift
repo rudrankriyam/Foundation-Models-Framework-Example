@@ -54,7 +54,8 @@ actor HealthKitService {
         ]
 
         try await healthStore.requestAuthorization(toShare: [], read: readTypes)
-        isAuthorized = true
+        let authorizationStatuses = readTypes.map { healthStore.authorizationStatus(for: $0) }
+        isAuthorized = authorizationStatuses.allSatisfy { $0 == .sharingAuthorized }
     }
 
     func fetchAllTodayMetrics() async -> TodayHealthMetrics {
@@ -137,7 +138,8 @@ actor HealthKitService {
         do {
             let samples = try await descriptor.result(for: healthStore)
             if let sample = samples.first {
-                return sample.quantity.doubleValue(for: HKUnit(from: "count/min"))
+                let unit = HKUnit(from: "count/min") ?? HKUnit.count().unitDivided(by: .minute())
+                return sample.quantity.doubleValue(for: unit)
             }
         } catch {
             logger.error("Failed to fetch heart rate data: \(error.localizedDescription)")

@@ -57,12 +57,28 @@ struct WebMetadataToolView: View {
   }
 
   private func executeWebMetadata() {
+    guard let validatedURL = validatedURL() else {
+      executor.errorMessage = "Enter a valid http or https URL."
+      return
+    }
+
     Task {
       await executor.execute(
         tool: WebMetadataTool(),
-        prompt: "Generate a social media summary for \(url)"
+        prompt: "Generate a social media summary for \(validatedURL)"
       )
     }
+  }
+
+  private func validatedURL() -> String? {
+    let trimmedURL = url.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard let parsedURL = URL(string: trimmedURL),
+          let scheme = parsedURL.scheme?.lowercased(),
+          ["http", "https"].contains(scheme),
+          parsedURL.host != nil else {
+      return nil
+    }
+    return trimmedURL
   }
 }
 

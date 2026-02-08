@@ -234,7 +234,7 @@ extension SpeechRecognizer {
         if case .listening(let partialText) = state,
            !partialText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             if VoiceLogging.isVerboseEnabled {
-                logger.debug("Ignoring error due to partial text: \(partialText, privacy: .public)")
+                logger.debug("Ignoring error due to partial text: \(partialText, privacy: .private)")
             }
             hasProcessedFinalResult = true
             state = .completed(finalText: partialText)
@@ -249,13 +249,13 @@ extension SpeechRecognizer {
 
         if result.isFinal {
             if VoiceLogging.isVerboseEnabled {
-                logger.debug("Final result: \(transcription, privacy: .public)")
+                logger.debug("Final result: \(transcription, privacy: .private)")
             }
             hasProcessedFinalResult = true
             state = .completed(finalText: transcription)
         } else if !hasProcessedFinalResult {
             if VoiceLogging.isVerboseEnabled {
-                logger.debug("Partial result: \(transcription, privacy: .public)")
+                logger.debug("Partial result: \(transcription, privacy: .private)")
             }
             state = .listening(partialText: transcription)
         }

@@ -326,7 +326,7 @@ private extension ChatViewModel {
     @MainActor
     private func startSpeechObservation() {
         stopSpeechObservation()
-        speechObservationTask = Task { [weak self] in
+        speechObservationTask = Task { @MainActor [weak self] in
             await self?.observeSpeechState()
         }
     }

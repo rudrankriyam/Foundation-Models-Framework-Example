@@ -64,8 +64,9 @@ for language in supported {
     let name = Locale.current.localizedString(forLanguageCode: code) ?? code
     let regionName = region.isEmpty ? nil :
         (Locale.current.localizedString(forRegionCode: region) ?? region)
+    let displayName = regionName.map { "\\(name) (\\($0))" } ?? name
 
-    print(regionName != nil ? "\\(name) (\\(regionName!))" : "\\(name)")
+    print(displayName)
 }
 """
             )
