@@ -46,8 +46,8 @@ final class ChatPage {
 
     func waitForResponse(timeout: TimeInterval = 30) -> Bool {
         // Wait for the loading to finish by checking if there's a response
-        let exists = app.staticTexts.containing(NSPredicate(format: "label CONTAINS[cd] 'How can we help'")).count > 0
-        return exists
+        let responseElement = app.staticTexts.containing(NSPredicate(format: "label CONTAINS[cd] 'How can we help'")).firstMatch
+        return responseElement.waitForExistence(timeout: timeout)
     }
 
     func clearChat() {
