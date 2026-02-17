@@ -27,9 +27,18 @@ struct TranscriptEntryView: View {
                     .padding(.horizontal, Spacing.large)
             }
         }
-        .task(id: entry.id) {
+        .task(id: entryContentHash) {
             tokenCount = await resolveTokenCount()
         }
+    }
+
+    /// A hash that changes when the entry's text content changes,
+    /// ensuring the token count recalculates after streaming completes.
+    private var entryContentHash: Int {
+        var hasher = Hasher()
+        hasher.combine(entry.id)
+        hasher.combine(entry.textContent() ?? "")
+        return hasher.finalize()
     }
 
     @ViewBuilder
