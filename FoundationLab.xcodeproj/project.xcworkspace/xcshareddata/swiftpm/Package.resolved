@@ -43,25 +43,7 @@
       "location" : "https://github.com/rryam/LumoKit.git",
       "state" : {
         "branch" : "main",
-        "revision" : "89302b98a9263f43e7bc1df4c5d2a8b2a86f72ff"
-      }
-    },
-    {
-      "identity" : "mlx-swift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/ml-explore/mlx-swift",
-      "state" : {
-        "revision" : "072b684acaae80b6a463abab3a103732f33774bf",
-        "version" : "0.29.1"
-      }
-    },
-    {
-      "identity" : "mlx-swift-lm",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/ml-explore/mlx-swift-lm/",
-      "state" : {
-        "revision" : "01852971866b17889f7aff27500cc62d9148b0df",
-        "version" : "2.29.2"
+        "revision" : "e18baa1e5c7677216350380f298338f1abb45f7c"
       }
     },
     {
@@ -69,8 +51,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/rudrankriyam/PicoDocs.git",
       "state" : {
-        "branch" : "main",
-        "revision" : "fcabf8ab13ddc0c5bd3d89d54c2b08fd6c1d249d"
+        "revision" : "5386f4db95da841b3f6e37e698baec2d0055afd6",
+        "version" : "1.0.1"
       }
     },
     {
@@ -105,8 +87,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/jkrukowski/swift-embeddings.git",
       "state" : {
-        "revision" : "63b5f211c8b9f3e9fb9781e88195b41ac16cf3b5",
-        "version" : "0.0.25"
+        "branch" : "main",
+        "revision" : "66994e3b3ed172a9b691b59d11bd0702c3f5eb33"
       }
     },
     {
@@ -116,15 +98,6 @@
       "state" : {
         "revision" : "06a511d5adab5a812852ff972e65702a24b8ce30",
         "version" : "2.2.0"
-      }
-    },
-    {
-      "identity" : "swift-numerics",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-numerics",
-      "state" : {
-        "revision" : "0c0290ff6b24942dadb83a929ffaaa1481df04a2",
-        "version" : "1.1.1"
       }
     },
     {
@@ -169,7 +142,7 @@
       "location" : "https://github.com/rryam/VecturaKit.git",
       "state" : {
         "branch" : "main",
-        "revision" : "1a42c3f198a2446f19b7899655b94c605dc757fd"
+        "revision" : "0b2beed33961a98eac2238ac2cecc2b5aa4b7418"
       }
     }
   ],
