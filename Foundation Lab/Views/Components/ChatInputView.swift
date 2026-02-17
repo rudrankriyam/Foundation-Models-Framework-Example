@@ -25,6 +25,7 @@ struct ChatInputView: View {
                     } else {
                         TextField("Type your message...", text: $messageText, axis: .vertical)
                             .textFieldStyle(.plain)
+                            .accessibilityIdentifier("chatTextField")
                             .focused($isTextFieldFocused)
                             .onSubmit {
                                 sendMessage()
@@ -86,6 +87,7 @@ struct ChatInputView: View {
                             .foregroundStyle(.white)
                     }
                     .accessibilityLabel("Voice mode")
+                    .accessibilityIdentifier("voiceButton")
                     .padding(Spacing.medium)
                     .glassEffect(
                         .regular
@@ -101,6 +103,7 @@ struct ChatInputView: View {
                             .foregroundStyle(.white)
                     }
                     .accessibilityLabel("Send message")
+                    .accessibilityIdentifier("sendButton")
                     .padding(Spacing.medium)
                     .glassEffect(
                         .regular
@@ -126,6 +129,7 @@ struct ChatInputView: View {
                 } else {
                     TextField("Type your message...", text: $messageText, axis: .vertical)
                         .textFieldStyle(.plain)
+                        .accessibilityIdentifier("chatTextField")
                         .focused($isTextFieldFocused)
                         .onSubmit {
                             sendMessage()
@@ -166,6 +170,7 @@ struct ChatInputView: View {
                         .foregroundStyle(.blue)
                 }
                 .accessibilityLabel("Voice mode")
+                .accessibilityIdentifier("voiceButton")
                 .buttonStyle(.plain)
                 .padding(Spacing.small)
                 .disabled(chatViewModel.voiceState.isActive && !chatViewModel.voiceState.isError)
@@ -178,6 +183,7 @@ struct ChatInputView: View {
                         )
                 }
                 .accessibilityLabel("Send message")
+                .accessibilityIdentifier("sendButton")
                 .buttonStyle(.plain)
                 .padding(Spacing.small)
                 .disabled(

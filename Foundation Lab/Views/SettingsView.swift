@@ -22,6 +22,7 @@ struct SettingsView: View {
                     }
                 }
                 .foregroundColor(.primary)
+                .accessibilityIdentifier("bugFeatureLink")
 
                 Link(destination: URL(string: "https://x.com/rudrankriyam")!) {
                     HStack {
@@ -33,6 +34,7 @@ struct SettingsView: View {
                     }
                 }
                 .foregroundColor(.primary)
+                .accessibilityIdentifier("madeByLink")
 
                 HStack {
                     Text("Version")
