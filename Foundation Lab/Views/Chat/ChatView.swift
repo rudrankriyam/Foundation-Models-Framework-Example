@@ -18,6 +18,8 @@ struct ChatView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            tokenUsageBar
+
             messagesView
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -100,6 +102,45 @@ struct ChatView: View {
     }
 
     // MARK: - View Components
+
+    @ViewBuilder
+    private var tokenUsageBar: some View {
+        if viewModel.currentTokenCount > 0 {
+            VStack(spacing: 2) {
+                ProgressView(
+                    value: viewModel.tokenUsageFraction
+                )
+                .tint(tokenUsageColor)
+
+                HStack {
+                    Text("\(viewModel.currentTokenCount) / \(viewModel.maxContextSize) tokens")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text("\(Int(viewModel.tokenUsageFraction * 100))%")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 4)
+            .transition(.move(edge: .top).combined(with: .opacity))
+            .animation(.easeInOut(duration: 0.3), value: viewModel.currentTokenCount)
+        }
+    }
+
+    private var tokenUsageColor: Color {
+        switch viewModel.tokenUsageFraction {
+        case 0..<0.5:
+            return .green
+        case 0.5..<0.75:
+            return .yellow
+        case 0.75..<0.9:
+            return .orange
+        default:
+            return .red
+        }
+    }
 
     private var messagesView: some View {
         ScrollViewReader { proxy in

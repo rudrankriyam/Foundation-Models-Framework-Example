@@ -40,6 +40,20 @@ final class ChatViewModel {
     var errorMessage: String?
     var showError: Bool = false
 
+    // MARK: - Token Usage Tracking
+
+    /// Current token usage for the transcript. Updated after each message.
+    private(set) var currentTokenCount: Int = 0
+
+    /// Maximum context size for the model.
+    private(set) var maxContextSize: Int = AppConfiguration.TokenManagement.defaultMaxTokens
+
+    /// Fraction of context window used (0.0 to 1.0).
+    var tokenUsageFraction: Double {
+        guard maxContextSize > 0 else { return 0 }
+        return min(1.0, Double(currentTokenCount) / Double(maxContextSize))
+    }
+
     // MARK: - Streaming Task
 
     private var streamingTask: Task<Void, Error>?
@@ -67,7 +81,6 @@ final class ChatViewModel {
     }
 
     // MARK: - Sliding Window Configuration
-    private let maxTokens = AppConfiguration.TokenManagement.maxTokens
     private let windowThreshold = AppConfiguration.TokenManagement.windowThreshold
     private let targetWindowSize = AppConfiguration.TokenManagement.targetWindowSize
 
@@ -83,6 +96,10 @@ final class ChatViewModel {
             model: createLanguageModel(),
             instructions: Instructions(instructions)
         )
+
+        Task {
+            await fetchContextSize()
+        }
     }
 
     // MARK: - Public Methods
@@ -93,12 +110,10 @@ final class ChatViewModel {
         defer { isLoading = session.isResponding }
 
         do {
-            // Check if we need to apply sliding window BEFORE sending
-            if shouldApplyWindow() {
+            if await shouldApplyWindow() {
                 await applySlidingWindow()
             }
 
-            // Stream response from current session
             let responseStream = session.streamResponse(to: Prompt(content), options: generationOptions)
 
             streamingTask?.cancel()
@@ -115,12 +130,12 @@ final class ChatViewModel {
                 return
             }
 
+            await updateTokenCount()
+
         } catch LanguageModelSession.GenerationError.exceededContextWindowSize {
-            // Fallback: Handle context window exceeded by summarizing and creating new session
             await handleContextWindowExceeded(userMessage: content)
 
         } catch {
-            // Handle other errors by showing an error message
             errorMessage = FoundationModelsErrorHandler.handleError(error)
             showError = true
         }
@@ -128,14 +143,10 @@ final class ChatViewModel {
 
     @MainActor
     func submitFeedback(for entryID: Transcript.Entry.ID, sentiment: LanguageModelFeedback.Sentiment) {
-        // Store the feedback state
         feedbackState[entryID] = sentiment
 
-        // Use the new session method to log feedback attachment
-        // The return value is Data containing the feedback attachment (can be saved/submitted to Apple)
         let feedbackData = session.logFeedbackAttachment(sentiment: sentiment)
-        // Note: feedbackData could be saved to a file for submission to Feedback Assistant if needed
-        _ = feedbackData // Explicitly acknowledge we're using the return value
+        _ = feedbackData
     }
 
     @MainActor
@@ -154,6 +165,7 @@ final class ChatViewModel {
         isApplyingWindow = false
         errorMessage = nil
         showError = false
+        currentTokenCount = 0
         session = LanguageModelSession(
             model: createLanguageModel(),
             instructions: Instructions(instructions)
@@ -163,12 +175,11 @@ final class ChatViewModel {
     @MainActor
     func updateInstructions(_ newInstructions: String) {
         instructions = newInstructions
-        // Create a new session with updated instructions
-        // Note: The transcript is read-only, so we start fresh with new instructions
         session = LanguageModelSession(
             model: createLanguageModel(),
             instructions: Instructions(instructions)
         )
+        currentTokenCount = 0
     }
 
     @MainActor
@@ -181,7 +192,6 @@ final class ChatViewModel {
     }
 
     /// Cleans up resources when the view disappears.
-    /// Cancels any running tasks and stops speech recognition.
     @MainActor
     func tearDown() {
         streamingTask?.cancel()
@@ -193,9 +203,6 @@ final class ChatViewModel {
 
     // MARK: - Voice Methods
 
-    /// Starts inline voice mode for hands-free conversation.
-    /// Requests microphone and speech recognition permissions if needed.
-    /// Transitions through: idle -> preparing -> listening
     @MainActor
     func startVoiceMode() async {
         if case .error = voiceState {
@@ -206,7 +213,6 @@ final class ChatViewModel {
             return
         }
 
-        // Check permissions first
         if !permissionManager.allPermissionsGranted {
             let granted = await permissionManager.requestAllPermissions()
             if !granted {
@@ -219,28 +225,22 @@ final class ChatViewModel {
         isLoading = false
         voiceState = .preparing
 
-        // Pre-warm the model
         session.prewarm()
 
         stopSpeechObservation()
         speechRecognizer?.stopRecognition()
         speechRecognizer = nil
 
-        // Initialize speech recognizer
         let didStart = await initializeSpeechRecognizer()
         guard didStart else { return }
 
-        // Only transition to listening if still in preparing state
         if case .preparing = voiceState {
             voiceState = .listening(partialText: "")
         }
 
-        // Observe speech state changes in the background
         startSpeechObservation()
     }
 
-    /// Cancels the current voice mode session and resets to idle state.
-    /// Clears any error messages and stops speech recognition.
     @MainActor
     func cancelVoiceMode() {
         stopSpeechObservation()
@@ -251,8 +251,6 @@ final class ChatViewModel {
         speechRecognizer = nil
     }
 
-    /// Interrupts the AI's speech response and returns to listening mode.
-    /// Allows the user to speak immediately without waiting for TTS to finish.
     @MainActor
     func stopSpeaking() {
         guard case .speaking = voiceState else { return }
@@ -260,9 +258,6 @@ final class ChatViewModel {
         restartListening()
     }
 
-    /// Stops listening and sends the recognized text to the AI.
-    /// Sends the voice input to the session, plays TTS response, and
-    /// auto-returns to listening for multi-turn conversation.
     @MainActor
     func stopVoiceModeAndSend() async {
         guard case .listening(let text) = voiceState else { return }
@@ -288,7 +283,6 @@ final class ChatViewModel {
                 try await speechSynthesizer.synthesizeAndSpeak(text: response.content)
             } catch let synthError as SpeechSynthesizerError {
                 if case .cancelled = synthError {
-                    // User-initiated cancellation; stopSpeaking already restarted listening.
                     return
                 }
                 handleVoiceError(synthError.localizedDescription)
@@ -298,11 +292,26 @@ final class ChatViewModel {
                 return
             }
 
-            // Auto-return to listening for multi-turn!
             restartListening()
         } catch {
             handleVoiceError(error.localizedDescription)
         }
+    }
+}
+
+// MARK: - Token Usage
+
+private extension ChatViewModel {
+    func fetchContextSize() async {
+        maxContextSize = await AppConfiguration.TokenManagement.contextSize(
+            for: createLanguageModel()
+        )
+    }
+
+    func updateTokenCount() async {
+        currentTokenCount = await session.transcript.tokenCount(
+            using: createLanguageModel()
+        )
     }
 }
 
@@ -403,15 +412,23 @@ private extension ChatViewModel {
 private extension ChatViewModel {
     // MARK: - Sliding Window Implementation
 
-    func shouldApplyWindow() -> Bool {
-        session.transcript.isApproachingLimit(threshold: windowThreshold, maxTokens: maxTokens)
+    func shouldApplyWindow() async -> Bool {
+        await session.transcript.isApproachingLimit(
+            threshold: windowThreshold,
+            maxTokens: maxContextSize,
+            using: createLanguageModel()
+        )
     }
 
     @MainActor
     func applySlidingWindow() async {
         isApplyingWindow = true
 
-        let windowEntries = session.transcript.entriesWithinTokenBudget(targetWindowSize)
+        let model = createLanguageModel()
+        let windowEntries = await session.transcript.entriesWithinTokenBudget(
+            targetWindowSize,
+            using: model
+        )
 
         var finalEntries = windowEntries
         if let instructions = session.transcript.first(where: {
@@ -424,10 +441,11 @@ private extension ChatViewModel {
         }
 
         let windowedTranscript = Transcript(entries: finalEntries)
-        _ = windowedTranscript.estimatedTokenCount
 
-        session = LanguageModelSession(model: createLanguageModel(), transcript: windowedTranscript)
+        session = LanguageModelSession(model: model, transcript: windowedTranscript)
         sessionCount += 1
+
+        await updateTokenCount()
 
         isApplyingWindow = false
     }
@@ -455,6 +473,7 @@ private extension ChatViewModel {
 
         do {
             try await respondWithNewSession(to: userMessage)
+            await updateTokenCount()
         } catch {
             errorMessage = FoundationModelsErrorHandler.handleError(error)
             showError = true
@@ -514,6 +533,7 @@ private extension ChatViewModel {
             instructions: Instructions(contextInstructions)
         )
         sessionCount += 1
+        currentTokenCount = 0
     }
 
     @MainActor

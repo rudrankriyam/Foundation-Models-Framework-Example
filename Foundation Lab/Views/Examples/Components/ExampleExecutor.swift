@@ -18,6 +18,9 @@ final class ExampleExecutor {
     var successMessage: String?
     var promptHistory: [String] = []
 
+    /// Token count from the last operation. Updated after each execution.
+    private(set) var lastTokenCount: Int?
+
     /// Executes a basic language model operation
     func executeBasic(
         prompt: String,
@@ -34,8 +37,8 @@ final class ExampleExecutor {
         errorMessage = nil
         self.successMessage = nil
         result = ""
+        lastTokenCount = nil
 
-        // Add to history
         addToHistory(prompt)
 
         do {
@@ -50,6 +53,8 @@ final class ExampleExecutor {
 
             let response = try await session.respond(to: Prompt(prompt))
             result = response.content
+
+            lastTokenCount = await session.transcript.tokenCount(using: model)
 
             if let successMessage = successMessage {
                 self.successMessage = successMessage
@@ -79,8 +84,8 @@ final class ExampleExecutor {
         errorMessage = nil
         successMessage = nil
         result = ""
+        lastTokenCount = nil
 
-        // Add to history
         addToHistory(prompt)
 
         do {
@@ -96,6 +101,8 @@ final class ExampleExecutor {
             )
 
             result = formatter(response.content)
+
+            lastTokenCount = await session.transcript.tokenCount()
 
         } catch {
             errorMessage = FoundationModelsErrorHandler.handleError(error)
@@ -119,8 +126,8 @@ final class ExampleExecutor {
         errorMessage = nil
         successMessage = nil
         result = ""
+        lastTokenCount = nil
 
-        // Add to history
         addToHistory(prompt)
 
         do {
@@ -138,6 +145,8 @@ final class ExampleExecutor {
                 onPartialResult(partialResponse.content)
             }
 
+            lastTokenCount = await session.transcript.tokenCount()
+
         } catch {
             errorMessage = FoundationModelsErrorHandler.handleError(error)
         }
@@ -151,6 +160,7 @@ final class ExampleExecutor {
         result = ""
         errorMessage = nil
         successMessage = nil
+        lastTokenCount = nil
     }
 
     /// Clears all state including prompt history
@@ -161,14 +171,10 @@ final class ExampleExecutor {
 
     /// Adds a prompt to history
     private func addToHistory(_ prompt: String) {
-        // Remove if already exists
         promptHistory.removeAll { $0 == prompt }
-        // Add to beginning
         promptHistory.insert(prompt, at: 0)
-        // Keep only last 10
         if promptHistory.count > 10 {
             promptHistory = Array(promptHistory.prefix(10))
         }
     }
-
 }

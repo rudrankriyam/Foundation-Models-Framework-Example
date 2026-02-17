@@ -52,6 +52,9 @@ final class RAGChatViewModel {
     var errorMessage: String?
     var showError = false
 
+    /// Token count from the last RAG generation.
+    private(set) var lastTokenCount: Int?
+
     private var streamingTask: Task<Void, Error>?
     private var service: RAGService?
     private var isInitialized = false
@@ -363,6 +366,7 @@ private extension RAGChatViewModel {
     func generateAnswer(query: String, chunks: [RAGChunk], onUpdate: @escaping @MainActor (String) -> Void) async {
         isGenerating = true
         defer { isGenerating = false }
+        lastTokenCount = nil
 
         let systemPrompt = """
         You are a helpful assistant. Answer using only the sources provided.
@@ -390,6 +394,8 @@ private extension RAGChatViewModel {
             } catch is CancellationError {
                 return
             }
+
+            lastTokenCount = await session.transcript.tokenCount()
         } catch {
             onUpdate("Failed to answer: \(error.localizedDescription)")
         }
@@ -398,6 +404,8 @@ private extension RAGChatViewModel {
     func generateResponse(for entry: RAGChatEntry, query: String, chunks: [RAGChunk]) async {
         isGenerating = true
         defer { isGenerating = false }
+        lastTokenCount = nil
+
         let systemPrompt = "You are a helpful assistant. Answer based on context. Cite content when possible."
         let contextText = chunks.isEmpty ? "No relevant documents found." :
             chunks.enumerated().map { index, chunk in "[Document \(index + 1)]: \(chunk.content)" }.joined(separator: "\n\n")
@@ -421,6 +429,8 @@ private extension RAGChatViewModel {
             } catch is CancellationError {
                 return
             }
+
+            lastTokenCount = await session.transcript.tokenCount()
         } catch {
             if entry.content.isEmpty { entry.content = "Failed: \(error.localizedDescription)" }
         }

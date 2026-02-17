@@ -10,8 +10,30 @@ import FoundationModels
 
 struct TranscriptEntryView: View {
     let entry: Transcript.Entry
+    @State private var tokenCount: Int?
 
     var body: some View {
+        VStack(spacing: 2) {
+            entryContent
+
+            if let tokenCount {
+                Text("\(tokenCount) tokens")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .frame(
+                        maxWidth: .infinity,
+                        alignment: entry.isFromUser ? .trailing : .leading
+                    )
+                    .padding(.horizontal, Spacing.large)
+            }
+        }
+        .task(id: entry.id) {
+            tokenCount = await resolveTokenCount()
+        }
+    }
+
+    @ViewBuilder
+    private var entryContent: some View {
         switch entry {
         case .prompt(let prompt):
             if let text = prompt.segments.textContentJoined() {
@@ -29,7 +51,7 @@ struct TranscriptEntryView: View {
             ForEach(Array(toolCalls.enumerated()), id: \.offset) { index, toolCall in
                 MessageBubbleView(message: ChatMessage(
                     entryID: entry.id,
-                    content: "🔧 Calling tool: \(toolCall.toolName)",
+                    content: "Calling tool: \(toolCall.toolName)",
                     isFromUser: false
                 ))
                 .id("\(entry.id)-tool-\(index)")
@@ -39,14 +61,13 @@ struct TranscriptEntryView: View {
             if let text = toolOutput.segments.textContentJoined() {
                 MessageBubbleView(message: ChatMessage(
                     entryID: entry.id,
-                    content: "🔧 Tool result: \(text)",
+                    content: "Tool result: \(text)",
                     isFromUser: false
                 ))
                 .id(entry.id)
             }
 
         case .instructions:
-            // Don't show instructions in chat UI
             EmptyView()
 
         @unknown default:
@@ -54,4 +75,25 @@ struct TranscriptEntryView: View {
         }
     }
 
+    private func resolveTokenCount() async -> Int? {
+        switch entry {
+        case .instructions:
+            return nil
+        default:
+            #if compiler(>=6.3)
+            if #available(iOS 26.4, macOS 26.4, visionOS 26.4, *) {
+                return try? await SystemLanguageModel.default
+                    .tokenUsage(for: [entry]).tokenCount
+            }
+            #endif
+            return entry.estimatedTokenCount
+        }
+    }
+}
+
+private extension Transcript.Entry {
+    var isFromUser: Bool {
+        if case .prompt = self { return true }
+        return false
+    }
 }

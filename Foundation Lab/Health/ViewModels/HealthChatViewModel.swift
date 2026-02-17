@@ -26,6 +26,15 @@ final class HealthChatViewModel {
     var sessionCount: Int = 1
     var currentHealthMetrics: [MetricType: Double] = [:]
 
+    // MARK: - Token Usage Tracking
+    private(set) var currentTokenCount: Int = 0
+    private(set) var maxContextSize: Int = AppConfiguration.TokenManagement.defaultMaxTokens
+
+    var tokenUsageFraction: Double {
+        guard maxContextSize > 0 else { return 0 }
+        return min(1.0, Double(currentTokenCount) / Double(maxContextSize))
+    }
+
     // MARK: - Streaming Task
     private var streamingTask: Task<Void, Error>?
 
@@ -43,11 +52,14 @@ final class HealthChatViewModel {
     // MARK: - Initialization
     init(healthDataManager: HealthDataManager? = nil) {
         self.healthDataManager = healthDataManager ?? .shared
-        // Create session with tools and instructions for health data access
         self.session = LanguageModelSession(
             tools: tools,
             instructions: Instructions(Self.baseInstructions)
         )
+
+        Task {
+            maxContextSize = await AppConfiguration.TokenManagement.contextSize()
+        }
     }
 
     func setModelContext(_ context: ModelContext) {
@@ -91,7 +103,8 @@ final class HealthChatViewModel {
                 await saveMessageToSession(responseText, isFromUser: false)
             }
 
-            // Generate insights if health data was discussed
+            await updateTokenCount()
+
             if shouldGenerateInsight(from: responseText) {
                 await generateHealthInsight(from: responseText)
             }
@@ -113,6 +126,7 @@ final class HealthChatViewModel {
         streamingTask?.cancel()
         streamingTask = nil
         sessionCount = 1
+        currentTokenCount = 0
         session = LanguageModelSession(
             tools: tools,
             instructions: Instructions(Self.baseInstructions)
@@ -149,6 +163,10 @@ final class HealthChatViewModel {
 }
 
 private extension HealthChatViewModel {
+    func updateTokenCount() async {
+        currentTokenCount = await session.transcript.tokenCount()
+    }
+
     static let baseInstructions = """
     You are a friendly and knowledgeable health coach AI assistant.
     Based on the user's health data, provide personalized, encouraging responses.
@@ -196,6 +214,7 @@ private extension HealthChatViewModel {
             instructions: Instructions(contextInstructions)
         )
         sessionCount += 1
+        currentTokenCount = 0
     }
 }
 
