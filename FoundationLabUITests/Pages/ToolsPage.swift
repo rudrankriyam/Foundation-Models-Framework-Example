@@ -20,10 +20,6 @@ final class ToolsPage {
         app.buttons["toolButton_\(identifier)"]
     }
 
-    func toolNavigationLink(identifier: String) -> XCUIElement {
-        app.buttons["toolButton_\(identifier)"]
-    }
-
     // MARK: - Common Tools
 
     var weatherToolButton: XCUIElement {
@@ -46,6 +42,6 @@ final class ToolsPage {
     }
 
     func navigateToTool(identifier: String) {
-        toolNavigationLink(identifier: identifier).tap()
+        toolButton(identifier: identifier).tap()
     }
 }
