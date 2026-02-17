@@ -11,6 +11,7 @@ import FoundationModels
 struct TranscriptEntryView: View {
     let entry: Transcript.Entry
     @State private var tokenCount: Int?
+    @Environment(ChatViewModel.self) private var chatViewModel
 
     var body: some View {
         VStack(spacing: 2) {
@@ -27,18 +28,10 @@ struct TranscriptEntryView: View {
                     .padding(.horizontal, Spacing.large)
             }
         }
-        .task(id: entryContentHash) {
+        .task(id: entry.id) {
+            tokenCount = nil
             tokenCount = await resolveTokenCount()
         }
-    }
-
-    /// A hash that changes when the entry's text content changes,
-    /// ensuring the token count recalculates after streaming completes.
-    private var entryContentHash: Int {
-        var hasher = Hasher()
-        hasher.combine(entry.id)
-        hasher.combine(entry.textContent() ?? "")
-        return hasher.finalize()
     }
 
     @ViewBuilder
@@ -60,7 +53,7 @@ struct TranscriptEntryView: View {
             ForEach(Array(toolCalls.enumerated()), id: \.offset) { index, toolCall in
                 MessageBubbleView(message: ChatMessage(
                     entryID: entry.id,
-                    content: "Calling tool: \(toolCall.toolName)",
+                    content: "🔧 Calling tool: \(toolCall.toolName)",
                     isFromUser: false
                 ))
                 .id("\(entry.id)-tool-\(index)")
@@ -70,7 +63,7 @@ struct TranscriptEntryView: View {
             if let text = toolOutput.segments.textContentJoined() {
                 MessageBubbleView(message: ChatMessage(
                     entryID: entry.id,
-                    content: "Tool result: \(text)",
+                    content: "🔧 Tool result: \(text)",
                     isFromUser: false
                 ))
                 .id(entry.id)
@@ -85,18 +78,38 @@ struct TranscriptEntryView: View {
     }
 
     private func resolveTokenCount() async -> Int? {
-        switch entry {
-        case .instructions:
+        if case .instructions = entry {
             return nil
-        default:
-            #if compiler(>=6.3)
-            if #available(iOS 26.4, macOS 26.4, visionOS 26.4, *) {
-                return try? await SystemLanguageModel.default
-                    .tokenUsage(for: [entry]).tokenCount
-            }
-            #endif
-            return entry.estimatedTokenCount
         }
+
+        // Avoid repeatedly calling the tokenizer while the newest entry is still streaming.
+        if chatViewModel.session.isResponding,
+           chatViewModel.session.transcript.last?.id == entry.id {
+            await waitForStreamingToFinish()
+        }
+
+        // Always compute tokens from the latest version of the entry in the transcript.
+        let latestEntry = chatViewModel.session.transcript.first(where: { $0.id == entry.id }) ?? entry
+        return await tokenCount(for: latestEntry)
+    }
+
+    private func waitForStreamingToFinish() async {
+        while chatViewModel.session.isResponding, !Task.isCancelled {
+            try? await Task.sleep(nanoseconds: 150_000_000)
+        }
+
+        // Give the transcript a moment to publish its final segment.
+        try? await Task.sleep(nanoseconds: 50_000_000)
+    }
+
+    private func tokenCount(for entry: Transcript.Entry) async -> Int? {
+        #if compiler(>=6.3)
+        if #available(iOS 26.4, macOS 26.4, visionOS 26.4, *) {
+            return try? await SystemLanguageModel.default.tokenUsage(for: [entry]).tokenCount
+        }
+        #endif
+
+        return entry.estimatedTokenCount
     }
 }
 

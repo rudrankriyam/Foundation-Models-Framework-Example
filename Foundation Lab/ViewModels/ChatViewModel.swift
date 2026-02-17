@@ -61,6 +61,7 @@ final class ChatViewModel {
     // MARK: - Public Properties
 
     private(set) var session: LanguageModelSession = LanguageModelSession()
+    private var languageModel: SystemLanguageModel = SystemLanguageModel(useCase: .general)
 
     // MARK: - Feedback State
 
@@ -92,8 +93,9 @@ final class ChatViewModel {
     ) {
         self.permissionManager = permissionManager ?? PermissionManager()
         self.speechSynthesizer = speechSynthesizer ?? SpeechSynthesizer.shared
+        languageModel = createLanguageModel()
         session = LanguageModelSession(
-            model: createLanguageModel(),
+            model: languageModel,
             instructions: Instructions(instructions)
         )
 
@@ -127,6 +129,7 @@ final class ChatViewModel {
             do {
                 try await task.value
             } catch is CancellationError {
+                // User-initiated cancellation (e.g. navigating away).
                 return
             }
 
@@ -166,8 +169,9 @@ final class ChatViewModel {
         errorMessage = nil
         showError = false
         currentTokenCount = 0
+        languageModel = createLanguageModel()
         session = LanguageModelSession(
-            model: createLanguageModel(),
+            model: languageModel,
             instructions: Instructions(instructions)
         )
     }
@@ -175,8 +179,9 @@ final class ChatViewModel {
     @MainActor
     func updateInstructions(_ newInstructions: String) {
         instructions = newInstructions
+        languageModel = createLanguageModel()
         session = LanguageModelSession(
-            model: createLanguageModel(),
+            model: languageModel,
             instructions: Instructions(instructions)
         )
         currentTokenCount = 0
@@ -293,6 +298,7 @@ final class ChatViewModel {
                 return
             }
 
+            // Auto-return to listening for multi-turn!
             restartListening()
         } catch {
             handleVoiceError(error.localizedDescription)
@@ -305,13 +311,13 @@ final class ChatViewModel {
 private extension ChatViewModel {
     func fetchContextSize() async {
         maxContextSize = await AppConfiguration.TokenManagement.contextSize(
-            for: createLanguageModel()
+            for: languageModel
         )
     }
 
     func updateTokenCount() async {
         currentTokenCount = await session.transcript.tokenCount(
-            using: createLanguageModel()
+            using: languageModel
         )
     }
 }
@@ -417,7 +423,7 @@ private extension ChatViewModel {
         await session.transcript.isApproachingLimit(
             threshold: windowThreshold,
             maxTokens: maxContextSize,
-            using: createLanguageModel()
+            using: languageModel
         )
     }
 
@@ -425,7 +431,7 @@ private extension ChatViewModel {
     func applySlidingWindow() async {
         isApplyingWindow = true
 
-        let model = createLanguageModel()
+        let model = languageModel
         let windowEntries = await session.transcript.entriesWithinTokenBudget(
             targetWindowSize,
             using: model
@@ -492,7 +498,7 @@ private extension ChatViewModel {
     @MainActor
     func generateConversationSummary() async throws -> ConversationSummary {
         let summarySession = LanguageModelSession(
-            model: createLanguageModel(),
+            model: languageModel,
             instructions: Instructions(
                 "You are an expert at summarizing conversations. Create comprehensive summaries that " +
                     "preserve all important context and details."
@@ -530,7 +536,7 @@ private extension ChatViewModel {
         )
 
         session = LanguageModelSession(
-            model: createLanguageModel(),
+            model: languageModel,
             instructions: Instructions(contextInstructions)
         )
         sessionCount += 1
@@ -552,6 +558,7 @@ private extension ChatViewModel {
         do {
             try await task.value
         } catch is CancellationError {
+            // User-initiated cancellation (e.g. navigating away).
             return
         }
     }

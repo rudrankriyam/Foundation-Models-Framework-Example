@@ -42,6 +42,7 @@ final class HealthChatViewModel {
     private(set) var session: LanguageModelSession
     private var modelContext: ModelContext?
     private let healthDataManager: HealthDataManager
+    private let languageModel = SystemLanguageModel.default
 
     // MARK: - Tools
     private let tools: [any Tool] = [
@@ -58,7 +59,7 @@ final class HealthChatViewModel {
         )
 
         Task {
-            maxContextSize = await AppConfiguration.TokenManagement.contextSize()
+            maxContextSize = await AppConfiguration.TokenManagement.contextSize(for: languageModel)
         }
     }
 
@@ -164,7 +165,7 @@ final class HealthChatViewModel {
 
 private extension HealthChatViewModel {
     func updateTokenCount() async {
-        currentTokenCount = await session.transcript.tokenCount()
+        currentTokenCount = await session.transcript.tokenCount(using: languageModel)
     }
 
     static let baseInstructions = """
@@ -277,6 +278,7 @@ private extension HealthChatViewModel {
             isSummarizing = false
 
             try await respondWithNewSession(to: userMessage, shouldSaveUserMessage: false)
+            await updateTokenCount()
         } catch {
             isSummarizing = false
             session = LanguageModelSession(
