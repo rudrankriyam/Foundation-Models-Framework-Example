@@ -277,6 +277,7 @@ private extension HealthChatViewModel {
             isSummarizing = false
 
             try await respondWithNewSession(to: userMessage, shouldSaveUserMessage: false)
+            await updateTokenCount()
         } catch {
             isSummarizing = false
             session = LanguageModelSession(
