@@ -165,7 +165,7 @@
 			name = FoundationLabUITests;
 			productName = FoundationLabUITests;
 			productReference = A1B2C3D4E5F6A7B8C9D0E1F0 /* FoundationLabUITests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
+			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
 
