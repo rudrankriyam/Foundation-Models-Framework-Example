@@ -131,17 +131,18 @@ extension Transcript {
 
     /// Returns the token count with a safety buffer for context window management.
     func safeTokenCount(using model: SystemLanguageModel = .default) async -> Int {
-        let baseTokens = await tokenCount(using: model)
-
         #if compiler(>=6.3)
         if #available(iOS 26.4, macOS 26.4, visionOS 26.4, *) {
-            // Real counts don't need as large a buffer
-            let buffer = Int(Double(baseTokens) * 0.05)
-            return baseTokens + buffer
+            if let realTokens = try? await realTokenCount(using: model) {
+                // Real counts don't need as large a buffer.
+                let buffer = Int(Double(realTokens) * 0.05)
+                return realTokens + buffer
+            }
         }
         #endif
 
         // Estimated counts need a larger buffer to account for inaccuracy
+        let baseTokens = estimatedTokenCount
         let buffer = Int(Double(baseTokens) * 0.25)
         let systemOverhead = 100
         return baseTokens + buffer + systemOverhead

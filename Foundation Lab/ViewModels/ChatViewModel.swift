@@ -277,6 +277,7 @@ final class ChatViewModel {
 
         do {
             let response = try await session.respond(to: Prompt(trimmedText))
+            await updateTokenCount()
             voiceState = .speaking(response: response.content)
 
             do {
