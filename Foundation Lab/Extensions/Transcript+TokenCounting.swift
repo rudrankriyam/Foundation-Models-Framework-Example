@@ -91,27 +91,6 @@ extension Transcript {
         try await model.tokenUsage(for: Array(self)).tokenCount
     }
 }
-
-@available(iOS 26.4, macOS 26.4, visionOS 26.4, *)
-extension Instructions {
-    /// Returns the real token count for instructions and optional tools.
-    func realTokenCount(
-        tools: [any Tool] = [],
-        using model: SystemLanguageModel = .default
-    ) async throws -> Int {
-        try await model.tokenUsage(for: self, tools: tools).tokenCount
-    }
-}
-
-@available(iOS 26.4, macOS 26.4, visionOS 26.4, *)
-extension Prompt {
-    /// Returns the real token count for a prompt.
-    func realTokenCount(
-        using model: SystemLanguageModel = .default
-    ) async throws -> Int {
-        try await model.tokenUsage(for: self).tokenCount
-    }
-}
 #endif
 
 // MARK: - Unified Token Counting
@@ -165,58 +144,76 @@ extension Transcript {
         _ budget: Int,
         using model: SystemLanguageModel = .default
     ) async -> [Transcript.Entry] {
-        var result: [Transcript.Entry] = []
-        var usedTokens = 0
-
-        if let instructions = self.first(where: {
+        let instructionsEntry = self.first(where: {
             if case .instructions = $0 { return true }
             return false
-        }) {
-            result.append(instructions)
-            usedTokens += await tokenCountForEntry(instructions, using: model)
-        }
+        })
 
         let nonInstructionEntries = self.filter { entry in
             if case .instructions = entry { return false }
             return true
         }
 
-        for entry in nonInstructionEntries.reversed() {
-            let entryTokens = await tokenCountForEntry(entry, using: model)
-            if usedTokens + entryTokens > budget { break }
+        func estimatedWindow() -> [Transcript.Entry] {
+            var result: [Transcript.Entry] = []
+            var usedTokens = 0
 
-            result.insert(entry, at: result.count)
-            usedTokens += entryTokens
+            if let instructionsEntry {
+                result.append(instructionsEntry)
+                usedTokens += instructionsEntry.estimatedTokenCount
+            }
+
+            for entry in nonInstructionEntries.reversed() {
+                let entryTokens = entry.estimatedTokenCount
+                if usedTokens + entryTokens > budget { break }
+                result.append(entry)
+                usedTokens += entryTokens
+            }
+
+            return result
         }
 
-        return result
-    }
-
-    /// Returns the best available token count for a single entry.
-    private func tokenCountForEntry(
-        _ entry: Transcript.Entry,
-        using model: SystemLanguageModel = .default
-    ) async -> Int {
         #if compiler(>=6.3)
         if #available(iOS 26.4, macOS 26.4, visionOS 26.4, *) {
-            if let real = try? await model.tokenUsage(for: [entry]).tokenCount {
-                return real
+            let base: [Transcript.Entry] = instructionsEntry.map { [$0] } ?? []
+
+            func realTokenCount(for entries: [Transcript.Entry]) async -> Int? {
+                try? await model.tokenUsage(for: entries).tokenCount
             }
+
+            // If we can't resolve real counts (or token usage fails), fall back to the estimator.
+            guard let baseTokens = base.isEmpty ? 0 : await realTokenCount(for: base) else {
+                return estimatedWindow()
+            }
+
+            // Match existing behavior: always keep instructions even if they alone exceed budget.
+            if baseTokens > budget {
+                return base
+            }
+
+            // Binary search for the largest suffix (most recent entries) that fits.
+            var low = 0
+            var high = nonInstructionEntries.count
+            while low < high {
+                let mid = (low + high + 1) / 2
+                let window = Array(nonInstructionEntries.suffix(mid).reversed())
+                let candidate = base + window
+
+                guard let tokens = await realTokenCount(for: candidate) else {
+                    return estimatedWindow()
+                }
+
+                if tokens <= budget {
+                    low = mid
+                } else {
+                    high = mid - 1
+                }
+            }
+
+            return base + Array(nonInstructionEntries.suffix(low).reversed())
         }
         #endif
-        return entry.estimatedTokenCount
-    }
-}
 
-// MARK: - Legacy Synchronous API (Estimation Only)
-
-extension Transcript {
-    /// Returns the estimated token count with a safety buffer.
-    /// Prefer the async `safeTokenCount(using:)` when possible.
-    var safeEstimatedTokenCount: Int {
-        let baseTokens = estimatedTokenCount
-        let buffer = Int(Double(baseTokens) * 0.25)
-        let systemOverhead = 100
-        return baseTokens + buffer + systemOverhead
+        return estimatedWindow()
     }
 }
