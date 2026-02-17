@@ -167,22 +167,23 @@ private extension Transcript {
         conversation: [Transcript.Entry],
         budget: Int
     ) -> [Transcript.Entry] {
-        var result: [Transcript.Entry] = []
+        let base: [Transcript.Entry] = instructions.map { [$0] } ?? []
+        var selectedConversation: [Transcript.Entry] = []
         var usedTokens = 0
 
         if let instructions {
-            result.append(instructions)
             usedTokens += instructions.estimatedTokenCount
         }
 
         for entry in conversation.reversed() {
             let entryTokens = entry.estimatedTokenCount
             if usedTokens + entryTokens > budget { break }
-            result.append(entry)
+            selectedConversation.append(entry)
             usedTokens += entryTokens
         }
 
-        return result
+        // Preserve chronological order (oldest -> newest) for the selected window.
+        return base + Array(selectedConversation.reversed())
     }
 
     #if compiler(>=6.3)

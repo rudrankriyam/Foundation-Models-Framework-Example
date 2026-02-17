@@ -32,7 +32,7 @@ struct RAGChatView: View {
                 }
 
                 if !answer.isEmpty {
-                    ResultDisplay(result: answer, isSuccess: true)
+                    ResultDisplay(result: answer, isSuccess: true, tokenCount: viewModel.lastTokenCount)
                 }
 
                 if !sources.isEmpty {
