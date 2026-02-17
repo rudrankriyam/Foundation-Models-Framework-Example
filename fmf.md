@@ -116,7 +116,9 @@ public struct DynamicGenerationSchema : Sendable {
     /// Creates an array schema.
     ///
     /// - Parameters:
-    ///   - arrayOf: A schema to use as the elements of the array.
+    ///   - itemSchema: A schema to use as the elements of the array.
+    ///   - minimumElements: A minimum number of elements the array should contain.
+    ///   - maximumElements: The maximum number of element the array should contain.
     public init(arrayOf itemSchema: DynamicGenerationSchema, minimumElements: Int? = nil, maximumElements: Int? = nil)
 
     /// Creates a schema from a generable type and guides.
@@ -231,7 +233,7 @@ extension Generable {
 ///   case nonFiction
 /// }
 /// ```
-/// - SeeAlso: @Guide macro ``Guide(description:)``
+/// - SeeAlso: @Generable macro ``Generable(description:representNullExplicitlyInGeneratedContent:)``
 @available(iOS 26.0, macOS 26.0, *)
 @available(tvOS, unavailable)
 @available(watchOS, unavailable)
@@ -384,7 +386,7 @@ extension GeneratedContent {
 
     /// A representation of the different types of content that can be stored in `GeneratedContent`.
     ///
-    /// `Kind` represents the various types of JSON-compatible data that can be held within 
+    /// `Kind` represents the various types of JSON-compatible data that can be held within
     /// a ``GeneratedContent`` instance, including primitive types, arrays, and structured objects.
     public enum Kind : Equatable, Sendable {
 
@@ -433,10 +435,10 @@ extension GeneratedContent {
     ///   - id: An optional ``GenerationID`` to associate with this content.
     public init(kind: GeneratedContent.Kind, id: GenerationID? = nil)
 
-    /// The kind representation of this generated content.
+    /// The representation of the generated content.
     ///
-    /// This property provides access to the content in a strongly-typed enum representation,
-    /// preserving the hierarchical structure of the data and the  data's ``GenerationID`` ids.
+    /// This property provides access to the content in a strongly-typed enumeration representation,
+    /// preserving the hierarchical structure of the data and the data's ``GenerationID`` values.
     public var kind: GeneratedContent.Kind { get }
 }
 
@@ -475,7 +477,7 @@ extension GenerationGuide where Value == Int {
     ///
     /// ```swift
     /// @Generable
-    /// struct struct GameCharacter {
+    /// struct GameCharacter {
     ///     @Guide(description: "A creative name appropriate for a fantasy RPG character")
     ///     var name: String
     ///
@@ -493,7 +495,7 @@ extension GenerationGuide where Value == Int {
     ///
     /// ```swift
     /// @Generable
-    /// struct struct GameCharacter {
+    /// struct GameCharacter {
     ///     @Guide(description: "A creative name appropriate for a fantasy RPG character")
     ///     var name: String
     ///
@@ -511,7 +513,7 @@ extension GenerationGuide where Value == Int {
     ///
     /// ```swift
     /// @Generable
-    /// struct struct GameCharacter {
+    /// struct GameCharacter {
     ///     @Guide(description: "A creative name appropriate for a fantasy RPG character")
     ///     var name: String
     ///
@@ -535,7 +537,7 @@ extension GenerationGuide where Value == Float {
     ///
     /// ```swift
     /// @Generable
-    /// struct struct GameCharacter {
+    /// struct GameCharacter {
     ///     @Guide(description: "A creative name appropriate for a fantasy RPG character")
     ///     var name: String
     ///
@@ -553,7 +555,7 @@ extension GenerationGuide where Value == Float {
     ///
     /// ```swift
     /// @Generable
-    /// struct struct GameCharacter {
+    /// struct GameCharacter {
     ///     @Guide(description: "A creative name appropriate for a fantasy RPG character")
     ///     var name: String
     ///
@@ -573,8 +575,8 @@ extension GenerationGuide where Value == Float {
     ///
     /// ```swift
     /// @Generable
-    /// struct struct ShopItem {
-    ///     @Guide(description: "A creative name for an item sold in a fantasy RPG"
+    /// struct ShopItem {
+    ///     @Guide(description: "A creative name for an item sold in a fantasy RPG")
     ///     var name: String
     ///
     ///     @Guide(description: "A cost for the item", .range(1...1000))
@@ -597,7 +599,7 @@ extension GenerationGuide where Value == Decimal {
     ///
     /// ```swift
     /// @Generable
-    /// struct struct GameCharacter {
+    /// struct GameCharacter {
     ///     @Guide(description: "A creative name appropriate for a fantasy RPG character")
     ///     var name: String
     ///
@@ -615,7 +617,7 @@ extension GenerationGuide where Value == Decimal {
     ///
     /// ```swift
     /// @Generable
-    /// struct struct GameCharacter {
+    /// struct GameCharacter {
     ///     @Guide(description: "A creative name appropriate for a fantasy RPG character")
     ///     var name: String
     ///
@@ -635,8 +637,8 @@ extension GenerationGuide where Value == Decimal {
     ///
     /// ```swift
     /// @Generable
-    /// struct struct ShopItem {
-    ///     @Guide(description: "A creative name for an item sold in a fantasy RPG"
+    /// struct ShopItem {
+    ///     @Guide(description: "A creative name for an item sold in a fantasy RPG")
     ///     var name: String
     ///
     ///     @Guide(description: "A cost for the item", .range(0.25...1000))
@@ -659,7 +661,7 @@ extension GenerationGuide where Value == Double {
     ///
     /// ```swift
     /// @Generable
-    /// struct struct GameCharacter {
+    /// struct GameCharacter {
     ///     @Guide(description: "A creative name appropriate for a fantasy RPG character")
     ///     var name: String
     ///
@@ -677,7 +679,7 @@ extension GenerationGuide where Value == Double {
     ///
     /// ```swift
     /// @Generable
-    /// struct struct GameCharacter {
+    /// struct GameCharacter {
     ///     @Guide(description: "A creative name appropriate for a fantasy RPG character")
     ///     var name: String
     ///
@@ -697,8 +699,8 @@ extension GenerationGuide where Value == Double {
     ///
     /// ```swift
     /// @Generable
-    /// struct struct ShopItem {
-    ///     @Guide(description: "A creative name for an item sold in a fantasy RPG"
+    /// struct ShopItem {
+    ///     @Guide(description: "A creative name for an item sold in a fantasy RPG")
     ///     var name: String
     ///
     ///     @Guide(description: "A cost for the item", .range(1...1000))
@@ -723,8 +725,8 @@ extension GenerationGuide {
     ///
     /// ```swift
     /// @Generable
-    /// struct struct Shop {
-    ///     @Guide(description: "A creative name for a shop in a fantasy RPG"
+    /// struct Shop {
+    ///     @Guide(description: "A creative name for a shop in a fantasy RPG")
     ///     var name: String
     ///
     ///     @Guide(description: "A list of items for sale", .minimumCount(3))
@@ -743,8 +745,8 @@ extension GenerationGuide {
     ///
     /// ```swift
     /// @Generable
-    /// struct struct Shop {
-    ///     @Guide(description: "A creative name for a shop in a fantasy RPG"
+    /// struct Shop {
+    ///     @Guide(description: "A creative name for a shop in a fantasy RPG")
     ///     var name: String
     ///
     ///     @Guide(description: "A list of items for sale", .maximumCount(10))
@@ -763,8 +765,8 @@ extension GenerationGuide {
     ///
     /// ```swift
     /// @Generable
-    /// struct struct Shop {
-    ///     @Guide(description: "A creative name for a shop in a fantasy RPG"
+    /// struct Shop {
+    ///     @Guide(description: "A creative name for a shop in a fantasy RPG")
     ///     var name: String
     ///
     ///     @Guide(description: "A list of items for sale", .count(2...10))
@@ -781,8 +783,8 @@ extension GenerationGuide {
     ///
     /// ```swift
     /// @Generable
-    /// struct struct Shop {
-    ///     @Guide(description: "A creative name for a shop in a fantasy RPG"
+    /// struct Shop {
+    ///     @Guide(description: "A creative name for a shop in a fantasy RPG")
     ///     var name: String
     ///
     ///     @Guide(description: "A list of items for sale", .count(3))
@@ -799,8 +801,8 @@ extension GenerationGuide {
     ///
     /// ```swift
     /// @Generable
-    /// struct struct FortuneCookie {
-    ///     @Guide(description: "A fortune from a fortune cookie"
+    /// struct FortuneCookie {
+    ///     @Guide(description: "A fortune from a fortune cookie")
     ///     var name: String
     ///
     ///     @Guide(description: "A list lucky numbers", .element(.range(0...9)), .count(4))
@@ -1140,7 +1142,7 @@ public struct GenerationSchema : Sendable, Codable, CustomDebugStringConvertible
     public var debugDescription: String { get }
 
     /// Creates a schema by providing an array of properties.
-    /// 
+    ///
     /// - Parameters:
     ///   - type: The type this schema represents.
     ///   - description: A natural language description of this schema.
@@ -1152,7 +1154,7 @@ public struct GenerationSchema : Sendable, Codable, CustomDebugStringConvertible
     /// - Parameters:
     ///   - type: The type this schema represents.
     ///   - description: A natural language description of this schema.
-    ///   - anyOf: The allowed choices.
+    ///   - choices: The allowed choices.
     public init(type: any Generable.Type, description: String? = nil, anyOf choices: [String])
 
     /// Creates a schema as the union of several other types.
@@ -1160,7 +1162,7 @@ public struct GenerationSchema : Sendable, Codable, CustomDebugStringConvertible
     /// - Parameters:
     ///   - type: The type this schema represents.
     ///   - description: A natural language description of this schema.
-    ///   - anyOf: The types this schema should be a union of.
+    ///   - types: The types this schema should be a union of.
     public init(type: any Generable.Type, description: String? = nil, anyOf types: [any Generable.Type])
 
     /// Creates a schema by providing an array of dynamic schemas.
@@ -1256,15 +1258,15 @@ public struct GenerationSchema : Sendable, Codable, CustomDebugStringConvertible
 @available(watchOS, unavailable)
 @attached(peer) public macro Guide(description: String) = #externalMacro(module: "FoundationModelsMacros", type: "GuideMacro")
 
-/// Instructions define the model's intended behavior on prompts.
+/// Details you provide that define the model's intended behavior on prompts.
 ///
-/// Instructions are typically provided by you to define the role and behavior of the model. In the code below,
-/// the instructions specify that the model replies with topics rather than, for example, a recipe:
+/// Instructions are typically provided by you to define the role and behavior of the model. In the code
+/// below, the instructions specify that the model replies with topics rather than, for example, a recipe:
 ///
 /// ```swift
 /// let instructions = """
-///     Suggest related topics. Keep them concise (three to seven words) and \
-///     make sure they build naturally from the person's topic.
+///     Suggest related topics. Keep them concise (three to seven words) and make sure they \
+///     build naturally from the person's topic.
 ///     """
 ///
 /// let session = LanguageModelSession(instructions: instructions)
@@ -1274,8 +1276,8 @@ public struct GenerationSchema : Sendable, Codable, CustomDebugStringConvertible
 /// ```
 ///
 /// Apple trains the model to obey instructions over any commands it receives in prompts, so don't include
-/// untrusted content in instructions. For more on how instructions impact generation quality and safety,
-/// see <doc:improving-safety-from-generative-model-output>.
+/// untrusted content in instructions. For more on how instructions impact generation quality and
+/// safety, see <doc:improving-the-safety-of-generative-model-output>.
 @available(iOS 26.0, macOS 26.0, *)
 @available(tvOS, unavailable)
 @available(watchOS, unavailable)
@@ -1346,7 +1348,7 @@ public protocol InstructionsRepresentable {
 /// Feedback appropriate for logging or attaching to Feedback Assistant.
 ///
 /// `LanguageModelFeedback` is a namespace with  structures for describing feedback in a consistent way.
-/// ``LanguageModelFeedback/Sentiment`` is used to describe the sentiment of the feedback, while
+/// ``LanguageModelFeedback/Sentiment`` describes the sentiment of the feedback, while
 /// ``LanguageModelFeedback/Issue`` offers a standard template for issues.
 ///
 /// Given a model session, use
@@ -1357,7 +1359,7 @@ public protocol InstructionsRepresentable {
 /// let session = LanguageModelSession()
 /// let response = try await session.respond(to: "What is the capital of France?")
 ///
-/// // Or create feedback for a problematic response
+/// // Create feedback for a problematic response.
 /// let feedbackData = session.logFeedbackAttachment(
 ///     sentiment: LanguageModelFeedback.Sentiment.negative,
 ///     issues: [
@@ -1603,6 +1605,20 @@ final public class LanguageModelSession {
     /// A full history of interactions, including user inputs and model responses.
     final public var transcript: Transcript { get }
 
+    @objc deinit
+}
+
+@available(iOS 26.0, macOS 26.0, *)
+@available(tvOS, unavailable)
+@available(watchOS, unavailable)
+extension LanguageModelSession : nonisolated Observable {
+}
+
+@available(iOS 26.0, macOS 26.0, *)
+@available(tvOS, unavailable)
+@available(watchOS, unavailable)
+extension LanguageModelSession {
+
     /// A Boolean value that indicates a response is being generated.
     ///
     /// - Important: You should not call any of the respond methods while
@@ -1672,11 +1688,11 @@ final public class LanguageModelSession {
     /// If you know a prefix for the future prompt, passing it to prewarm will allow the system to process the
     /// prompt eagerly and reduce latency for the future request.
     ///
-    /// - Important: You should only use prewarm when you have a window of at least 1s before the
-    /// call to `respond(to:)`.
+    /// - Important: You should only use prewarm when you have a window of at least 1 second before
+    /// the call to a respond method, like ``respond(to:options:)`` or ``streamResponse(to:options:)``.
     ///
-    /// - Note: Calling this method does not guarantee that the system loads your assets immediately,
-    /// particularly if your app is running in the background or the system is under load.
+    /// Calling this method does not guarantee that the system loads your assets immediately, particularly if
+    /// your app is running in the background or the system is under load.
     final public func prewarm(promptPrefix: Prompt? = nil)
 
     /// A structure that stores the output of a response call.
@@ -1835,8 +1851,6 @@ final public class LanguageModelSession {
     @available(tvOS, unavailable)
     @available(watchOS, unavailable)
     final public func streamResponse(to prompt: Prompt, schema: GenerationSchema, includeSchemaInPrompt: Bool = true, options: GenerationOptions = GenerationOptions()) -> sending LanguageModelSession.ResponseStream<GeneratedContent>
-
-    @objc deinit
 }
 
 @available(iOS 26.0, macOS 26.0, *)
@@ -1848,9 +1862,6 @@ extension LanguageModelSession : @unchecked Sendable {
 @available(iOS 26.0, macOS 26.0, *)
 @available(tvOS, unavailable)
 @available(watchOS, unavailable)
-extension LanguageModelSession : nonisolated Observable {
-}
-
 extension LanguageModelSession {
 
     /// An error that may occur while generating a response.
@@ -1909,13 +1920,16 @@ extension LanguageModelSession {
 
         /// An error that signals the session reached its context window size limit.
         ///
-        /// This error occurs when you use the available tokens for the context window of  4,096 tokens. The
+        /// This error occurs when you use the available tokens for the context window of 4,096 tokens. The
         /// token count includes instructions, prompts, and outputs for a session instance. A single token
         /// corresponds to approximately three to four characters in languages like English, Spanish, or
         /// German, and one token per character in languages like Japanese, Chinese, and Korean.
         ///
         /// Start a new session when you exceed the content window size, and try again using a shorter
         /// prompt or shorter output length.
+        ///
+        /// For more information on managing the context window size,
+        /// see <doc://com.apple.documentation/technotes/tn3193-managing-the-on-device-foundation-model-s-context-window>
         case exceededContextWindowSize(LanguageModelSession.GenerationError.Context)
 
         /// An error that indicates the assets required for the session are unavailable.
@@ -1988,7 +2002,7 @@ extension LanguageModelSession {
         ///
         /// - Parameters:
         ///   - tool: The tool that produced the error.
-        ///    - underlyingError: The underlying error that was thrown during a tool call.
+        ///   - underlyingError: The underlying error that was thrown during a tool call.
         public init(tool: any Tool, underlyingError: any Error)
 
         /// A string representation of the error description.
@@ -1996,6 +2010,9 @@ extension LanguageModelSession {
     }
 }
 
+@available(iOS 26.0, macOS 26.0, *)
+@available(tvOS, unavailable)
+@available(watchOS, unavailable)
 extension LanguageModelSession {
 
     /// An async sequence of snapshots of partially generated content.
@@ -2108,7 +2125,7 @@ extension LanguageModelSession {
     /// - Parameters:
     ///   - prompt: A prompt for the model to respond to.
     ///   - type: A type to produce as the response.
-    ///   - includeSchemaInPrompt: Inject the schema into the prompt to bias the model.   
+    ///   - includeSchemaInPrompt: Inject the schema into the prompt to bias the model.
     ///   - options: Options that control how tokens are sampled from the distribution the model produces.
     /// - Returns: A response stream.
     final public func streamResponse<Content>(generating type: Content.Type = Content.self, includeSchemaInPrompt: Bool = true, options: GenerationOptions = GenerationOptions(), @PromptBuilder prompt: () throws -> Prompt) rethrows -> sending LanguageModelSession.ResponseStream<Content> where Content : Generable
@@ -2150,6 +2167,9 @@ extension LanguageModelSession {
     final public func streamResponse(options: GenerationOptions = GenerationOptions(), @PromptBuilder prompt: () throws -> Prompt) rethrows -> sending LanguageModelSession.ResponseStream<String>
 }
 
+@available(iOS 26.0, macOS 26.0, *)
+@available(tvOS, unavailable)
+@available(watchOS, unavailable)
 extension LanguageModelSession {
 
     /// Logs and serializes a feedback attachment that can be submitted to Apple.
@@ -2171,7 +2191,7 @@ extension LanguageModelSession {
     /// ```swift
     /// let session = LanguageModelSession()
     /// let response = try await session.respond(to: "What is the capital of France?")
-    /// 
+    ///
     /// // Create feedback for a helpful response
     /// let feedbackData = session.logFeedbackAttachment(sentiment: .positive)
     ///
@@ -2201,8 +2221,8 @@ extension LanguageModelSession {
     /// If your `desiredOutput` is a ``Generable`` type, turning that into a ``Transcript`` entry is slightly different:
     ///
     /// ```swift
-    /// let foo = Foo(...) // A Generable type
-    /// let structure = Transcript.StructuredSegment(source: String(describing: Foo.self), content: foo.generatedContent))
+    /// let customType = MyCustomType(...) // A generable type.
+    /// let structure = Transcript.StructuredSegment(source: String(describing: Foo.self), content: customType.generatedContent)
     /// let segment = Transcript.Segment.structure(structure)
     /// let response = Transcript.Response(segments: [segment])
     /// let entry = Transcript.Entry.response(response)
@@ -2366,17 +2386,17 @@ extension Prompt {
 }
 
 /// A type whose value can represent a prompt.
-///  
+///
 /// - Important: Conformance to this protocol is provided automatically by the
 /// `@Generable` macro, you should **not** override its implementations. Overriding
 /// may negatively impact runtime performance and cause bugs.
-///  
+///
 /// For types that are not ``Generable``, you may provide your own implementation.
-///  
+///
 /// Experiment with different representations to find one that works well for
 /// your type. Generally, any format that is easily understandable to humans
 /// will work well for the model as well.
-///  
+///
 /// ```swift
 /// struct FamousHistoricalFigure: PromptRepresentable {
 ///     var name: String
@@ -2464,7 +2484,7 @@ final public class SystemLanguageModel : Sendable {
         /// A use case for general prompting.
         ///
         /// This is the default use case for the base version of the model, so if you use
-        /// `SystemLanguageModel.default`, you don't need to specify a use case.
+        /// `SystemLanguageModel/default`, you don't need to specify a use case.
         public static let general: SystemLanguageModel.UseCase
 
         /// A use case for content tagging.
@@ -2492,9 +2512,15 @@ final public class SystemLanguageModel : Sendable {
 @available(iOS 26.0, macOS 26.0, *)
 @available(tvOS, unavailable)
 @available(watchOS, unavailable)
+extension SystemLanguageModel : nonisolated Observable {
+}
+
+@available(iOS 26.0, macOS 26.0, *)
+@available(tvOS, unavailable)
+@available(watchOS, unavailable)
 extension SystemLanguageModel {
 
-    /// Controls the built-in safety guardrails for prompt and response filtering.
+    /// Guardrails flag sensitive content from model input and output.
     @available(iOS 26.0, macOS 26.0, *)
     @available(tvOS, unavailable)
     @available(watchOS, unavailable)
@@ -2612,7 +2638,7 @@ extension SystemLanguageModel {
     @available(iOS 26.0, macOS 26.0, *)
     @available(tvOS, unavailable)
     @available(watchOS, unavailable)
-    public static let `default`: SystemLanguageModel
+    public static var `default`: SystemLanguageModel { get }
 
     /// Creates a system language model for a specific use case.
     @available(iOS 26.0, macOS 26.0, *)
@@ -2637,10 +2663,74 @@ extension SystemLanguageModel {
     final public func supportsLocale(_ locale: Locale = Locale.current) -> Bool
 }
 
+@available(iOS 26.4, macOS 26.4, *)
+@available(tvOS, unavailable)
+@available(watchOS, unavailable)
+extension SystemLanguageModel {
+
+    /// Token usage information for a prompt or transcript.
+    ///
+    /// Provides the total number of tokens used.
+    @available(iOS 26.4, macOS 26.4, *)
+    @available(tvOS, unavailable)
+    @available(watchOS, unavailable)
+    public struct TokenUsage {
+
+        /// The total token count.
+        public var tokenCount: Int
+    }
+
+    /// Returns token usage information for the specified instructions and tools.
+    ///
+    /// This method calculates the token count for a set of instructions and
+    /// tool definitions. The token count includes both the instructions and the
+    /// tool hints that would be included in the model's context.
+    ///
+    /// - Parameters:
+    ///   - instructions: Instructions to calculate token usage for.
+    ///   - tools: An array of tools that will be available to the model. Defaults to an empty array if not specified.
+    /// - Returns: A summary of token usage for the instructions and tools.
+    @available(iOS 26.4, macOS 26.4, *)
+    @available(tvOS, unavailable)
+    @available(watchOS, unavailable)
+    nonisolated(nonsending) final public func tokenUsage(for instructions: Instructions, tools: [any Tool] = []) async throws -> SystemLanguageModel.TokenUsage
+
+    /// Returns token usage information for the specified prompt.
+    ///
+    /// - Parameter prompt: A prompt to calculate token usage for.
+    /// - Returns: A summary of token usage for the prompt.
+    @available(iOS 26.4, macOS 26.4, *)
+    @available(tvOS, unavailable)
+    @available(watchOS, unavailable)
+    nonisolated(nonsending) final public func tokenUsage(for prompt: some PromptRepresentable) async throws -> SystemLanguageModel.TokenUsage
+
+    /// Returns token usage information for the specified collection of transcript entries.
+    ///
+    /// - Parameter transcriptEntries: A collection of transcript entries to calculate token usage for.
+    /// - Returns: A summary of token usage for the transcript.
+    @available(iOS 26.4, macOS 26.4, *)
+    @available(tvOS, unavailable)
+    @available(watchOS, unavailable)
+    nonisolated(nonsending) final public func tokenUsage(for transcriptEntries: some Collection<Transcript.Entry>) async throws -> SystemLanguageModel.TokenUsage
+}
+
 @available(iOS 26.0, macOS 26.0, *)
 @available(tvOS, unavailable)
 @available(watchOS, unavailable)
-extension SystemLanguageModel : nonisolated Observable {
+extension SystemLanguageModel {
+
+    /// Returns the maximum context size (in tokens) supported by the model.
+    ///
+    /// The context size represents the total number of tokens that can be used in a single session,
+    /// including both input prompts and generated responses.
+    ///
+    /// - Returns: The maximum number of tokens the model can process in a single context.
+    /// - Throws: An error if the context size cannot be determined. Typically this is due to the model not being available or Apple Intelligence is disabled.
+    @available(iOS 26.0, macOS 26.0, *)
+    @backDeployed(before: iOS 26.4, macOS 26.4, visionOS 26.4)
+    @available(tvOS, unavailable)
+    @available(watchOS, unavailable)
+    final public var contextSize: Int { get async throws }
 }
 
 @available(iOS 26.0, macOS 26.0, *)
@@ -2665,7 +2755,7 @@ extension SystemLanguageModel {
 /// specialize the model, train a custom `Adapter` to alter the system model weights and optimize it for
 /// your custom task. Use custom adapters only if you're comfortable training foundation models in Python.
 ///
-/// > Important: You need to re-train an adapter for every new version of the base system model that
+/// > Important: Be sure to re-train the adapter for every new version of the base system model that
 /// Apple releases. Adapters consume a large amount of storage space and isn't recommended for
 /// most apps.
 ///
@@ -2689,7 +2779,7 @@ extension SystemLanguageModel.Adapter {
 
     /// Prepares an adapter before being used with a ``LanguageModelSession``.
     /// You should call this if your adapter has a draft model.
-    public func compile() async throws
+    @concurrent public func compile() async throws
 
     /// Get all compatible adapter identifiers compatible with current system models.
     ///
@@ -2739,7 +2829,7 @@ extension SystemLanguageModel.Adapter {
         public struct Context : Sendable {
 
             /// A debug description to help developers diagnose issues during development.
-            /// 
+            ///
             /// This string is not localized and is not appropriate for display to end users.
             public let debugDescription: String
 
@@ -2851,7 +2941,7 @@ public protocol Tool<Arguments, Output> : Sendable {
     /// of ``LanguageModelSession/respond(to:options:)-(Prompt,_)``.
     ///
     /// - Note: This method may be invoked concurrently with itself or with other tools.
-    func call(arguments: Self.Arguments) async throws -> Self.Output
+    @concurrent func call(arguments: Self.Arguments) async throws -> Self.Output
 }
 
 @available(iOS 26.0, macOS 26.0, *)
@@ -2881,10 +2971,10 @@ extension Tool where Self.Arguments : Generable {
     public var parameters: GenerationSchema { get }
 }
 
-/// A transcript contains a linear history of ``Transcript/Entry`` entries.
+/// A linear history of entries that reflect an interaction with a session.
 ///
-/// Transcript entries are can be used to visualize previous prompts and
-/// responses.
+/// Use a `Transcript` to visualize previous instructions, prompts and model responses. If you use tool
+/// calling, a `Transcript` includes a history of tool calls and their results.
 ///
 /// ```swift
 /// struct HistoryView: View {
@@ -3189,7 +3279,7 @@ public struct Transcript : Sendable, Equatable, RandomAccessCollection {
         /// - Parameters:
         ///   - lhs: A value to compare.
         ///   - rhs: Another value to compare.
-        public static func == (a: Transcript.ToolDefinition, b: Transcript.ToolDefinition) -> Bool
+        public static func == (lhs: Transcript.ToolDefinition, rhs: Transcript.ToolDefinition) -> Bool
     }
 
     /// A prompt from the user to the model.
@@ -4466,4 +4556,3 @@ extension Array : PromptRepresentable where Element : PromptRepresentable {
     /// An instance that represents a prompt.
     public var promptRepresentation: Prompt { get }
 }
-
