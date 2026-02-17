@@ -46,13 +46,13 @@ final class FoundationLabUITests: XCTestCase {
     func testCanNavigateToToolsTab() throws {
         app.launch()
         app.buttons["Tools"].tap()
-        XCTAssertTrue(app.staticTexts["Tools"].exists)
+        XCTAssertTrue(app.navigationBars["Tools"].waitForExistence(timeout: 2))
     }
 
     func testCanNavigateToSettingsTab() throws {
         app.launch()
         app.buttons["Settings"].tap()
-        XCTAssertTrue(app.staticTexts["Settings"].exists)
+        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 2))
     }
 
     // MARK: - Chat Tests

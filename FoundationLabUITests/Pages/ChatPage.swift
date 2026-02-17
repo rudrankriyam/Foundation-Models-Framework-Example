@@ -17,7 +17,11 @@ final class ChatPage {
     // MARK: - Elements
 
     var textField: XCUIElement {
-        app.textFields["chatTextField"]
+        let singleLine = app.textFields["chatTextField"]
+        if singleLine.exists {
+            return singleLine
+        }
+        return app.textViews["chatTextField"]
     }
 
     var sendButton: XCUIElement {
@@ -45,8 +49,12 @@ final class ChatPage {
     }
 
     func waitForResponse(timeout: TimeInterval = 30) -> Bool {
-        // Wait for the loading to finish by checking if there's a response
-        let responseElement = app.staticTexts.containing(NSPredicate(format: "label CONTAINS[cd] 'How can we help'")).firstMatch
+        let predicate = NSPredicate(
+            format: "label CONTAINS[cd] %@ AND NOT (label CONTAINS[cd] %@)",
+            "Assistant replied",
+            "typing indicator"
+        )
+        let responseElement = app.descendants(matching: .any).matching(predicate).firstMatch
         return responseElement.waitForExistence(timeout: timeout)
     }
 
