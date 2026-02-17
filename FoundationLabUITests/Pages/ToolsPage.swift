@@ -21,7 +21,7 @@ final class ToolsPage {
     }
 
     func toolNavigationLink(identifier: String) -> XCUIElement {
-        app.buttons["tool_\(identifier)"]
+        app.buttons["toolButton_\(identifier)"]
     }
 
     // MARK: - Common Tools
@@ -31,7 +31,7 @@ final class ToolsPage {
     }
 
     var searchToolButton: XCUIElement {
-        toolButton(identifier: "search")
+        toolButton(identifier: "web")
     }
 
     var locationToolButton: XCUIElement {
