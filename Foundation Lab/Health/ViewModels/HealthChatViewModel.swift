@@ -285,6 +285,7 @@ private extension HealthChatViewModel {
                 tools: tools,
                 instructions: Instructions(Self.baseInstructions)
             )
+            currentTokenCount = 0
             let restartMessage = "I need to start a fresh conversation. Please repeat your question."
             await saveMessageToSession(restartMessage, isFromUser: false)
         }
