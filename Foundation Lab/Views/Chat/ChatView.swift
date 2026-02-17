@@ -58,6 +58,7 @@ struct ChatView: View {
                 Button(action: clearChat, label: { Image(systemName: "xmark") })
                 .disabled(isChatEffectivelyEmpty)
                 .help("Clear chat")
+                .accessibilityIdentifier("clearChatButton")
             }
         }
         .alert(
@@ -116,6 +117,7 @@ struct ChatView: View {
                             .font(.title2)
                             .foregroundStyle(.secondary)
                             .padding(.bottom, 48)
+                            .accessibilityIdentifier("emptyStateText")
                     }
 
                     ForEach(viewModel.session.transcript) { entry in

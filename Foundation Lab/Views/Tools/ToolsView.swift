@@ -42,6 +42,7 @@ struct ToolsView: View {
               )
             }
             .buttonStyle(PlainButtonStyle())
+            .accessibilityIdentifier("toolButton_\(tool.rawValue)")
           }
         }
       }
@@ -58,6 +59,7 @@ struct ToolsView: View {
             )
           }
           .buttonStyle(PlainButtonStyle())
+          .accessibilityIdentifier("toolButton_\(tool.rawValue)")
         }
       }
       .padding(.horizontal)

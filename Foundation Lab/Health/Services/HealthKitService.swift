@@ -138,7 +138,7 @@ actor HealthKitService {
         do {
             let samples = try await descriptor.result(for: healthStore)
             if let sample = samples.first {
-                let unit = HKUnit(from: "count/min") ?? HKUnit.count().unitDivided(by: .minute())
+                let unit = HKUnit.count().unitDivided(by: .minute())
                 return sample.quantity.doubleValue(for: unit)
             }
         } catch {
