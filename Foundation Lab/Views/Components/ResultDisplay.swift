@@ -14,6 +14,7 @@ import UIKit
 struct ResultDisplay: View {
   let result: String
   let isSuccess: Bool
+  var tokenCount: Int?
   @State private var isCopied = false
 
   var body: some View {
@@ -23,6 +24,15 @@ struct ResultDisplay: View {
           .font(.footnote)
           .fontWeight(.medium)
           .foregroundColor(.secondary)
+
+        if let tokenCount {
+          Text("\(tokenCount) tokens")
+            .font(.caption2)
+            .foregroundStyle(.tertiary)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(.quaternary, in: .capsule)
+        }
 
         Spacer()
 

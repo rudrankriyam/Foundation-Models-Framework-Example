@@ -10,8 +10,32 @@ import FoundationModels
 
 struct TranscriptEntryView: View {
     let entry: Transcript.Entry
+    @State private var tokenCount: Int?
+    @Environment(ChatViewModel.self) private var chatViewModel
 
     var body: some View {
+        VStack(spacing: 2) {
+            entryContent
+
+            if let tokenCount {
+                Text("\(tokenCount) tokens")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .frame(
+                        maxWidth: .infinity,
+                        alignment: entry.isFromUser ? .trailing : .leading
+                    )
+                    .padding(.horizontal, Spacing.large)
+            }
+        }
+        .task(id: entry.id) {
+            tokenCount = nil
+            tokenCount = await resolveTokenCount()
+        }
+    }
+
+    @ViewBuilder
+    private var entryContent: some View {
         switch entry {
         case .prompt(let prompt):
             if let text = prompt.segments.textContentJoined() {
@@ -46,7 +70,6 @@ struct TranscriptEntryView: View {
             }
 
         case .instructions:
-            // Don't show instructions in chat UI
             EmptyView()
 
         @unknown default:
@@ -54,4 +77,47 @@ struct TranscriptEntryView: View {
         }
     }
 
+    private func resolveTokenCount() async -> Int? {
+        if case .instructions = entry {
+            return nil
+        }
+
+        // Avoid repeatedly calling the tokenizer while the newest entry is still streaming.
+        if chatViewModel.session.isResponding,
+           chatViewModel.session.transcript.last?.id == entry.id {
+            await waitForStreamingToFinish()
+        }
+
+        // Always compute tokens from the latest version of the entry in the transcript.
+        let latestEntry = chatViewModel.session.transcript.first(where: { $0.id == entry.id }) ?? entry
+        return await tokenCount(for: latestEntry)
+    }
+
+    private func waitForStreamingToFinish() async {
+        while chatViewModel.session.isResponding, !Task.isCancelled {
+            try? await Task.sleep(nanoseconds: 150_000_000)
+        }
+
+        // Give the transcript a moment to publish its final segment.
+        try? await Task.sleep(nanoseconds: 50_000_000)
+    }
+
+    private func tokenCount(for entry: Transcript.Entry) async -> Int? {
+        #if compiler(>=6.3)
+        if #available(iOS 26.4, macOS 26.4, visionOS 26.4, *) {
+            if let real = try? await SystemLanguageModel.default.tokenUsage(for: [entry]).tokenCount {
+                return real
+            }
+        }
+        #endif
+
+        return entry.estimatedTokenCount
+    }
+}
+
+private extension Transcript.Entry {
+    var isFromUser: Bool {
+        if case .prompt = self { return true }
+        return false
+    }
 }

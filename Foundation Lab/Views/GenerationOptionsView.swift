@@ -20,6 +20,8 @@ struct GenerationOptionsView: View {
     @State private var response: String = ""
     @State private var isGenerating: Bool = false
     @State private var showError: String?
+    @State private var lastTokenCount: Int?
+    @State private var contextSize: Int = AppConfiguration.TokenManagement.defaultMaxTokens
 
     @Namespace private var glassNamespace
 
@@ -35,6 +37,9 @@ struct GenerationOptionsView: View {
             .padding()
         }
         .navigationTitle("Generation Options")
+        .task {
+            contextSize = await AppConfiguration.TokenManagement.contextSize()
+        }
     }
 
     // MARK: - View Components
@@ -187,6 +192,16 @@ struct GenerationOptionsView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .frame(maxHeight: 300)
+
+                    if let lastTokenCount {
+                        HStack {
+                            Label("\(lastTokenCount) / \(contextSize) tokens used", systemImage: "number.circle")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                        }
+                        .padding(.horizontal)
+                    }
                 }
             }
         }
@@ -207,6 +222,7 @@ struct GenerationOptionsView: View {
         isGenerating = true
         showError = nil
         response = ""
+        lastTokenCount = nil
 
         do {
             let config = GenerationConfig(
@@ -226,6 +242,7 @@ struct GenerationOptionsView: View {
             )
 
             response = generatedResponse.content
+            lastTokenCount = await session.transcript.tokenCount()
         } catch {
             showError = error.localizedDescription
         }

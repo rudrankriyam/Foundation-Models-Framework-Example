@@ -20,6 +20,11 @@ struct HealthChatView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
+                TokenUsageBar(
+                    currentTokenCount: viewModel.currentTokenCount,
+                    maxContextSize: viewModel.maxContextSize,
+                    tokenUsageFraction: viewModel.tokenUsageFraction
+                )
                 messagesView
 
                 HealthChatInputView(

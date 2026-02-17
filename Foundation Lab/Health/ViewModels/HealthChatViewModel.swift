@@ -26,6 +26,15 @@ final class HealthChatViewModel {
     var sessionCount: Int = 1
     var currentHealthMetrics: [MetricType: Double] = [:]
 
+    // MARK: - Token Usage Tracking
+    private(set) var currentTokenCount: Int = 0
+    private(set) var maxContextSize: Int = AppConfiguration.TokenManagement.defaultMaxTokens
+
+    var tokenUsageFraction: Double {
+        guard maxContextSize > 0 else { return 0 }
+        return min(1.0, Double(currentTokenCount) / Double(maxContextSize))
+    }
+
     // MARK: - Streaming Task
     private var streamingTask: Task<Void, Error>?
 
@@ -33,6 +42,7 @@ final class HealthChatViewModel {
     private(set) var session: LanguageModelSession
     private var modelContext: ModelContext?
     private let healthDataManager: HealthDataManager
+    private let languageModel = SystemLanguageModel.default
 
     // MARK: - Tools
     private let tools: [any Tool] = [
@@ -43,11 +53,14 @@ final class HealthChatViewModel {
     // MARK: - Initialization
     init(healthDataManager: HealthDataManager? = nil) {
         self.healthDataManager = healthDataManager ?? .shared
-        // Create session with tools and instructions for health data access
         self.session = LanguageModelSession(
             tools: tools,
             instructions: Instructions(Self.baseInstructions)
         )
+
+        Task {
+            maxContextSize = await AppConfiguration.TokenManagement.contextSize(for: languageModel)
+        }
     }
 
     func setModelContext(_ context: ModelContext) {
@@ -91,7 +104,8 @@ final class HealthChatViewModel {
                 await saveMessageToSession(responseText, isFromUser: false)
             }
 
-            // Generate insights if health data was discussed
+            await updateTokenCount()
+
             if shouldGenerateInsight(from: responseText) {
                 await generateHealthInsight(from: responseText)
             }
@@ -113,6 +127,7 @@ final class HealthChatViewModel {
         streamingTask?.cancel()
         streamingTask = nil
         sessionCount = 1
+        currentTokenCount = 0
         session = LanguageModelSession(
             tools: tools,
             instructions: Instructions(Self.baseInstructions)
@@ -149,6 +164,10 @@ final class HealthChatViewModel {
 }
 
 private extension HealthChatViewModel {
+    func updateTokenCount() async {
+        currentTokenCount = await session.transcript.tokenCount(using: languageModel)
+    }
+
     static let baseInstructions = """
     You are a friendly and knowledgeable health coach AI assistant.
     Based on the user's health data, provide personalized, encouraging responses.
@@ -196,6 +215,7 @@ private extension HealthChatViewModel {
             instructions: Instructions(contextInstructions)
         )
         sessionCount += 1
+        currentTokenCount = 0
     }
 }
 
@@ -258,12 +278,14 @@ private extension HealthChatViewModel {
             isSummarizing = false
 
             try await respondWithNewSession(to: userMessage, shouldSaveUserMessage: false)
+            await updateTokenCount()
         } catch {
             isSummarizing = false
             session = LanguageModelSession(
                 tools: tools,
                 instructions: Instructions(Self.baseInstructions)
             )
+            currentTokenCount = 0
             let restartMessage = "I need to start a fresh conversation. Please repeat your question."
             await saveMessageToSession(restartMessage, isFromUser: false)
         }
