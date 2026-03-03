@@ -16,8 +16,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "C1A100062EAA000100000001"
-               BuildableName = "FoundationLabCLI"
-               BlueprintName = "FoundationLabCLI"
+               BuildableName = "fm"
+               BlueprintName = "fm"
                ReferencedContainer = "container:FoundationLab.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -44,8 +44,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "C1A100062EAA000100000001"
-            BuildableName = "FoundationLabCLI"
-            BlueprintName = "FoundationLabCLI"
+            BuildableName = "fm"
+            BlueprintName = "fm"
             ReferencedContainer = "container:FoundationLab.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -61,8 +61,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "C1A100062EAA000100000001"
-            BuildableName = "FoundationLabCLI"
-            BlueprintName = "FoundationLabCLI"
+            BuildableName = "fm"
+            BlueprintName = "fm"
             ReferencedContainer = "container:FoundationLab.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

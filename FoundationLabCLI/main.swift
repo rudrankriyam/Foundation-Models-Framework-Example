@@ -38,7 +38,7 @@ import HealthKit
 #endif
 
 @available(macOS 10.15, macCatalyst 13, iOS 13, tvOS 13, watchOS 6, *)
-struct FoundationLabCLI: AsyncParsableCommand {
+struct FMCLI: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "fm",
         abstract: "Command-line access to Foundation Models workflows.",
@@ -912,15 +912,6 @@ let ragStorageURL: URL = {
 }()
 
 func loadRAGDocuments() throws -> [RAGDocument] {
-    let legacyURL = FileManager.default.homeDirectoryForCurrentUser
-        .appendingPathComponent(".foundationlab/rag_store.json")
-
-    if !FileManager.default.fileExists(atPath: ragStorageURL.path),
-       FileManager.default.fileExists(atPath: legacyURL.path) {
-        let legacyData = try Data(contentsOf: legacyURL)
-        return try JSONDecoder().decode([RAGDocument].self, from: legacyData)
-    }
-
     guard FileManager.default.fileExists(atPath: ragStorageURL.path) else {
         return []
     }
@@ -3195,11 +3186,11 @@ struct VoiceCheckCommand: AsyncParsableCommand {
 if #available(macOS 10.15, macCatalyst 13, iOS 13, tvOS 13, watchOS 6, *) {
     let semaphore = DispatchSemaphore(value: 0)
     Task {
-        await FoundationLabCLI.main()
+        await FMCLI.main()
         semaphore.signal()
     }
     semaphore.wait()
 } else {
-    fputs("FoundationLabCLI requires a newer operating system.\n", stderr)
+    fputs("fm requires a newer operating system.\n", stderr)
     exit(1)
 }

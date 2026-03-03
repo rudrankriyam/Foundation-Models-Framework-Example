@@ -20,7 +20,7 @@
 		0A5454A72E1148A8002C2152 /* Foundation Lab.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "Foundation Lab.icon"; sourceTree = "<group>"; };
 		0A9766662E1E562A008CFA37 /* Collections.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = Collections.xcodeproj; sourceTree = "<group>"; };
 		0AAE4FFF2DF76E6600838F13 /* Foundation Lab.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Foundation Lab.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		C1A100032EAA000100000001 /* FoundationLabCLI */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FoundationLabCLI; sourceTree = BUILT_PRODUCTS_DIR; };
+		C1A100032EAA000100000001 /* fm */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = fm; sourceTree = BUILT_PRODUCTS_DIR; };
 		6C9AECE22E728F6D00F4C37F /* SampleCode.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = SampleCode.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -44,7 +44,7 @@
 			path = "Foundation Lab";
 			sourceTree = "<group>";
 		};
-		C1A100042EAA000100000001 /* FoundationLabCLI */ = {
+		C1A100042EAA000100000001 /* fm */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = FoundationLabCLI;
 			sourceTree = "<group>";
@@ -87,7 +87,7 @@
 			children = (
 				6C9AECE22E728F6D00F4C37F /* SampleCode.xcconfig */,
 				0ADB46AD2E0CE6C100C29293 /* Foundation Lab */,
-				C1A100042EAA000100000001 /* FoundationLabCLI */,
+				C1A100042EAA000100000001 /* fm */,
 				0AAE50002DF76E6600838F13 /* Products */,
 				0A5454A72E1148A8002C2152 /* Foundation Lab.icon */,
 				0AFDF8422EA8C3F80071BEA5 /* Frameworks */,
@@ -98,7 +98,7 @@
 			isa = PBXGroup;
 			children = (
 				0AAE4FFF2DF76E6600838F13 /* Foundation Lab.app */,
-				C1A100032EAA000100000001 /* FoundationLabCLI */,
+				C1A100032EAA000100000001 /* fm */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -139,9 +139,9 @@
 			productReference = 0AAE4FFF2DF76E6600838F13 /* Foundation Lab.app */;
 			productType = "com.apple.product-type.application";
 		};
-		C1A100062EAA000100000001 /* FoundationLabCLI */ = {
+		C1A100062EAA000100000001 /* fm */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C1A1000A2EAA000100000001 /* Build configuration list for PBXNativeTarget "FoundationLabCLI" */;
+			buildConfigurationList = C1A1000A2EAA000100000001 /* Build configuration list for PBXNativeTarget "fm" */;
 			buildPhases = (
 				C1A100072EAA000100000001 /* Sources */,
 				C1A100052EAA000100000001 /* Frameworks */,
@@ -151,15 +151,15 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				C1A100042EAA000100000001 /* FoundationLabCLI */,
+				C1A100042EAA000100000001 /* fm */,
 			);
-			name = FoundationLabCLI;
+			name = fm;
 			packageProductDependencies = (
 				0A979E832E1E5921008CFA37 /* FoundationModelsTools */,
 				C1A1000C2EAA000100000001 /* ArgumentParser */,
 			);
-			productName = FoundationLabCLI;
-			productReference = C1A100032EAA000100000001 /* FoundationLabCLI */;
+			productName = fm;
+			productReference = C1A100032EAA000100000001 /* fm */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -208,7 +208,7 @@
 			projectRoot = "";
 			targets = (
 				0AAE4FFE2DF76E6600838F13 /* Foundation Lab */,
-				C1A100062EAA000100000001 /* FoundationLabCLI */,
+				C1A100062EAA000100000001 /* fm */,
 			);
 		};
 /* End PBXProject section */
@@ -533,7 +533,7 @@
 				CODE_SIGNING_ALLOWED = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.rudrankriyam.foundationlabcli${SAMPLE_CODE_DISAMBIGUATOR}";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.rudrankriyam.fm${SAMPLE_CODE_DISAMBIGUATOR}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SUPPORTED_PLATFORMS = macosx;
@@ -548,7 +548,7 @@
 				CODE_SIGNING_ALLOWED = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.rudrankriyam.foundationlabcli${SAMPLE_CODE_DISAMBIGUATOR}";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.rudrankriyam.fm${SAMPLE_CODE_DISAMBIGUATOR}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SUPPORTED_PLATFORMS = macosx;
@@ -578,7 +578,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		C1A1000A2EAA000100000001 /* Build configuration list for PBXNativeTarget "FoundationLabCLI" */ = {
+		C1A1000A2EAA000100000001 /* Build configuration list for PBXNativeTarget "fm" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C1A100082EAA000100000001 /* Debug */,
