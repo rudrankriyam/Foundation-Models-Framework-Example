@@ -1,0 +1,107 @@
+name: Release fm CLI
+
+on:
+  push:
+    tags:
+      - "[0-9]*.[0-9]*.[0-9]*"
+
+jobs:
+  release-fm:
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    env:
+      PROJECT_PATH: FoundationLab.xcodeproj
+      SCHEME: fm
+      BUILD_DIR: build-fm-release
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Build fm binary
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          rm -rf "${BUILD_DIR}" release
+          mkdir -p release
+
+          xcodebuild \
+            -project "${PROJECT_PATH}" \
+            -scheme "${SCHEME}" \
+            -configuration Release \
+            -derivedDataPath "${BUILD_DIR}" \
+            ARCHS=arm64 \
+            ONLY_ACTIVE_ARCH=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+          cp "${BUILD_DIR}/Build/Products/Release/fm" "release/fm_${VERSION}_macOS_arm64"
+          chmod +x "release/fm_${VERSION}_macOS_arm64"
+
+      - name: Create checksums
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          cd release
+          shasum -a 256 "fm_${VERSION}_macOS_arm64" > "fm_${VERSION}_checksums.txt"
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/**
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update Homebrew tap
+        env:
+          TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
+        run: |
+          if [ -z "$TAP_GITHUB_TOKEN" ]; then
+            echo "TAP_GITHUB_TOKEN not set, skipping Homebrew tap update"
+            exit 0
+          fi
+
+          VERSION="${GITHUB_REF_NAME}"
+          SHA256=$(shasum -a 256 "release/fm_${VERSION}_macOS_arm64" | cut -d ' ' -f 1)
+
+          git clone "https://x-access-token:${TAP_GITHUB_TOKEN}@github.com/rudrankriyam/homebrew-tap.git" homebrew-tap || {
+            echo "Unable to clone tap repository, skipping update."
+            exit 0
+          }
+
+          cd homebrew-tap
+          cat > Formula/fm.rb << EOF
+          # typed: false
+          # frozen_string_literal: true
+
+          class Fm < Formula
+            desc "Foundation Lab command line interface"
+            homepage "https://github.com/rudrankriyam/Foundation-Models-Framework-Example"
+            url "https://github.com/rudrankriyam/Foundation-Models-Framework-Example/releases/download/${VERSION}/fm_${VERSION}_macOS_arm64"
+            version "${VERSION}"
+            sha256 "${SHA256}"
+            license "MIT"
+
+            depends_on :macos
+
+            def install
+              bin.install "fm_${VERSION}_macOS_arm64" => "fm"
+            end
+
+            test do
+              assert_match "fm (preview)", shell_output("#{bin}/fm about")
+            end
+          end
+          EOF
+
+          git add Formula/fm.rb
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "Update fm to ${VERSION}" || echo "No changes to commit"
+          git push || {
+            echo "Tap push failed, skipping."
+            exit 0
+          }
