@@ -37,11 +37,29 @@ import AVFoundation
 import HealthKit
 #endif
 
+let fmCLIVersion = "0.1.0"
+let fmCompletionCommands = [
+    "about",
+    "diagnostics",
+    "chat",
+    "examples",
+    "tools",
+    "schemas",
+    "languages",
+    "rag",
+    "health",
+    "voice",
+    "completion",
+    "version",
+    "help"
+]
+
 @available(macOS 10.15, macCatalyst 13, iOS 13, tvOS 13, watchOS 6, *)
 struct FMCLI: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "fm",
         abstract: "Command-line access to Foundation Models workflows.",
+        version: fmCLIVersion,
         subcommands: [
             AboutCommand.self,
             DiagnosticsCommand.self,
@@ -52,7 +70,9 @@ struct FMCLI: AsyncParsableCommand {
             LanguagesCommand.self,
             RagCommand.self,
             HealthCommand.self,
-            VoiceCommand.self
+            VoiceCommand.self,
+            CompletionCommand.self,
+            VersionCommand.self
         ],
         defaultSubcommand: AboutCommand.self
     )
@@ -103,6 +123,14 @@ enum ReminderPriorityOption: String, ExpressibleByArgument {
     case medium
     case high
 }
+
+enum CompletionShell: String, ExpressibleByArgument {
+    case bash
+    case zsh
+    case fish
+}
+
+let fmKnownTopLevelCommands = Set(fmCompletionCommands)
 
 enum CLICommandError: LocalizedError {
     case timedOut(Int)
@@ -1147,7 +1175,7 @@ struct AboutCommand: AsyncParsableCommand {
     mutating func run() async throws {
         let payload: [String: Any] = [
             "name": "fm",
-            "version": "0.1.0",
+            "version": fmCLIVersion,
             "platform": "macOS 26+",
             "status": "preview",
             "features": [
@@ -1168,6 +1196,66 @@ struct AboutCommand: AsyncParsableCommand {
         Feature groups: diagnostics, chat, examples, tools, schemas, languages, rag, health, voice
         """
         CLIPrinter.emit(payload: payload, human: human, global: global)
+    }
+}
+
+struct VersionCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "version",
+        abstract: "Print CLI version."
+    )
+    @OptionGroup var global: GlobalOptions
+
+    mutating func run() async throws {
+        let payload: [String: Any] = [
+            "name": "fm",
+            "version": fmCLIVersion
+        ]
+        CLIPrinter.emit(payload: payload, human: fmCLIVersion, global: global)
+    }
+}
+
+struct CompletionCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "completion",
+        abstract: "Print shell completion scripts."
+    )
+    @Option(name: .long, help: "Shell type: bash, zsh, or fish.")
+    var shell: CompletionShell
+
+    mutating func run() async throws {
+        let words = fmCompletionCommands.joined(separator: " ")
+        let script: String = switch shell {
+        case .bash:
+            """
+            # bash completion for fm
+            _fm_completions() {
+              local cur
+              COMPREPLY=()
+              cur="${COMP_WORDS[COMP_CWORD]}"
+
+              if [[ $COMP_CWORD -eq 1 ]]; then
+                COMPREPLY=( $(compgen -W "\(words)" -- "$cur") )
+                return 0
+              fi
+            }
+
+            complete -F _fm_completions fm
+            """
+        case .zsh:
+            """
+            #compdef fm
+            _arguments \
+              '1:command:(\(words))' \
+              '*::arg:->args'
+            """
+        case .fish:
+            """
+            # fish completion for fm
+            complete -c fm -f -a '\(words)'
+            """
+        }
+        print(script)
     }
 }
 
@@ -3181,6 +3269,75 @@ struct VoiceCheckCommand: AsyncParsableCommand {
         """
         CLIPrinter.emit(payload: payload, human: human, global: global)
     }
+}
+
+func maybeHandleUnknownTopLevelCommand() -> Int32? {
+    let args = Array(CommandLine.arguments.dropFirst())
+    guard let first = args.first, !first.hasPrefix("-") else {
+        return nil
+    }
+    guard !fmKnownTopLevelCommands.contains(first) else {
+        return nil
+    }
+
+    let message = "Error: Unknown command '\(first)'.\n"
+    fputs(message, stderr)
+    if let suggestion = closestCommandMatch(for: first, candidates: fmCompletionCommands) {
+        fputs("Did you mean '\(suggestion)'?\n", stderr)
+    }
+    fputs("Run `fm --help` to see available commands.\n", stderr)
+    return 2
+}
+
+func closestCommandMatch(for input: String, candidates: [String]) -> String? {
+    let needle = input.lowercased()
+    guard !needle.isEmpty else { return nil }
+
+    var best: (command: String, distance: Int)?
+    for candidate in candidates {
+        let distance = levenshteinDistance(needle, candidate.lowercased())
+        if let current = best {
+            if distance < current.distance {
+                best = (candidate, distance)
+            }
+        } else {
+            best = (candidate, distance)
+        }
+    }
+
+    guard let best else { return nil }
+    let threshold = max(2, needle.count / 3)
+    return best.distance <= threshold ? best.command : nil
+}
+
+func levenshteinDistance(_ lhs: String, _ rhs: String) -> Int {
+    let left = Array(lhs)
+    let right = Array(rhs)
+
+    if left.isEmpty { return right.count }
+    if right.isEmpty { return left.count }
+
+    var previous = Array(0...right.count)
+    var current = Array(repeating: 0, count: right.count + 1)
+
+    for (i, leftChar) in left.enumerated() {
+        current[0] = i + 1
+        for (j, rightChar) in right.enumerated() {
+            let cost = leftChar == rightChar ? 0 : 1
+            current[j + 1] = min(
+                current[j] + 1,
+                previous[j + 1] + 1,
+                previous[j] + cost
+            )
+        }
+        swap(&previous, &current)
+    }
+
+    return previous[right.count]
+}
+
+if let exitCode = maybeHandleUnknownTopLevelCommand() {
+    exit(exitCode)
 }
 
 if #available(macOS 10.15, macCatalyst 13, iOS 13, tvOS 13, watchOS 6, *) {
