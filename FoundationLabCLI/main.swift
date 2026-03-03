@@ -3,6 +3,12 @@ import Foundation
 import FoundationModels
 import FoundationModelsTools
 
+#if canImport(Darwin)
+import Darwin
+#elseif canImport(Glibc)
+import Glibc
+#endif
+
 #if canImport(Contacts)
 import Contacts
 #endif
@@ -34,8 +40,8 @@ import HealthKit
 @available(macOS 10.15, macCatalyst 13, iOS 13, tvOS 13, watchOS 6, *)
 struct FoundationLabCLI: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
-        commandName: "foundationlab",
-        abstract: "Command-line access to Foundation Lab features.",
+        commandName: "fm",
+        abstract: "Command-line access to Foundation Models workflows.",
         subcommands: [
             AboutCommand.self,
             DiagnosticsCommand.self,
@@ -243,6 +249,22 @@ func withTimeout<T>(seconds: Int?, operation: @escaping () async throws -> T) as
         }
         group.cancelAll()
         return first
+    }
+}
+
+func hasInteractiveTerminal() -> Bool {
+#if canImport(Darwin) || canImport(Glibc)
+    isatty(fileno(stdin)) != 0 && isatty(fileno(stdout)) != 0
+#else
+    false
+#endif
+}
+
+func requireInteractiveTerminal(command: String) throws {
+    guard hasInteractiveTerminal() else {
+        throw CLICommandError.invalidInput(
+            "`\(command)` requires an interactive terminal. Use non-interactive commands (for example, `fm chat send --message ...`) for automation."
+        )
     }
 }
 
@@ -886,10 +908,19 @@ func formattedJSONString(from object: Any, pretty: Bool) -> String {
 
 let ragStorageURL: URL = {
     let home = FileManager.default.homeDirectoryForCurrentUser
-    return home.appendingPathComponent(".foundationlab/rag_store.json")
+    return home.appendingPathComponent(".fm/rag_store.json")
 }()
 
 func loadRAGDocuments() throws -> [RAGDocument] {
+    let legacyURL = FileManager.default.homeDirectoryForCurrentUser
+        .appendingPathComponent(".foundationlab/rag_store.json")
+
+    if !FileManager.default.fileExists(atPath: ragStorageURL.path),
+       FileManager.default.fileExists(atPath: legacyURL.path) {
+        let legacyData = try Data(contentsOf: legacyURL)
+        return try JSONDecoder().decode([RAGDocument].self, from: legacyData)
+    }
+
     guard FileManager.default.fileExists(atPath: ragStorageURL.path) else {
         return []
     }
@@ -1124,7 +1155,7 @@ struct AboutCommand: AsyncParsableCommand {
 
     mutating func run() async throws {
         let payload: [String: Any] = [
-            "name": "FoundationLabCLI",
+            "name": "fm",
             "version": "0.1.0",
             "platform": "macOS 26+",
             "status": "preview",
@@ -1141,7 +1172,7 @@ struct AboutCommand: AsyncParsableCommand {
             ]
         ]
         let human = """
-        FoundationLabCLI (preview)
+        fm (preview)
         Platform: macOS 26+
         Feature groups: diagnostics, chat, examples, tools, schemas, languages, rag, health, voice
         """
@@ -1240,13 +1271,14 @@ struct DiagnosticsCapabilitiesCommand: AsyncParsableCommand {
 struct ChatCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "chat",
-        abstract: "Chat with the model in single-turn, streaming, or interactive modes.",
+        abstract: "Chat with the model (non-interactive by default).",
         subcommands: [
             ChatSendCommand.self,
             ChatStreamCommand.self,
             ChatInteractiveCommand.self,
             ChatResetCommand.self
-        ]
+        ],
+        defaultSubcommand: ChatSendCommand.self
     )
 }
 
@@ -1382,6 +1414,12 @@ struct ChatInteractiveCommand: AsyncParsableCommand {
 
     mutating func run() async throws {
         do {
+            if global.dryRun {
+                CLIPrinter.emit(payload: ["status": "dry_run", "command": "chat interactive"], human: "[dry-run] Interactive chat prepared.", global: global)
+                return
+            }
+
+            try requireInteractiveTerminal(command: "fm chat interactive")
             var activeSessionPath = session
             var state = try loadSession(path: activeSessionPath)
             let model = createModel(guardrails: guardrails)
@@ -1395,7 +1433,7 @@ struct ChatInteractiveCommand: AsyncParsableCommand {
             CLIPrinter.emitHuman("Interactive mode started. Use /reset, /save <path>, /config, /exit.", global: global)
 
             while true {
-                if !global.json && !global.quiet, let data = "foundationlab> ".data(using: .utf8) {
+                if !global.json && !global.quiet, let data = "fm> ".data(using: .utf8) {
                     FileHandle.standardOutput.write(data)
                 }
 
@@ -3080,6 +3118,7 @@ struct HealthChatCommand: AsyncParsableCommand {
                 CLIPrinter.emit(payload: ["status": "dry_run", "command": "health chat"], human: "[dry-run] Health chat prepared.", global: global)
                 return
             }
+            try requireInteractiveTerminal(command: "fm health chat")
             try requireCapability("health", status: healthCapability())
             var state = try loadSession(path: session)
             CLIPrinter.emitHuman("Health chat started. Type /exit to quit, /reset to clear.", global: global)
