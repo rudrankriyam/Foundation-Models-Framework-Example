@@ -19,9 +19,9 @@ public struct CapabilityDescriptor: Sendable, Hashable {
 /// A task-oriented use case that can be shared by the app, App Intents, and CLI adapters.
 public protocol CapabilityUseCase: Sendable {
     associatedtype Request: CapabilityRequest
-    associatedtype Result: CapabilityResult
+    associatedtype Output: CapabilityResult
 
     static var descriptor: CapabilityDescriptor { get }
 
-    func execute(_ request: Request) async throws -> Result
+    func execute(_ request: Request) async throws -> Output
 }
