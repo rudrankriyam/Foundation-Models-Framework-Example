@@ -41,6 +41,6 @@ The `SupportedLanguagesAndInternationalization` playground covers multilingual c
 ## Running the Playgrounds
 
 1. Open the `FoundationLab.xcodeproj` in Xcode
-2. Navigate to the `Playgrounds` folder in the project navigator
+2. Navigate to the `BookPlaygrounds` folder in the project navigator
 3. Select any `.swift` file to open it in the playground editor
 4. Click the refresh button to start the Canvas on the right. You can open the canvas by Option + Command + Return.

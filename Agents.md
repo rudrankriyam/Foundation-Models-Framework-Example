@@ -181,69 +181,12 @@ final class ChatViewModel {
 - `LanguageService.swift` - `@MainActor @Observable` for language detection/management
 - `HealthDataManager.swift` - Shared instance pattern for health data
 
-### Directory Structure
-
-```
-Foundation Lab/
-├── AppIntents/               # Siri Shortcuts integration (OpenChatIntent)
-├── Assets.xcassets/          # App assets and icons
-├── Extensions/
-│   ├── Color+Extensions.swift
-│   └── Transcript+TokenCounting.swift
-├── FoundationLabApp.swift    # App entry point
-├── Models/
-│   ├── AppConfiguration.swift     # Constants (maxTokens, temperature)
-│   ├── DataModels.swift           # @Generable structs
-│   ├── FoundationModelsError.swift
-│   ├── NavigationCoordinator.swift
-│   └── TabSelection.swift
-├── Playgrounds/              # 37 learning examples (Chapter 2, 3, 8, 13)
-├── Services/
-│   ├── ConversationContextBuilder.swift
-│   ├── LanguageService.swift
-│   ├── RAGService.swift
-│   └── ToolExecutor.swift
-├── ViewModels/
-│   ├── ChatViewModel.swift
-│   ├── RAGChatViewModel.swift
-│   └── VoiceViewModel.swift
-├── Views/
-│   ├── AdaptiveNavigationView.swift
-│   ├── Chat/
-│   │   ├── ChatView.swift
-│   │   ├── ChatInputView.swift
-│   │   ├── ChatInstructionsView.swift
-│   │   └── RAGDocumentPickerView.swift
-│   ├── Components/
-│   │   ├── CodeDisclosure.swift
-│   │   ├── GenericCardView.swift
-│   │   ├── ExampleViewBase.swift
-│   │   └── Spacing.swift
-│   ├── Examples/
-│   │   ├── ExamplesView.swift
-│   │   ├── BasicChatView.swift
-│   │   ├── RAGChatView.swift
-│   │   ├── RAGChatView+Types.swift
-│   │   ├── DynamicSchemas/
-│   │   └── ...
-│   ├── Languages/
-│   │   ├── LanguagesView.swift
-│   │   └── ProductionLanguageExampleView.swift
-│   ├── SidebarView.swift
-│   ├── Tools/
-│   │   ├── ToolsView.swift
-│   │   └── HealthToolView.swift
-│   └── Voice/
-│       ├── VoiceView.swift
-│       └── PermissionRequestView.swift
-```
-
 ### Localization (`Localizable.xcstrings`)
 
 - 10 languages: English, German, Spanish, French, Italian, Japanese, Korean, Portuguese (Brazil), Chinese (Simplified), Chinese (Traditional)
 - ~450KB file with all translations
 
-### Playground Examples (`Playgrounds/`)
+### Playground Examples (`BookPlaygrounds/`)
 
 Run directly in Xcode using the `#Playground` directive:
 - Chapter 2: 16 examples (Getting Started with Sessions)
