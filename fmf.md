@@ -89,6 +89,33 @@ extension ConvertibleToGeneratedContent {
 @available(watchOS, unavailable)
 public struct DynamicGenerationSchema : Sendable {
 
+    /// Creates a null schema.
+    ///
+    /// You can use null schemas as a way to express types that
+    /// cannot be absent, but may have an empty value.
+    ///
+    ///     let person = DynamicGenerationSchema(
+    ///         name: "Person",
+    ///         properties: []
+    ///             DynamicGenerationSchema.Property(
+    ///               name: "fullName",
+    ///               schema: DynamicGenerationSchema(type: String.self)
+    ///             )
+    ///         ]
+    ///     )
+    ///
+    ///     let nullablePerson = DynamicGenerationSchema(
+    ///       name: "NullablePerson",
+    ///       anyOf: [person, .null]
+    ///     )
+    ///
+    ///     let schema = try GenerationSchema(root: nullablePerson, dependencies: [])
+    ///
+    @available(iOS 26.4, macOS 26.4, *)
+    @available(tvOS, unavailable)
+    @available(watchOS, unavailable)
+    public static var null: DynamicGenerationSchema { get }
+
     /// Creates an object schema.
     ///
     /// - Parameters:
@@ -96,6 +123,18 @@ public struct DynamicGenerationSchema : Sendable {
     ///   - description: A natural language description of this schema.
     ///   - properties: The properties to associated with this schema.
     public init(name: String, description: String? = nil, properties: [DynamicGenerationSchema.Property])
+
+    /// Creates an object schema.
+    ///
+    /// - Parameters:
+    ///   - name: A name this dynamic schema can be referenced by.
+    ///   - description: A natural language description of this schema.
+    ///   - representNilExplicitlyInGeneratedContent: Controls how the model will represent nil.
+    ///   - properties: The properties to associated with this schema.
+    @available(iOS 26.4, macOS 26.4, *)
+    @available(tvOS, unavailable)
+    @available(watchOS, unavailable)
+    public init(name: String, description: String? = nil, representNilExplicitlyInGeneratedContent explicitNil: Bool, properties: [DynamicGenerationSchema.Property])
 
     /// Creates an any-of schema.
     ///
@@ -233,11 +272,59 @@ extension Generable {
 ///   case nonFiction
 /// }
 /// ```
-/// - SeeAlso: @Generable macro ``Generable(description:representNullExplicitlyInGeneratedContent:)``
+/// - SeeAlso: @Generable macro ``Generable(description:representNilExplicitlyInGeneratedContent:)``
 @available(iOS 26.0, macOS 26.0, *)
 @available(tvOS, unavailable)
 @available(watchOS, unavailable)
 @attached(extension, conformances: Generable, names: named(init(_:)), named(generatedContent)) @attached(member, names: arbitrary) public macro Generable(description: String? = nil) = #externalMacro(module: "FoundationModelsMacros", type: "GenerableMacro")
+
+/// Conforms a type to ``Generable`` protocol.
+///
+/// You can apply this macro to structures and enumerations.
+///
+/// ```swift
+/// @Generable(representNilExplicitlyInGeneratedContent: true)
+/// struct Character {
+///   @Guide(description: "A short title")
+///   let title: String
+///
+///   @Guide(description: "An optional short subtitle for the novel")
+///   let subtitle: String?
+///
+///   @Guide(description: "The genre of the novel")
+///   let genre: Genre
+/// }
+///
+/// @Generable
+/// enum Genre {
+///   case fiction
+///   case nonFiction
+/// }
+/// ```
+///
+/// The `representNilExplicitlyInGeneratedContent` argument controls how the
+/// model represents nil properties. When `false`, the model will omit nil
+/// properties from the generated content, so no property will be present. When
+/// `true`, the model will produce a property, but its value will be
+/// ``GeneratedContent/Kind/null``.
+///
+/// ```swift
+/// // representNilExplicitlyInGeneratedContent: false
+/// let content = GeneratedContent(properties: [:])
+///
+/// // representNilExplicitlyInGeneratedContent: true
+/// let content = GeneratedContent(properties: ["foo": nil])
+/// ```
+///
+/// Controlling this behavior can be important when interfacing with external
+/// systems, using custom adapters, or working with one-shot examples that
+/// contain explicitly encoded nils.
+///
+/// - SeeAlso: @Generable macro ``Generable(description:)``
+@available(iOS 26.4, macOS 26.4, *)
+@available(tvOS, unavailable)
+@available(watchOS, unavailable)
+@attached(extension, conformances: Generable, names: named(init(_:)), named(generatedContent)) @attached(member, names: arbitrary) public macro Generable(description: String? = nil, representNilExplicitlyInGeneratedContent: Bool) = #externalMacro(module: "FoundationModelsMacros", type: "GenerableMacro")
 
 /// A type that represents structured, generated content.
 ///
@@ -1149,6 +1236,18 @@ public struct GenerationSchema : Sendable, Codable, CustomDebugStringConvertible
     ///   - properties: An array of properties.
     public init(type: any Generable.Type, description: String? = nil, properties: [GenerationSchema.Property])
 
+    /// Creates a schema by providing an array of properties.
+    ///
+    /// - Parameters:
+    ///   - type: The type this schema represents.
+    ///   - description: A natural language description of this schema.
+    ///   - representNilExplicitlyInGeneratedContent: Controls how the model will represent nil.
+    ///   - properties: An array of properties.
+    @available(iOS 26.4, macOS 26.4, *)
+    @available(tvOS, unavailable)
+    @available(watchOS, unavailable)
+    public init(type: any Generable.Type, description: String? = nil, representNilExplicitlyInGeneratedContent explicitNil: Bool, properties: [GenerationSchema.Property])
+
     /// Creates a schema for a string enumeration.
     ///
     /// - Parameters:
@@ -1689,7 +1788,7 @@ extension LanguageModelSession {
     /// prompt eagerly and reduce latency for the future request.
     ///
     /// - Important: You should only use prewarm when you have a window of at least 1 second before
-    /// the call to a respond method, like ``respond(to:options:)`` or ``streamResponse(to:options:)``.
+    /// the call to a respond method, like ``respond(to:options:)-(Prompt,_)`` or ``streamResponse(to:options:)-(Prompt,_)``.
     ///
     /// Calling this method does not guarantee that the system loads your assets immediately, particularly if
     /// your app is running in the background or the system is under load.
@@ -2433,9 +2532,15 @@ public protocol PromptRepresentable {
 /// The `SystemLanguageModel` refers to the on-device text foundation model that powers Apple
 /// Intelligence. Use ``default`` to access the base version of the model and perform general-purpose
 /// text generation tasks. To access a specialized version of the model, initialize the model
-/// with ``UseCase`` to perform tasks like ``UseCase/contentTagging``.
+/// with ``UseCase`` to perform tasks like ``UseCase/contentTagging``. Apple will periodically
+/// update `SystemLanguageModel` in routine OS updates to improve the on-device model's abilities and
+/// performance. Currently there are 2 model versions that align with:
+/// - iOS, iPadOS, macOS, and visionOS **26.0 - 26.3**
+/// - iOS, iPadOS, macOS, visionOS **26.4**
 ///
-/// Verify the model availability before you use the model. Model availability depends on device factors like:
+/// To better understand the impact of model version on your app, see the guide <doc:updating-prompts-for-new-model-versions>.
+///
+/// Before you use the model, you'll need to verify its availability. Model availability depends on device factors like:
 ///
 /// * The device must support Apple Intelligence.
 /// * Apple Intelligence must be turned on in Settings.
@@ -2526,21 +2631,27 @@ extension SystemLanguageModel {
     @available(watchOS, unavailable)
     public struct Guardrails : Sendable {
 
-        /// Default guardrails. This mode ensures that unsafe content in prompts and responses will be
-        /// blocked with a `LanguageModelSession.GenerationError.guardrailViolation`
+        /// Guardrails that block unsafe content in prompts and responses.
+        ///
+        /// The `default` guardrail level means that all guardrails are turned on. When
+        /// the guardrails block unsafe content from either the prompt input or model response,
+        /// the framework will throw a
+        ///  ``LanguageModelSession/GenerationError/guardrailViolation(_:)``
         /// error.
         public static let `default`: SystemLanguageModel.Guardrails
 
-        /// Guardrails that allow for permissively transforming text input, including
-        /// potentially unsafe content, to text responses, such as summarizing an article.
+        /// Guardrails that allow for permissively transforming text input.
         ///
-        /// In this mode, requests you make to the model that generate a `String` will not throw
-        /// `LanguageModelSession.GenerationError.guardrailViolation` errors.
-        /// However, when the purpose of your instructions and prompts is not transforming user input,
-        /// the model may still refuse to respond to potentially unsafe prompts by generating an
-        /// explanation.
+        /// The `permissiveContentTransform` guardrail mode is designed to let the model handle
+        /// potentially unsafe content, such as summarizing a news article. In this mode, requests you make to
+        /// the model that generate a `String` will not throw
+        /// ``LanguageModelSession/GenerationError/guardrailViolation(_:)`` errors.
+        /// However, the model may still sometimes refuse to respond to a sensitive prompt, in which case
+        /// it will generate a `String` refusal message.
         ///
-        /// When you generate responses other than `String`, this mode behaves the same way as `.default`.
+        /// When you generate responses other than `String`, this mode behaves the same way
+        /// as ``SystemLanguageModel/Guardrails/default`` mode and _will_ throw
+        /// ``LanguageModelSession/GenerationError/guardrailViolation(_:)`` errors.
         public static let permissiveContentTransformations: SystemLanguageModel.Guardrails
     }
 }
@@ -2668,50 +2779,50 @@ extension SystemLanguageModel {
 @available(watchOS, unavailable)
 extension SystemLanguageModel {
 
-    /// Token usage information for a prompt or transcript.
+    /// Returns the token count for the specified prompt.
     ///
-    /// Provides the total number of tokens used.
+    /// - Parameter prompt: The prompt to calculate the token count for.
+    /// - Returns: The token count for the prompt.
     @available(iOS 26.4, macOS 26.4, *)
     @available(tvOS, unavailable)
     @available(watchOS, unavailable)
-    public struct TokenUsage {
+    nonisolated(nonsending) final public func tokenCount(for prompt: some PromptRepresentable) async throws -> Int
 
-        /// The total token count.
-        public var tokenCount: Int
-    }
-
-    /// Returns token usage information for the specified instructions and tools.
+    /// Returns the token count for the specified instructions.
     ///
-    /// This method calculates the token count for a set of instructions and
-    /// tool definitions. The token count includes both the instructions and the
-    /// tool hints that would be included in the model's context.
-    ///
-    /// - Parameters:
-    ///   - instructions: Instructions to calculate token usage for.
-    ///   - tools: An array of tools that will be available to the model. Defaults to an empty array if not specified.
-    /// - Returns: A summary of token usage for the instructions and tools.
+    /// - Parameter instructions: The instructions to calculate the token count for.
+    /// - Returns: The token count for the instructions.
     @available(iOS 26.4, macOS 26.4, *)
     @available(tvOS, unavailable)
     @available(watchOS, unavailable)
-    nonisolated(nonsending) final public func tokenUsage(for instructions: Instructions, tools: [any Tool] = []) async throws -> SystemLanguageModel.TokenUsage
+    nonisolated(nonsending) final public func tokenCount(for instructions: Instructions) async throws -> Int
 
-    /// Returns token usage information for the specified prompt.
+    /// Returns the token count for the specified tools.
     ///
-    /// - Parameter prompt: A prompt to calculate token usage for.
-    /// - Returns: A summary of token usage for the prompt.
+    /// - Parameter tools: An array of tools to calculate the token count for.
+    /// - Returns: The token count for the tools.
     @available(iOS 26.4, macOS 26.4, *)
     @available(tvOS, unavailable)
     @available(watchOS, unavailable)
-    nonisolated(nonsending) final public func tokenUsage(for prompt: some PromptRepresentable) async throws -> SystemLanguageModel.TokenUsage
+    nonisolated(nonsending) final public func tokenCount(for tools: [any Tool]) async throws -> Int
 
-    /// Returns token usage information for the specified collection of transcript entries.
+    /// Returns the token count for the specified schema.
     ///
-    /// - Parameter transcriptEntries: A collection of transcript entries to calculate token usage for.
-    /// - Returns: A summary of token usage for the transcript.
+    /// - Parameter schema: The schema to calculate the token count for.
+    /// - Returns: The token count for the schema.
     @available(iOS 26.4, macOS 26.4, *)
     @available(tvOS, unavailable)
     @available(watchOS, unavailable)
-    nonisolated(nonsending) final public func tokenUsage(for transcriptEntries: some Collection<Transcript.Entry>) async throws -> SystemLanguageModel.TokenUsage
+    nonisolated(nonsending) final public func tokenCount(for schema: GenerationSchema) async throws -> Int
+
+    /// Returns the token count for the specified collection of transcript entries.
+    ///
+    /// - Parameter transcriptEntries: A collection of transcript entries to calculate the token count for.
+    /// - Returns: The token count for the transcript.
+    @available(iOS 26.4, macOS 26.4, *)
+    @available(tvOS, unavailable)
+    @available(watchOS, unavailable)
+    nonisolated(nonsending) final public func tokenCount(for transcriptEntries: some Collection<Transcript.Entry>) async throws -> Int
 }
 
 @available(iOS 26.0, macOS 26.0, *)
@@ -2730,7 +2841,7 @@ extension SystemLanguageModel {
     @backDeployed(before: iOS 26.4, macOS 26.4, visionOS 26.4)
     @available(tvOS, unavailable)
     @available(watchOS, unavailable)
-    final public var contextSize: Int { get async throws }
+    final public var contextSize: Int { get }
 }
 
 @available(iOS 26.0, macOS 26.0, *)
@@ -4556,3 +4667,4 @@ extension Array : PromptRepresentable where Element : PromptRepresentable {
     /// An instance that represents a prompt.
     public var promptRepresentation: Prompt { get }
 }
+
