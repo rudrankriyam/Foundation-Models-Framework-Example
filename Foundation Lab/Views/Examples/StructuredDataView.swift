@@ -5,7 +5,6 @@
 //  Created by Rudrank Riyam on 6/29/25.
 //
 
-import FoundationModels
 import SwiftUI
 
 struct StructuredDataView: View {
@@ -71,19 +70,7 @@ struct StructuredDataView: View {
 
   private func executeStructuredData() {
     Task {
-      await executor.executeStructured(
-        prompt: currentPrompt,
-        type: BookRecommendation.self
-      ) { book in
-        """
-        📚 Title: \(book.title)
-        ✍️ Author: \(book.author)
-        🏷️ Genre: \(book.genre)
-
-        📖 Description:
-        \(book.description)
-        """
-      }
+      await executor.executeBookRecommendation(prompt: currentPrompt)
     }
   }
 

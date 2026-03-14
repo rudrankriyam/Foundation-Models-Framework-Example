@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import FoundationLabCore
 import FoundationModels
 import SwiftUI
 
@@ -20,6 +21,7 @@ final class ExampleExecutor {
 
     /// Token count from the last operation. Updated after each execution.
     private(set) var lastTokenCount: Int?
+    private let generateBookRecommendationUseCase = GenerateBookRecommendationUseCase()
 
     /// Executes a basic language model operation
     func executeBasic(
@@ -104,6 +106,53 @@ final class ExampleExecutor {
 
             lastTokenCount = await session.transcript.tokenCount()
 
+        } catch {
+            errorMessage = FoundationModelsErrorHandler.handleError(error)
+        }
+
+        isRunning = false
+    }
+
+    /// Executes the shared book recommendation capability.
+    func executeBookRecommendation(
+        prompt: String,
+        systemPrompt: String? = nil
+    ) async {
+        guard !prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            errorMessage = "Please enter a valid prompt"
+            return
+        }
+
+        isRunning = true
+        errorMessage = nil
+        successMessage = nil
+        result = ""
+        lastTokenCount = nil
+
+        addToHistory(prompt)
+
+        do {
+            let response = try await generateBookRecommendationUseCase.execute(
+                GenerateBookRecommendationRequest(
+                    prompt: prompt,
+                    systemPrompt: systemPrompt,
+                    context: CapabilityInvocationContext(
+                        source: .app,
+                        localeIdentifier: Locale.current.identifier
+                    )
+                )
+            )
+
+            let book = response.recommendation
+            result = """
+            📚 Title: \(book.title)
+            ✍️ Author: \(book.author)
+            🏷️ Genre: \(String(describing: book.genre))
+
+            📖 Description:
+            \(book.description)
+            """
+            lastTokenCount = response.metadata.tokenCount
         } catch {
             errorMessage = FoundationModelsErrorHandler.handleError(error)
         }
