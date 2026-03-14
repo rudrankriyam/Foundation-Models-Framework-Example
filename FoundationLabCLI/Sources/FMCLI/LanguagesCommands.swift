@@ -6,6 +6,7 @@ struct LanguagesCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "languages",
         abstract: "Run the shared Foundation Lab language demos.",
+        discussion: CLIHelpText.languages,
         subcommands: [
             ListLanguagesCommand.self,
             RunLanguagesCommand.self

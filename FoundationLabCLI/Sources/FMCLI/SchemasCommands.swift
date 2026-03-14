@@ -6,6 +6,7 @@ struct SchemasCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "schemas",
         abstract: "Run the shared Foundation Lab schema demos.",
+        discussion: CLIHelpText.schemas,
         subcommands: [
             ListSchemasCommand.self,
             RunSchemasCommand.self

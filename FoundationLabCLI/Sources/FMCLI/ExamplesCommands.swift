@@ -6,6 +6,7 @@ struct ExamplesCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "examples",
         abstract: "Run the shared Foundation Lab example demos.",
+        discussion: CLIHelpText.examples,
         subcommands: [
             ListExamplesCommand.self,
             RunExamplesCommand.self
