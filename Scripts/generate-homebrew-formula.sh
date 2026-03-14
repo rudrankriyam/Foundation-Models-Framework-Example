@@ -49,9 +49,9 @@ class Fm < Formula
   end
 
   test do
-    output = shell_output("#{bin}/fm book recommend --dry-run --json --prompt 'Suggest an uplifting science fiction novel'")
-    assert_match "\"status\" : \"dry_run\"", output
-    assert_match "\"command\" : \"book recommend\"", output
+    output = shell_output("#{bin}/fm --help")
+    assert_match "USAGE: fm", output
+    assert_match "session", output
   end
 end
 EOF

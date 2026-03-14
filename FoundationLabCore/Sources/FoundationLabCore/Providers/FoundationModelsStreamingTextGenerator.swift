@@ -6,7 +6,7 @@ public struct FoundationModelsStreamingTextGenerator: StreamingTextGenerationPro
 
     public func streamText(
         for request: StreamingTextGenerationRequest,
-        onPartialResponse: @escaping @Sendable (String) -> Void
+        onPartialResponse: @escaping @Sendable (String) async -> Void
     ) async throws -> TextGenerationResult {
         let prompt = request.prompt.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !prompt.isEmpty else {
@@ -36,12 +36,12 @@ public struct FoundationModelsStreamingTextGenerator: StreamingTextGenerationPro
                 options: generationOptions.foundationModelsValue
             ) {
                 finalContent = partialResponse.content
-                onPartialResponse(partialResponse.content)
+                await onPartialResponse(partialResponse.content)
             }
         } else {
             for try await partialResponse in session.streamResponse(to: Prompt(prompt)) {
                 finalContent = partialResponse.content
-                onPartialResponse(partialResponse.content)
+                await onPartialResponse(partialResponse.content)
             }
         }
 

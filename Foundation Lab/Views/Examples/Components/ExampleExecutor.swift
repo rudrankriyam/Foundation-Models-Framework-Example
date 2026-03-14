@@ -191,7 +191,7 @@ final class ExampleExecutor {
                     )
                 )
             ) { [weak self] partialText in
-                Task { @MainActor in
+                await MainActor.run {
                     self?.result = partialText
                     onPartialResult(partialText)
                 }

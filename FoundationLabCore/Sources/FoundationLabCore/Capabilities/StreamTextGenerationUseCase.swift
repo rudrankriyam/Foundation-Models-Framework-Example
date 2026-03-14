@@ -15,7 +15,7 @@ public struct StreamTextGenerationUseCase: Sendable {
 
     public func execute(
         _ request: StreamingTextGenerationRequest,
-        onPartialResponse: @escaping @Sendable (String) -> Void
+        onPartialResponse: @escaping @Sendable (String) async -> Void
     ) async throws -> TextGenerationResult {
         guard !request.prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw FoundationLabCoreError.invalidRequest("Missing prompt")
