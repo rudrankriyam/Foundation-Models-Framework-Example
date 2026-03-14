@@ -33,6 +33,7 @@ public struct AnalyzeNutritionUseCase: CapabilityUseCase {
             for: AnalyzeNutritionRequest(
                 foodDescription: trimmedFoodDescription,
                 responseLanguage: trimmedResponseLanguage,
+                guardrails: request.guardrails,
                 context: request.context
             )
         )

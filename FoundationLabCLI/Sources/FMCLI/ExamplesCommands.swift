@@ -355,7 +355,11 @@ struct StreamingExampleCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Optional system instructions for the example.")
     var systemPrompt: String?
 
-    @Flag(name: .long, help: "Print streamed partial output live before the final response.")
+    @Flag(
+        name: .long,
+        inversion: .prefixedNo,
+        help: "Print streamed partial output live before the final response."
+    )
     var stream = true
 
     mutating func run() async throws {
