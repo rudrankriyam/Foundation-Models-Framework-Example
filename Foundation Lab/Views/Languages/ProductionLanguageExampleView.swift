@@ -6,14 +6,13 @@
 //
 
 import SwiftUI
-import FoundationModels
-import Observation
+import FoundationLabCore
 
 struct ProductionLanguageExampleView: View {
     @State private var detectedLanguage = ""
     @State private var selectedLanguage = "English (en-US)"
     @State private var foodDescription = "I had 2 scrambled eggs with toast for breakfast"
-    @State private var nutritionResult: NutritionResult?
+    @State private var nutritionResult: NutritionAnalysis?
     @State private var isRunning = false
     @State private var errorMessage: String?
 
@@ -137,7 +136,7 @@ struct ProductionLanguageExampleView: View {
         }
     }
 
-    private func resultSection(result: NutritionResult) -> some View {
+    private func resultSection(result: NutritionAnalysis) -> some View {
         VStack(alignment: .leading, spacing: Spacing.medium) {
             Text("Nutrition Analysis")
                 .font(.headline)
@@ -207,15 +206,17 @@ struct ProductionLanguageExampleView: View {
         nutritionResult = nil
 
         do {
-            let config = PromptConfig(selectedLanguage: selectedLanguage, foodDescription: foodDescription)
-            let session = LanguageModelSession(instructions: createNutritionInstructions(config: config))
-            let response = try await session.respond(
-                to: createNutritionPrompt(config: config),
-                generating: NutritionParseResult.self
+            let response = try await AnalyzeNutritionUseCase().execute(
+                AnalyzeNutritionRequest(
+                    foodDescription: foodDescription,
+                    responseLanguage: selectedLanguage,
+                    context: CapabilityInvocationContext(
+                        source: .app,
+                        localeIdentifier: Locale.current.identifier
+                    )
+                )
             )
-
-            let insightsResponse = try await session.respond(to: createInsightsPrompt(config: config, response: response))
-            nutritionResult = createNutritionResult(response, insightsResponse)
+            nutritionResult = response.analysis
 
         } catch {
             errorMessage = "Analysis failed: \(error.localizedDescription)"
@@ -223,33 +224,6 @@ struct ProductionLanguageExampleView: View {
 
         isRunning = false
     }
-}
-
-@Generable
-struct NutritionParseResult {
-    @Guide(description: "The name or description of the food item")
-    let foodName: String
-
-    @Guide(description: "Estimated calories as a whole number")
-    let calories: Int
-
-    @Guide(description: "Protein content in grams as a whole number")
-    let proteinGrams: Int
-
-    @Guide(description: "Carbohydrate content in grams as a whole number")
-    let carbsGrams: Int
-
-    @Guide(description: "Fat content in grams as a whole number")
-    let fatGrams: Int
-}
-
-struct NutritionResult {
-    let foodName: String
-    let calories: Int
-    let proteinGrams: Int
-    let carbsGrams: Int
-    let fatGrams: Int
-    let insights: String
 }
 
 struct NutritionCard: View {
