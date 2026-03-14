@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import FoundationModels
+import FoundationLabCore
 
 struct LanguageDetectionView: View {
     @Environment(LanguageService.self) private var languageService
@@ -54,17 +54,16 @@ struct LanguageDetectionView: View {
         VStack(alignment: .leading, spacing: Spacing.medium) {
             CodeViewer(
                 code: """
-let model = SystemLanguageModel.default
-let supported = model.supportedLanguages // [Locale.Language]
+import FoundationLabCore
 
-for language in supported {
-    let code = language.languageCode?.identifier ?? ""
-    let region = language.region?.identifier ?? ""
+let result = ListSupportedLanguagesUseCase().execute(locale: .current)
+
+for language in result.languages {
+    let code = language.languageCode
+    let region = language.regionCode ?? ""
 
     let name = Locale.current.localizedString(forLanguageCode: code) ?? code
-    let regionName = region.isEmpty ? nil :
-        (Locale.current.localizedString(forRegionCode: region) ?? region)
-    let displayName = regionName.map { "\\(name) (\\($0))" } ?? name
+    let displayName = region.isEmpty ? name : "\\(name) (\\(code)-\\(region))"
 
     print(displayName)
 }
@@ -95,7 +94,7 @@ for language in supported {
 }
 
 struct LanguageCard: View {
-    let language: Locale.Language
+    let language: SupportedLanguageDescriptor
     let languageService: LanguageService
 
     var body: some View {

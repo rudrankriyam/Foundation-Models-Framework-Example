@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import FoundationModels
+import FoundationLabCore
 
 struct MultilingualResponsesView: View {
     @State private var isRunning = false
@@ -64,7 +64,7 @@ struct MultilingualResponsesView: View {
 
             CodeViewer(
                 code: """
-let session = LanguageModelSession(model: SystemLanguageModel.default)
+import FoundationLabCore
 
 let prompts: [LanguagePrompt] = [
     .init(name: "English", text: "What is the capital of France?"),
@@ -74,8 +74,13 @@ let prompts: [LanguagePrompt] = [
 ]
 
 for prompt in prompts {
-    let response = try await session.respond(to: prompt.text)
-    print("\\(prompt.name): \\(response.content)")
+    let result = try await GenerateTextUseCase().execute(
+        TextGenerationRequest(
+            prompt: prompt.text,
+            context: CapabilityInvocationContext(source: .app)
+        )
+    )
+    print("\\(prompt.name): \\(result.content)")
 }
 """
             )
@@ -122,7 +127,7 @@ for prompt in prompts {
 
         // Create prompts for supported languages that we have templates for
         for language in languageService.supportedLanguages {
-            let code = language.languageCode?.identifier ?? ""
+            let code = language.languageCode
             if let promptText = promptTemplates[code] {
                 let displayName = languageService.getDisplayName(for: language)
                 prompts.append(LanguagePrompt(
@@ -141,11 +146,17 @@ for prompt in prompts {
             ]
         }
 
-        let session = LanguageModelSession(model: SystemLanguageModel.default)
-
         for prompt in prompts {
             do {
-                let response = try await session.respond(to: prompt.text)
+                let response = try await GenerateTextUseCase().execute(
+                    TextGenerationRequest(
+                        prompt: prompt.text,
+                        context: CapabilityInvocationContext(
+                            source: .app,
+                            localeIdentifier: Locale.current.identifier
+                        )
+                    )
+                )
 
                 let result = LanguagePromptResult(
                     language: prompt.language,

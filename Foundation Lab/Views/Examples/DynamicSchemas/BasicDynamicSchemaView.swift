@@ -153,34 +153,33 @@ private var bindingForSelectedExample: Binding<String> {
     }
 
     private func runExample() async {
-        await executor.execute {
+        do {
             let schema = try createSchema(for: selectedExample)
-            let session = LanguageModelSession()
-
             let prompt = """
             Extract the following information from this text:
 
             \(currentInput)
             """
-
-            let response = try await session.respond(
-                to: Prompt(prompt),
+            await executor.executeDynamicSchema(
+                prompt: prompt,
                 schema: schema,
-                options: .init(temperature: 0.1)
-            )
+                generationOptions: .init(temperature: 0.1)
+            ) { content in
+                """
+                📝 Input:
+                \(currentInput)
 
-            return """
-            📝 Input:
-            \(currentInput)
+                📊 Extracted Data:
+                \(formatContent(content))
 
-            📊 Extracted Data:
-            \(formatContent(response.content))
-
-            🔍 Schema Used:
-            \(selectedExample == 0 ? "Person" : selectedExample == 1 ? "Product" : "CustomObject")
-            """
-        }
+                🔍 Schema Used:
+                \(selectedExample == 0 ? "Person" : selectedExample == 1 ? "Product" : "CustomObject")
+                """
             }
+        } catch {
+            executor.errorMessage = FoundationModelsErrorHandler.handleError(error)
+            executor.result = ""
+        }
     }
 
     private func createSchema(for index: Int) throws -> GenerationSchema {
@@ -318,6 +317,7 @@ private var bindingForSelectedExample: Binding<String> {
         )
         """
     }
+}
 
 #Preview {
     NavigationStack {

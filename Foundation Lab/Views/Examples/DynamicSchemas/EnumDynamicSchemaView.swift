@@ -138,43 +138,43 @@ struct EnumDynamicSchemaView: View {
     }
 
     private func runExample() async {
-        await executor.execute {
+        do {
             let schema = try createSchema(for: selectedExample)
-            let session = LanguageModelSession()
-
             let fieldName = selectedExample == 0 ? "sentiment" : selectedExample == 1 ? "priority" : "condition"
             let prompt = """
             Analyze the following text and classify it into one of the available categories.
 
             Text: \(currentInput)
             """
-
-            let response = try await session.respond(
-                to: Prompt(prompt),
+            await executor.executeDynamicSchema(
+                prompt: prompt,
                 schema: schema,
-                options: .init(temperature: 0.1)
-            )
+                generationOptions: .init(temperature: 0.1)
+            ) { content in
+                let data = extractClassificationData(from: content, fieldName: fieldName)
+                let classification = data.classification
+                let confidence = data.confidence
+                let reasoning = data.reasoning
 
-            let data = extractClassificationData(from: response.content, fieldName: fieldName)
-            let classification = data.classification
-            let confidence = data.confidence
-            let reasoning = data.reasoning
+                return """
+                📝 Input:
+                \(currentInput)
 
-            return """
-            📝 Input:
-            \(currentInput)
+                🏷️ Classification: \(classification)
 
-            🏷️ Classification: \(classification)
+                📊 Available Choices:
+                \(currentChoices.map { "• \($0)" }.joined(separator: "\n"))
 
-            📊 Available Choices:
-            \(currentChoices.map { "• \($0)" }.joined(separator: "\n"))
+                \(confidence != nil ? "🎯 Confidence: \(String(format: "%.1f%%", (confidence ?? 0) * 100))" : "")
 
-            \(confidence != nil ? "🎯 Confidence: \(String(format: "%.1f%%", (confidence ?? 0) * 100))" : "")
+                \(reasoning != nil ? "💭 Reasoning: \(reasoning ?? "")" : "")
 
-            \(reasoning != nil ? "💭 Reasoning: \(reasoning ?? "")" : "")
-
-            ✅ Valid Choice: \(currentChoices.contains(classification) ? "Yes" : "No (Invalid!)")
-            """
+                ✅ Valid Choice: \(currentChoices.contains(classification) ? "Yes" : "No (Invalid!)")
+                """
+            }
+        } catch {
+            executor.errorMessage = FoundationModelsErrorHandler.handleError(error)
+            executor.result = ""
         }
     }
 

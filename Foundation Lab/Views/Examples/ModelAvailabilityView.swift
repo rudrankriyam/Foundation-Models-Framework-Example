@@ -5,7 +5,7 @@
 //  Created by Rudrank Riyam on 6/29/25.
 //
 
-import FoundationModels
+import FoundationLabCore
 import SwiftUI
 
 struct ModelAvailabilityView: View {
@@ -80,17 +80,9 @@ struct ModelAvailabilityView: View {
       isChecking = true
       isAvailable = nil
 
-      let availability = SystemLanguageModel.default.availability
-
-      if availability == .available {
-        isAvailable = true
-        availabilityStatus = "✅ Apple Intelligence is available and ready to use!"
-      } else {
-        isAvailable = false
-        availabilityStatus = "Apple Intelligence is not available on this device. This feature requires iOS 26.0+, " +
-                               "macOS 26.0+, or visionOS 26.0+ and a compatible Apple device with Apple Intelligence " +
-                               "enabled."
-      }
+      let availability = CheckModelAvailabilityUseCase().execute()
+      isAvailable = availability.isAvailable
+      availabilityStatus = availabilityMessage(for: availability)
 
       isChecking = false
     }
@@ -100,6 +92,23 @@ struct ModelAvailabilityView: View {
     availabilityStatus = "Tap 'Check Availability' to verify Apple Intelligence status"
     isAvailable = nil
     isChecking = false // Also reset the checking state
+  }
+
+  private func availabilityMessage(for result: ModelAvailabilityResult) -> String {
+    guard !result.isAvailable else {
+      return "✅ Apple Intelligence is available and ready to use!"
+    }
+
+    switch result.reason {
+    case .deviceNotEligible:
+      return "Apple Intelligence is not available because this device is not eligible. Foundation Lab requires iOS 26.0+, macOS 26.0+, or visionOS 26.0+ on supported Apple Intelligence hardware."
+    case .appleIntelligenceNotEnabled:
+      return "Apple Intelligence is not enabled. Turn it on in Settings, then try again."
+    case .modelNotReady:
+      return "Apple Intelligence is still preparing model assets on this device. Please wait a bit and try again."
+    case .unknown, .none:
+      return "Apple Intelligence is not available on this device right now. This feature requires iOS 26.0+, macOS 26.0+, or visionOS 26.0+ and a compatible Apple device with Apple Intelligence enabled."
+    }
   }
 }
 

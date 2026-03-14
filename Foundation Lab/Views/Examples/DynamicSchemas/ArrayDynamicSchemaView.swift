@@ -143,43 +143,43 @@ struct ArrayDynamicSchemaView: View {
     }
 
     private func runExample() async {
-        await executor.execute {
+        do {
             let schema = try createSchema(for: selectedExample, minItems: minItems, maxItems: maxItems)
-            let session = LanguageModelSession()
-
             let prompt = """
             Extract the items from this text. Return between \(minItems) and \(maxItems) items.
 
             Text: \(currentInput)
             """
-
-            let response = try await session.respond(
-                to: Prompt(prompt),
+            await executor.executeDynamicSchema(
+                prompt: prompt,
                 schema: schema,
-                options: .init(temperature: 0.1)
-            )
+                generationOptions: .init(temperature: 0.1)
+            ) { content in
+                let items: [GeneratedContent]
+                switch content.kind {
+                case .array(let elements):
+                    items = elements
+                default:
+                    items = []
+                }
 
-            let items: [GeneratedContent]
-            switch response.content.kind {
-            case .array(let elements):
-                items = elements
-            default:
-                items = []
+                return """
+                📝 Input:
+                \(currentInput)
+
+                Extracted Items (Count: \(items.count)):
+                \(formatItems(items))
+
+                Constraints:
+                - Minimum: \(minItems) items
+                - Maximum: \(maxItems) items
+                - Actual: \(items.count) items
+                - Valid: \(items.count >= minItems && items.count <= maxItems ? "Yes" : "No")
+                """
             }
-
-            return """
-            📝 Input:
-            \(currentInput)
-
-            Extracted Items (Count: \(items.count)):
-            \(formatItems(items))
-
-            Constraints:
-            - Minimum: \(minItems) items
-            - Maximum: \(maxItems) items
-            - Actual: \(items.count) items
-            - Valid: \(items.count >= minItems && items.count <= maxItems ? "Yes" : "No")
-            """
+        } catch {
+            executor.errorMessage = FoundationModelsErrorHandler.handleError(error)
+            executor.result = ""
         }
     }
 }

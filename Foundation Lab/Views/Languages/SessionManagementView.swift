@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import FoundationModels
+import FoundationLabCore
 
 struct SessionManagementView: View {
     @State private var conversationResults: [ConversationStep] = []
@@ -61,19 +61,20 @@ struct SessionManagementView: View {
         VStack(alignment: .leading, spacing: Spacing.medium) {
             CodeViewer(
                 code: """
-let session = LanguageModelSession(model: SystemLanguageModel.default)
+import FoundationLabCore
 
-// English interaction
-let english = try await session.respond(to: "Hello, how are you?")
-
-// Switch to Spanish in the same session
-let spanish = try await session.respond(to: "Hola, ¿cómo estás?")
-
-// Ask to switch back to English
-let switchBack = try await session.respond(to: "Now answer in English please")
-
-// Test context retention
-let memory = try await session.respond(to: "What language did I first speak to you in?")
+let result = try await RunConversationUseCase().execute(
+    RunConversationRequest(
+        prompts: [
+            "Hello, how are you?",
+            "Hola, ¿cómo estás?",
+            "Now answer in English please",
+            "What language did I first speak to you in?"
+        ],
+        systemPrompt: "You are a multilingual assistant who can naturally switch between languages and maintain conversational context.",
+        context: CapabilityInvocationContext(source: .app)
+    )
+)
 """
             )
         }
@@ -114,35 +115,28 @@ let memory = try await session.respond(to: "What language did I first speak to y
             ("🤝 Mixed", "Can you parler both English and French in your response?")
         ]
 
-        // Create single persistent session
-        let session = LanguageModelSession(
-            model: SystemLanguageModel.default,
-            instructions: "You are a multilingual assistant who can naturally switch between languages and maintain " +
-                         "conversational context."
-        )
-
-        for (language, prompt) in conversationSteps {
-            do {
-                let response = try await session.respond(to: prompt)
-
-                let step = ConversationStep(
-                    language: language,
-                    prompt: prompt,
-                    response: response.content,
-                    isError: false
+        do {
+            let result = try await RunConversationUseCase().execute(
+                RunConversationRequest(
+                    prompts: conversationSteps.map(\.1),
+                    systemPrompt: "You are a multilingual assistant who can naturally switch between languages and maintain conversational context.",
+                    context: CapabilityInvocationContext(
+                        source: .app,
+                        localeIdentifier: Locale.current.identifier
+                    )
                 )
+            )
 
-                conversationResults.append(step)
-            } catch {
-                let errorStep = ConversationStep(
-                    language: language,
-                    prompt: prompt,
-                    response: "Error: \(error.localizedDescription)",
-                    isError: true
+            conversationResults = zip(conversationSteps, result.exchanges).map { stepInfo, exchange in
+                ConversationStep(
+                    language: stepInfo.0,
+                    prompt: exchange.prompt,
+                    response: exchange.response,
+                    isError: exchange.isError
                 )
-
-                conversationResults.append(errorStep)
             }
+        } catch {
+            errorMessage = error.localizedDescription
         }
 
         isRunning = false

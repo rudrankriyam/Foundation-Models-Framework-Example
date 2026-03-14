@@ -265,15 +265,14 @@ let summary = response.content
   }
 
   static let modelAvailabilityCode = """
-import FoundationModels
+import FoundationLabCore
 
-// Check Apple Intelligence availability
-let availability = SystemLanguageModel.default.availability
+let result = CheckModelAvailabilityUseCase().execute()
 
-switch availability {
-case .available:
-case .notAvailable(let reason):
-@unknown default:
+if result.isAvailable {
+    print("Apple Intelligence is ready")
+} else {
+    print(result.reason?.rawValue ?? "unknown")
 }
 """
 }

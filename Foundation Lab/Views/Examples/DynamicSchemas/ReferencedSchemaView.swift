@@ -144,38 +144,38 @@ struct ReferencedSchemaView: View {
     }
 
     private func runExample() async {
-        await executor.execute {
+        do {
             let (schema, referencedSchemas) = try createSchema(for: selectedExample)
-            let session = LanguageModelSession()
-
             let prompt = """
             Extract the structured information from this text:
 
             \(currentInput)
             """
-
-            let response = try await session.respond(
-                to: Prompt(prompt),
+            await executor.executeDynamicSchema(
+                prompt: prompt,
                 schema: schema,
-                options: .init(temperature: 0.1)
-            )
+                generationOptions: .init(temperature: 0.1)
+            ) { content in
+                """
+                📝 Input:
+                \(currentInput)
 
-            return """
-            📝 Input:
-            \(currentInput)
+                📊 Extracted Data:
+                \(formatReferencedContent(content))
 
-            📊 Extracted Data:
-            \(formatReferencedContent(response.content))
+                🔗 Referenced Schemas Used:
+                \(referencedSchemas.map { "• \($0)" }.joined(separator: "\n"))
 
-            🔗 Referenced Schemas Used:
-            \(referencedSchemas.map { "• \($0)" }.joined(separator: "\n"))
-
-            ✅ Benefits:
-            • No schema duplication
-            • Consistent data structure
-            • Easier maintenance
-            • Type safety across references
-            """
+                ✅ Benefits:
+                • No schema duplication
+                • Consistent data structure
+                • Easier maintenance
+                • Type safety across references
+                """
+            }
+        } catch {
+            executor.errorMessage = FoundationModelsErrorHandler.handleError(error)
+            executor.result = ""
         }
     }
 

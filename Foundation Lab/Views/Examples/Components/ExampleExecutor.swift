@@ -21,7 +21,9 @@ final class ExampleExecutor {
 
     /// Token count from the last operation. Updated after each execution.
     private(set) var lastTokenCount: Int?
+    private let generateTextUseCase = GenerateTextUseCase()
     private let generateBookRecommendationUseCase = GenerateBookRecommendationUseCase()
+    private let streamTextGenerationUseCase = StreamTextGenerationUseCase()
 
     /// Executes a basic language model operation
     func executeBasic(
@@ -44,19 +46,19 @@ final class ExampleExecutor {
         addToHistory(prompt)
 
         do {
-            let session: LanguageModelSession
-            let model = SystemLanguageModel(useCase: .general, guardrails: guardrails)
-
-            if let instructions = instructions {
-                session = LanguageModelSession(model: model, instructions: Instructions(instructions))
-            } else {
-                session = LanguageModelSession(model: model)
-            }
-
-            let response = try await session.respond(to: Prompt(prompt))
+            let response = try await generateTextUseCase.execute(
+                TextGenerationRequest(
+                    prompt: prompt,
+                    systemPrompt: instructions,
+                    guardrails: guardrails,
+                    context: CapabilityInvocationContext(
+                        source: .app,
+                        localeIdentifier: Locale.current.identifier
+                    )
+                )
+            )
             result = response.content
-
-            lastTokenCount = await session.transcript.tokenCount(using: model)
+            lastTokenCount = response.metadata.tokenCount
 
             if let successMessage = successMessage {
                 self.successMessage = successMessage
@@ -91,20 +93,19 @@ final class ExampleExecutor {
         addToHistory(prompt)
 
         do {
-            let session: LanguageModelSession
-            if let instructions, !instructions.isEmpty {
-                session = LanguageModelSession(instructions: Instructions(instructions))
-            } else {
-                session = LanguageModelSession()
-            }
-            let response = try await session.respond(
-                to: Prompt(prompt),
-                generating: type
+            let response = try await GenerateStructuredDataUseCase<T>().execute(
+                StructuredGenerationRequest<T>(
+                    prompt: prompt,
+                    systemPrompt: instructions,
+                    context: CapabilityInvocationContext(
+                        source: .app,
+                        localeIdentifier: Locale.current.identifier
+                    )
+                )
             )
 
-            result = formatter(response.content)
-
-            lastTokenCount = await session.transcript.tokenCount()
+            result = formatter(response.output)
+            lastTokenCount = response.metadata.tokenCount
 
         } catch {
             errorMessage = FoundationModelsErrorHandler.handleError(error)
@@ -180,21 +181,24 @@ final class ExampleExecutor {
         addToHistory(prompt)
 
         do {
-            let session: LanguageModelSession
-            if let instructions = instructions {
-                session = LanguageModelSession(instructions: Instructions(instructions))
-            } else {
-                session = LanguageModelSession()
+            let response = try await streamTextGenerationUseCase.execute(
+                StreamingTextGenerationRequest(
+                    prompt: prompt,
+                    systemPrompt: instructions,
+                    context: CapabilityInvocationContext(
+                        source: .app,
+                        localeIdentifier: Locale.current.identifier
+                    )
+                )
+            ) { [weak self] partialText in
+                Task { @MainActor in
+                    self?.result = partialText
+                    onPartialResult(partialText)
+                }
             }
 
-            let stream = session.streamResponse(to: Prompt(prompt))
-
-            for try await partialResponse in stream {
-                result = partialResponse.content
-                onPartialResult(partialResponse.content)
-            }
-
-            lastTokenCount = await session.transcript.tokenCount()
+            result = response.content
+            lastTokenCount = response.metadata.tokenCount
 
         } catch {
             errorMessage = FoundationModelsErrorHandler.handleError(error)
@@ -225,5 +229,9 @@ final class ExampleExecutor {
         if promptHistory.count > 10 {
             promptHistory = Array(promptHistory.prefix(10))
         }
+    }
+
+    func storeLastTokenCount(_ count: Int?) {
+        lastTokenCount = count
     }
 }
