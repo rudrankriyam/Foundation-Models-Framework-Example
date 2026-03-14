@@ -39,3 +39,39 @@ public enum BookGenre: Sendable, Hashable, Codable {
     case biography
     case history
 }
+
+public extension BookRecommendation {
+    var plainTextSummary: String {
+        """
+        Title: \(title)
+        Author: \(author)
+        Genre: \(genre.displayName)
+
+        Description:
+        \(description)
+        """
+    }
+}
+
+public extension BookGenre {
+    var displayName: String {
+        switch self {
+        case .fiction:
+            return "Fiction"
+        case .nonFiction:
+            return "Non-Fiction"
+        case .mystery:
+            return "Mystery"
+        case .romance:
+            return "Romance"
+        case .sciFi:
+            return "Sci-Fi"
+        case .fantasy:
+            return "Fantasy"
+        case .biography:
+            return "Biography"
+        case .history:
+            return "History"
+        }
+    }
+}

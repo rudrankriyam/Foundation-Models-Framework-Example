@@ -10,6 +10,15 @@ import AppIntents
 nonisolated struct FoundationLabAppShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(
+            intent: GenerateBookRecommendationIntent(),
+            phrases: [
+                "Recommend a book in \(.applicationName)",
+                "Get a book recommendation from \(.applicationName)"
+            ],
+            shortTitle: "Recommend Book",
+            systemImageName: "book.closed.fill"
+        )
+        AppShortcut(
             intent: OpenChatIntent(),
             phrases: [
                 "Open \(.applicationName) chat",

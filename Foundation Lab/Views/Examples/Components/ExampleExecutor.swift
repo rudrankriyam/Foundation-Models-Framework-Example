@@ -147,7 +147,7 @@ final class ExampleExecutor {
             result = """
             📚 Title: \(book.title)
             ✍️ Author: \(book.author)
-            🏷️ Genre: \(String(describing: book.genre))
+            🏷️ Genre: \(book.genre.displayName)
 
             📖 Description:
             \(book.description)

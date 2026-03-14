@@ -29,3 +29,5 @@ Its job is not to own delivery layers or UI concerns.
 - `Providers/` contains abstraction seams and shared concrete generators that capabilities compose.
 
 This package is intentionally small. It creates the seam for later extraction work without moving major user-facing features yet.
+
+See `ROADMAP.md` for the current shared-capability stack and next capability extractions.

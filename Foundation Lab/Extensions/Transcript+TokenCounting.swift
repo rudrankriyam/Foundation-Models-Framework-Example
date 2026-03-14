@@ -71,7 +71,7 @@ func estimateTokensForStructuredContent(_ content: GeneratedContent) -> Int {
 extension Transcript {
     /// Returns the real token count for the entire transcript using the system tokenizer.
     func realTokenCount(using model: SystemLanguageModel = .default) async throws -> Int {
-        try await model.tokenUsage(for: Array(self)).tokenCount
+        try await model.tokenCount(for: Array(self))
     }
 }
 #endif
@@ -200,7 +200,7 @@ private extension Transcript {
 
         guard let baseTokens = base.isEmpty
             ? 0
-            : try? await model.tokenUsage(for: base).tokenCount
+            : try? await model.tokenCount(for: base)
         else {
             return nil
         }
@@ -217,7 +217,7 @@ private extension Transcript {
             let recentEntries = Array(conversation.suffix(mid))
             let candidate = base + recentEntries
 
-            guard let tokens = try? await model.tokenUsage(for: candidate).tokenCount else {
+            guard let tokens = try? await model.tokenCount(for: candidate) else {
                 return nil
             }
 
