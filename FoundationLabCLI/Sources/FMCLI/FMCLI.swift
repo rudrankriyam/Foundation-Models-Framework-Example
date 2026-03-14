@@ -9,7 +9,9 @@ struct FMCLI: AsyncParsableCommand {
         commandName: "fm",
         abstract: "Run Foundation Lab shared capabilities from the command line.",
         subcommands: [
-            BookCommand.self
+            BookCommand.self,
+            WeatherCommand.self,
+            WebCommand.self
         ],
         defaultSubcommand: BookCommand.self
     )
@@ -34,6 +36,28 @@ struct BookCommand: AsyncParsableCommand {
             RecommendBookCommand.self
         ],
         defaultSubcommand: RecommendBookCommand.self
+    )
+}
+
+struct WeatherCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "weather",
+        abstract: "Weather capabilities.",
+        subcommands: [
+            GetWeatherCommand.self
+        ],
+        defaultSubcommand: GetWeatherCommand.self
+    )
+}
+
+struct WebCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "web",
+        abstract: "Web capabilities.",
+        subcommands: [
+            SearchWebCommand.self
+        ],
+        defaultSubcommand: SearchWebCommand.self
     )
 }
 
@@ -125,6 +149,146 @@ struct RecommendBookCommand: AsyncParsableCommand {
     }
 }
 
+struct GetWeatherCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "get",
+        abstract: "Get the weather for a location."
+    )
+
+    @OptionGroup var options: CLIOptions
+
+    @Option(name: [.short, .long], help: "The location to look up.")
+    var location: String
+
+    mutating func run() async throws {
+        let trimmedLocation = location.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedLocation.isEmpty else {
+            throw ValidationError("Please provide a non-empty --location.")
+        }
+
+        if options.dryRun {
+            CLIOutput.emit(
+                payload: [
+                    "status": "dry_run",
+                    "command": "weather get",
+                    "location": trimmedLocation
+                ],
+                human: """
+                [dry-run] fm weather get
+                Location: \(trimmedLocation)
+                """,
+                json: options.json
+            )
+            return
+        }
+
+        do {
+            try requireFoundationModelsAvailability()
+
+            let response = try await GetWeatherUseCase().execute(
+                GetWeatherRequest(
+                    location: trimmedLocation,
+                    context: CapabilityInvocationContext(
+                        source: .cli,
+                        localeIdentifier: Locale.current.identifier
+                    )
+                )
+            )
+
+            CLIOutput.emit(
+                payload: [
+                    "location": trimmedLocation,
+                    "content": response.content,
+                    "metadata": [
+                        "provider": response.metadata.provider ?? "",
+                        "modelIdentifier": response.metadata.modelIdentifier ?? "",
+                        "tokenCount": response.metadata.tokenCount as Any
+                    ]
+                ],
+                human: humanReadableText(
+                    title: "Weather for \(trimmedLocation)",
+                    response: response,
+                    verbose: options.verbose
+                ),
+                json: options.json
+            )
+        } catch {
+            CLIOutput.emitError(error, json: options.json)
+            throw ExitCode.failure
+        }
+    }
+}
+
+struct SearchWebCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "search",
+        abstract: "Search the web with the shared web search capability."
+    )
+
+    @OptionGroup var options: CLIOptions
+
+    @Option(name: [.short, .long], help: "The search query to run.")
+    var query: String
+
+    mutating func run() async throws {
+        let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedQuery.isEmpty else {
+            throw ValidationError("Please provide a non-empty --query.")
+        }
+
+        if options.dryRun {
+            CLIOutput.emit(
+                payload: [
+                    "status": "dry_run",
+                    "command": "web search",
+                    "query": trimmedQuery
+                ],
+                human: """
+                [dry-run] fm web search
+                Query: \(trimmedQuery)
+                """,
+                json: options.json
+            )
+            return
+        }
+
+        do {
+            try requireFoundationModelsAvailability()
+
+            let response = try await SearchWebUseCase().execute(
+                SearchWebRequest(
+                    query: trimmedQuery,
+                    context: CapabilityInvocationContext(
+                        source: .cli,
+                        localeIdentifier: Locale.current.identifier
+                    )
+                )
+            )
+
+            CLIOutput.emit(
+                payload: [
+                    "query": trimmedQuery,
+                    "content": response.content,
+                    "metadata": [
+                        "provider": response.metadata.provider ?? "",
+                        "modelIdentifier": response.metadata.modelIdentifier ?? "",
+                        "tokenCount": response.metadata.tokenCount as Any
+                    ]
+                ],
+                human: humanReadableText(
+                    title: "Web search for \(trimmedQuery)",
+                    response: response,
+                    verbose: options.verbose
+                ),
+                json: options.json
+            )
+        } catch {
+            CLIOutput.emitError(error, json: options.json)
+            throw ExitCode.failure
+        }
+    }
+}
+
 enum CLIOutput {
     static func emit(payload: [String: Any], human: String, json: Bool) {
         if json {
@@ -160,6 +324,24 @@ enum CLIOutput {
 
         print(text)
     }
+}
+
+func humanReadableText(
+    title: String,
+    response: TextGenerationResult,
+    verbose: Bool
+) -> String {
+    var lines = [title, "", response.content]
+
+    if verbose {
+        let provider = response.metadata.provider ?? "Unknown"
+        let tokenCount = response.metadata.tokenCount.map(String.init) ?? "n/a"
+        lines.append("")
+        lines.append("Provider: \(provider)")
+        lines.append("Token count: \(tokenCount)")
+    }
+
+    return lines.joined(separator: "\n")
 }
 
 enum CLIAvailabilityError: LocalizedError {

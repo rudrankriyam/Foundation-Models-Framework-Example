@@ -19,6 +19,24 @@ nonisolated struct FoundationLabAppShortcuts: AppShortcutsProvider {
             systemImageName: "book.closed.fill"
         )
         AppShortcut(
+            intent: GetWeatherIntent(),
+            phrases: [
+                "Get the weather in \(.applicationName)",
+                "Check weather with \(.applicationName)"
+            ],
+            shortTitle: "Get Weather",
+            systemImageName: "cloud.sun.fill"
+        )
+        AppShortcut(
+            intent: SearchWebIntent(),
+            phrases: [
+                "Search the web in \(.applicationName)",
+                "Look something up with \(.applicationName)"
+            ],
+            shortTitle: "Search Web",
+            systemImageName: "magnifyingglass"
+        )
+        AppShortcut(
             intent: OpenChatIntent(),
             phrases: [
                 "Open \(.applicationName) chat",

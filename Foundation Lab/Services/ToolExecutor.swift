@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import FoundationLabCore
 import FoundationModels
 
 /// A reusable helper class that eliminates code duplication across tool views
@@ -56,6 +57,18 @@ final class ToolExecutor {
     await performExecution(successMessage: successMessage, clearForm: clearForm) {
       let session = sessionBuilder()
       let response = try await session.respond(to: Prompt(prompt))
+      return response.content
+    }
+  }
+
+  /// Executes a shared FoundationLabCore capability that returns generated text.
+  func executeCapability(
+    successMessage: String? = nil,
+    clearForm: (@MainActor () -> Void)? = nil,
+    operation: () async throws -> TextGenerationResult
+  ) async {
+    await performExecution(successMessage: successMessage, clearForm: clearForm) {
+      let response = try await operation()
       return response.content
     }
   }

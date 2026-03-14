@@ -5,7 +5,7 @@
 //  Created by Rudrank Riyam on 6/29/25.
 //
 
-import FoundationModels
+import FoundationLabCore
 import SwiftUI
 
 struct WebToolView: View {
@@ -49,10 +49,17 @@ struct WebToolView: View {
 
   private func executeWebSearch() {
     Task {
-      await executor.execute(
-        tool: Search1WebSearchTool(),
-        prompt: searchQuery
-      )
+      await executor.executeCapability {
+        try await SearchWebUseCase().execute(
+          SearchWebRequest(
+            query: searchQuery,
+            context: CapabilityInvocationContext(
+              source: .app,
+              localeIdentifier: Locale.current.identifier
+            )
+          )
+        )
+      }
     }
   }
 }

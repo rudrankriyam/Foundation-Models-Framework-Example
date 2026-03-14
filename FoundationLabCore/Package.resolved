@@ -1,0 +1,15 @@
+{
+  "originHash" : "a3c47db7930275ffa8f654852f3c745dff8dfd2f92411bdaf91e4c0985a84a68",
+  "pins" : [
+    {
+      "identity" : "foundationmodelstools",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/rudrankriyam/FoundationModelsTools.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "207b5a123bebb78f9a907287255b31971b16ee86"
+      }
+    }
+  ],
+  "version" : 3
+}
