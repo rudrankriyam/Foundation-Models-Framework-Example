@@ -1,0 +1,31 @@
+import AppIntents
+import Foundation
+import FoundationLabCore
+
+struct SearchMusicCatalogIntent: AppIntent {
+    static let title: LocalizedStringResource = "Search Music Catalog"
+    static let description = IntentDescription(
+        "Searches Apple Music using Foundation Lab's shared music capability."
+    )
+    static let openAppWhenRun = true
+
+    @Parameter(
+        title: "Query",
+        requestValueDialog: IntentDialog("What music do you want to search for?")
+    )
+    var query: String
+
+    func perform() async throws -> some IntentResult & ReturnsValue<String> {
+        let response = try await SearchMusicCatalogUseCase().execute(
+            SearchMusicCatalogRequest(
+                query: query,
+                context: CapabilityInvocationContext(
+                    source: .appIntent,
+                    localeIdentifier: Locale.current.identifier
+                )
+            )
+        )
+
+        return .result(value: response.content)
+    }
+}

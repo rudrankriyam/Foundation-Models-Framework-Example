@@ -10,8 +10,15 @@ struct FMCLI: AsyncParsableCommand {
         abstract: "Run Foundation Lab shared capabilities from the command line.",
         subcommands: [
             BookCommand.self,
+            NutritionCommand.self,
             WeatherCommand.self,
-            WebCommand.self
+            WebCommand.self,
+            ContactsCommand.self,
+            CalendarCommand.self,
+            RemindersCommand.self,
+            LocationCommand.self,
+            MusicCommand.self,
+            HealthCommand.self
         ],
         defaultSubcommand: BookCommand.self
     )
@@ -39,6 +46,17 @@ struct BookCommand: AsyncParsableCommand {
     )
 }
 
+struct NutritionCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "nutrition",
+        abstract: "Nutrition analysis capabilities.",
+        subcommands: [
+            AnalyzeNutritionCommand.self
+        ],
+        defaultSubcommand: AnalyzeNutritionCommand.self
+    )
+}
+
 struct WeatherCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "weather",
@@ -55,9 +73,76 @@ struct WebCommand: AsyncParsableCommand {
         commandName: "web",
         abstract: "Web capabilities.",
         subcommands: [
-            SearchWebCommand.self
+            SearchWebCommand.self,
+            SummarizeWebPageCommand.self
         ],
         defaultSubcommand: SearchWebCommand.self
+    )
+}
+
+struct ContactsCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "contacts",
+        abstract: "Contacts capabilities.",
+        subcommands: [
+            SearchContactsCommand.self
+        ],
+        defaultSubcommand: SearchContactsCommand.self
+    )
+}
+
+struct CalendarCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "calendar",
+        abstract: "Calendar capabilities.",
+        subcommands: [
+            QueryCalendarCommand.self
+        ],
+        defaultSubcommand: QueryCalendarCommand.self
+    )
+}
+
+struct RemindersCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "reminders",
+        abstract: "Reminders capabilities.",
+        subcommands: [
+            ManageRemindersCLICommand.self
+        ],
+        defaultSubcommand: ManageRemindersCLICommand.self
+    )
+}
+
+struct LocationCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "location",
+        abstract: "Location capabilities.",
+        subcommands: [
+            GetCurrentLocationCommand.self
+        ],
+        defaultSubcommand: GetCurrentLocationCommand.self
+    )
+}
+
+struct MusicCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "music",
+        abstract: "Music capabilities.",
+        subcommands: [
+            SearchMusicCommand.self
+        ],
+        defaultSubcommand: SearchMusicCommand.self
+    )
+}
+
+struct HealthCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "health",
+        abstract: "Health capabilities.",
+        subcommands: [
+            QueryHealthCommand.self
+        ],
+        defaultSubcommand: QueryHealthCommand.self
     )
 }
 
@@ -76,10 +161,7 @@ struct RecommendBookCommand: AsyncParsableCommand {
     var systemPrompt: String?
 
     mutating func run() async throws {
-        let trimmedPrompt = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedPrompt.isEmpty else {
-            throw ValidationError("Please provide a non-empty --prompt.")
-        }
+        let trimmedPrompt = try validatedNonEmpty(prompt, optionName: "--prompt")
 
         if options.dryRun {
             CLIOutput.emit(
@@ -105,10 +187,7 @@ struct RecommendBookCommand: AsyncParsableCommand {
                 GenerateBookRecommendationRequest(
                     prompt: trimmedPrompt,
                     systemPrompt: systemPrompt,
-                    context: CapabilityInvocationContext(
-                        source: .cli,
-                        localeIdentifier: Locale.current.identifier
-                    )
+                    context: cliContext()
                 )
             )
 
@@ -118,13 +197,9 @@ struct RecommendBookCommand: AsyncParsableCommand {
                     "author": response.recommendation.author,
                     "genre": response.recommendation.genre.displayName,
                     "description": response.recommendation.description,
-                    "metadata": [
-                        "provider": response.metadata.provider ?? "",
-                        "modelIdentifier": response.metadata.modelIdentifier ?? "",
-                        "tokenCount": response.metadata.tokenCount as Any
-                    ]
+                    "metadata": metadataPayload(response.metadata)
                 ],
-                human: humanReadableOutput(for: response),
+                human: humanReadableBookOutput(for: response, verbose: options.verbose),
                 json: options.json
             )
         } catch {
@@ -132,20 +207,72 @@ struct RecommendBookCommand: AsyncParsableCommand {
             throw ExitCode.failure
         }
     }
+}
 
-    private func humanReadableOutput(
-        for response: GenerateBookRecommendationResult
-    ) -> String {
-        var lines = [response.recommendation.plainTextSummary]
+struct AnalyzeNutritionCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "analyze",
+        abstract: "Analyze a meal description."
+    )
 
-        if options.verbose {
-            let provider = response.metadata.provider ?? "Unknown"
-            let tokenCount = response.metadata.tokenCount.map(String.init) ?? "n/a"
-            lines.append("Provider: \(provider)")
-            lines.append("Token count: \(tokenCount)")
+    @OptionGroup var options: CLIOptions
+
+    @Option(name: [.short, .long], help: "Describe the food or meal to analyze.")
+    var description: String
+
+    @Option(name: .long, help: "Preferred response language.", completion: .default)
+    var language = "English"
+
+    mutating func run() async throws {
+        let trimmedDescription = try validatedNonEmpty(description, optionName: "--description")
+        let trimmedLanguage = try validatedNonEmpty(language, optionName: "--language")
+
+        if options.dryRun {
+            CLIOutput.emit(
+                payload: [
+                    "status": "dry_run",
+                    "command": "nutrition analyze",
+                    "description": trimmedDescription,
+                    "language": trimmedLanguage
+                ],
+                human: """
+                [dry-run] fm nutrition analyze
+                Description: \(trimmedDescription)
+                Language: \(trimmedLanguage)
+                """,
+                json: options.json
+            )
+            return
         }
 
-        return lines.joined(separator: "\n\n")
+        do {
+            try requireFoundationModelsAvailability()
+
+            let response = try await AnalyzeNutritionUseCase().execute(
+                AnalyzeNutritionRequest(
+                    foodDescription: trimmedDescription,
+                    responseLanguage: trimmedLanguage,
+                    context: cliContext()
+                )
+            )
+
+            CLIOutput.emit(
+                payload: [
+                    "foodName": response.analysis.foodName,
+                    "calories": response.analysis.calories,
+                    "proteinGrams": response.analysis.proteinGrams,
+                    "carbsGrams": response.analysis.carbsGrams,
+                    "fatGrams": response.analysis.fatGrams,
+                    "insights": response.analysis.insights,
+                    "metadata": metadataPayload(response.metadata)
+                ],
+                human: humanReadableNutritionOutput(for: response, verbose: options.verbose),
+                json: options.json
+            )
+        } catch {
+            CLIOutput.emitError(error, json: options.json)
+            throw ExitCode.failure
+        }
     }
 }
 
@@ -161,10 +288,7 @@ struct GetWeatherCommand: AsyncParsableCommand {
     var location: String
 
     mutating func run() async throws {
-        let trimmedLocation = location.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedLocation.isEmpty else {
-            throw ValidationError("Please provide a non-empty --location.")
-        }
+        let trimmedLocation = try validatedNonEmpty(location, optionName: "--location")
 
         if options.dryRun {
             CLIOutput.emit(
@@ -188,10 +312,7 @@ struct GetWeatherCommand: AsyncParsableCommand {
             let response = try await GetWeatherUseCase().execute(
                 GetWeatherRequest(
                     location: trimmedLocation,
-                    context: CapabilityInvocationContext(
-                        source: .cli,
-                        localeIdentifier: Locale.current.identifier
-                    )
+                    context: cliContext()
                 )
             )
 
@@ -199,11 +320,7 @@ struct GetWeatherCommand: AsyncParsableCommand {
                 payload: [
                     "location": trimmedLocation,
                     "content": response.content,
-                    "metadata": [
-                        "provider": response.metadata.provider ?? "",
-                        "modelIdentifier": response.metadata.modelIdentifier ?? "",
-                        "tokenCount": response.metadata.tokenCount as Any
-                    ]
+                    "metadata": metadataPayload(response.metadata)
                 ],
                 human: humanReadableText(
                     title: "Weather for \(trimmedLocation)",
@@ -231,10 +348,7 @@ struct SearchWebCommand: AsyncParsableCommand {
     var query: String
 
     mutating func run() async throws {
-        let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedQuery.isEmpty else {
-            throw ValidationError("Please provide a non-empty --query.")
-        }
+        let trimmedQuery = try validatedNonEmpty(query, optionName: "--query")
 
         if options.dryRun {
             CLIOutput.emit(
@@ -258,10 +372,7 @@ struct SearchWebCommand: AsyncParsableCommand {
             let response = try await SearchWebUseCase().execute(
                 SearchWebRequest(
                     query: trimmedQuery,
-                    context: CapabilityInvocationContext(
-                        source: .cli,
-                        localeIdentifier: Locale.current.identifier
-                    )
+                    context: cliContext()
                 )
             )
 
@@ -269,11 +380,7 @@ struct SearchWebCommand: AsyncParsableCommand {
                 payload: [
                     "query": trimmedQuery,
                     "content": response.content,
-                    "metadata": [
-                        "provider": response.metadata.provider ?? "",
-                        "modelIdentifier": response.metadata.modelIdentifier ?? "",
-                        "tokenCount": response.metadata.tokenCount as Any
-                    ]
+                    "metadata": metadataPayload(response.metadata)
                 ],
                 human: humanReadableText(
                     title: "Web search for \(trimmedQuery)",
@@ -282,6 +389,291 @@ struct SearchWebCommand: AsyncParsableCommand {
                 ),
                 json: options.json
             )
+        } catch {
+            CLIOutput.emitError(error, json: options.json)
+            throw ExitCode.failure
+        }
+    }
+}
+
+struct SummarizeWebPageCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "summary",
+        abstract: "Summarize a web page."
+    )
+
+    @OptionGroup var options: CLIOptions
+
+    @Option(name: [.short, .long], help: "The page URL to summarize.")
+    var url: String
+
+    mutating func run() async throws {
+        let trimmedURL = try validatedNonEmpty(url, optionName: "--url")
+
+        if options.dryRun {
+            CLIOutput.emit(
+                payload: [
+                    "status": "dry_run",
+                    "command": "web summary",
+                    "url": trimmedURL
+                ],
+                human: """
+                [dry-run] fm web summary
+                URL: \(trimmedURL)
+                """,
+                json: options.json
+            )
+            return
+        }
+
+        do {
+            try requireFoundationModelsAvailability()
+
+            let response = try await GenerateWebPageSummaryUseCase().execute(
+                GenerateWebPageSummaryRequest(
+                    url: trimmedURL,
+                    context: cliContext()
+                )
+            )
+
+            CLIOutput.emit(
+                payload: [
+                    "url": trimmedURL,
+                    "content": response.content,
+                    "metadata": metadataPayload(response.metadata)
+                ],
+                human: humanReadableText(
+                    title: "Web page summary",
+                    response: response,
+                    verbose: options.verbose
+                ),
+                json: options.json
+            )
+        } catch {
+            CLIOutput.emitError(error, json: options.json)
+            throw ExitCode.failure
+        }
+    }
+}
+
+struct SearchContactsCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "search",
+        abstract: "Search contacts."
+    )
+
+    @OptionGroup var options: CLIOptions
+
+    @Option(name: [.short, .long], help: "The contact search query.")
+    var query: String
+
+    mutating func run() async throws {
+        let trimmedQuery = try validatedNonEmpty(query, optionName: "--query")
+
+        if options.dryRun {
+            CLIOutput.emit(
+                payload: [
+                    "status": "dry_run",
+                    "command": "contacts search",
+                    "query": trimmedQuery
+                ],
+                human: """
+                [dry-run] fm contacts search
+                Query: \(trimmedQuery)
+                """,
+                json: options.json
+            )
+            return
+        }
+
+        do {
+            try requireUnsupportedCLICapability("Contacts")
+        } catch {
+            CLIOutput.emitError(error, json: options.json)
+            throw ExitCode.failure
+        }
+    }
+}
+
+struct QueryCalendarCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "query",
+        abstract: "Query calendar events."
+    )
+
+    @OptionGroup var options: CLIOptions
+
+    @Option(name: [.short, .long], help: "The natural-language calendar request.")
+    var request: String
+
+    mutating func run() async throws {
+        let trimmedRequest = try validatedNonEmpty(request, optionName: "--request")
+
+        if options.dryRun {
+            CLIOutput.emit(
+                payload: [
+                    "status": "dry_run",
+                    "command": "calendar query",
+                    "request": trimmedRequest
+                ],
+                human: """
+                [dry-run] fm calendar query
+                Request: \(trimmedRequest)
+                """,
+                json: options.json
+            )
+            return
+        }
+
+        do {
+            try requireUnsupportedCLICapability("Calendar")
+        } catch {
+            CLIOutput.emitError(error, json: options.json)
+            throw ExitCode.failure
+        }
+    }
+}
+
+struct ManageRemindersCLICommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "request",
+        abstract: "Create or manage reminders."
+    )
+
+    @OptionGroup var options: CLIOptions
+
+    @Option(name: [.short, .long], help: "The natural-language reminders request.")
+    var prompt: String
+
+    mutating func run() async throws {
+        let trimmedPrompt = try validatedNonEmpty(prompt, optionName: "--prompt")
+
+        if options.dryRun {
+            CLIOutput.emit(
+                payload: [
+                    "status": "dry_run",
+                    "command": "reminders request",
+                    "prompt": trimmedPrompt
+                ],
+                human: """
+                [dry-run] fm reminders request
+                Prompt: \(trimmedPrompt)
+                """,
+                json: options.json
+            )
+            return
+        }
+
+        do {
+            try requireUnsupportedCLICapability("Reminders")
+        } catch {
+            CLIOutput.emitError(error, json: options.json)
+            throw ExitCode.failure
+        }
+    }
+}
+
+struct GetCurrentLocationCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "current",
+        abstract: "Get the current location."
+    )
+
+    @OptionGroup var options: CLIOptions
+
+    mutating func run() async throws {
+        if options.dryRun {
+            CLIOutput.emit(
+                payload: [
+                    "status": "dry_run",
+                    "command": "location current"
+                ],
+                human: "[dry-run] fm location current",
+                json: options.json
+            )
+            return
+        }
+
+        do {
+            try requireUnsupportedCLICapability("Location")
+        } catch {
+            CLIOutput.emitError(error, json: options.json)
+            throw ExitCode.failure
+        }
+    }
+}
+
+struct SearchMusicCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "search",
+        abstract: "Search the Apple Music catalog."
+    )
+
+    @OptionGroup var options: CLIOptions
+
+    @Option(name: [.short, .long], help: "The music search query.")
+    var query: String
+
+    mutating func run() async throws {
+        let trimmedQuery = try validatedNonEmpty(query, optionName: "--query")
+
+        if options.dryRun {
+            CLIOutput.emit(
+                payload: [
+                    "status": "dry_run",
+                    "command": "music search",
+                    "query": trimmedQuery
+                ],
+                human: """
+                [dry-run] fm music search
+                Query: \(trimmedQuery)
+                """,
+                json: options.json
+            )
+            return
+        }
+
+        do {
+            try requireUnsupportedCLICapability("Music")
+        } catch {
+            CLIOutput.emitError(error, json: options.json)
+            throw ExitCode.failure
+        }
+    }
+}
+
+struct QueryHealthCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "query",
+        abstract: "Query health data."
+    )
+
+    @OptionGroup var options: CLIOptions
+
+    @Option(name: [.short, .long], help: "The health data question to ask.")
+    var request: String
+
+    mutating func run() async throws {
+        let trimmedRequest = try validatedNonEmpty(request, optionName: "--request")
+
+        if options.dryRun {
+            CLIOutput.emit(
+                payload: [
+                    "status": "dry_run",
+                    "command": "health query",
+                    "request": trimmedRequest
+                ],
+                human: """
+                [dry-run] fm health query
+                Request: \(trimmedRequest)
+                """,
+                json: options.json
+            )
+            return
+        }
+
+        do {
+            try requireUnsupportedCLICapability("Health")
         } catch {
             CLIOutput.emitError(error, json: options.json)
             throw ExitCode.failure
@@ -326,6 +718,48 @@ enum CLIOutput {
     }
 }
 
+func humanReadableBookOutput(
+    for response: GenerateBookRecommendationResult,
+    verbose: Bool
+) -> String {
+    var lines = [response.recommendation.plainTextSummary]
+
+    if verbose {
+        let provider = response.metadata.provider ?? "Unknown"
+        let tokenCount = response.metadata.tokenCount.map(String.init) ?? "n/a"
+        lines.append("Provider: \(provider)")
+        lines.append("Token count: \(tokenCount)")
+    }
+
+    return lines.joined(separator: "\n\n")
+}
+
+func humanReadableNutritionOutput(
+    for response: AnalyzeNutritionResult,
+    verbose: Bool
+) -> String {
+    var lines = [
+        response.analysis.foodName,
+        "",
+        "Calories: \(response.analysis.calories)",
+        "Protein: \(response.analysis.proteinGrams)g",
+        "Carbs: \(response.analysis.carbsGrams)g",
+        "Fat: \(response.analysis.fatGrams)g",
+        "",
+        response.analysis.insights
+    ]
+
+    if verbose {
+        let provider = response.metadata.provider ?? "Unknown"
+        let tokenCount = response.metadata.tokenCount.map(String.init) ?? "n/a"
+        lines.append("")
+        lines.append("Provider: \(provider)")
+        lines.append("Token count: \(tokenCount)")
+    }
+
+    return lines.joined(separator: "\n")
+}
+
 func humanReadableText(
     title: String,
     response: TextGenerationResult,
@@ -344,6 +778,14 @@ func humanReadableText(
     return lines.joined(separator: "\n")
 }
 
+func metadataPayload(_ metadata: CapabilityExecutionMetadata) -> [String: Any] {
+    [
+        "provider": metadata.provider ?? "",
+        "modelIdentifier": metadata.modelIdentifier ?? "",
+        "tokenCount": metadata.tokenCount as Any
+    ]
+}
+
 enum CLIAvailabilityError: LocalizedError {
     case foundationModelsUnavailable(String)
 
@@ -353,6 +795,27 @@ enum CLIAvailabilityError: LocalizedError {
             return message
         }
     }
+}
+
+func validatedNonEmpty(_ value: String, optionName: String) throws -> String {
+    let trimmedValue = value.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmedValue.isEmpty else {
+        throw ValidationError("Please provide a non-empty \(optionName).")
+    }
+    return trimmedValue
+}
+
+func cliContext() -> CapabilityInvocationContext {
+    CapabilityInvocationContext(
+        source: .cli,
+        localeIdentifier: Locale.current.identifier
+    )
+}
+
+func requireUnsupportedCLICapability(_ name: String) throws {
+    throw FoundationLabCoreError.unsupportedEnvironment(
+        "\(name) is only supported in the Foundation Lab app or its App Intents because command-line execution does not have the required system entitlements and permissions."
+    )
 }
 
 func requireFoundationModelsAvailability() throws {

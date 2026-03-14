@@ -28,6 +28,15 @@ nonisolated struct FoundationLabAppShortcuts: AppShortcutsProvider {
             systemImageName: "cloud.sun.fill"
         )
         AppShortcut(
+            intent: AnalyzeNutritionIntent(),
+            phrases: [
+                "Analyze nutrition in \(.applicationName)",
+                "Check calories with \(.applicationName)"
+            ],
+            shortTitle: "Analyze Nutrition",
+            systemImageName: "fork.knife"
+        )
+        AppShortcut(
             intent: SearchWebIntent(),
             phrases: [
                 "Search the web in \(.applicationName)",
@@ -37,50 +46,58 @@ nonisolated struct FoundationLabAppShortcuts: AppShortcutsProvider {
             systemImageName: "magnifyingglass"
         )
         AppShortcut(
-            intent: OpenChatIntent(),
+            intent: SearchContactsIntent(),
             phrases: [
-                "Open \(.applicationName) chat",
-                "Start chatting in \(.applicationName)",
-                "Open chat in \(.applicationName)"
+                "Search contacts in \(.applicationName)",
+                "Find someone with \(.applicationName)"
             ],
-            shortTitle: "Open Chat",
-            systemImageName: "message.fill"
+            shortTitle: "Search Contacts",
+            systemImageName: "person.crop.circle"
         )
         AppShortcut(
-            intent: OpenExampleIntent(),
+            intent: QueryCalendarIntent(),
             phrases: [
-                "Open \(\.$example) in \(.applicationName)",
-                "Show \(\.$example) in \(.applicationName)"
+                "Check my calendar in \(.applicationName)",
+                "Ask calendar with \(.applicationName)"
             ],
-            shortTitle: "Open Example",
-            systemImageName: "sparkles"
+            shortTitle: "Query Calendar",
+            systemImageName: "calendar"
         )
         AppShortcut(
-            intent: OpenToolIntent(),
+            intent: ManageRemindersIntent(),
             phrases: [
-                "Open \(\.$tool) tool in \(.applicationName)",
-                "Show \(\.$tool) in \(.applicationName)"
+                "Manage reminders in \(.applicationName)",
+                "Create a reminder with \(.applicationName)"
             ],
-            shortTitle: "Open Tool",
-            systemImageName: "wrench.and.screwdriver"
+            shortTitle: "Manage Reminders",
+            systemImageName: "checklist"
         )
         AppShortcut(
-            intent: OpenSchemaIntent(),
+            intent: GetCurrentLocationIntent(),
             phrases: [
-                "Open \(\.$schema) in \(.applicationName)",
-                "Show \(\.$schema) in \(.applicationName)"
+                "Get my location in \(.applicationName)",
+                "Check location with \(.applicationName)"
             ],
-            shortTitle: "Open Schema",
-            systemImageName: "doc.text"
+            shortTitle: "Get Location",
+            systemImageName: "location"
         )
         AppShortcut(
-            intent: OpenLanguageIntent(),
+            intent: SearchMusicCatalogIntent(),
             phrases: [
-                "Open \(\.$language) in \(.applicationName)",
-                "Show \(\.$language) in \(.applicationName)"
+                "Search music in \(.applicationName)",
+                "Find music with \(.applicationName)"
             ],
-            shortTitle: "Open Language",
-            systemImageName: "globe"
+            shortTitle: "Search Music",
+            systemImageName: "music.note"
+        )
+        AppShortcut(
+            intent: QueryHealthDataIntent(),
+            phrases: [
+                "Check health data in \(.applicationName)",
+                "Ask health data with \(.applicationName)"
+            ],
+            shortTitle: "Query Health",
+            systemImageName: "heart.text.square"
         )
     }
 }

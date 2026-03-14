@@ -21,8 +21,8 @@
 		0A5454A72E1148A8002C2152 /* Foundation Lab.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "Foundation Lab.icon"; sourceTree = "<group>"; };
 		0A9766662E1E562A008CFA37 /* Collections.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = Collections.xcodeproj; sourceTree = "<group>"; };
 		0AAE4FFF2DF76E6600838F13 /* Foundation Lab.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Foundation Lab.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		C1A100032EAA000100000001 /* fm */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = fm; sourceTree = BUILT_PRODUCTS_DIR; };
 		6C9AECE22E728F6D00F4C37F /* SampleCode.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = SampleCode.xcconfig; sourceTree = "<group>"; };
+		C1A100032EAA000100000001 /* fm */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = fm; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -36,11 +36,6 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		0B0A11002ECB000100000001 /* BookPlaygrounds */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = BookPlaygrounds;
-			sourceTree = "<group>";
-		};
 		0ADB46AD2E0CE6C100C29293 /* Foundation Lab */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -49,7 +44,12 @@
 			path = "Foundation Lab";
 			sourceTree = "<group>";
 		};
-		C1A100042EAA000100000001 /* fm */ = {
+		0B0A11002ECB000100000001 /* BookPlaygrounds */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = BookPlaygrounds;
+			sourceTree = "<group>";
+		};
+		C1A100042EAA000100000001 /* FoundationLabCLI/Sources/FMCLI */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = FoundationLabCLI/Sources/FMCLI;
 			sourceTree = "<group>";
@@ -94,7 +94,7 @@
 				6C9AECE22E728F6D00F4C37F /* SampleCode.xcconfig */,
 				0ADB46AD2E0CE6C100C29293 /* Foundation Lab */,
 				0B0A11002ECB000100000001 /* BookPlaygrounds */,
-				C1A100042EAA000100000001 /* fm */,
+				C1A100042EAA000100000001 /* FoundationLabCLI/Sources/FMCLI */,
 				0AAE50002DF76E6600838F13 /* Products */,
 				0A5454A72E1148A8002C2152 /* Foundation Lab.icon */,
 				0AFDF8422EA8C3F80071BEA5 /* Frameworks */,
@@ -159,7 +159,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				C1A100042EAA000100000001 /* fm */,
+				C1A100042EAA000100000001 /* FoundationLabCLI/Sources/FMCLI */,
 			);
 			name = fm;
 			packageProductDependencies = (
@@ -630,20 +630,20 @@
 				minimumVersion = 1.0.9;
 			};
 		};
-		F1B8C56C2E5B5A1C00XYZ123 /* XCRemoteSwiftPackageReference "LumoKit" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/rryam/LumoKit.git";
-			requirement = {
-				branch = main;
-				kind = branch;
-			};
-		};
 		C1A1000B2EAA000100000001 /* XCRemoteSwiftPackageReference "swift-argument-parser" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/apple/swift-argument-parser.git";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 1.7.0;
+			};
+		};
+		F1B8C56C2E5B5A1C00XYZ123 /* XCRemoteSwiftPackageReference "LumoKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/rryam/LumoKit.git";
+			requirement = {
+				branch = main;
+				kind = branch;
 			};
 		};
 		FA43F93F2E13A16E00F24BCC /* XCRemoteSwiftPackageReference "HighlightSwift" */ = {
@@ -672,15 +672,15 @@
 			package = 0B0A11112ECB100100000001 /* XCLocalSwiftPackageReference "FoundationLabCore" */;
 			productName = FoundationLabCore;
 		};
-		F1B8C56D2E5B5A1C00XYZ123 /* LumoKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F1B8C56C2E5B5A1C00XYZ123 /* XCRemoteSwiftPackageReference "LumoKit" */;
-			productName = LumoKit;
-		};
 		C1A1000C2EAA000100000001 /* ArgumentParser */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = C1A1000B2EAA000100000001 /* XCRemoteSwiftPackageReference "swift-argument-parser" */;
 			productName = ArgumentParser;
+		};
+		F1B8C56D2E5B5A1C00XYZ123 /* LumoKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F1B8C56C2E5B5A1C00XYZ123 /* XCRemoteSwiftPackageReference "LumoKit" */;
+			productName = LumoKit;
 		};
 		FA43F9402E13A16E00F24BCC /* HighlightSwift */ = {
 			isa = XCSwiftPackageProductDependency;

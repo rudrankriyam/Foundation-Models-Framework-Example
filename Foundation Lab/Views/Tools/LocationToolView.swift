@@ -5,8 +5,7 @@
 //  Created by Rudrank Riyam on 6/29/25.
 //
 
-import FoundationModels
-import FoundationModelsTools
+import FoundationLabCore
 import SwiftUI
 
 struct LocationToolView: View {
@@ -41,11 +40,18 @@ struct LocationToolView: View {
 
   private func getCurrentLocation() {
     Task {
-      await executor.execute(
-        tool: LocationTool(),
-        prompt: "What's my current location?",
+      await executor.executeCapability(
         successMessage: "Location retrieved successfully!"
-      )
+      ) {
+        try await GetCurrentLocationUseCase().execute(
+          GetCurrentLocationRequest(
+            context: CapabilityInvocationContext(
+              source: .app,
+              localeIdentifier: Locale.current.identifier
+            )
+          )
+        )
+      }
     }
   }
 }

@@ -17,22 +17,25 @@ This roadmap tracks the shared-capability refactor after the initial package bou
 - `#114` Add the first thin CLI adapter over `GenerateBookRecommendation`.
 - `#115` Extract `AnalyzeNutrition` into `FoundationLabCore`.
 - `#116` Extract Weather and Web Search into shared capabilities with app, App Intent, and CLI adapters.
+- Extract the remaining tool-backed capabilities for Contacts, Calendar, Reminders, Location, Music, Web Metadata, and Health into `FoundationLabCore`.
+- Rewire the corresponding SwiftUI tool views so they invoke shared use cases instead of owning Foundation Models prompts and orchestration directly.
+- Add capability-backed App Intents for nutrition, contacts, calendar, reminders, location, music, web page summary, and health queries.
+- Extend the `fm` CLI with matching feature groups while returning consistent unsupported-environment errors for system-entitled capabilities outside the app.
 - Add shared core primitives for one-shot text, structured generation, streaming text, dynamic schema generation, model availability, supported language listing, and a basic reusable multi-turn conversation runner.
 - Rewire the example/language runtime surfaces so `ExampleExecutor`, model availability, supported-language loading, multilingual response generation, dynamic schema execution, and the session-management demo flow through `FoundationLabCore`.
 
 ## Next up
 
-### Remaining tool-backed capabilities
+### Tool cleanup
 
-- Apply the same shared-capability pattern to Contacts, Calendar, Reminders, Location, Music, Web Metadata, and Health.
-- Move the remaining Foundation Models tool orchestration out of `ToolExecutor` and tool-specific helper files.
-- Add explicit unsupported-environment behavior for CLI paths that cannot run safely outside the app or an entitled host.
-- Keep the app adapters thin while making the remaining tool stack reusable from future CLI and App Intent surfaces.
+- Remove or shrink any remaining app-local helper types that still exist only to support the old tool-owned Foundation Models flow.
+- Audit for dead Foundation Models tool wrappers that are no longer used now that shared providers live in `FoundationLabCore`.
+- Refresh user-facing docs and sample references so the shared-capability architecture is the default story.
 
 ### `#117` Richer App Intents
 
 - Keep existing navigation intents working while capability-backed intents expand.
-- Add task-oriented App Shortcuts around the remaining extracted shared capabilities.
+- Stay within the system limit of 10 App Shortcuts while keeping the broader set of App Intents available.
 - Introduce App Entities only where they meaningfully improve Shortcuts or Spotlight surfaces.
 - Define the first Spotlight-oriented foundation only after capability inputs and outputs stabilize.
 - Keep `perform()` methods thin and free of business logic.

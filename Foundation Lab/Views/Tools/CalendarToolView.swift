@@ -5,8 +5,7 @@
 //  Created by Rudrank Riyam on 6/29/25.
 //
 
-import FoundationModels
-import FoundationModelsTools
+import FoundationLabCore
 import SwiftUI
 
 struct CalendarToolView: View {
@@ -49,24 +48,22 @@ struct CalendarToolView: View {
 
   private func executeCalendarQuery() {
     Task {
-      await executor.executeWithPromptBuilder(
-        tool: CalendarTool(),
+      await executor.executeCapability(
         successMessage: "Calendar query completed successfully!"
       ) {
-        """
-The user's current time zone is \(TimeZone.current.identifier).
-The user's current locale identifier is \(Locale.current.identifier).
-The current local date and time is \(formattedCurrentDate()).
-Use this information when interpreting relative dates like "today" or "tomorrow".
-"""
-        query
+        try await QueryCalendarUseCase().execute(
+          QueryCalendarRequest(
+            query: query,
+            referenceDate: .now,
+            timeZoneIdentifier: TimeZone.current.identifier,
+            context: CapabilityInvocationContext(
+              source: .app,
+              localeIdentifier: Locale.current.identifier
+            )
+          )
+        )
       }
     }
-  }
-
-  private func formattedCurrentDate() -> String {
-    let formatter = Date.ISO8601FormatStyle(includingFractionalSeconds: false, timeZone: TimeZone.current)
-    return Date.now.formatted(formatter)
   }
 }
 
