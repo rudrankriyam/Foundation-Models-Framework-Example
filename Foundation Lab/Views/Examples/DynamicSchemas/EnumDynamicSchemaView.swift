@@ -7,36 +7,42 @@
 
 import SwiftUI
 import FoundationLabCore
-import FoundationModels
 
 struct EnumDynamicSchemaView: View {
     @State private var executor = ExampleExecutor()
-    @State private var customerInput = "The customer seems very happy with our service and left a glowing review"
-    @State private var taskInput = "This bug fix is urgent and needs to be completed today"
-    @State private var weatherInput = "It's a beautiful sunny day with clear skies"
+    @State private var customerInput = FoundationLabSchemaExample.enumSchema.preset(at: 0).defaultInput
+    @State private var taskInput = FoundationLabSchemaExample.enumSchema.preset(at: 1).defaultInput
+    @State private var weatherInput = FoundationLabSchemaExample.enumSchema.preset(at: 2).defaultInput
     @State private var selectedExample = 0
     @State private var customChoices = "excellent, good, average, poor"
     @State private var useCustomChoices = false
 
-    private let examples = ["Sentiment Analysis", "Task Priority", "Weather Condition"]
+    private let schemaExample = FoundationLabSchemaExample.enumSchema
 
     var body: some View {
         ExampleViewBase(
-            title: "Enum Schemas",
-            description: "Create schemas with predefined string choices using anyOf",
-            defaultPrompt: customerInput,
+            title: schemaExample.title,
+            description: schemaExample.summary,
+            defaultPrompt: schemaExample.defaultInput,
             currentPrompt: bindingForSelectedExample,
             isRunning: executor.isRunning,
             errorMessage: executor.errorMessage,
             codeExample: exampleCode,
             onRun: { Task { await runExample() } },
-            onReset: { selectedExample = 0; useCustomChoices = false },
+            onReset: {
+                selectedExample = 0
+                customerInput = schemaExample.preset(at: 0).defaultInput
+                taskInput = schemaExample.preset(at: 1).defaultInput
+                weatherInput = schemaExample.preset(at: 2).defaultInput
+                customChoices = "excellent, good, average, poor"
+                useCustomChoices = false
+            },
             content: {
                 VStack(alignment: .leading, spacing: Spacing.medium) {
                     // Example selector
                     Picker("Example", selection: $selectedExample) {
-                        ForEach(0..<examples.count, id: \.self) { index in
-                            Text(examples[index]).tag(index)
+                        ForEach(schemaExample.presets) { preset in
+                            Text(preset.title).tag(preset.id)
                         }
                     }
                     .pickerStyle(.segmented)
@@ -124,102 +130,35 @@ struct EnumDynamicSchemaView: View {
     }
 
     private var currentChoices: [String] {
-        if useCustomChoices {
-            return customChoices.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
-        }
-
-        switch selectedExample {
-        case 0:
-            return ["positive", "negative", "neutral", "mixed"]
-        case 1:
-            return ["urgent", "high", "medium", "low"]
-        default:
-            return ["sunny", "cloudy", "rainy", "snowy", "foggy", "stormy"]
-        }
+        schemaExample.choices(
+            for: selectedExample,
+            customChoices: useCustomChoices ? parsedCustomChoices : nil
+        )
     }
 
     private func runExample() async {
-        do {
-            let schema = try createSchema(for: selectedExample)
-            let fieldName = selectedExample == 0 ? "sentiment" : selectedExample == 1 ? "priority" : "condition"
-            let prompt = """
-            Analyze the following text and classify it into one of the available categories.
-
-            Text: \(currentInput)
-            """
-            await executor.executeDynamicSchema(
-                prompt: prompt,
-                schema: schema,
-                generationOptions: .init(temperature: 0.1)
-            ) { content in
-                let data = extractClassificationData(from: content, fieldName: fieldName)
-                let classification = data.classification
-                let confidence = data.confidence
-                let reasoning = data.reasoning
-
-                return """
-                📝 Input:
-                \(currentInput)
-
-                🏷️ Classification: \(classification)
-
-                📊 Available Choices:
-                \(currentChoices.map { "• \($0)" }.joined(separator: "\n"))
-
-                \(confidence != nil ? "🎯 Confidence: \(String(format: "%.1f%%", (confidence ?? 0) * 100))" : "")
-
-                \(reasoning != nil ? "💭 Reasoning: \(reasoning ?? "")" : "")
-
-                ✅ Valid Choice: \(currentChoices.contains(classification) ? "Yes" : "No (Invalid!)")
-                """
-            }
-        } catch {
-            executor.errorMessage = FoundationModelsErrorHandler.handleError(error)
-            executor.result = ""
+        await executor.execute {
+            let result = try await RunSchemaExampleUseCase().execute(
+                RunSchemaExampleRequest(
+                    example: .enumSchema,
+                    presetIndex: selectedExample,
+                    input: currentInput,
+                    customChoices: useCustomChoices ? parsedCustomChoices : nil,
+                    context: CapabilityInvocationContext(
+                        source: .app,
+                        localeIdentifier: Locale.current.identifier
+                    )
+                )
+            )
+            return result.content
         }
     }
 
-    private func createSchema(for index: Int) throws -> GenerationSchema {
-        let choices = currentChoices
-        let fieldName = index == 0 ? "sentiment" : index == 1 ? "priority" : "condition"
-        let description = index == 0 ? "The sentiment of the text" : index == 1 ? "The priority level" : "The weather condition"
-
-        // Create enum schema
-        let enumSchema = DynamicGenerationSchema(
-            name: "\(fieldName.capitalized)Type",
-            description: description,
-            anyOf: choices
-        )
-
-        // Create properties for the result
-        let classificationProperty = DynamicGenerationSchema.Property(
-            name: fieldName,
-            description: description,
-            schema: enumSchema
-        )
-
-        let confidenceProperty = DynamicGenerationSchema.Property(
-            name: "confidence",
-            description: "Confidence score between 0 and 1",
-            schema: .init(type: Float.self),
-            isOptional: true
-        )
-
-        let reasoningProperty = DynamicGenerationSchema.Property(
-            name: "reasoning",
-            description: "Brief explanation for the classification",
-            schema: .init(type: String.self),
-            isOptional: true
-        )
-
-        // Create the main schema
-        let resultSchema = DynamicGenerationSchema(
-            name: "ClassificationResult",
-            description: "Classification result with optional confidence and reasoning",
-            properties: [classificationProperty, confidenceProperty, reasoningProperty]
-        )
-
-        return try GenerationSchema(root: resultSchema, dependencies: [enumSchema])
+    private var parsedCustomChoices: [String] {
+        customChoices
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
     }
 }
 

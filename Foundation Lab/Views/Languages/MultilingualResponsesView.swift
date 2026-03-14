@@ -10,10 +10,11 @@ import FoundationLabCore
 
 struct MultilingualResponsesView: View {
     @State private var isRunning = false
-    @State private var results: [LanguagePromptResult] = []
+    @State private var results: [MultilingualResponseEntry] = []
     @State private var errorMessage: String?
 
     @Environment(LanguageService.self) private var languageService
+    private let generateMultilingualResponsesUseCase = GenerateMultilingualResponsesUseCase()
 
     var body: some View {
         ScrollView {
@@ -95,7 +96,7 @@ for prompt in prompts {
                 .padding(.horizontal)
 
             LazyVStack(spacing: Spacing.medium) {
-                ForEach(results, id: \.language) { result in
+                ForEach(results) { result in
                     LanguageResponseCard(result: result)
                 }
             }
@@ -108,98 +109,27 @@ for prompt in prompts {
         isRunning = true
         errorMessage = nil
         results = []
-
-        // Generate prompts dynamically based on supported languages
-        var prompts: [LanguagePrompt] = []
-
-        // Sample prompts for different languages (you can expand this)
-        let promptTemplates: [String: String] = [
-            "en": "What is the capital of France? Please provide a brief answer.",
-            "es": "¿Cuál es la capital de España? Por favor, proporciona una respuesta breve.",
-            "fr": "Quelle est la capitale de l'Allemagne ? Veuillez donner une réponse brève.",
-            "de": "Was ist die Hauptstadt von Italien? Bitte geben Sie eine kurze Antwort.",
-            "it": "Qual è la capitale del Portogallo? Per favore, fornisci una risposta breve.",
-            "pt": "Qual é a capital do Brasil? Por favor, forneça uma resposta breve.",
-            "zh": "中国的首都是什么？请简要回答。",
-            "ja": "日本の首都は何ですか？簡潔にお答えください。",
-            "ko": "한국의 수도는 어디인가요? 간단히 답해주세요."
-        ]
-
-        // Create prompts for supported languages that we have templates for
-        for language in languageService.supportedLanguages {
-            let code = language.languageCode
-            if let promptText = promptTemplates[code] {
-                let displayName = languageService.getDisplayName(for: language)
-                prompts.append(LanguagePrompt(
-                    language: displayName,
-                    flag: "🌐",
-                    text: promptText
-                ))
-            }
-        }
-
-        // If no supported languages found with templates, use fallback
-        if prompts.isEmpty {
-            prompts = [
-                LanguagePrompt(language: "English", flag: "🌐",
-                              text: "What is the capital of France? Please provide a brief answer.")
-            ]
-        }
-
-        for prompt in prompts {
-            do {
-                let response = try await GenerateTextUseCase().execute(
-                    TextGenerationRequest(
-                        prompt: prompt.text,
-                        context: CapabilityInvocationContext(
-                            source: .app,
-                            localeIdentifier: Locale.current.identifier
-                        )
+        do {
+            let result = try await generateMultilingualResponsesUseCase.execute(
+                GenerateMultilingualResponsesRequest(
+                    supportedLanguages: languageService.supportedLanguages,
+                    context: CapabilityInvocationContext(
+                        source: .app,
+                        localeIdentifier: Locale.current.identifier
                     )
                 )
-
-                let result = LanguagePromptResult(
-                    language: prompt.language,
-                    flag: prompt.flag,
-                    prompt: prompt.text,
-                    response: response.content,
-                    isError: false
-                )
-
-                results.append(result)
-            } catch {
-                let errorResult = LanguagePromptResult(
-                    language: prompt.language,
-                    flag: prompt.flag,
-                    prompt: prompt.text,
-                    response: "Error: \(error.localizedDescription)",
-                    isError: true
-                )
-
-                results.append(errorResult)
-            }
+            )
+            results = result.responses
+        } catch {
+            errorMessage = error.localizedDescription
         }
 
         isRunning = false
     }
 }
 
-struct LanguagePrompt {
-    let language: String
-    let flag: String
-    let text: String
-}
-
-struct LanguagePromptResult {
-    let language: String
-    let flag: String
-    let prompt: String
-    let response: String
-    let isError: Bool
-}
-
 struct LanguageResponseCard: View {
-    let result: LanguagePromptResult
+    let result: MultilingualResponseEntry
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.medium) {

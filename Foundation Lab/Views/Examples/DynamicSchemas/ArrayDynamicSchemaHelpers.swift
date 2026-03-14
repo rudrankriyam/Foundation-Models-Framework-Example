@@ -6,120 +6,17 @@
 //
 
 import Foundation
-import FoundationModels
+import FoundationLabCore
 
 extension ArrayDynamicSchemaView {
-    func createSchema(for index: Int, minItems: Int, maxItems: Int) throws -> GenerationSchema {
-        switch index {
-        case 0:
-            // Todo items array
-            let todoItemSchema = DynamicSchemaHelpers.schema(
-                "TodoItem",
-                description: "A single todo task",
-                properties: [
-                    DynamicSchemaHelpers.typedProperty(
-                        "task",
-                        type: String.self,
-                        description: "The task description"
-                    ),
-                    DynamicGenerationSchema.Property(
-                        name: "priority",
-                        description: "Priority level (high, medium, low)",
-                        schema: .init(name: "Priority", anyOf: ["high", "medium", "low"]),
-                        isOptional: true
-                    )
-                ]
-            )
-
-            let arraySchema = DynamicGenerationSchema(
-                arrayOf: todoItemSchema,
-                minimumElements: minItems,
-                maximumElements: maxItems
-            )
-
-            return try GenerationSchema(root: arraySchema, dependencies: [todoItemSchema])
-
-        case 1:
-            // Recipe ingredients array
-            let ingredientSchema = DynamicSchemaHelpers.schema(
-                "Ingredient",
-                description: "A recipe ingredient",
-                properties: [
-                    DynamicSchemaHelpers.typedProperty(
-                        "name",
-                        type: String.self,
-                        description: "Ingredient name"
-                    ),
-                    DynamicSchemaHelpers.typedProperty(
-                        "quantity",
-                        type: String.self,
-                        description: "Amount needed",
-                        isOptional: true
-                    )
-                ]
-            )
-
-            let arraySchema = DynamicGenerationSchema(
-                arrayOf: ingredientSchema,
-                minimumElements: minItems,
-                maximumElements: maxItems
-            )
-
-            return try GenerationSchema(root: arraySchema, dependencies: [ingredientSchema])
-
-        default:
-            // Simple string array for tags
-            let stringSchema = DynamicGenerationSchema(type: String.self)
-            let arraySchema = DynamicGenerationSchema(
-                arrayOf: stringSchema,
-                minimumElements: minItems,
-                maximumElements: maxItems
-            )
-
-            return try GenerationSchema(root: arraySchema, dependencies: [])
-        }
-    }
-
     func schemaInfo(for index: Int, minItems: Int, maxItems: Int) -> String {
-        let itemType = index == 0 ? "TodoItem" : index == 1 ? "Ingredient" : "Tag"
+        let itemType = FoundationLabSchemaExample.arraySchema.preset(at: index).title
         return """
         This will extract an array of \(itemType) objects.
         • Minimum items: \(minItems)
         • Maximum items: \(maxItems)
         • The model will respect these constraints when generating the array.
         """
-    }
-
-    func formatItems(_ items: [GeneratedContent]) -> String {
-        var result = ""
-        for (index, item) in items.enumerated() {
-            result += "\n\(index + 1). "
-
-            // Try to format as object with properties
-            switch item.kind {
-            case .structure(let properties, _):
-                var parts: [String] = []
-                for (key, value) in properties {
-                    switch value.kind {
-                    case .string(let stringValue):
-                        parts.append("\(key): \(stringValue)")
-                    case .number(let numValue):
-                        parts.append("\(key): \(numValue)")
-                    case .bool(let boolValue):
-                        parts.append("\(key): \(boolValue)")
-                    default:
-                        break
-                    }
-                }
-                result += parts.joined(separator: ", ")
-            case .string(let stringValue):
-                // Format as simple string
-                result += stringValue
-            default:
-                result += "Unknown item"
-            }
-        }
-        return result
     }
 
     var exampleCode: String {

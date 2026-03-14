@@ -26,3 +26,15 @@ public struct SupportedLanguagesResult: CapabilityResult, Sendable, Hashable, Co
         self.metadata = metadata
     }
 }
+
+public extension SupportedLanguageDescriptor {
+    func displayName(in locale: Locale = .current) -> String {
+        let languageName = locale.localizedString(forLanguageCode: languageCode) ?? languageCode
+
+        if let regionCode, !regionCode.isEmpty {
+            return "\(languageName) (\(languageCode)-\(regionCode))"
+        }
+
+        return languageName
+    }
+}

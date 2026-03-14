@@ -6,43 +6,8 @@
 //
 
 import Foundation
-import FoundationModels
-
-struct ClassificationData {
-    let classification: String
-    let confidence: Float?
-    let reasoning: String?
-}
 
 extension EnumDynamicSchemaView {
-    func extractClassificationData(from content: GeneratedContent, fieldName: String) -> ClassificationData {
-        switch content.kind {
-        case .structure(let properties, _):
-            let classification = extractStringValue(from: properties[fieldName])
-            let confidence = extractFloatValue(from: properties["confidence"])
-            let reasoning = extractStringValue(from: properties["reasoning"])
-            return ClassificationData(classification: classification, confidence: confidence, reasoning: reasoning)
-        default:
-            return ClassificationData(classification: "unknown", confidence: nil, reasoning: nil)
-        }
-    }
-
-    func extractStringValue(from content: GeneratedContent?) -> String {
-        guard let content = content else { return "unknown" }
-        if case .string(let str) = content.kind {
-            return str
-        }
-        return "unknown"
-    }
-
-    func extractFloatValue(from content: GeneratedContent?) -> Float? {
-        guard let content = content else { return nil }
-        if case .number(let num) = content.kind {
-            return Float(num)
-        }
-        return nil
-    }
-
     var exampleCode: String {
         """
         // Creating an enum schema with string choices

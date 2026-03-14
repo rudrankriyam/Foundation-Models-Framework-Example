@@ -5,7 +5,6 @@
 //  Created by Rudrank Riyam on 6/29/25.
 //
 
-import FoundationModels
 import SwiftUI
 
 /// Base component for example views providing consistent UI elements

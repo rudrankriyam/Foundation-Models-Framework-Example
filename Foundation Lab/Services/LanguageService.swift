@@ -33,16 +33,7 @@ final class LanguageService {
     }
 
     func getDisplayName(for language: SupportedLanguageDescriptor) -> String {
-        let code = language.languageCode
-        let region = language.regionCode ?? ""
-
-        let languageName = Locale.current.localizedString(forLanguageCode: code) ?? code
-
-        if !region.isEmpty {
-            return "\(languageName) (\(code)-\(region))"
-        } else {
-            return languageName
-        }
+        language.displayName(in: .current)
     }
 
     func getCurrentUserLanguage() -> String {

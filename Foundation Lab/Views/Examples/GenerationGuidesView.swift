@@ -5,18 +5,18 @@
 //  Created by Rudrank Riyam on 6/29/25.
 //
 
-import FoundationModels
+import FoundationLabCore
 import SwiftUI
 
 struct GenerationGuidesView: View {
-  @State private var currentPrompt = DefaultPrompts.generationGuides
+  @State private var currentPrompt = FoundationLabExampleDemo.generationGuides.defaultPrompt
   @State private var executor = ExampleExecutor()
 
   var body: some View {
     ExampleViewBase(
       title: "Generation Guides",
       description: "Guided generation with constraints and structured output",
-      defaultPrompt: DefaultPrompts.generationGuides,
+      defaultPrompt: FoundationLabExampleDemo.generationGuides.defaultPrompt,
       currentPrompt: $currentPrompt,
       isRunning: executor.isRunning,
       errorMessage: executor.errorMessage,
@@ -40,7 +40,7 @@ struct GenerationGuidesView: View {
 
         // Prompt Suggestions
         PromptSuggestions(
-          suggestions: DefaultPrompts.generationGuidesSuggestions,
+          suggestions: FoundationLabExampleDemo.generationGuides.suggestions,
           onSelect: { currentPrompt = $0 }
         )
 
@@ -75,22 +75,7 @@ struct GenerationGuidesView: View {
         prompt: currentPrompt,
         type: ProductReview.self
       ) { review in
-        """
-        🛍️ Product: \(review.productName)
-        ⭐ Rating: \(review.rating)/5
-
-        ✅ Pros:
-        \(review.pros.map { "• \($0)" }.joined(separator: "\n"))
-
-        ❌ Cons:
-        \(review.cons.map { "• \($0)" }.joined(separator: "\n"))
-
-        💬 Review:
-        \(review.reviewText)
-
-        📌 Recommendation:
-        \(review.recommendation)
-        """
+        review.plainTextSummary
       }
     }
   }

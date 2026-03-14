@@ -9,9 +9,10 @@ import SwiftUI
 import FoundationLabCore
 
 struct SessionManagementView: View {
-    @State private var conversationResults: [ConversationStep] = []
+    @State private var conversationResults: [LanguageSessionExchange] = []
     @State private var isRunning = false
     @State private var errorMessage: String?
+    private let runLanguageSessionDemoUseCase = RunLanguageSessionDemoUseCase()
 
     var body: some View {
         ScrollView {
@@ -105,36 +106,21 @@ let result = try await RunConversationUseCase().execute(
         errorMessage = nil
         conversationResults = []
 
-        let conversationSteps = [
-            ("🌐 English", "Hello, how are you?"),
-            ("🌐 Spanish", "Hola, ¿cómo estás?"),
-            ("🌐 English", "Now answer in English please"),
-            ("🧠 Memory", "What language did I first speak to you in?"),
-            ("🔄 Switch", "Please respond in French from now on"),
-            ("🌐 French", "Comment allez-vous aujourd'hui?"),
-            ("🤝 Mixed", "Can you parler both English and French in your response?")
-        ]
-
         do {
-            let result = try await RunConversationUseCase().execute(
-                RunConversationRequest(
-                    prompts: conversationSteps.map(\.1),
-                    systemPrompt: "You are a multilingual assistant who can naturally switch between languages and maintain conversational context.",
+            let steps = FoundationLabLanguageCatalog.defaultConversationSteps.map {
+                LanguageConversationStep(label: "🌐 \($0.label)", prompt: $0.prompt)
+            }
+            let result = try await runLanguageSessionDemoUseCase.execute(
+                RunLanguageSessionDemoRequest(
+                    steps: steps,
+                    systemPrompt: FoundationLabLanguageCatalog.multilingualSystemPrompt,
                     context: CapabilityInvocationContext(
                         source: .app,
                         localeIdentifier: Locale.current.identifier
                     )
                 )
             )
-
-            conversationResults = zip(conversationSteps, result.exchanges).map { stepInfo, exchange in
-                ConversationStep(
-                    language: stepInfo.0,
-                    prompt: exchange.prompt,
-                    response: exchange.response,
-                    isError: exchange.isError
-                )
-            }
+            conversationResults = result.exchanges
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -143,15 +129,8 @@ let result = try await RunConversationUseCase().execute(
     }
 }
 
-struct ConversationStep {
-    let language: String
-    let prompt: String
-    let response: String
-    let isError: Bool
-}
-
 struct ConversationStepCard: View {
-    let step: ConversationStep
+    let step: LanguageSessionExchange
     let stepNumber: Int
 
     var body: some View {
@@ -164,7 +143,7 @@ struct ConversationStepCard: View {
                     .frame(width: 24, height: 24)
                     .background(Circle().fill(.blue))
 
-                Text(step.language)
+                Text(step.label)
                     .font(.headline)
                     .fontWeight(.medium)
 
