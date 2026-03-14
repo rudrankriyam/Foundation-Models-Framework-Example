@@ -191,10 +191,8 @@ final class ExampleExecutor {
                     )
                 )
             ) { [weak self] partialText in
-                await MainActor.run {
-                    self?.result = partialText
-                    onPartialResult(partialText)
-                }
+                guard let self else { return }
+                await self.applyStreamingUpdate(partialText, onPartialResult: onPartialResult)
             }
 
             result = response.content
@@ -205,6 +203,15 @@ final class ExampleExecutor {
         }
 
         isRunning = false
+    }
+
+    @MainActor
+    private func applyStreamingUpdate(
+        _ partialText: String,
+        onPartialResult: (String) -> Void
+    ) {
+        result = partialText
+        onPartialResult(partialText)
     }
 
     /// Clears all state
