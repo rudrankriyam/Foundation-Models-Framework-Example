@@ -2,7 +2,7 @@ import Foundation
 import FoundationModels
 
 extension FoundationLabModelUseCase {
-    var foundationModelsValue: SystemLanguageModel.UseCase {
+    public var foundationModelsValue: SystemLanguageModel.UseCase {
         switch self {
         case .general:
             return .general
@@ -11,7 +11,7 @@ extension FoundationLabModelUseCase {
 }
 
 extension FoundationLabGuardrails {
-    var foundationModelsValue: SystemLanguageModel.Guardrails {
+    public var foundationModelsValue: SystemLanguageModel.Guardrails {
         switch self {
         case .default:
             return .default

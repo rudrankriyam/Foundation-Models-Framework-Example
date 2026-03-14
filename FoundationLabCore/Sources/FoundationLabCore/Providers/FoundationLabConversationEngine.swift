@@ -264,8 +264,19 @@ private extension FoundationLabConversationEngine {
             notifyStateChange()
         }
 
-        let summary = try await generateConversationSummary()
-        createNewSession(with: summary)
+        do {
+            let summary = try await generateConversationSummary()
+            createNewSession(with: summary)
+        } catch {
+            createFreshSessionAfterOverflow()
+
+            if let overflowResetMessage = trimmedOverflowResetMessage() {
+                onPartialResponse?(overflowResetMessage)
+                return overflowResetMessage
+            }
+
+            throw error
+        }
 
         let response: String
         switch responseMode {
@@ -323,6 +334,27 @@ private extension FoundationLabConversationEngine {
         sessionCount += 1
         currentTokenCount = 0
         notifyStateChange()
+    }
+
+    func createFreshSessionAfterOverflow() {
+        session = Self.makeSession(
+            model: model,
+            tools: configuration.tools,
+            instructions: configuration.baseInstructions
+        )
+        sessionCount += 1
+        currentTokenCount = 0
+        notifyStateChange()
+    }
+
+    func trimmedOverflowResetMessage() -> String? {
+        guard let message = configuration.overflowResetMessage?
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+              !message.isEmpty else {
+            return nil
+        }
+
+        return message
     }
 
     func latestResponseText() -> String {

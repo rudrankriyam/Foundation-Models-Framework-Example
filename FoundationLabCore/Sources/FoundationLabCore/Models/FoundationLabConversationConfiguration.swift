@@ -8,6 +8,7 @@ public struct FoundationLabConversationConfiguration {
     public var conversationUserLabel: String
     public var conversationAssistantLabel: String
     public var continuationNote: String
+    public var overflowResetMessage: String?
     public var modelUseCase: FoundationLabModelUseCase
     public var guardrails: FoundationLabGuardrails
     public var tools: [any Tool]
@@ -23,6 +24,7 @@ public struct FoundationLabConversationConfiguration {
         conversationUserLabel: String,
         conversationAssistantLabel: String,
         continuationNote: String,
+        overflowResetMessage: String? = nil,
         modelUseCase: FoundationLabModelUseCase = .general,
         guardrails: FoundationLabGuardrails = .default,
         tools: [any Tool] = [],
@@ -37,6 +39,7 @@ public struct FoundationLabConversationConfiguration {
         self.conversationUserLabel = conversationUserLabel
         self.conversationAssistantLabel = conversationAssistantLabel
         self.continuationNote = continuationNote
+        self.overflowResetMessage = overflowResetMessage
         self.modelUseCase = modelUseCase
         self.guardrails = guardrails
         self.tools = tools

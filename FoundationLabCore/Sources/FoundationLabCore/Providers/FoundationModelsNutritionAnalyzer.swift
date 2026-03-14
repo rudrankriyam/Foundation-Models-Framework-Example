@@ -7,28 +7,17 @@ public struct FoundationModelsNutritionAnalyzer: NutritionAnalyzing {
     public func analyzeNutrition(
         for request: AnalyzeNutritionRequest
     ) async throws -> AnalyzeNutritionResult {
-        let trimmedFoodDescription = request.foodDescription.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedResponseLanguage = request.responseLanguage.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        guard !trimmedFoodDescription.isEmpty else {
-            throw FoundationLabCoreError.invalidRequest("Missing food description")
-        }
-
-        guard !trimmedResponseLanguage.isEmpty else {
-            throw FoundationLabCoreError.invalidRequest("Missing response language")
-        }
-
         let session = LanguageModelSession(
             instructions: Instructions(
-                nutritionInstructions(responseLanguage: trimmedResponseLanguage)
+                nutritionInstructions(responseLanguage: request.responseLanguage)
             )
         )
 
         let parseResponse = try await session.respond(
             to: Prompt(
                 nutritionPrompt(
-                    foodDescription: trimmedFoodDescription,
-                    responseLanguage: trimmedResponseLanguage
+                    foodDescription: request.foodDescription,
+                    responseLanguage: request.responseLanguage
                 )
             ),
             generating: NutritionParsePayload.self
@@ -38,7 +27,7 @@ public struct FoundationModelsNutritionAnalyzer: NutritionAnalyzing {
             to: Prompt(
                 nutritionInsightsPrompt(
                     parsedNutrition: parseResponse.content,
-                    responseLanguage: trimmedResponseLanguage
+                    responseLanguage: request.responseLanguage
                 )
             )
         )

@@ -38,17 +38,9 @@ enum AppConfiguration {
             modelUseCase: FoundationLabModelUseCase = .general,
             guardrails: FoundationLabGuardrails = .default
         ) async -> Int {
-            let systemUseCase: SystemLanguageModel.UseCase
-            switch modelUseCase {
-            case .general:
-                systemUseCase = .general
-            }
-
             let model = SystemLanguageModel(
-                useCase: systemUseCase,
-                guardrails: guardrails == .permissiveContentTransformations
-                    ? .permissiveContentTransformations
-                    : .default
+                useCase: modelUseCase.foundationModelsValue,
+                guardrails: guardrails.foundationModelsValue
             )
             return await contextSize(for: model)
         }

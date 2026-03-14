@@ -73,6 +73,10 @@ final class HealthChatViewModel {
             conversationUserLabel: String(localized: "User:"),
             conversationAssistantLabel: String(localized: "Health AI:"),
             continuationNote: "Continue the conversation naturally, referencing this context when relevant.",
+            overflowResetMessage: """
+            I need to start a fresh conversation to keep your health coaching accurate.
+            Please send your last message again.
+            """,
             modelUseCase: .general,
             guardrails: .default,
             tools: tools,

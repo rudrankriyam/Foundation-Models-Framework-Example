@@ -19,12 +19,11 @@ struct AnalyzeNutritionIntent: AppIntent {
     var responseLanguage: String?
 
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
+        let trimmedResponseLanguage = responseLanguage?.trimmingCharacters(in: .whitespacesAndNewlines)
         let response = try await AnalyzeNutritionUseCase().execute(
             AnalyzeNutritionRequest(
                 foodDescription: mealDescription,
-                responseLanguage: responseLanguage?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
-                    ? responseLanguage!
-                    : "English",
+                responseLanguage: trimmedResponseLanguage?.isEmpty == false ? trimmedResponseLanguage! : "English",
                 context: CapabilityInvocationContext(
                     source: .appIntent,
                     localeIdentifier: Locale.current.identifier
