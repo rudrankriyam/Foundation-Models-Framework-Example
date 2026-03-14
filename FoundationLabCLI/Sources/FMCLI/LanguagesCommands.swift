@@ -8,11 +8,20 @@ struct LanguagesCommand: AsyncParsableCommand {
         abstract: "Run the shared Foundation Lab language demos.",
         subcommands: [
             ListLanguagesCommand.self,
+            RunLanguagesCommand.self
+        ]
+    )
+}
+
+struct RunLanguagesCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "run",
+        abstract: "Run a shared Foundation Lab language demo.",
+        subcommands: [
             MultilingualLanguagesCommand.self,
             SessionLanguagesCommand.self,
             NutritionLanguagesCommand.self
-        ],
-        defaultSubcommand: ListLanguagesCommand.self
+        ]
     )
 }
 
@@ -63,10 +72,10 @@ struct MultilingualLanguagesCommand: AsyncParsableCommand {
             CLIOutput.emit(
                 payload: [
                     "status": "dry_run",
-                    "command": "languages multilingual",
+                    "command": "languages run multilingual",
                     "limit": limit as Any
                 ],
-                human: "[dry-run] fm languages multilingual",
+                human: "[dry-run] fm languages run multilingual",
                 json: options.json
             )
             return
@@ -120,10 +129,10 @@ struct SessionLanguagesCommand: AsyncParsableCommand {
             CLIOutput.emit(
                 payload: [
                     "status": "dry_run",
-                    "command": "languages session",
+                    "command": "languages run session",
                     "systemPrompt": systemPrompt ?? ""
                 ],
-                human: "[dry-run] fm languages session",
+                human: "[dry-run] fm languages run session",
                 json: options.json
             )
             return
@@ -189,12 +198,12 @@ struct NutritionLanguagesCommand: AsyncParsableCommand {
             CLIOutput.emit(
                 payload: [
                     "status": "dry_run",
-                    "command": "languages nutrition",
+                    "command": "languages run nutrition",
                     "description": resolvedDescription,
                     "language": resolvedLanguage
                 ],
                 human: """
-                [dry-run] fm languages nutrition
+                [dry-run] fm languages run nutrition
                 Description: \(resolvedDescription)
                 Language: \(resolvedLanguage)
                 """,

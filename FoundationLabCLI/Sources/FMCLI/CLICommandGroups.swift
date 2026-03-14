@@ -28,8 +28,7 @@ struct WeatherToolCommand: AsyncParsableCommand {
         abstract: "Weather tool demos.",
         subcommands: [
             GetWeatherCommand.self
-        ],
-        defaultSubcommand: GetWeatherCommand.self
+        ]
     )
 }
 
@@ -40,8 +39,7 @@ struct WebToolCommand: AsyncParsableCommand {
         subcommands: [
             SearchWebCommand.self,
             SummarizeWebPageCommand.self
-        ],
-        defaultSubcommand: SearchWebCommand.self
+        ]
     )
 }
 
@@ -51,7 +49,6 @@ struct ChatCommand: AsyncParsableCommand {
         abstract: "Multi-turn conversation capabilities.",
         subcommands: [
             RunChatCommand.self
-        ],
-        defaultSubcommand: RunChatCommand.self
+        ]
     )
 }

@@ -8,11 +8,20 @@ struct SchemasCommand: AsyncParsableCommand {
         abstract: "Run the shared Foundation Lab schema demos.",
         subcommands: [
             ListSchemasCommand.self,
+            RunSchemasCommand.self
+        ]
+    )
+}
+
+struct RunSchemasCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "run",
+        abstract: "Run a shared Foundation Lab schema demo.",
+        subcommands: [
             BasicObjectSchemaCommand.self,
             ArraySchemaCommand.self,
             EnumSchemaCommand.self
-        ],
-        defaultSubcommand: ListSchemasCommand.self
+        ]
     )
 }
 
@@ -87,12 +96,12 @@ struct BasicObjectSchemaCommand: AsyncParsableCommand {
             CLIOutput.emit(
                 payload: [
                     "status": "dry_run",
-                    "command": "schemas basic-object",
+                    "command": "schemas run basic-object",
                     "preset": preset.rawValue,
                     "input": resolvedInput
                 ],
                 human: """
-                [dry-run] fm schemas basic-object
+                [dry-run] fm schemas run basic-object
                 Preset: \(presetInfo.title)
                 Input: \(resolvedInput)
                 """,
@@ -154,14 +163,14 @@ struct ArraySchemaCommand: AsyncParsableCommand {
             CLIOutput.emit(
                 payload: [
                     "status": "dry_run",
-                    "command": "schemas array-schema",
+                    "command": "schemas run array-schema",
                     "preset": preset.rawValue,
                     "input": resolvedInput,
                     "minimumItems": minimumItems,
                     "maximumItems": maximumItems
                 ],
                 human: """
-                [dry-run] fm schemas array-schema
+                [dry-run] fm schemas run array-schema
                 Preset: \(presetInfo.title)
                 Input: \(resolvedInput)
                 Constraints: \(minimumItems)-\(maximumItems)
@@ -230,13 +239,13 @@ struct EnumSchemaCommand: AsyncParsableCommand {
             CLIOutput.emit(
                 payload: [
                     "status": "dry_run",
-                    "command": "schemas enum-schema",
+                    "command": "schemas run enum-schema",
                     "preset": preset.rawValue,
                     "input": resolvedInput,
                     "choices": customChoices
                 ],
                 human: """
-                [dry-run] fm schemas enum-schema
+                [dry-run] fm schemas run enum-schema
                 Preset: \(presetInfo.title)
                 Input: \(resolvedInput)
                 Choices: \((customChoices.isEmpty ? example.choices(for: preset.index) : customChoices).joined(separator: ", "))

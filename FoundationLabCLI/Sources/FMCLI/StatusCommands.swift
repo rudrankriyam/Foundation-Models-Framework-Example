@@ -83,7 +83,7 @@ private struct CLIStatusGroup {
                     : "Most example commands require Apple Intelligence. `fm examples list` still works.",
                 commands: [
                     "fm examples list",
-                    "fm examples structured-data"
+                    "fm examples run structured-data"
                 ]
             ),
             CLIStatusGroup(
@@ -93,7 +93,7 @@ private struct CLIStatusGroup {
                 reason: availability.isAvailable
                     ? ""
                     : "Schema execution requires Apple Intelligence. `fm schemas list` still works.",
-                commands: ["fm schemas list", "fm schemas basic-object"]
+                commands: ["fm schemas list", "fm schemas run basic-object"]
             ),
             CLIStatusGroup(
                 id: "languages",
@@ -102,7 +102,7 @@ private struct CLIStatusGroup {
                 reason: availability.isAvailable
                     ? ""
                     : "Language demos require Apple Intelligence. `fm languages list` still works.",
-                commands: ["fm languages list", "fm languages nutrition"]
+                commands: ["fm languages list", "fm languages run nutrition"]
             ),
             CLIStatusGroup(
                 id: "chat",

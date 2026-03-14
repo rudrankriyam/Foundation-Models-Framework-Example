@@ -8,6 +8,16 @@ struct ExamplesCommand: AsyncParsableCommand {
         abstract: "Run the shared Foundation Lab example demos.",
         subcommands: [
             ListExamplesCommand.self,
+            RunExamplesCommand.self
+        ]
+    )
+}
+
+struct RunExamplesCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "run",
+        abstract: "Run a shared Foundation Lab example demo.",
+        subcommands: [
             BasicChatExampleCommand.self,
             JournalingExampleCommand.self,
             CreativeWritingExampleCommand.self,
@@ -15,8 +25,7 @@ struct ExamplesCommand: AsyncParsableCommand {
             StreamingExampleCommand.self,
             GenerationGuidesExampleCommand.self,
             GenerationOptionsExampleCommand.self
-        ],
-        defaultSubcommand: ListExamplesCommand.self
+        ]
     )
 }
 
@@ -77,12 +86,12 @@ struct BasicChatExampleCommand: AsyncParsableCommand {
             CLIOutput.emit(
                 payload: [
                     "status": "dry_run",
-                    "command": "examples basic-chat",
+                    "command": "examples run basic-chat",
                     "prompt": resolvedPrompt,
                     "systemPrompt": resolvedSystemPrompt ?? ""
                 ],
                 human: """
-                [dry-run] fm examples basic-chat
+                [dry-run] fm examples run basic-chat
                 Prompt: \(resolvedPrompt)
                 """,
                 json: options.json
@@ -147,12 +156,12 @@ struct JournalingExampleCommand: AsyncParsableCommand {
             CLIOutput.emit(
                 payload: [
                     "status": "dry_run",
-                    "command": "examples journaling",
+                    "command": "examples run journaling",
                     "prompt": resolvedPrompt,
                     "systemPrompt": resolvedSystemPrompt ?? ""
                 ],
                 human: """
-                [dry-run] fm examples journaling
+                [dry-run] fm examples run journaling
                 Prompt: \(resolvedPrompt)
                 """,
                 json: options.json
@@ -217,12 +226,12 @@ struct CreativeWritingExampleCommand: AsyncParsableCommand {
             CLIOutput.emit(
                 payload: [
                     "status": "dry_run",
-                    "command": "examples creative-writing",
+                    "command": "examples run creative-writing",
                     "prompt": resolvedPrompt,
                     "systemPrompt": resolvedSystemPrompt ?? ""
                 ],
                 human: """
-                [dry-run] fm examples creative-writing
+                [dry-run] fm examples run creative-writing
                 Prompt: \(resolvedPrompt)
                 """,
                 json: options.json
@@ -283,12 +292,12 @@ struct StructuredDataExampleCommand: AsyncParsableCommand {
             CLIOutput.emit(
                 payload: [
                     "status": "dry_run",
-                    "command": "examples structured-data",
+                    "command": "examples run structured-data",
                     "prompt": resolvedPrompt,
                     "systemPrompt": systemPrompt ?? ""
                 ],
                 human: """
-                [dry-run] fm examples structured-data
+                [dry-run] fm examples run structured-data
                 Prompt: \(resolvedPrompt)
                 """,
                 json: options.json
@@ -356,12 +365,12 @@ struct StreamingExampleCommand: AsyncParsableCommand {
             CLIOutput.emit(
                 payload: [
                     "status": "dry_run",
-                    "command": "examples streaming",
+                    "command": "examples run streaming",
                     "prompt": resolvedPrompt,
                     "systemPrompt": resolvedSystemPrompt ?? ""
                 ],
                 human: """
-                [dry-run] fm examples streaming
+                [dry-run] fm examples run streaming
                 Prompt: \(resolvedPrompt)
                 """,
                 json: options.json
@@ -432,11 +441,11 @@ struct GenerationGuidesExampleCommand: AsyncParsableCommand {
             CLIOutput.emit(
                 payload: [
                     "status": "dry_run",
-                    "command": "examples generation-guides",
+                    "command": "examples run generation-guides",
                     "prompt": resolvedPrompt
                 ],
                 human: """
-                [dry-run] fm examples generation-guides
+                [dry-run] fm examples run generation-guides
                 Prompt: \(resolvedPrompt)
                 """,
                 json: options.json
@@ -529,13 +538,13 @@ struct GenerationOptionsExampleCommand: AsyncParsableCommand {
             CLIOutput.emit(
                 payload: [
                     "status": "dry_run",
-                    "command": "examples generation-options",
+                    "command": "examples run generation-options",
                     "prompt": resolvedPrompt,
                     "temperature": temperature,
                     "maximumResponseTokens": maximumResponseTokens
                 ],
                 human: """
-                [dry-run] fm examples generation-options
+                [dry-run] fm examples run generation-options
                 Prompt: \(resolvedPrompt)
                 """,
                 json: options.json

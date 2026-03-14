@@ -14,7 +14,7 @@ It intentionally stays as its own Swift package even though the repository also 
 
 ```bash
 cd FoundationLabCLI
-swift run fm examples structured-data --dry-run --json --prompt "Suggest an uplifting science fiction novel"
+swift run fm examples run structured-data --dry-run --json --prompt "Suggest an uplifting science fiction novel"
 ```
 
 ## Homebrew Distribution
