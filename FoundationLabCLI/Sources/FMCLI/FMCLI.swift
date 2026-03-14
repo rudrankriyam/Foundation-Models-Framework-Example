@@ -14,13 +14,7 @@ struct FMCLI: AsyncParsableCommand {
             ExamplesCommand.self,
             SchemasCommand.self,
             LanguagesCommand.self,
-            ChatCommand.self,
-            ContactsCommand.self,
-            CalendarCommand.self,
-            RemindersCommand.self,
-            LocationCommand.self,
-            MusicCommand.self,
-            HealthCommand.self
+            ChatCommand.self
         ],
         defaultSubcommand: BookCommand.self
     )

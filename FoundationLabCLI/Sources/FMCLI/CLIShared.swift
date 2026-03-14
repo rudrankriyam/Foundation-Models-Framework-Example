@@ -208,12 +208,6 @@ func cliConversationConfiguration(systemPrompt: String?) -> FoundationLabConvers
     )
 }
 
-func requireUnsupportedCLICapability(_ name: String) throws {
-    throw FoundationLabCoreError.unsupportedEnvironment(
-        "\(name) is only supported in the Foundation Lab app or its App Intents because command-line execution does not have the required system entitlements and permissions."
-    )
-}
-
 func requireFoundationModelsAvailability() throws {
     let availability = CheckModelAvailabilityUseCase().execute()
 

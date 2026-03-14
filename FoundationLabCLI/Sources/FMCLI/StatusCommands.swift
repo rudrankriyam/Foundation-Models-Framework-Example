@@ -62,7 +62,7 @@ private struct CLIStatusGroup {
     static func defaultGroups(for availability: ModelAvailabilityResult) -> [CLIStatusGroup] {
         let foundationModelsReason = availabilityReasonDescription(for: availability)
 
-        let sharedCoreGroups = [
+        return [
             CLIStatusGroup(
                 id: "book",
                 title: "Book Recommendations",
@@ -129,54 +129,6 @@ private struct CLIStatusGroup {
                 commands: ["fm chat run"]
             )
         ]
-
-        let appOnlyReason = "Requires app entitlements and permissions that are not available to standalone CLI execution."
-        let appOnlyGroups = [
-            CLIStatusGroup(
-                id: "contacts",
-                title: "Contacts",
-                status: "app_only",
-                reason: appOnlyReason,
-                commands: ["fm contacts search"]
-            ),
-            CLIStatusGroup(
-                id: "calendar",
-                title: "Calendar",
-                status: "app_only",
-                reason: appOnlyReason,
-                commands: ["fm calendar query"]
-            ),
-            CLIStatusGroup(
-                id: "reminders",
-                title: "Reminders",
-                status: "app_only",
-                reason: appOnlyReason,
-                commands: ["fm reminders request"]
-            ),
-            CLIStatusGroup(
-                id: "location",
-                title: "Location",
-                status: "app_only",
-                reason: appOnlyReason,
-                commands: ["fm location current"]
-            ),
-            CLIStatusGroup(
-                id: "music",
-                title: "Music",
-                status: "app_only",
-                reason: appOnlyReason,
-                commands: ["fm music search"]
-            ),
-            CLIStatusGroup(
-                id: "health",
-                title: "Health",
-                status: "app_only",
-                reason: appOnlyReason,
-                commands: ["fm health query"]
-            )
-        ]
-
-        return sharedCoreGroups + appOnlyGroups
     }
 }
 
@@ -194,13 +146,11 @@ private func statusSummaryPayload(for groups: [CLIStatusGroup]) -> [String: Any]
     let availableCount = groups.filter { $0.status == "available" }.count
     let partiallyAvailableCount = groups.filter { $0.status == "partially_available" }.count
     let unavailableCount = groups.filter { $0.status == "unavailable" }.count
-    let appOnlyCount = groups.filter { $0.status == "app_only" }.count
 
     return [
         "available": availableCount,
         "partiallyAvailable": partiallyAvailableCount,
         "unavailable": unavailableCount,
-        "appOnly": appOnlyCount,
         "total": groups.count
     ]
 }
@@ -220,8 +170,7 @@ private func humanReadableStatus(
     let groupedStatuses = [
         ("Available Now", "available"),
         ("Partially Available", "partially_available"),
-        ("Unavailable Right Now", "unavailable"),
-        ("App-Only", "app_only")
+        ("Unavailable Right Now", "unavailable")
     ]
 
     for (sectionTitle, status) in groupedStatuses {
