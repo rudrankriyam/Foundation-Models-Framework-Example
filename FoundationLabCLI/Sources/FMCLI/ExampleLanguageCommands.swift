@@ -2,65 +2,10 @@ import ArgumentParser
 import Foundation
 import FoundationLabCore
 
-struct LanguagesCommand: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(
-        commandName: "languages",
-        abstract: "Run the shared Foundation Lab language demos.",
-        discussion: CLIHelpText.languages,
-        subcommands: [
-            ListLanguagesCommand.self,
-            RunLanguagesCommand.self
-        ]
-    )
-}
-
-struct RunLanguagesCommand: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(
-        commandName: "run",
-        abstract: "Run a shared Foundation Lab language demo.",
-        subcommands: [
-            MultilingualLanguagesCommand.self,
-            SessionLanguagesCommand.self,
-            NutritionLanguagesCommand.self
-        ]
-    )
-}
-
-struct ListLanguagesCommand: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(
-        commandName: "list",
-        abstract: "List supported languages using the shared language detection flow."
-    )
-
-    @OptionGroup var options: CLIOptions
-
-    mutating func run() async throws {
-        let result = ListSupportedLanguagesUseCase().execute(locale: .current)
-        let currentLanguage = currentSupportedLanguageDisplayName(from: result.languages)
-        let payload: [String: Any] = [
-            "currentLanguage": currentLanguage,
-            "languages": result.languages.map { language in
-                [
-                    "identifier": language.identifier,
-                    "displayName": language.displayName(in: .current)
-                ]
-            }
-        ]
-
-        let human = """
-        Current language: \(currentLanguage)
-
-        \(result.languages.map { $0.displayName(in: .current) }.joined(separator: "\n"))
-        """
-
-        CLIOutput.emit(payload: payload, human: human, json: options.json)
-    }
-}
-
-struct MultilingualLanguagesCommand: AsyncParsableCommand {
+struct MultilingualExampleCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "multilingual",
-        abstract: "Run the shared multilingual responses demo."
+        abstract: "Run the shared multilingual responses example."
     )
 
     @OptionGroup var options: CLIOptions
@@ -73,10 +18,10 @@ struct MultilingualLanguagesCommand: AsyncParsableCommand {
             CLIOutput.emit(
                 payload: [
                     "status": "dry_run",
-                    "command": "languages run multilingual",
+                    "command": "examples run multilingual",
                     "limit": limit as Any
                 ],
-                human: "[dry-run] fm languages run multilingual",
+                human: "[dry-run] fm examples run multilingual",
                 json: options.json
             )
             return
@@ -104,7 +49,10 @@ struct MultilingualLanguagesCommand: AsyncParsableCommand {
                     },
                     "metadata": metadataPayload(result.metadata)
                 ],
-                human: humanReadableMultilingualResponses(result.responses, verbose: options.verbose),
+                human: humanReadableMultilingualResponses(
+                    result.responses,
+                    verbose: options.verbose
+                ),
                 json: options.json
             )
         } catch {
@@ -114,10 +62,10 @@ struct MultilingualLanguagesCommand: AsyncParsableCommand {
     }
 }
 
-struct SessionLanguagesCommand: AsyncParsableCommand {
+struct LanguageSessionExampleCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
-        commandName: "session",
-        abstract: "Run the shared multilingual session demo."
+        commandName: "language-session",
+        abstract: "Run the shared multilingual session example."
     )
 
     @OptionGroup var options: CLIOptions
@@ -130,10 +78,10 @@ struct SessionLanguagesCommand: AsyncParsableCommand {
             CLIOutput.emit(
                 payload: [
                     "status": "dry_run",
-                    "command": "languages run session",
+                    "command": "examples run language-session",
                     "systemPrompt": systemPrompt ?? ""
                 ],
-                human: "[dry-run] fm languages run session",
+                human: "[dry-run] fm examples run language-session",
                 json: options.json
             )
             return
@@ -171,10 +119,10 @@ struct SessionLanguagesCommand: AsyncParsableCommand {
     }
 }
 
-struct NutritionLanguagesCommand: AsyncParsableCommand {
+struct NutritionExampleCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "nutrition",
-        abstract: "Run the shared multilingual nutrition example."
+        abstract: "Run the shared localized nutrition example."
     )
 
     @OptionGroup var options: CLIOptions
@@ -191,7 +139,9 @@ struct NutritionLanguagesCommand: AsyncParsableCommand {
             optionName: "--description"
         )
         let resolvedLanguage = try validatedNonEmpty(
-            language ?? currentSupportedLanguageDisplayName(from: ListSupportedLanguagesUseCase().execute(locale: .current).languages),
+            language ?? currentSupportedLanguageDisplayName(
+                from: ListSupportedLanguagesUseCase().execute(locale: .current).languages
+            ),
             optionName: "--language"
         )
 
@@ -199,12 +149,12 @@ struct NutritionLanguagesCommand: AsyncParsableCommand {
             CLIOutput.emit(
                 payload: [
                     "status": "dry_run",
-                    "command": "languages run nutrition",
+                    "command": "examples run nutrition",
                     "description": resolvedDescription,
                     "language": resolvedLanguage
                 ],
                 human: """
-                [dry-run] fm languages run nutrition
+                [dry-run] fm examples run nutrition
                 Description: \(resolvedDescription)
                 Language: \(resolvedLanguage)
                 """,
@@ -243,26 +193,6 @@ struct NutritionLanguagesCommand: AsyncParsableCommand {
             throw ExitCode.failure
         }
     }
-}
-
-private func currentSupportedLanguageDisplayName(
-    from languages: [SupportedLanguageDescriptor]
-) -> String {
-    let currentLocale = Locale.autoupdatingCurrent
-    let currentLanguageCode = currentLocale.language.languageCode?.identifier
-    let currentRegionCode = currentLocale.region?.identifier
-
-    if let exactMatch = languages.first(where: {
-        $0.languageCode == currentLanguageCode && $0.regionCode == currentRegionCode
-    }) {
-        return exactMatch.displayName(in: currentLocale)
-    }
-
-    if let languageMatch = languages.first(where: { $0.languageCode == currentLanguageCode }) {
-        return languageMatch.displayName(in: currentLocale)
-    }
-
-    return languages.first?.displayName(in: currentLocale) ?? "English"
 }
 
 private func humanReadableMultilingualResponses(

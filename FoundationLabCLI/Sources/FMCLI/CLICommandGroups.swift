@@ -11,10 +11,23 @@ struct CLIOptions: ParsableArguments {
     var verbose = false
 }
 
+struct SessionCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "session",
+        abstract: "Create one-off, streaming, or multi-turn session responses.",
+        discussion: CLIHelpText.session,
+        subcommands: [
+            SessionRespondCommand.self,
+            SessionStreamCommand.self,
+            SessionChatCommand.self
+        ]
+    )
+}
+
 struct ToolsCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "tools",
-        abstract: "Run the shared Foundation Lab tool demos.",
+        abstract: "Use tool calling workflows backed by the shared core runtime.",
         discussion: CLIHelpText.tools,
         subcommands: [
             WeatherToolCommand.self,
@@ -26,7 +39,7 @@ struct ToolsCommand: AsyncParsableCommand {
 struct WeatherToolCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "weather",
-        abstract: "Weather tool demos.",
+        abstract: "Weather tool commands.",
         discussion: CLIHelpText.weather,
         subcommands: [
             GetWeatherCommand.self
@@ -37,22 +50,11 @@ struct WeatherToolCommand: AsyncParsableCommand {
 struct WebToolCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "web",
-        abstract: "Web tool demos.",
+        abstract: "Web tool commands.",
         discussion: CLIHelpText.web,
         subcommands: [
             SearchWebCommand.self,
             SummarizeWebPageCommand.self
-        ]
-    )
-}
-
-struct ChatCommand: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(
-        commandName: "chat",
-        abstract: "Multi-turn conversation capabilities.",
-        discussion: CLIHelpText.chat,
-        subcommands: [
-            RunChatCommand.self
         ]
     )
 }

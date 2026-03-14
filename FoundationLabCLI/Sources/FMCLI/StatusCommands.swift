@@ -11,35 +11,47 @@ struct StatusCommand: AsyncParsableCommand {
     @OptionGroup var options: CLIOptions
 
     mutating func run() async throws {
-        let availability = CheckModelAvailabilityUseCase().execute()
-        let commandGroups = CLIStatusGroup.defaultGroups(for: availability)
-
-        if options.dryRun {
-            CLIOutput.emit(
-                payload: [
-                    "status": "dry_run",
-                    "command": "status"
-                ],
-                human: "[dry-run] fm status",
-                json: options.json
-            )
-            return
-        }
-
-        CLIOutput.emit(
-            payload: [
-                "foundationModels": foundationModelsPayload(for: availability),
-                "commandGroups": commandGroups.map(\.payload),
-                "summary": statusSummaryPayload(for: commandGroups)
-            ],
-            human: humanReadableStatus(
-                availability: availability,
-                commandGroups: commandGroups,
-                verbose: options.verbose
-            ),
-            json: options.json
+        emitStatusCommand(
+            options: options,
+            commandPath: "status",
+            dryRunHuman: "[dry-run] fm status"
         )
     }
+}
+
+func emitStatusCommand(
+    options: CLIOptions,
+    commandPath: String,
+    dryRunHuman: String
+) {
+    let availability = CheckModelAvailabilityUseCase().execute()
+    let commandGroups = CLIStatusGroup.defaultGroups(for: availability)
+
+    if options.dryRun {
+        CLIOutput.emit(
+            payload: [
+                "status": "dry_run",
+                "command": commandPath
+            ],
+            human: dryRunHuman,
+            json: options.json
+        )
+        return
+    }
+
+    CLIOutput.emit(
+        payload: [
+            "foundationModels": foundationModelsPayload(for: availability),
+            "commandGroups": commandGroups.map(\.payload),
+            "summary": statusSummaryPayload(for: commandGroups)
+        ],
+        human: humanReadableStatus(
+            availability: availability,
+            commandGroups: commandGroups,
+            verbose: options.verbose
+        ),
+        json: options.json
+    )
 }
 
 private struct CLIStatusGroup {
@@ -64,6 +76,27 @@ private struct CLIStatusGroup {
 
         return [
             CLIStatusGroup(
+                id: "model",
+                title: "Model",
+                status: "available",
+                reason: "",
+                commands: [
+                    "fm model status",
+                    "fm model languages"
+                ]
+            ),
+            CLIStatusGroup(
+                id: "session",
+                title: "Session",
+                status: availability.isAvailable ? "available" : "unavailable",
+                reason: availability.isAvailable ? "" : foundationModelsReason,
+                commands: [
+                    "fm session respond",
+                    "fm session stream",
+                    "fm session chat"
+                ]
+            ),
+            CLIStatusGroup(
                 id: "tools",
                 title: "Tools",
                 status: availability.isAvailable ? "available" : "unavailable",
@@ -83,7 +116,7 @@ private struct CLIStatusGroup {
                     : "Most example commands require Apple Intelligence. `fm examples list` still works.",
                 commands: [
                     "fm examples list",
-                    "fm examples run structured-data"
+                    "fm examples run multilingual"
                 ]
             ),
             CLIStatusGroup(
@@ -94,22 +127,6 @@ private struct CLIStatusGroup {
                     ? ""
                     : "Schema execution requires Apple Intelligence. `fm schemas list` still works.",
                 commands: ["fm schemas list", "fm schemas run basic-object"]
-            ),
-            CLIStatusGroup(
-                id: "languages",
-                title: "Languages",
-                status: availability.isAvailable ? "available" : "partially_available",
-                reason: availability.isAvailable
-                    ? ""
-                    : "Language demos require Apple Intelligence. `fm languages list` still works.",
-                commands: ["fm languages list", "fm languages run nutrition"]
-            ),
-            CLIStatusGroup(
-                id: "chat",
-                title: "Chat",
-                status: availability.isAvailable ? "available" : "unavailable",
-                reason: availability.isAvailable ? "" : foundationModelsReason,
-                commands: ["fm chat run"]
             )
         ]
     }

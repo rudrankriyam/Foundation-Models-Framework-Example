@@ -5,7 +5,7 @@ import FoundationLabCore
 struct SchemasCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "schemas",
-        abstract: "Run the shared Foundation Lab schema demos.",
+        abstract: "Run structured schema demos backed by the shared core runtime.",
         discussion: CLIHelpText.schemas,
         subcommands: [
             ListSchemasCommand.self,
@@ -17,7 +17,7 @@ struct SchemasCommand: AsyncParsableCommand {
 struct RunSchemasCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "run",
-        abstract: "Run a shared Foundation Lab schema demo.",
+        abstract: "Run a structured schema demo.",
         subcommands: [
             BasicObjectSchemaCommand.self,
             ArraySchemaCommand.self,

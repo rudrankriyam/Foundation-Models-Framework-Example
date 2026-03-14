@@ -6,7 +6,7 @@ enum CLIOutput {
     static func emit(payload: [String: Any], human: String, json: Bool) {
         if json {
             emitJSON(payload)
-        } else {
+        } else if !human.isEmpty {
             print(human)
         }
     }

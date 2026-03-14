@@ -5,7 +5,7 @@ import FoundationLabCore
 struct ExamplesCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "examples",
-        abstract: "Run the shared Foundation Lab example demos.",
+        abstract: "Run higher-level demos built on top of the core model and session commands.",
         discussion: CLIHelpText.examples,
         subcommands: [
             ListExamplesCommand.self,
@@ -17,7 +17,7 @@ struct ExamplesCommand: AsyncParsableCommand {
 struct RunExamplesCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "run",
-        abstract: "Run a shared Foundation Lab example demo.",
+        abstract: "Run a higher-level example demo built on top of the core commands.",
         subcommands: [
             BasicChatExampleCommand.self,
             JournalingExampleCommand.self,
@@ -25,7 +25,10 @@ struct RunExamplesCommand: AsyncParsableCommand {
             StructuredDataExampleCommand.self,
             StreamingExampleCommand.self,
             GenerationGuidesExampleCommand.self,
-            GenerationOptionsExampleCommand.self
+            GenerationOptionsExampleCommand.self,
+            MultilingualExampleCommand.self,
+            LanguageSessionExampleCommand.self,
+            NutritionExampleCommand.self
         ]
     )
 }
@@ -39,17 +42,17 @@ struct ListExamplesCommand: AsyncParsableCommand {
     @OptionGroup var options: CLIOptions
 
     mutating func run() async throws {
-        let demos = cliExamples.map {
+        let demos = cliExampleDescriptors.map {
             [
-                "id": $0.rawValue,
+                "id": $0.id,
                 "title": $0.title,
-                "defaultPrompt": $0.defaultPrompt
+                "summary": $0.summary
             ]
         }
 
-        let human = cliExamples
-            .map { "\($0.rawValue): \($0.title)" }
-            .joined(separator: "\n")
+        let human = cliExampleDescriptors
+            .map { "\($0.id): \($0.title)\n  \($0.summary)" }
+            .joined(separator: "\n\n")
 
         CLIOutput.emit(
             payload: ["examples": demos],
@@ -624,5 +627,3 @@ private func humanReadableStructuredText(
 
     return lines.joined(separator: "\n")
 }
-
-private let cliExamples = FoundationLabExampleDemo.allCases.filter { $0 != .modelAvailability }

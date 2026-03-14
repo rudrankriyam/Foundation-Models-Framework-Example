@@ -4,15 +4,15 @@ import ArgumentParser
 struct FMCLI: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "fm",
-        abstract: "Run Foundation Lab shared capabilities from the command line.",
+        abstract: "Work with Apple's Foundation Models from the command line.",
         discussion: CLIHelpText.root,
         subcommands: [
             StatusCommand.self,
+            ModelCommand.self,
+            SessionCommand.self,
             ToolsCommand.self,
             ExamplesCommand.self,
-            SchemasCommand.self,
-            LanguagesCommand.self,
-            ChatCommand.self
+            SchemasCommand.self
         ]
     )
 }
