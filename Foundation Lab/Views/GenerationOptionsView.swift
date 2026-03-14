@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import FoundationLabCore
 import FoundationModels
 
 struct GenerationOptionsView: View {
@@ -242,7 +243,7 @@ struct GenerationOptionsView: View {
             )
 
             response = generatedResponse.content
-            lastTokenCount = await session.transcript.tokenCount()
+            lastTokenCount = await session.transcript.foundationLabTokenCount()
         } catch {
             showError = error.localizedDescription
         }

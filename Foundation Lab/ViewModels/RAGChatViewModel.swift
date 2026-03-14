@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import FoundationLabCore
 import FoundationModels
 import LumoKit
 import VecturaKit
@@ -59,6 +60,7 @@ final class RAGChatViewModel {
     private var service: RAGService?
     private var isInitialized = false
     private var config: RAGConfig?
+    private let streamingTextUseCase = StreamTextGenerationUseCase()
 
     // Store titles per source key (for text/samples) and per chunk UUID (for files)
     private var sourceTitles: [String: String] = [:]
@@ -377,15 +379,20 @@ private extension RAGChatViewModel {
         let prompt = "SOURCES:\n\(contextText)\n\nQUESTION:\n\(query)"
 
         do {
-            let session = LanguageModelSession(
-                model: SystemLanguageModel(useCase: .general),
-                instructions: Instructions(systemPrompt)
-            )
             streamingTask?.cancel()
-            let task = Task { @MainActor in
-                for try await snapshot in session.streamResponse(to: Prompt(prompt)) {
-                    onUpdate(snapshot.content)
+            let request = StreamingTextGenerationRequest(
+                prompt: prompt,
+                systemPrompt: systemPrompt,
+                modelUseCase: .general,
+                context: CapabilityInvocationContext(source: .app)
+            )
+            let task = Task { @MainActor [streamingTextUseCase] in
+                let result = try await streamingTextUseCase.execute(request) { partialResponse in
+                    Task { @MainActor in
+                        onUpdate(partialResponse)
+                    }
                 }
+                self.lastTokenCount = result.metadata.tokenCount
             }
             streamingTask = task
             defer { streamingTask = nil }
@@ -394,8 +401,6 @@ private extension RAGChatViewModel {
             } catch is CancellationError {
                 return
             }
-
-            lastTokenCount = await session.transcript.tokenCount()
         } catch {
             onUpdate("Failed to answer: \(error.localizedDescription)")
         }
@@ -412,15 +417,20 @@ private extension RAGChatViewModel {
         let prompt = "CONTEXT:\n\(contextText)\n\nQUESTION:\n\(query)"
 
         do {
-            let session = LanguageModelSession(
-                model: SystemLanguageModel(useCase: .general),
-                instructions: Instructions(systemPrompt)
-            )
             streamingTask?.cancel()
-            let task = Task { @MainActor in
-                for try await snapshot in session.streamResponse(to: Prompt(prompt)) {
-                    entry.content = snapshot.content
+            let request = StreamingTextGenerationRequest(
+                prompt: prompt,
+                systemPrompt: systemPrompt,
+                modelUseCase: .general,
+                context: CapabilityInvocationContext(source: .app)
+            )
+            let task = Task { @MainActor [streamingTextUseCase] in
+                let result = try await streamingTextUseCase.execute(request) { partialResponse in
+                    Task { @MainActor in
+                        entry.content = partialResponse
+                    }
                 }
+                self.lastTokenCount = result.metadata.tokenCount
             }
             streamingTask = task
             defer { streamingTask = nil }
@@ -429,8 +439,6 @@ private extension RAGChatViewModel {
             } catch is CancellationError {
                 return
             }
-
-            lastTokenCount = await session.transcript.tokenCount()
         } catch {
             if entry.content.isEmpty { entry.content = "Failed: \(error.localizedDescription)" }
         }

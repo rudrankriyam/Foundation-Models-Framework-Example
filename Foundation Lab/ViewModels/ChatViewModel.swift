@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import FoundationLabCore
 import FoundationModels
 import Observation
 import Speech
@@ -25,13 +26,11 @@ final class ChatViewModel {
     private var speechObservationTask: Task<Void, Never>?
     private let permissionManager: PermissionManager
     private let speechSynthesizer: SpeechSynthesisService
+    private let conversationEngine: FoundationLabConversationEngine
     var isSummarizing: Bool = false
     var isApplyingWindow: Bool = false
     var sessionCount: Int = 1
-    var instructions: String = """
-        You are a helpful, friendly AI assistant. Engage in natural conversation and provide
-        thoughtful, detailed responses.
-        """
+    var instructions: String
     var samplingStrategy: SamplingStrategy = .default
     var topKSamplingValue: Int = 50
     var useFixedSeed: Bool = false
@@ -42,26 +41,17 @@ final class ChatViewModel {
 
     // MARK: - Token Usage Tracking
 
-    /// Current token usage for the transcript. Updated after each message.
     private(set) var currentTokenCount: Int = 0
-
-    /// Maximum context size for the model.
     private(set) var maxContextSize: Int = AppConfiguration.TokenManagement.defaultMaxTokens
 
-    /// Fraction of context window used (0.0 to 1.0).
     var tokenUsageFraction: Double {
         guard maxContextSize > 0 else { return 0 }
         return min(1.0, Double(currentTokenCount) / Double(maxContextSize))
     }
 
-    // MARK: - Streaming Task
-
-    private var streamingTask: Task<Void, Error>?
-
     // MARK: - Public Properties
 
-    private(set) var session: LanguageModelSession = LanguageModelSession()
-    private var languageModel: SystemLanguageModel = SystemLanguageModel(useCase: .general)
+    private(set) var session: LanguageModelSession
 
     // MARK: - Feedback State
 
@@ -81,10 +71,6 @@ final class ChatViewModel {
         }
     }
 
-    // MARK: - Sliding Window Configuration
-    private let windowThreshold = AppConfiguration.TokenManagement.windowThreshold
-    private let targetWindowSize = AppConfiguration.TokenManagement.targetWindowSize
-
     // MARK: - Initialization
 
     init(
@@ -93,11 +79,40 @@ final class ChatViewModel {
     ) {
         self.permissionManager = permissionManager ?? PermissionManager()
         self.speechSynthesizer = speechSynthesizer ?? SpeechSynthesizer.shared
-        languageModel = createLanguageModel()
-        session = LanguageModelSession(
-            model: languageModel,
-            instructions: Instructions(instructions)
+        self.instructions = Self.defaultInstructions
+
+        let configuration = FoundationLabConversationConfiguration(
+            baseInstructions: Self.defaultInstructions,
+            summaryInstructions: """
+            You are an expert at summarizing conversations. Create comprehensive summaries that \
+            preserve all important context and details.
+            """,
+            summaryPromptPreamble: """
+            Please summarize the following entire conversation comprehensively. Include all key points, \
+            topics discussed, user preferences, and important context that would help continue the \
+            conversation naturally:
+            """,
+            conversationUserLabel: "User:",
+            conversationAssistantLabel: "Assistant:",
+            continuationNote: """
+            Continue the conversation naturally, referencing this context when relevant. \
+            The user's next message is a continuation of your previous discussion.
+            """,
+            modelUseCase: .general,
+            guardrails: .default,
+            enableSlidingWindow: true,
+            windowThreshold: AppConfiguration.TokenManagement.windowThreshold,
+            targetWindowSize: AppConfiguration.TokenManagement.targetWindowSize,
+            defaultMaxContextSize: AppConfiguration.TokenManagement.defaultMaxTokens
         )
+        let engine = FoundationLabConversationEngine(configuration: configuration)
+        self.conversationEngine = engine
+        self.session = engine.session
+
+        engine.onStateChange = { [weak self] in
+            self?.syncConversationState()
+        }
+        syncConversationState()
 
         Task {
             await fetchContextSize()
@@ -106,88 +121,51 @@ final class ChatViewModel {
 
     // MARK: - Public Methods
 
-    @MainActor
     func sendMessage(_ content: String) async {
         isLoading = true
         defer { isLoading = session.isResponding }
 
         do {
-            if await shouldApplyWindow() {
-                await applySlidingWindow()
-            }
-
-            let responseStream = session.streamResponse(to: Prompt(content), options: generationOptions)
-
-            streamingTask?.cancel()
-            let task = Task { @MainActor in
-                for try await _ in responseStream {
-                    // The streaming automatically updates the session transcript
-                }
-            }
-            streamingTask = task
-            defer { streamingTask = nil }
-            do {
-                try await task.value
-            } catch is CancellationError {
-                // User-initiated cancellation (e.g. navigating away).
-                return
-            }
-
-            await updateTokenCount()
-
-        } catch LanguageModelSession.GenerationError.exceededContextWindowSize {
-            await handleContextWindowExceeded(userMessage: content)
-
+            _ = try await conversationEngine.sendStreamingMessage(
+                content,
+                generationOptions: generationOptions
+            )
+            syncConversationState()
+        } catch is CancellationError {
+            return
         } catch {
             errorMessage = FoundationModelsErrorHandler.handleError(error)
             showError = true
         }
     }
 
-    @MainActor
     func submitFeedback(for entryID: Transcript.Entry.ID, sentiment: LanguageModelFeedback.Sentiment) {
         feedbackState[entryID] = sentiment
-
-        let feedbackData = session.logFeedbackAttachment(sentiment: sentiment)
-        _ = feedbackData
+        _ = session.logFeedbackAttachment(sentiment: sentiment)
     }
 
-    @MainActor
     func getFeedback(for entryID: Transcript.Entry.ID) -> LanguageModelFeedback.Sentiment? {
-        return feedbackState[entryID]
+        feedbackState[entryID]
     }
 
-    @MainActor
     func clearChat() {
-        streamingTask?.cancel()
-        streamingTask = nil
-        sessionCount = 1
+        conversationEngine.clear()
         feedbackState.removeAll()
         isLoading = false
-        isSummarizing = false
-        isApplyingWindow = false
         errorMessage = nil
         showError = false
-        currentTokenCount = 0
-        languageModel = createLanguageModel()
-        session = LanguageModelSession(
-            model: languageModel,
-            instructions: Instructions(instructions)
-        )
+        syncConversationState()
     }
 
-    @MainActor
     func updateInstructions(_ newInstructions: String) {
         instructions = newInstructions
-        languageModel = createLanguageModel()
-        session = LanguageModelSession(
-            model: languageModel,
-            instructions: Instructions(instructions)
+        conversationEngine.rebuild(
+            baseInstructions: newInstructions,
+            guardrails: currentGuardrails()
         )
-        currentTokenCount = 0
+        syncConversationState()
     }
 
-    @MainActor
     func dismissError() {
         showError = false
         errorMessage = nil
@@ -196,11 +174,8 @@ final class ChatViewModel {
         }
     }
 
-    /// Cleans up resources when the view disappears.
-    @MainActor
     func tearDown() {
-        streamingTask?.cancel()
-        streamingTask = nil
+        conversationEngine.cancelActiveResponse()
         stopSpeechObservation()
         speechRecognizer?.stopRecognition()
         speechRecognizer = nil
@@ -208,7 +183,6 @@ final class ChatViewModel {
 
     // MARK: - Voice Methods
 
-    @MainActor
     func startVoiceMode() async {
         if case .error = voiceState {
             errorMessage = nil
@@ -230,7 +204,7 @@ final class ChatViewModel {
         isLoading = false
         voiceState = .preparing
 
-        session.prewarm()
+        conversationEngine.prewarm()
 
         stopSpeechObservation()
         speechRecognizer?.stopRecognition()
@@ -246,7 +220,6 @@ final class ChatViewModel {
         startSpeechObservation()
     }
 
-    @MainActor
     func cancelVoiceMode() {
         stopSpeechObservation()
         voiceState = .idle
@@ -256,14 +229,12 @@ final class ChatViewModel {
         speechRecognizer = nil
     }
 
-    @MainActor
     func stopSpeaking() {
         guard case .speaking = voiceState else { return }
         speechSynthesizer.cancelSpeaking()
         restartListening()
     }
 
-    @MainActor
     func stopVoiceModeAndSend() async {
         guard case .listening(let text) = voiceState else { return }
 
@@ -281,12 +252,15 @@ final class ChatViewModel {
         voiceState = .processing
 
         do {
-            let response = try await session.respond(to: Prompt(trimmedText))
-            await updateTokenCount()
-            voiceState = .speaking(response: response.content)
+            let response = try await conversationEngine.sendMessage(
+                trimmedText,
+                generationOptions: generationOptions
+            )
+            syncConversationState()
+            voiceState = .speaking(response: response)
 
             do {
-                try await speechSynthesizer.synthesizeAndSpeak(text: response.content)
+                try await speechSynthesizer.synthesizeAndSpeak(text: response)
             } catch let synthError as SpeechSynthesizerError {
                 if case .cancelled = synthError {
                     return
@@ -298,7 +272,6 @@ final class ChatViewModel {
                 return
             }
 
-            // Auto-return to listening for multi-turn!
             restartListening()
         } catch {
             handleVoiceError(error.localizedDescription)
@@ -306,27 +279,32 @@ final class ChatViewModel {
     }
 }
 
-// MARK: - Token Usage
-
 private extension ChatViewModel {
+    static let defaultInstructions = """
+    You are a helpful, friendly AI assistant. Engage in natural conversation and provide
+    thoughtful, detailed responses.
+    """
+
+    func syncConversationState() {
+        session = conversationEngine.session
+        currentTokenCount = conversationEngine.currentTokenCount
+        maxContextSize = conversationEngine.maxContextSize
+        isSummarizing = conversationEngine.isSummarizing
+        isApplyingWindow = conversationEngine.isApplyingWindow
+        sessionCount = conversationEngine.sessionCount
+    }
+
     func fetchContextSize() async {
-        maxContextSize = await AppConfiguration.TokenManagement.contextSize(
-            for: languageModel
+        let contextSize = await AppConfiguration.TokenManagement.contextSize(
+            for: createLanguageModel()
         )
+        conversationEngine.setMaxContextSize(contextSize)
+        syncConversationState()
     }
 
-    func updateTokenCount() async {
-        currentTokenCount = await session.transcript.tokenCount(
-            using: languageModel
-        )
-    }
-}
-
-private extension ChatViewModel {
     // MARK: - Voice Helpers
 
-    @MainActor
-    private func initializeSpeechRecognizer() async -> Bool {
+    func initializeSpeechRecognizer() async -> Bool {
         let recognizer = SpeechRecognizer()
         speechRecognizer = recognizer
 
@@ -339,22 +317,19 @@ private extension ChatViewModel {
         }
     }
 
-    @MainActor
-    private func startSpeechObservation() {
+    func startSpeechObservation() {
         stopSpeechObservation()
         speechObservationTask = Task { @MainActor [weak self] in
             await self?.observeSpeechState()
         }
     }
 
-    @MainActor
-    private func stopSpeechObservation() {
+    func stopSpeechObservation() {
         speechObservationTask?.cancel()
         speechObservationTask = nil
     }
 
-    @MainActor
-    private func restartListening() {
+    func restartListening() {
         guard let recognizer = speechRecognizer else {
             handleVoiceError("Speech recognizer not initialized")
             return
@@ -368,8 +343,7 @@ private extension ChatViewModel {
         }
     }
 
-    @MainActor
-    private func handleVoiceError(_ message: String) {
+    func handleVoiceError(_ message: String) {
         stopSpeechObservation()
         speechRecognizer?.stopRecognition()
         speechRecognizer = nil
@@ -378,9 +352,7 @@ private extension ChatViewModel {
         voiceState = .error(message: message)
     }
 
-    /// Observes speech recognizer state changes and updates voiceState accordingly
-    @MainActor
-    private func observeSpeechState() async {
+    func observeSpeechState() async {
         guard let recognizer = speechRecognizer else { return }
 
         for await state in recognizer.stateValues {
@@ -404,169 +376,16 @@ private extension ChatViewModel {
     // MARK: - Language Model
 
     func createLanguageModel() -> SystemLanguageModel {
-        let guardrails: SystemLanguageModel.Guardrails = usePermissiveGuardrails ?
-            .permissiveContentTransformations : .default
-        return SystemLanguageModel(useCase: .general, guardrails: guardrails)
+        SystemLanguageModel(useCase: .general, guardrails: currentGuardrails())
+    }
+
+    func currentGuardrails() -> SystemLanguageModel.Guardrails {
+        usePermissiveGuardrails ? .permissiveContentTransformations : .default
     }
 
     func generateAndStoreSeed() -> UInt64 {
         let seed = UInt64.random(in: UInt64.min...UInt64.max)
         samplingSeed = seed
         return seed
-    }
-}
-
-private extension ChatViewModel {
-    // MARK: - Sliding Window Implementation
-
-    func shouldApplyWindow() async -> Bool {
-        await session.transcript.isApproachingLimit(
-            threshold: windowThreshold,
-            maxTokens: maxContextSize,
-            using: languageModel
-        )
-    }
-
-    @MainActor
-    func applySlidingWindow() async {
-        isApplyingWindow = true
-
-        let model = languageModel
-        let windowEntries = await session.transcript.entriesWithinTokenBudget(
-            targetWindowSize,
-            using: model
-        )
-
-        var finalEntries = windowEntries
-        if let instructions = session.transcript.first(where: {
-            if case .instructions = $0 { return true }
-            return false
-        }) {
-            if !finalEntries.contains(where: { $0.id == instructions.id }) {
-                finalEntries.insert(instructions, at: 0)
-            }
-        }
-
-        let windowedTranscript = Transcript(entries: finalEntries)
-
-        session = LanguageModelSession(model: model, transcript: windowedTranscript)
-        sessionCount += 1
-
-        await updateTokenCount()
-
-        isApplyingWindow = false
-    }
-}
-
-private extension ChatViewModel {
-    // MARK: - Error Handling + Context Management
-
-    @MainActor
-    func handleContextWindowExceeded(userMessage: String) async {
-        isSummarizing = true
-
-        let summary: ConversationSummary
-        do {
-            summary = try await generateConversationSummary()
-        } catch {
-            handleSummarizationError(error)
-            errorMessage = FoundationModelsErrorHandler.handleError(error)
-            showError = true
-            return
-        }
-
-        createNewSessionWithContext(summary: summary)
-        isSummarizing = false
-
-        do {
-            try await respondWithNewSession(to: userMessage)
-            await updateTokenCount()
-        } catch {
-            errorMessage = FoundationModelsErrorHandler.handleError(error)
-            showError = true
-        }
-    }
-
-    func createConversationText() -> String {
-        ConversationContextBuilder.conversationText(
-            from: session.transcript,
-            userLabel: "User:",
-            assistantLabel: "Assistant:"
-        )
-    }
-
-    @MainActor
-    func generateConversationSummary() async throws -> ConversationSummary {
-        let summarySession = LanguageModelSession(
-            model: languageModel,
-            instructions: Instructions(
-                "You are an expert at summarizing conversations. Create comprehensive summaries that " +
-                    "preserve all important context and details."
-            )
-        )
-
-        let conversationText = createConversationText()
-        let summaryPrompt = """
-        Please summarize the following entire conversation comprehensively. Include all key points, topics discussed, \
-        user preferences, and important context that would help continue the conversation naturally:
-
-        \(conversationText)
-        """
-
-        let summaryResponse = try await summarySession.respond(
-            to: Prompt(summaryPrompt),
-            generating: ConversationSummary.self
-        )
-
-        return summaryResponse.content
-    }
-
-    func createNewSessionWithContext(summary: ConversationSummary) {
-        let continuationNote = """
-        Continue the conversation naturally, referencing this context when relevant. \
-        The user's next message is a continuation of your previous discussion.
-        """
-
-        let contextInstructions = ConversationContextBuilder.contextInstructions(
-            baseInstructions: instructions,
-            summary: summary.summary,
-            keyTopics: summary.keyTopics,
-            userPreferences: summary.userPreferences,
-            continuationNote: continuationNote
-        )
-
-        session = LanguageModelSession(
-            model: languageModel,
-            instructions: Instructions(contextInstructions)
-        )
-        sessionCount += 1
-        currentTokenCount = 0
-    }
-
-    @MainActor
-    func respondWithNewSession(to userMessage: String) async throws {
-        let responseStream = session.streamResponse(to: Prompt(userMessage), options: generationOptions)
-
-        streamingTask?.cancel()
-        let task = Task { @MainActor in
-            for try await _ in responseStream {
-                // The streaming automatically updates the session transcript
-            }
-        }
-        streamingTask = task
-        defer { streamingTask = nil }
-        do {
-            try await task.value
-        } catch is CancellationError {
-            // User-initiated cancellation (e.g. navigating away).
-            return
-        }
-    }
-
-    @MainActor
-    func handleSummarizationError(_ error: Error) {
-        isSummarizing = false
-        errorMessage = error.localizedDescription
-        showError = true
     }
 }

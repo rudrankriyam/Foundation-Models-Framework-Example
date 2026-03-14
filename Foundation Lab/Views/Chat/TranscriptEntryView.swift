@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import FoundationLabCore
 import FoundationModels
 
 struct TranscriptEntryView: View {
@@ -111,7 +112,7 @@ struct TranscriptEntryView: View {
         }
         #endif
 
-        return entry.estimatedTokenCount
+        return entry.foundationLabEstimatedTokenCount
     }
 }
 
