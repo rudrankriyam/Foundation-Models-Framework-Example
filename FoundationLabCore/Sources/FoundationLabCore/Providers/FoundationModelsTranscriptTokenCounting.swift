@@ -21,6 +21,19 @@ extension Transcript.Entry {
             return 0
         }
     }
+
+    public func foundationLabTokenCount(
+        using model: SystemLanguageModel = .default
+    ) async -> Int {
+        #if compiler(>=6.3)
+        if #available(iOS 26.4, macOS 26.4, visionOS 26.4, *),
+           let realTokenCount = try? await model.tokenCount(for: [self]) {
+            return realTokenCount
+        }
+        #endif
+
+        return foundationLabEstimatedTokenCount
+    }
 }
 
 extension Transcript.Segment {

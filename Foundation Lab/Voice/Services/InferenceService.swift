@@ -28,8 +28,7 @@ protocol InferenceServiceProtocol {
 @MainActor
 class InferenceService: InferenceServiceProtocol {
     private let conversationEngine: FoundationLabConversationEngine
-    public var session: LanguageModelSession { conversationEngine.session }
-    public let instructions: String
+    private let instructions: String
 
     init() {
         let instructionsText = """
@@ -80,6 +79,10 @@ class InferenceService: InferenceServiceProtocol {
     /// - Returns: The response text to be sent to speech synthesis
     func processText(_ text: String) async throws -> String {
         try await conversationEngine.sendMessage(text)
+    }
+
+    func prewarm() {
+        conversationEngine.prewarm(withPromptPrefix: instructions)
     }
 
 }

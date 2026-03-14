@@ -7,7 +7,6 @@
 
 import EventKit
 import Foundation
-import FoundationModels
 import SwiftUI
 import OSLog
 import Speech
@@ -178,8 +177,8 @@ class VoiceViewModel {
     func prewarmAndGreet() async {
         logger.info("Prewarming and sending greeting")
 
-        // Prewarm the session with the system's default instructions
-        inferenceService.session.prewarm(promptPrefix: Prompt(inferenceService.instructions))
+        // Prewarm the shared conversation engine with the default voice instructions.
+        inferenceService.prewarm()
 
         // Have the AI generate a greeting
         do {

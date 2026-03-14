@@ -17,36 +17,28 @@ This roadmap tracks the shared-capability refactor after the initial package bou
 - `#114` Add the first thin CLI adapter over `GenerateBookRecommendation`.
 - `#115` Extract `AnalyzeNutrition` into `FoundationLabCore`.
 - `#116` Extract Weather and Web Search into shared capabilities with app, App Intent, and CLI adapters.
+- `#117` Expand task-oriented App Intents with capability-backed App Shortcuts, an indexed `SupportedLanguageEntity`, and a thin localized-response intent surface.
+- `#118` Extract the shared conversation/session core with transcript windowing, summarization, streaming, and reusable app/CLI adapters.
 - Extract the remaining tool-backed capabilities for Contacts, Calendar, Reminders, Location, Music, Web Metadata, and Health into `FoundationLabCore`.
 - Rewire the corresponding SwiftUI tool views so they invoke shared use cases instead of owning Foundation Models prompts and orchestration directly.
 - Add capability-backed App Intents for nutrition, contacts, calendar, reminders, location, music, web page summary, and health queries.
 - Extend the `fm` CLI with matching feature groups while returning consistent unsupported-environment errors for system-entitled capabilities outside the app.
 - Add shared core primitives for one-shot text, structured generation, streaming text, dynamic schema generation, model availability, supported language listing, and a basic reusable multi-turn conversation runner.
 - Rewire the example/language runtime surfaces so `ExampleExecutor`, model availability, supported-language loading, multilingual response generation, dynamic schema execution, and the session-management demo flow through `FoundationLabCore`.
+- Rewire chat, health chat, voice inference, RAG chat, generation-options execution, and transcript token-counting helpers so app-side adapters no longer own direct `LanguageModelSession` execution paths.
 
 ## Next up
 
-### Tool cleanup
+### Final polish
 
-- Remove or shrink any remaining app-local helper types that still exist only to support the old tool-owned Foundation Models flow.
-- Audit for dead Foundation Models tool wrappers that are no longer used now that shared providers live in `FoundationLabCore`.
 - Refresh user-facing docs and sample references so the shared-capability architecture is the default story.
+- Decide whether any remaining app-side `FoundationModels` imports should stay as adapter/configuration types or be wrapped behind `FoundationLabCore` enums.
+- Review educational snippets and prompt/code examples that intentionally still demonstrate raw `FoundationModels` APIs so they stay clearly separate from the shared runtime path.
 
-### `#117` Richer App Intents
+### Cleanup audit
 
-- Keep existing navigation intents working while capability-backed intents expand.
-- Stay within the system limit of 10 App Shortcuts while keeping the broader set of App Intents available.
-- Introduce App Entities only where they meaningfully improve Shortcuts or Spotlight surfaces.
-- Define the first Spotlight-oriented foundation only after capability inputs and outputs stabilize.
-- Keep `perform()` methods thin and free of business logic.
-
-### `#118` Shared Conversation Core
-
-- Expand the current shared conversation runner into the full session, transcript-windowing, summarization, and streaming engine used by chat.
-- Keep `ChatViewModel` focused on presentation, not ownership of conversation rules.
-- Make the shared conversation engine reusable from SwiftUI, CLI, and later voice/RAG adapters.
-- Preserve reset semantics, token budgeting, and streaming behavior with explicit tests.
-- Defer voice and RAG migration until the conversation core boundary is stable.
+- The remaining direct `LanguageModelSession(...)`, `session.respond(...)`, and `Prompt(...)` references in the app target are now teaching snippets and example-code strings rather than live adapter execution.
+- Remaining runtime `FoundationModels` imports in the app are primarily used for model types, `@Generable` examples, or adapter-facing configuration such as guardrails and transcript display.
 
 ## CLI note
 
