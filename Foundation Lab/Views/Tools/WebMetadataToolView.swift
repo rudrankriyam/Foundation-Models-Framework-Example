@@ -56,13 +56,28 @@ struct WebMetadataToolView: View {
   }
 
   private func executeWebMetadata() {
+    let trimmedURL = url.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmedURL.isEmpty else {
+      executor.result = ""
+      executor.successMessage = nil
+      executor.errorMessage = "Please enter a valid URL"
+      return
+    }
+
+    guard isValidWebURL(trimmedURL) else {
+      executor.result = ""
+      executor.successMessage = nil
+      executor.errorMessage = "URL must use http or https"
+      return
+    }
+
     Task {
       await executor.executeCapability(
         successMessage: "Web page summary generated successfully!"
       ) {
         try await GenerateWebPageSummaryUseCase().execute(
           GenerateWebPageSummaryRequest(
-            url: url,
+            url: trimmedURL,
             context: CapabilityInvocationContext(
               source: .app,
               localeIdentifier: Locale.current.identifier
@@ -71,6 +86,17 @@ struct WebMetadataToolView: View {
         )
       }
     }
+  }
+
+  private func isValidWebURL(_ value: String) -> Bool {
+    guard let parsedURL = URL(string: value),
+          let scheme = parsedURL.scheme?.lowercased(),
+          ["http", "https"].contains(scheme),
+          parsedURL.host != nil else {
+      return false
+    }
+
+    return true
   }
 }
 
