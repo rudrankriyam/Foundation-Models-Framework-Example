@@ -14,8 +14,7 @@ struct ExamplesCommand: AsyncParsableCommand {
             StructuredDataExampleCommand.self,
             StreamingExampleCommand.self,
             GenerationGuidesExampleCommand.self,
-            GenerationOptionsExampleCommand.self,
-            ModelAvailabilityExampleCommand.self
+            GenerationOptionsExampleCommand.self
         ],
         defaultSubcommand: ListExamplesCommand.self
     )
@@ -30,7 +29,7 @@ struct ListExamplesCommand: AsyncParsableCommand {
     @OptionGroup var options: CLIOptions
 
     mutating func run() async throws {
-        let demos = FoundationLabExampleDemo.allCases.map {
+        let demos = cliExamples.map {
             [
                 "id": $0.rawValue,
                 "title": $0.title,
@@ -38,7 +37,7 @@ struct ListExamplesCommand: AsyncParsableCommand {
             ]
         }
 
-        let human = FoundationLabExampleDemo.allCases
+        let human = cliExamples
             .map { "\($0.rawValue): \($0.title)" }
             .joined(separator: "\n")
 
@@ -578,28 +577,6 @@ struct GenerationOptionsExampleCommand: AsyncParsableCommand {
     }
 }
 
-struct ModelAvailabilityExampleCommand: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(
-        commandName: "model-availability",
-        abstract: "Run the shared model availability example."
-    )
-
-    @OptionGroup var options: CLIOptions
-
-    mutating func run() async throws {
-        let result = CheckModelAvailabilityUseCase().execute()
-
-        CLIOutput.emit(
-            payload: [
-                "isAvailable": result.isAvailable,
-                "reason": result.reason?.rawValue ?? ""
-            ],
-            human: humanReadableAvailabilityOutput(result),
-            json: options.json
-        )
-    }
-}
-
 private func resolvedExamplePrompt(
     _ prompt: String?,
     demo: FoundationLabExampleDemo
@@ -638,19 +615,4 @@ private func humanReadableStructuredText(
     return lines.joined(separator: "\n")
 }
 
-private func humanReadableAvailabilityOutput(_ result: ModelAvailabilityResult) -> String {
-    guard !result.isAvailable else {
-        return "Apple Intelligence is available and ready to use."
-    }
-
-    switch result.reason {
-    case .deviceNotEligible:
-        return "Apple Intelligence is unavailable because this device is not eligible."
-    case .appleIntelligenceNotEnabled:
-        return "Apple Intelligence is unavailable because it is not enabled in Settings."
-    case .modelNotReady:
-        return "Apple Intelligence is still preparing model assets on this device."
-    case .unknown, .none:
-        return "Apple Intelligence is unavailable on this device right now."
-    }
-}
+private let cliExamples = FoundationLabExampleDemo.allCases.filter { $0 != .modelAvailability }
