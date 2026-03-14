@@ -424,9 +424,7 @@ private extension RAGChatViewModel {
             )
             let task = Task { @MainActor [streamingTextUseCase] in
                 let result = try await streamingTextUseCase.execute(request) { partialResponse in
-                    await MainActor.run {
-                        entry.content = partialResponse
-                    }
+                    await updateStreamingEntry(entry, with: partialResponse)
                 }
                 self.lastTokenCount = result.metadata.tokenCount
             }
@@ -440,5 +438,10 @@ private extension RAGChatViewModel {
         } catch {
             if entry.content.isEmpty { entry.content = "Failed: \(error.localizedDescription)" }
         }
+    }
+
+    @MainActor
+    private func updateStreamingEntry(_ entry: RAGChatEntry, with partialResponse: String) {
+        entry.content = partialResponse
     }
 }
