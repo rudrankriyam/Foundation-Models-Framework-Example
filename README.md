@@ -55,6 +55,14 @@ You can now try Foundation Lab on TestFlight! Join the beta: [https://testflight
 - Build and run the project
 - Explore the different capabilities through the examples!
 
+## CLI
+
+This repository also includes `fm`, a standalone command-line interface backed by shared capability code in `FoundationLabCore`.
+
+- Local development: `cd FoundationLabCLI && swift run fm book recommend --dry-run --json --prompt "Suggest an uplifting science fiction novel"`
+- Xcode development: build the `fm` scheme from `FoundationLab.xcodeproj`
+- Homebrew release prep: use `./Scripts/generate-homebrew-formula.sh <tag>` and follow [FoundationLabCLI/README.md](FoundationLabCLI/README.md)
+
 ## What's Inside
 
 The app has four main sections:
