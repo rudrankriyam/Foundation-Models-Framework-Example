@@ -59,15 +59,17 @@ final class ChatViewModel {
 
     // MARK: - Generation Options
 
-    var generationOptions: GenerationOptions {
+    var generationOptions: FoundationLabGenerationOptions {
         switch samplingStrategy {
         case .default:
-            return GenerationOptions()
+            return FoundationLabGenerationOptions()
         case .greedy:
-            return GenerationOptions(sampling: .greedy)
+            return FoundationLabGenerationOptions(sampling: .greedy)
         case .sampling:
             let seed: UInt64? = useFixedSeed ? (samplingSeed ?? generateAndStoreSeed()) : nil
-            return GenerationOptions(sampling: .random(top: topKSamplingValue, seed: seed))
+            return FoundationLabGenerationOptions(
+                sampling: .randomTop(topKSamplingValue, seed: seed)
+            )
         }
     }
 
@@ -296,7 +298,8 @@ private extension ChatViewModel {
 
     func fetchContextSize() async {
         let contextSize = await AppConfiguration.TokenManagement.contextSize(
-            for: createLanguageModel()
+            modelUseCase: .general,
+            guardrails: currentGuardrails()
         )
         conversationEngine.setMaxContextSize(contextSize)
         syncConversationState()
@@ -375,11 +378,7 @@ private extension ChatViewModel {
 
     // MARK: - Language Model
 
-    func createLanguageModel() -> SystemLanguageModel {
-        SystemLanguageModel(useCase: .general, guardrails: currentGuardrails())
-    }
-
-    func currentGuardrails() -> SystemLanguageModel.Guardrails {
+    func currentGuardrails() -> FoundationLabGuardrails {
         usePermissiveGuardrails ? .permissiveContentTransformations : .default
     }
 

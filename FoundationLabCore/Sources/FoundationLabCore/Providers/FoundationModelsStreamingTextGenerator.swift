@@ -14,8 +14,8 @@ public struct FoundationModelsStreamingTextGenerator: StreamingTextGenerationPro
         }
 
         let model = SystemLanguageModel(
-            useCase: request.modelUseCase,
-            guardrails: request.guardrails ?? .default
+            useCase: request.modelUseCase.foundationModelsValue,
+            guardrails: (request.guardrails ?? FoundationLabGuardrails.default).foundationModelsValue
         )
         let session: LanguageModelSession
 
@@ -33,7 +33,7 @@ public struct FoundationModelsStreamingTextGenerator: StreamingTextGenerationPro
         if let generationOptions = request.generationOptions {
             for try await partialResponse in session.streamResponse(
                 to: Prompt(prompt),
-                options: generationOptions
+                options: generationOptions.foundationModelsValue
             ) {
                 finalContent = partialResponse.content
                 onPartialResponse(partialResponse.content)

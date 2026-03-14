@@ -1,18 +1,16 @@
 import Foundation
-import FoundationModels
-
 public struct GenerateWebPageSummaryRequest: CapabilityRequest, Sendable {
     public let url: String
     public let systemPrompt: String?
-    public let modelUseCase: SystemLanguageModel.UseCase
-    public let guardrails: SystemLanguageModel.Guardrails?
+    public let modelUseCase: FoundationLabModelUseCase
+    public let guardrails: FoundationLabGuardrails?
     public let context: CapabilityInvocationContext
 
     public init(
         url: String,
         systemPrompt: String? = nil,
-        modelUseCase: SystemLanguageModel.UseCase = .general,
-        guardrails: SystemLanguageModel.Guardrails? = nil,
+        modelUseCase: FoundationLabModelUseCase = .general,
+        guardrails: FoundationLabGuardrails? = nil,
         context: CapabilityInvocationContext
     ) {
         self.url = url

@@ -14,8 +14,8 @@ public struct FoundationModelsConversationRunner: ConversationRunning {
         }
 
         let model = SystemLanguageModel(
-            useCase: request.modelUseCase,
-            guardrails: request.guardrails ?? .default
+            useCase: request.modelUseCase.foundationModelsValue,
+            guardrails: (request.guardrails ?? FoundationLabGuardrails.default).foundationModelsValue
         )
         let session: LanguageModelSession
 
@@ -37,7 +37,7 @@ public struct FoundationModelsConversationRunner: ConversationRunning {
                 if let generationOptions = request.generationOptions {
                     responseContent = try await session.respond(
                         to: Prompt(prompt),
-                        options: generationOptions
+                        options: generationOptions.foundationModelsValue
                     ).content
                 } else {
                     responseContent = try await session.respond(to: Prompt(prompt)).content

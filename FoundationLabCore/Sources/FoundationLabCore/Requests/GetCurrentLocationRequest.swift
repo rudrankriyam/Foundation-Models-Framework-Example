@@ -1,16 +1,14 @@
 import Foundation
-import FoundationModels
-
 public struct GetCurrentLocationRequest: CapabilityRequest, Sendable {
     public let systemPrompt: String?
-    public let modelUseCase: SystemLanguageModel.UseCase
-    public let guardrails: SystemLanguageModel.Guardrails?
+    public let modelUseCase: FoundationLabModelUseCase
+    public let guardrails: FoundationLabGuardrails?
     public let context: CapabilityInvocationContext
 
     public init(
         systemPrompt: String? = nil,
-        modelUseCase: SystemLanguageModel.UseCase = .general,
-        guardrails: SystemLanguageModel.Guardrails? = nil,
+        modelUseCase: FoundationLabModelUseCase = .general,
+        guardrails: FoundationLabGuardrails? = nil,
         context: CapabilityInvocationContext
     ) {
         self.systemPrompt = systemPrompt

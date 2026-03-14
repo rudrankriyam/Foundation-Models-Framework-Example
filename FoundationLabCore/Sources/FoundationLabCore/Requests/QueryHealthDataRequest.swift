@@ -1,11 +1,9 @@
 import Foundation
-import FoundationModels
-
 public struct QueryHealthDataRequest: CapabilityRequest, Sendable {
     public let query: String
     public let systemPrompt: String?
-    public let modelUseCase: SystemLanguageModel.UseCase
-    public let guardrails: SystemLanguageModel.Guardrails?
+    public let modelUseCase: FoundationLabModelUseCase
+    public let guardrails: FoundationLabGuardrails?
     public let referenceDate: Date
     public let timeZoneIdentifier: String
     public let context: CapabilityInvocationContext
@@ -13,8 +11,8 @@ public struct QueryHealthDataRequest: CapabilityRequest, Sendable {
     public init(
         query: String,
         systemPrompt: String? = nil,
-        modelUseCase: SystemLanguageModel.UseCase = .general,
-        guardrails: SystemLanguageModel.Guardrails? = nil,
+        modelUseCase: FoundationLabModelUseCase = .general,
+        guardrails: FoundationLabGuardrails? = nil,
         referenceDate: Date = .now,
         timeZoneIdentifier: String = TimeZone.current.identifier,
         context: CapabilityInvocationContext

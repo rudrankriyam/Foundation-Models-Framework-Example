@@ -1,7 +1,6 @@
 import ArgumentParser
 import Foundation
 import FoundationLabCore
-import FoundationModels
 
 @main
 struct FMCLI: AsyncParsableCommand {
@@ -1022,12 +1021,25 @@ func requireUnsupportedCLICapability(_ name: String) throws {
 }
 
 func requireFoundationModelsAvailability() throws {
-    switch SystemLanguageModel.default.availability {
-    case .available:
+    let availability = CheckModelAvailabilityUseCase().execute()
+
+    if availability.isAvailable {
         return
-    case .unavailable(let reason):
-        throw CLIAvailabilityError.foundationModelsUnavailable(
-            "Apple Intelligence is unavailable for CLI execution: \(reason)"
-        )
     }
+
+    let reasonDescription: String
+    switch availability.reason {
+    case .deviceNotEligible:
+        reasonDescription = "device not eligible"
+    case .appleIntelligenceNotEnabled:
+        reasonDescription = "Apple Intelligence not enabled"
+    case .modelNotReady:
+        reasonDescription = "model not ready"
+    case .unknown, .none:
+        reasonDescription = "unknown reason"
+    }
+
+    throw CLIAvailabilityError.foundationModelsUnavailable(
+        "Apple Intelligence is unavailable for CLI execution: \(reasonDescription)"
+    )
 }

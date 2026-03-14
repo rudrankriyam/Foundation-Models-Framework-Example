@@ -5,7 +5,7 @@
 //  Created by Rudrank Riyam on 6/29/25.
 //
 
-import FoundationModels
+import FoundationLabCore
 import SwiftUI
 
 struct BasicChatView: View {
@@ -99,7 +99,7 @@ struct BasicChatView: View {
 
     private func executeChat() {
         Task {
-            let guardrails: SystemLanguageModel.Guardrails = usePermissiveGuardrails ?
+            let guardrails: FoundationLabGuardrails = usePermissiveGuardrails ?
                 .permissiveContentTransformations : .default
 
             await executor.executeBasic(

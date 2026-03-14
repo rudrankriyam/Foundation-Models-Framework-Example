@@ -63,7 +63,7 @@ extension ExampleExecutor {
     func executeDynamicSchema(
         prompt: String,
         schema: GenerationSchema,
-        generationOptions: GenerationOptions? = nil,
+        generationOptions: FoundationLabGenerationOptions? = nil,
         formatter: @escaping (GeneratedContent) -> String
     ) async {
         isRunning = true

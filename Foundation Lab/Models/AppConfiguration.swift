@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import FoundationLabCore
 import FoundationModels
 
 /// Centralized configuration constants for the app
@@ -31,6 +32,25 @@ enum AppConfiguration {
             #else
             return defaultMaxTokens
             #endif
+        }
+
+        static func contextSize(
+            modelUseCase: FoundationLabModelUseCase = .general,
+            guardrails: FoundationLabGuardrails = .default
+        ) async -> Int {
+            let systemUseCase: SystemLanguageModel.UseCase
+            switch modelUseCase {
+            case .general:
+                systemUseCase = .general
+            }
+
+            let model = SystemLanguageModel(
+                useCase: systemUseCase,
+                guardrails: guardrails == .permissiveContentTransformations
+                    ? .permissiveContentTransformations
+                    : .default
+            )
+            return await contextSize(for: model)
         }
     }
 

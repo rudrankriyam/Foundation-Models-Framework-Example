@@ -19,8 +19,8 @@ public final class FoundationLabConversationEngine {
     public init(configuration: FoundationLabConversationConfiguration) {
         self.configuration = configuration
         self.model = SystemLanguageModel(
-            useCase: configuration.modelUseCase,
-            guardrails: configuration.guardrails
+            useCase: configuration.modelUseCase.foundationModelsValue,
+            guardrails: configuration.guardrails.foundationModelsValue
         )
         self.maxContextSize = configuration.defaultMaxContextSize
         self.session = Self.makeSession(
@@ -38,7 +38,7 @@ public final class FoundationLabConversationEngine {
 
     public func rebuild(
         baseInstructions: String? = nil,
-        guardrails: SystemLanguageModel.Guardrails? = nil
+        guardrails: FoundationLabGuardrails? = nil
     ) {
         if let baseInstructions {
             configuration.baseInstructions = baseInstructions
@@ -48,8 +48,8 @@ public final class FoundationLabConversationEngine {
         }
 
         model = SystemLanguageModel(
-            useCase: configuration.modelUseCase,
-            guardrails: configuration.guardrails
+            useCase: configuration.modelUseCase.foundationModelsValue,
+            guardrails: configuration.guardrails.foundationModelsValue
         )
         resetSession()
     }
@@ -83,7 +83,7 @@ public final class FoundationLabConversationEngine {
 
     public func sendStreamingMessage(
         _ content: String,
-        generationOptions: GenerationOptions? = nil,
+        generationOptions: FoundationLabGenerationOptions? = nil,
         onPartialResponse: (@MainActor @Sendable (String) -> Void)? = nil
     ) async throws -> String {
         let prompt = try validatedPrompt(from: content)
@@ -112,7 +112,7 @@ public final class FoundationLabConversationEngine {
 
     public func sendMessage(
         _ content: String,
-        generationOptions: GenerationOptions? = nil
+        generationOptions: FoundationLabGenerationOptions? = nil
     ) async throws -> String {
         let prompt = try validatedPrompt(from: content)
 
@@ -204,7 +204,7 @@ private extension FoundationLabConversationEngine {
 
     func streamResponse(
         to prompt: String,
-        generationOptions: GenerationOptions?,
+        generationOptions: FoundationLabGenerationOptions?,
         onPartialResponse: (@MainActor @Sendable (String) -> Void)?
     ) async throws -> String {
         activeStreamingTask?.cancel()
@@ -217,7 +217,7 @@ private extension FoundationLabConversationEngine {
             if let generationOptions {
                 for try await snapshot in self.session.streamResponse(
                     to: Prompt(prompt),
-                    options: generationOptions
+                    options: generationOptions.foundationModelsValue
                 ) {
                     latest = snapshot.content
                     onPartialResponse?(snapshot.content)
@@ -238,12 +238,12 @@ private extension FoundationLabConversationEngine {
 
     func respond(
         to prompt: String,
-        generationOptions: GenerationOptions?
+        generationOptions: FoundationLabGenerationOptions?
     ) async throws -> String {
         if let generationOptions {
             return try await session.respond(
                 to: Prompt(prompt),
-                options: generationOptions
+                options: generationOptions.foundationModelsValue
             ).content
         }
 
@@ -252,7 +252,7 @@ private extension FoundationLabConversationEngine {
 
     func recoverFromContextOverflow(
         userMessage: String,
-        generationOptions: GenerationOptions?,
+        generationOptions: FoundationLabGenerationOptions?,
         responseMode: ResponseMode,
         onPartialResponse: (@MainActor @Sendable (String) -> Void)?
     ) async throws -> String {

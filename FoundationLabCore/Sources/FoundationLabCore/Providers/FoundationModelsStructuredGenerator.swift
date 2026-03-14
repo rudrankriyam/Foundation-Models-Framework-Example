@@ -14,8 +14,8 @@ public struct FoundationModelsStructuredGenerator: StructuredGenerationProviding
         }
 
         let model = SystemLanguageModel(
-            useCase: request.modelUseCase,
-            guardrails: request.guardrails ?? .default
+            useCase: request.modelUseCase.foundationModelsValue,
+            guardrails: (request.guardrails ?? FoundationLabGuardrails.default).foundationModelsValue
         )
         let session: LanguageModelSession
 

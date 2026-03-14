@@ -30,7 +30,7 @@ final class ExampleExecutor {
         prompt: String,
         instructions: String? = nil,
         successMessage: String? = nil,
-        guardrails: SystemLanguageModel.Guardrails = .default
+        guardrails: FoundationLabGuardrails = .default
     ) async {
         guard !prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             errorMessage = "Please enter a valid prompt"

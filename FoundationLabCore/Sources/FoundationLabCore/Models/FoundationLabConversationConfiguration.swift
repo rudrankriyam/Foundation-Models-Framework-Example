@@ -8,8 +8,8 @@ public struct FoundationLabConversationConfiguration {
     public var conversationUserLabel: String
     public var conversationAssistantLabel: String
     public var continuationNote: String
-    public var modelUseCase: SystemLanguageModel.UseCase
-    public var guardrails: SystemLanguageModel.Guardrails
+    public var modelUseCase: FoundationLabModelUseCase
+    public var guardrails: FoundationLabGuardrails
     public var tools: [any Tool]
     public var enableSlidingWindow: Bool
     public var windowThreshold: Double
@@ -23,8 +23,8 @@ public struct FoundationLabConversationConfiguration {
         conversationUserLabel: String,
         conversationAssistantLabel: String,
         continuationNote: String,
-        modelUseCase: SystemLanguageModel.UseCase = .general,
-        guardrails: SystemLanguageModel.Guardrails = .default,
+        modelUseCase: FoundationLabModelUseCase = .general,
+        guardrails: FoundationLabGuardrails = .default,
         tools: [any Tool] = [],
         enableSlidingWindow: Bool = false,
         windowThreshold: Double = 0.70,

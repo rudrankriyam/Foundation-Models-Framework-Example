@@ -8,9 +8,9 @@ public struct FoundationModelsToolInvoker: Sendable {
         to prompt: String,
         using tool: ToolType,
         systemPrompt: String? = nil,
-        modelUseCase: SystemLanguageModel.UseCase = .general,
-        guardrails: SystemLanguageModel.Guardrails? = nil,
-        generationOptions: GenerationOptions? = nil
+        modelUseCase: FoundationLabModelUseCase = .general,
+        guardrails: FoundationLabGuardrails? = nil,
+        generationOptions: FoundationLabGenerationOptions? = nil
     ) async throws -> TextGenerationResult {
         let trimmedPrompt = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedPrompt.isEmpty else {
@@ -18,8 +18,8 @@ public struct FoundationModelsToolInvoker: Sendable {
         }
 
         let model = SystemLanguageModel(
-            useCase: modelUseCase,
-            guardrails: guardrails ?? .default
+            useCase: modelUseCase.foundationModelsValue,
+            guardrails: (guardrails ?? FoundationLabGuardrails.default).foundationModelsValue
         )
         let session: LanguageModelSession
 
@@ -38,7 +38,7 @@ public struct FoundationModelsToolInvoker: Sendable {
         if let generationOptions {
             responseContent = try await session.respond(
                 to: Prompt(trimmedPrompt),
-                options: generationOptions
+                options: generationOptions.foundationModelsValue
             ).content
         } else {
             responseContent = try await session.respond(to: Prompt(trimmedPrompt)).content

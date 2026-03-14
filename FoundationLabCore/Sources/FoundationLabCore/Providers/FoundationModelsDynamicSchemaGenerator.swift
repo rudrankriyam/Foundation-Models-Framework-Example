@@ -11,8 +11,8 @@ public struct FoundationModelsDynamicSchemaGenerator: DynamicSchemaGenerationPro
         }
 
         let model = SystemLanguageModel(
-            useCase: request.modelUseCase,
-            guardrails: request.guardrails ?? .default
+            useCase: request.modelUseCase.foundationModelsValue,
+            guardrails: (request.guardrails ?? FoundationLabGuardrails.default).foundationModelsValue
         )
         let session: LanguageModelSession
 
@@ -31,7 +31,7 @@ public struct FoundationModelsDynamicSchemaGenerator: DynamicSchemaGenerationPro
             output = try await session.respond(
                 to: Prompt(prompt),
                 schema: request.schema,
-                options: generationOptions
+                options: generationOptions.foundationModelsValue
             ).content
         } else {
             output = try await session.respond(

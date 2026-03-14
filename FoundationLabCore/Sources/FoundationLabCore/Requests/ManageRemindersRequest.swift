@@ -1,6 +1,4 @@
 import Foundation
-import FoundationModels
-
 public enum ReminderExecutionMode: String, Sendable, Hashable, Codable {
     case customPrompt
     case quickCreate
@@ -15,8 +13,8 @@ public struct ManageRemindersRequest: CapabilityRequest, Sendable {
     public let priority: ReminderPriorityValue
     public let listName: String?
     public let systemPrompt: String?
-    public let modelUseCase: SystemLanguageModel.UseCase
-    public let guardrails: SystemLanguageModel.Guardrails?
+    public let modelUseCase: FoundationLabModelUseCase
+    public let guardrails: FoundationLabGuardrails?
     public let referenceDate: Date
     public let timeZoneIdentifier: String
     public let context: CapabilityInvocationContext
@@ -30,8 +28,8 @@ public struct ManageRemindersRequest: CapabilityRequest, Sendable {
         priority: ReminderPriorityValue = .none,
         listName: String? = nil,
         systemPrompt: String? = nil,
-        modelUseCase: SystemLanguageModel.UseCase = .general,
-        guardrails: SystemLanguageModel.Guardrails? = nil,
+        modelUseCase: FoundationLabModelUseCase = .general,
+        guardrails: FoundationLabGuardrails? = nil,
         referenceDate: Date = .now,
         timeZoneIdentifier: String = TimeZone.current.identifier,
         context: CapabilityInvocationContext
