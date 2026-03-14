@@ -39,22 +39,6 @@ enum CLIOutput {
     }
 }
 
-func humanReadableBookOutput(
-    for response: GenerateBookRecommendationResult,
-    verbose: Bool
-) -> String {
-    var lines = [response.recommendation.plainTextSummary]
-
-    if verbose {
-        let provider = response.metadata.provider ?? "Unknown"
-        let tokenCount = response.metadata.tokenCount.map(String.init) ?? "n/a"
-        lines.append("Provider: \(provider)")
-        lines.append("Token count: \(tokenCount)")
-    }
-
-    return lines.joined(separator: "\n\n")
-}
-
 func humanReadableNutritionOutput(
     for response: AnalyzeNutritionResult,
     verbose: Bool

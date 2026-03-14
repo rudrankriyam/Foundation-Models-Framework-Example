@@ -2,136 +2,6 @@ import ArgumentParser
 import Foundation
 import FoundationLabCore
 
-struct RecommendBookCommand: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(
-        commandName: "recommend",
-        abstract: "Generate a book recommendation."
-    )
-
-    @OptionGroup var options: CLIOptions
-
-    @Option(name: [.short, .long], help: "Describe the kind of book recommendation you want.")
-    var prompt: String
-
-    @Option(name: .long, help: "Optional system instructions for the shared capability.")
-    var systemPrompt: String?
-
-    mutating func run() async throws {
-        let trimmedPrompt = try validatedNonEmpty(prompt, optionName: "--prompt")
-
-        if options.dryRun {
-            CLIOutput.emit(
-                payload: [
-                    "status": "dry_run",
-                    "command": "book recommend",
-                    "prompt": trimmedPrompt,
-                    "systemPrompt": systemPrompt ?? ""
-                ],
-                human: """
-                [dry-run] fm book recommend
-                Prompt: \(trimmedPrompt)
-                """,
-                json: options.json
-            )
-            return
-        }
-
-        do {
-            try requireFoundationModelsAvailability()
-
-            let response = try await GenerateBookRecommendationUseCase().execute(
-                GenerateBookRecommendationRequest(
-                    prompt: trimmedPrompt,
-                    systemPrompt: systemPrompt,
-                    context: cliContext()
-                )
-            )
-
-            CLIOutput.emit(
-                payload: [
-                    "title": response.recommendation.title,
-                    "author": response.recommendation.author,
-                    "genre": response.recommendation.genre.displayName,
-                    "description": response.recommendation.description,
-                    "metadata": metadataPayload(response.metadata)
-                ],
-                human: humanReadableBookOutput(for: response, verbose: options.verbose),
-                json: options.json
-            )
-        } catch {
-            CLIOutput.emitError(error, json: options.json)
-            throw ExitCode.failure
-        }
-    }
-}
-
-struct AnalyzeNutritionCommand: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(
-        commandName: "analyze",
-        abstract: "Analyze a meal description."
-    )
-
-    @OptionGroup var options: CLIOptions
-
-    @Option(name: [.short, .long], help: "Describe the food or meal to analyze.")
-    var description: String
-
-    @Option(name: .long, help: "Preferred response language.", completion: .default)
-    var language = "English"
-
-    mutating func run() async throws {
-        let trimmedDescription = try validatedNonEmpty(description, optionName: "--description")
-        let trimmedLanguage = try validatedNonEmpty(language, optionName: "--language")
-
-        if options.dryRun {
-            CLIOutput.emit(
-                payload: [
-                    "status": "dry_run",
-                    "command": "nutrition analyze",
-                    "description": trimmedDescription,
-                    "language": trimmedLanguage
-                ],
-                human: """
-                [dry-run] fm nutrition analyze
-                Description: \(trimmedDescription)
-                Language: \(trimmedLanguage)
-                """,
-                json: options.json
-            )
-            return
-        }
-
-        do {
-            try requireFoundationModelsAvailability()
-
-            let response = try await AnalyzeNutritionUseCase().execute(
-                AnalyzeNutritionRequest(
-                    foodDescription: trimmedDescription,
-                    responseLanguage: trimmedLanguage,
-                    context: cliContext()
-                )
-            )
-
-            CLIOutput.emit(
-                payload: [
-                    "foodName": response.analysis.foodName,
-                    "calories": response.analysis.calories,
-                    "proteinGrams": response.analysis.proteinGrams,
-                    "carbsGrams": response.analysis.carbsGrams,
-                    "fatGrams": response.analysis.fatGrams,
-                    "insights": response.analysis.insights,
-                    "metadata": metadataPayload(response.metadata)
-                ],
-                human: humanReadableNutritionOutput(for: response, verbose: options.verbose),
-                json: options.json
-            )
-        } catch {
-            CLIOutput.emitError(error, json: options.json)
-            throw ExitCode.failure
-        }
-    }
-}
-
 struct GetWeatherCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "get",
@@ -150,11 +20,11 @@ struct GetWeatherCommand: AsyncParsableCommand {
             CLIOutput.emit(
                 payload: [
                     "status": "dry_run",
-                    "command": "weather get",
+                    "command": "tools weather get",
                     "location": trimmedLocation
                 ],
                 human: """
-                [dry-run] fm weather get
+                [dry-run] fm tools weather get
                 Location: \(trimmedLocation)
                 """,
                 json: options.json
@@ -210,11 +80,11 @@ struct SearchWebCommand: AsyncParsableCommand {
             CLIOutput.emit(
                 payload: [
                     "status": "dry_run",
-                    "command": "web search",
+                    "command": "tools web search",
                     "query": trimmedQuery
                 ],
                 human: """
-                [dry-run] fm web search
+                [dry-run] fm tools web search
                 Query: \(trimmedQuery)
                 """,
                 json: options.json
@@ -270,11 +140,11 @@ struct SummarizeWebPageCommand: AsyncParsableCommand {
             CLIOutput.emit(
                 payload: [
                     "status": "dry_run",
-                    "command": "web summary",
+                    "command": "tools web summary",
                     "url": trimmedURL
                 ],
                 human: """
-                [dry-run] fm web summary
+                [dry-run] fm tools web summary
                 URL: \(trimmedURL)
                 """,
                 json: options.json

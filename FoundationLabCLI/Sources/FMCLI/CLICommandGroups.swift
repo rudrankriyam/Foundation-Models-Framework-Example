@@ -11,32 +11,21 @@ struct CLIOptions: ParsableArguments {
     var verbose = false
 }
 
-struct BookCommand: AsyncParsableCommand {
+struct ToolsCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
-        commandName: "book",
-        abstract: "Book recommendation capabilities.",
+        commandName: "tools",
+        abstract: "Run the shared Foundation Lab tool demos.",
         subcommands: [
-            RecommendBookCommand.self
-        ],
-        defaultSubcommand: RecommendBookCommand.self
+            WeatherToolCommand.self,
+            WebToolCommand.self
+        ]
     )
 }
 
-struct NutritionCommand: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(
-        commandName: "nutrition",
-        abstract: "Nutrition analysis capabilities.",
-        subcommands: [
-            AnalyzeNutritionCommand.self
-        ],
-        defaultSubcommand: AnalyzeNutritionCommand.self
-    )
-}
-
-struct WeatherCommand: AsyncParsableCommand {
+struct WeatherToolCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "weather",
-        abstract: "Weather capabilities.",
+        abstract: "Weather tool demos.",
         subcommands: [
             GetWeatherCommand.self
         ],
@@ -44,10 +33,10 @@ struct WeatherCommand: AsyncParsableCommand {
     )
 }
 
-struct WebCommand: AsyncParsableCommand {
+struct WebToolCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "web",
-        abstract: "Web capabilities.",
+        abstract: "Web tool demos.",
         subcommands: [
             SearchWebCommand.self,
             SummarizeWebPageCommand.self

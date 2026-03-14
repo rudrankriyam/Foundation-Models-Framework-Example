@@ -7,15 +7,11 @@ struct FMCLI: AsyncParsableCommand {
         abstract: "Run Foundation Lab shared capabilities from the command line.",
         subcommands: [
             StatusCommand.self,
-            BookCommand.self,
-            NutritionCommand.self,
-            WeatherCommand.self,
-            WebCommand.self,
+            ToolsCommand.self,
             ExamplesCommand.self,
             SchemasCommand.self,
             LanguagesCommand.self,
             ChatCommand.self
-        ],
-        defaultSubcommand: BookCommand.self
+        ]
     )
 }

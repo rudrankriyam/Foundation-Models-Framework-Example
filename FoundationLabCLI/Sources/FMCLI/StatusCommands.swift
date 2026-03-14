@@ -64,32 +64,15 @@ private struct CLIStatusGroup {
 
         return [
             CLIStatusGroup(
-                id: "book",
-                title: "Book Recommendations",
+                id: "tools",
+                title: "Tools",
                 status: availability.isAvailable ? "available" : "unavailable",
                 reason: availability.isAvailable ? "" : foundationModelsReason,
-                commands: ["fm book recommend"]
-            ),
-            CLIStatusGroup(
-                id: "nutrition",
-                title: "Nutrition Analysis",
-                status: availability.isAvailable ? "available" : "unavailable",
-                reason: availability.isAvailable ? "" : foundationModelsReason,
-                commands: ["fm nutrition analyze"]
-            ),
-            CLIStatusGroup(
-                id: "weather",
-                title: "Weather",
-                status: availability.isAvailable ? "available" : "unavailable",
-                reason: availability.isAvailable ? "" : foundationModelsReason,
-                commands: ["fm weather get"]
-            ),
-            CLIStatusGroup(
-                id: "web",
-                title: "Web",
-                status: availability.isAvailable ? "available" : "unavailable",
-                reason: availability.isAvailable ? "" : foundationModelsReason,
-                commands: ["fm web search", "fm web summary"]
+                commands: [
+                    "fm tools weather get",
+                    "fm tools web search",
+                    "fm tools web summary"
+                ]
             ),
             CLIStatusGroup(
                 id: "examples",
@@ -100,7 +83,7 @@ private struct CLIStatusGroup {
                     : "Most example commands require Apple Intelligence. `fm examples list` still works.",
                 commands: [
                     "fm examples list",
-                    "fm examples basic-chat"
+                    "fm examples structured-data"
                 ]
             ),
             CLIStatusGroup(
@@ -119,7 +102,7 @@ private struct CLIStatusGroup {
                 reason: availability.isAvailable
                     ? ""
                     : "Language demos require Apple Intelligence. `fm languages list` still works.",
-                commands: ["fm languages list", "fm languages multilingual"]
+                commands: ["fm languages list", "fm languages nutrition"]
             ),
             CLIStatusGroup(
                 id: "chat",
