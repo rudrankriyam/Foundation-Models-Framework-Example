@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import FoundationModels
+import FoundationLabCore
 
 struct GenerationOptionsView: View {
     @State private var temperature: Double = 0.7
@@ -24,6 +24,7 @@ struct GenerationOptionsView: View {
     @State private var contextSize: Int = AppConfiguration.TokenManagement.defaultMaxTokens
 
     @Namespace private var glassNamespace
+    private let generateTextUseCase = GenerateTextUseCase()
 
     var body: some View {
         ScrollView {
@@ -235,14 +236,19 @@ struct GenerationOptionsView: View {
             )
             let options = createGenerationOptions(from: config)
 
-            let session = LanguageModelSession()
-            let generatedResponse = try await session.respond(
-                to: Prompt(prompt),
-                options: options
+            let generatedResponse = try await generateTextUseCase.execute(
+                TextGenerationRequest(
+                    prompt: prompt,
+                    generationOptions: options,
+                    context: CapabilityInvocationContext(
+                        source: .app,
+                        localeIdentifier: Locale.current.identifier
+                    )
+                )
             )
 
             response = generatedResponse.content
-            lastTokenCount = await session.transcript.tokenCount()
+            lastTokenCount = generatedResponse.metadata.tokenCount
         } catch {
             showError = error.localizedDescription
         }

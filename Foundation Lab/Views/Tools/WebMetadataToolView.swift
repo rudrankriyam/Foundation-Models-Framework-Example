@@ -5,8 +5,7 @@
 //  Created by Rudrank Riyam on 6/29/25.
 //
 
-import FoundationModels
-import FoundationModelsTools
+import FoundationLabCore
 import SwiftUI
 
 struct WebMetadataToolView: View {
@@ -57,28 +56,47 @@ struct WebMetadataToolView: View {
   }
 
   private func executeWebMetadata() {
-    guard let validatedURL = validatedURL() else {
-      executor.errorMessage = "Enter a valid http or https URL."
+    let trimmedURL = url.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmedURL.isEmpty else {
+      executor.result = ""
+      executor.successMessage = nil
+      executor.errorMessage = "Please enter a valid URL"
+      return
+    }
+
+    guard isValidWebURL(trimmedURL) else {
+      executor.result = ""
+      executor.successMessage = nil
+      executor.errorMessage = "URL must use http or https"
       return
     }
 
     Task {
-      await executor.execute(
-        tool: WebMetadataTool(),
-        prompt: "Generate a social media summary for \(validatedURL)"
-      )
+      await executor.executeCapability(
+        successMessage: "Web page summary generated successfully!"
+      ) {
+        try await GenerateWebPageSummaryUseCase().execute(
+          GenerateWebPageSummaryRequest(
+            url: trimmedURL,
+            context: CapabilityInvocationContext(
+              source: .app,
+              localeIdentifier: Locale.current.identifier
+            )
+          )
+        )
+      }
     }
   }
 
-  private func validatedURL() -> String? {
-    let trimmedURL = url.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard let parsedURL = URL(string: trimmedURL),
+  private func isValidWebURL(_ value: String) -> Bool {
+    guard let parsedURL = URL(string: value),
           let scheme = parsedURL.scheme?.lowercased(),
           ["http", "https"].contains(scheme),
           parsedURL.host != nil else {
-      return nil
+      return false
     }
-    return trimmedURL
+
+    return true
   }
 }
 

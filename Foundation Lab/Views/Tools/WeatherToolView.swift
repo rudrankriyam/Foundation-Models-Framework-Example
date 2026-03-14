@@ -5,8 +5,7 @@
 //  Created by Rudrank Riyam on 6/29/25.
 //
 
-import FoundationModels
-import FoundationModelsTools
+import FoundationLabCore
 import SwiftUI
 
 struct WeatherToolView: View {
@@ -48,10 +47,17 @@ struct WeatherToolView: View {
 
     private func executeWeatherTool() {
         Task {
-            await executor.execute(
-                tool: WeatherTool(),
-                prompt: "What's the weather like in \(location)?"
-            )
+            await executor.executeCapability {
+                try await GetWeatherUseCase().execute(
+                    GetWeatherRequest(
+                        location: location,
+                        context: CapabilityInvocationContext(
+                            source: .app,
+                            localeIdentifier: Locale.current.identifier
+                        )
+                    )
+                )
+            }
         }
     }
 }

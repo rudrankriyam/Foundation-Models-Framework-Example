@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import FoundationModels
+import FoundationLabCore
 
 /// A reusable helper class that eliminates code duplication across tool views
 /// by providing a standardized pattern for executing tool operations
@@ -18,44 +18,14 @@ final class ToolExecutor {
   var errorMessage: String?
   var successMessage: String?
 
-  /// Executes a tool operation with standardized state management
-  func execute<T: Tool>(
-    tool: T,
-    prompt: String,
-    successMessage: String? = nil,
-    clearForm: (@MainActor () -> Void)? = nil
-  ) async {
-    await performExecution(successMessage: successMessage, clearForm: clearForm) {
-      let session = LanguageModelSession(tools: [tool])
-      let response = try await session.respond(to: Prompt(prompt))
-      return response.content
-    }
-  }
-
-  /// Executes a tool operation using PromptBuilder
-  func executeWithPromptBuilder<T: Tool>(
-    tool: T,
+  /// Executes a shared FoundationLabCore capability that returns generated text.
+  func executeCapability(
     successMessage: String? = nil,
     clearForm: (@MainActor () -> Void)? = nil,
-    @PromptBuilder promptBuilder: () -> Prompt
+    operation: () async throws -> TextGenerationResult
   ) async {
     await performExecution(successMessage: successMessage, clearForm: clearForm) {
-      let session = LanguageModelSession(tools: [tool])
-      let response = try await session.respond(to: promptBuilder())
-      return response.content
-    }
-  }
-
-  /// Executes a tool operation with a custom session configuration
-  func executeWithCustomSession(
-    sessionBuilder: () -> LanguageModelSession,
-    prompt: String,
-    successMessage: String? = nil,
-    clearForm: (@MainActor () -> Void)? = nil
-  ) async {
-    await performExecution(successMessage: successMessage, clearForm: clearForm) {
-      let session = sessionBuilder()
-      let response = try await session.respond(to: Prompt(prompt))
+      let response = try await operation()
       return response.content
     }
   }

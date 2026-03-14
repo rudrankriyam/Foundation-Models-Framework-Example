@@ -5,18 +5,18 @@
 //  Created by Rudrank Riyam on 6/29/25.
 //
 
-import FoundationModels
+import FoundationLabCore
 import SwiftUI
 
 struct StructuredDataView: View {
-  @State private var currentPrompt = DefaultPrompts.structuredData
+  @State private var currentPrompt = FoundationLabExampleDemo.structuredData.defaultPrompt
   @State private var executor = ExampleExecutor()
 
   var body: some View {
     ExampleViewBase(
       title: "Structured Data",
       description: "Generate and parse structured information",
-      defaultPrompt: DefaultPrompts.structuredData,
+      defaultPrompt: FoundationLabExampleDemo.structuredData.defaultPrompt,
       currentPrompt: $currentPrompt,
       isRunning: executor.isRunning,
       errorMessage: executor.errorMessage,
@@ -40,7 +40,7 @@ struct StructuredDataView: View {
 
         // Prompt Suggestions
         PromptSuggestions(
-          suggestions: DefaultPrompts.structuredDataSuggestions,
+          suggestions: FoundationLabExampleDemo.structuredData.suggestions,
           onSelect: { currentPrompt = $0 }
         )
 
@@ -71,19 +71,7 @@ struct StructuredDataView: View {
 
   private func executeStructuredData() {
     Task {
-      await executor.executeStructured(
-        prompt: currentPrompt,
-        type: BookRecommendation.self
-      ) { book in
-        """
-        📚 Title: \(book.title)
-        ✍️ Author: \(book.author)
-        🏷️ Genre: \(book.genre)
-
-        📖 Description:
-        \(book.description)
-        """
-      }
+      await executor.executeBookRecommendation(prompt: currentPrompt)
     }
   }
 

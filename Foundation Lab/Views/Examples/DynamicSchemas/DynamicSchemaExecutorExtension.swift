@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import FoundationLabCore
 import FoundationModels
 
 extension ExampleExecutor {
@@ -41,24 +42,48 @@ extension ExampleExecutor {
         schema: DynamicGenerationSchema,
         formatResults: ((String) -> String)? = nil
     ) async {
+        do {
+            let generationSchema = try GenerationSchema(root: schema, dependencies: [])
+            await executeDynamicSchema(
+                prompt: prompt,
+                schema: generationSchema
+            ) { [formatResults] content in
+                let formattedContent = self.formatGeneratedContent(content)
+                if let formatResults {
+                    return formatResults(formattedContent)
+                }
+                return formattedContent
+            }
+        } catch {
+            isRunning = false
+            errorMessage = FoundationModelsErrorHandler.handleError(error)
+        }
+    }
+
+    func executeDynamicSchema(
+        prompt: String,
+        schema: GenerationSchema,
+        generationOptions: FoundationLabGenerationOptions? = nil,
+        formatter: @escaping (GeneratedContent) -> String
+    ) async {
         isRunning = true
         errorMessage = nil
         result = ""
 
         do {
-            let session = LanguageModelSession()
-            let generationSchema = try GenerationSchema(root: schema, dependencies: [])
-            let output = try await session.respond(
-                to: Prompt(prompt),
-                schema: generationSchema
+            let response = try await GenerateDynamicSchemaContentUseCase().execute(
+                DynamicSchemaGenerationRequest(
+                    prompt: prompt,
+                    schema: schema,
+                    generationOptions: generationOptions,
+                    context: CapabilityInvocationContext(
+                        source: .app,
+                        localeIdentifier: Locale.current.identifier
+                    )
+                )
             )
-
-            // Format the output content properly
-            if let formatResults = formatResults {
-                result = formatResults(formatGeneratedContent(output.content))
-            } else {
-                result = formatGeneratedContent(output.content)
-            }
+            result = formatter(response.output)
+            storeLastTokenCount(response.metadata.tokenCount)
         } catch {
             errorMessage = FoundationModelsErrorHandler.handleError(error)
         }

@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import FoundationModels
+import FoundationLabCore
 import SwiftUI
 
 extension GenerationOptionsView {
@@ -36,21 +36,21 @@ extension GenerationOptionsView {
         let maximumResponseTokens: Int
     }
 
-    func createGenerationOptions(from config: GenerationConfig) -> GenerationOptions {
-        let samplingModeOption: GenerationOptions.SamplingMode? = if config.useSampling {
+    func createGenerationOptions(from config: GenerationConfig) -> FoundationLabGenerationOptions {
+        let samplingModeOption: FoundationLabGenerationOptions.SamplingMode? = if config.useSampling {
             switch config.samplingMode {
             case .greedy:
                 .greedy
             case .topK:
-                .random(top: config.topK)
+                .randomTop(config.topK)
             case .nucleus:
-                .random(probabilityThreshold: config.topP)
+                .randomProbabilityThreshold(config.topP)
             }
         } else {
             nil // Let system choose default
         }
 
-        return GenerationOptions(
+        return FoundationLabGenerationOptions(
             sampling: samplingModeOption,
             temperature: config.temperature,
             maximumResponseTokens: config.maximumResponseTokens

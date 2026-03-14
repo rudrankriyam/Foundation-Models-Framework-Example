@@ -94,64 +94,67 @@ struct FormBuilderSchemaView: View {
 }
 
     private func runExample() async {
-        await executor.execute {
-            let session = LanguageModelSession()
-
-            switch generationMode {
-            case 0: // Generate & Extract
-                // First, create a simple form schema from the description
+        switch generationMode {
+        case 0:
+            do {
                 let formSchema = createFormSchemaFromDescription(formDescription)
-
-                // Then extract data using that schema
                 let extractionSchema = try GenerationSchema(root: formSchema, dependencies: [])
-                let response = try await session.respond(
-                    to: Prompt("Extract form data from: \(formData)"),
+
+                await executor.executeDynamicSchema(
+                    prompt: "Extract form data from: \(formData)",
                     schema: extractionSchema
-                )
+                ) { content in
+                    let extractedData = formatGeneratedContent(content)
+                    return """
+                    📋 Generated Form Schema:
+                    \(describeSchema(formSchema))
 
-                let extractedData = formatGeneratedContent(response.content)
+                    📊 Extracted Data:
+                    \(extractedData)
 
-                return """
-                📋 Generated Form Schema:
-                \(describeSchema(formSchema))
+                    ✅ Validation: All fields processed successfully
+                    """
+                }
+            } catch {
+                executor.errorMessage = FoundationModelsErrorHandler.handleError(error)
+                executor.result = ""
+            }
 
-                📊 Extracted Data:
-                \(extractedData)
-
-                ✅ Validation: All fields processed successfully
-                """
-
-            case 1: // Generate Schema Only
+        case 1:
+            await executor.execute {
                 let formSchema = createFormSchemaFromDescription(formDescription)
-
                 return """
                 📋 Generated Form Schema:
                 \(describeSchema(formSchema))
 
                 💡 Use this schema to extract structured data from unstructured text
                 """
+            }
 
-            case 2: // Use Predefined
+        case 2:
+            do {
                 let predefinedSchema = createPredefinedJobApplicationSchema()
                 let extractionSchema = try GenerationSchema(root: predefinedSchema, dependencies: [])
 
-                let response = try await session.respond(
-                    to: Prompt("Extract job application data from: \(formData)"),
+                await executor.executeDynamicSchema(
+                    prompt: "Extract job application data from: \(formData)",
                     schema: extractionSchema
-                )
+                ) { content in
+                    let extractedData = formatGeneratedContent(content)
+                    return """
+                    📋 Using Predefined Job Application Schema
 
-                let extractedData = formatGeneratedContent(response.content)
-
-                return """
-                📋 Using Predefined Job Application Schema
-
-                📊 Extracted Data:
-                \(extractedData)
-                """
-
-            default:
-                return "Invalid mode"
+                    📊 Extracted Data:
+                    \(extractedData)
+                    """
+                }
+            } catch {
+                executor.errorMessage = FoundationModelsErrorHandler.handleError(error)
+                executor.result = ""
             }
+
+        default:
+            await executor.execute { "Invalid mode" }
         }
     }
 

@@ -195,24 +195,17 @@ struct GenerablePatternView: View {
     }
 
     private func runExample() async {
-        await executor.execute {
-            let session = LanguageModelSession()
+        if selectedExample == 0 {
+            let prompt = """
+            Create a delicious \(cuisineInput) recipe that would be perfect for a dinner party.
+            Make it sound appetizing and include specific measurements for ingredients.
+            """
 
-            if selectedExample == 0 {
-                // Recipe generation
-                let prompt = """
-                Create a delicious \(cuisineInput) recipe that would be perfect for a dinner party.
-                Make it sound appetizing and include specific measurements for ingredients.
+            await executor.executeStructured(
+                prompt: prompt,
+                type: Recipe.self
+            ) { recipe in
                 """
-
-                let response = try await session.respond(
-                    to: Prompt(prompt),
-                    generating: Recipe.self
-                )
-
-                let recipe = response.content
-
-                return """
                 🍳 Generated Recipe
 
                 Name: \(recipe.name)
@@ -231,21 +224,18 @@ struct GenerablePatternView: View {
 
                 💡 Note: Generated using @Generable pattern with type safety and constraints
                 """
-            } else {
-                // Movie review generation
-                let prompt = """
-                Write a review for a popular \(movieGenreInput) movie.
-                Include your honest opinion and rating.
+            }
+        } else {
+            let prompt = """
+            Write a review for a popular \(movieGenreInput) movie.
+            Include your honest opinion and rating.
+            """
+
+            await executor.executeStructured(
+                prompt: prompt,
+                type: MovieReview.self
+            ) { review in
                 """
-
-                let response = try await session.respond(
-                    to: Prompt(prompt),
-                    generating: MovieReview.self
-                )
-
-                let review = response.content
-
-                return """
                 🎬 Movie Review
 
                 Title: \(review.title) (\(review.year))

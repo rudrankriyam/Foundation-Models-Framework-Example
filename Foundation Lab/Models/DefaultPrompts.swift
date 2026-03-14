@@ -175,16 +175,16 @@ extension DefaultPrompts {
   static func structuredDataCode(prompt: String) -> String {
     let escapedPrompt = codeEscaped(prompt)
     return """
-import FoundationModels
+import FoundationLabCore
 
-// Uses BookRecommendation struct from DataModels.swift
-// Generate structured data
-let session = LanguageModelSession()
-let response = try await session.respond(
-    to: "\(escapedPrompt)",
-    generating: BookRecommendation.self
+let useCase = GenerateBookRecommendationUseCase()
+let response = try await useCase.execute(
+    GenerateBookRecommendationRequest(
+        prompt: "\(escapedPrompt)",
+        context: CapabilityInvocationContext(source: .app)
+    )
 )
-let book = response.content
+let book = response.recommendation
 
 """
   }
@@ -265,15 +265,14 @@ let summary = response.content
   }
 
   static let modelAvailabilityCode = """
-import FoundationModels
+import FoundationLabCore
 
-// Check Apple Intelligence availability
-let availability = SystemLanguageModel.default.availability
+let result = CheckModelAvailabilityUseCase().execute()
 
-switch availability {
-case .available:
-case .notAvailable(let reason):
-@unknown default:
+if result.isAvailable {
+    print("Apple Intelligence is ready")
+} else {
+    print(result.reason?.rawValue ?? "unknown")
 }
 """
 }

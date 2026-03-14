@@ -6,8 +6,7 @@
 //
 
 import Foundation
-import FoundationModels
-import FoundationModelsTools
+import FoundationLabCore
 import SwiftUI
 
 extension RemindersToolView {
@@ -21,72 +20,21 @@ extension RemindersToolView {
         let selectedPriority: ReminderPriority
     }
 
-    func createCustomPromptInstructions(formattedDate: String) -> Instructions {
-        Instructions {
-            "You are a helpful assistant that can create reminders for users."
-            "Current date and time: \(formattedDate)"
-            "Time zone: \(TimeZone.current.identifier) (" +
-            "\(TimeZone.current.localizedName(for: .standard, locale: Locale.current) ?? "Unknown"))"
-            "When creating reminders, consider the current date and time zone context."
-            "Always execute tool calls directly without asking for confirmation or permission from the user."
-            "If you need to create a reminder, call the RemindersTool immediately with the appropriate parameters."
-            "IMPORTANT: When setting due dates, you MUST format them as 'yyyy-MM-dd HH:mm:ss' " +
-            "(24-hour format)."
-            "Examples: '2025-01-15 17:00:00' for tomorrow at 5 PM, '2025-01-16 09:30:00' for " +
-            "day after tomorrow at 9:30 AM."
-            "Calculate the exact date and time based on the current date and time provided above."
-        }
-    }
-
-    func createQuickCreateInstructions(formattedDate: String) -> Instructions {
-        Instructions {
-            "You are a helpful assistant that creates reminders based on structured input."
-            "Current date and time: \(formattedDate)"
-            "Time zone: \(TimeZone.current.identifier) (" +
-            "\(TimeZone.current.localizedName(for: .standard, locale: Locale.current) ?? "Unknown"))"
-            "Always execute the RemindersTool directly with the provided information."
-            "Format due dates as 'yyyy-MM-dd HH:mm:ss' (24-hour format)."
-        }
-    }
-
-    func executeCustomPrompt(config: ExecutionConfig) async throws -> String {
-        let currentDate = Date()
-        let formattedDate = Self.displayDateFormatter.string(from: currentDate)
-
-        let session = LanguageModelSession(tools: [RemindersTool()]) {
-            createCustomPromptInstructions(formattedDate: formattedDate)
-        }
-
-        let response = try await session.respond(to: Prompt(config.customPrompt))
-        return response.content
-    }
-
-    func executeQuickCreate(config: ExecutionConfig) async throws -> String {
-        let currentDate = Date()
-        let formattedDate = Self.displayDateFormatter.string(from: currentDate)
-
-        let session = LanguageModelSession(tools: [RemindersTool()]) {
-            createQuickCreateInstructions(formattedDate: formattedDate)
-        }
-
-        // Build the prompt from form data
-        var promptText = "Create a reminder with the following details:\n"
-        promptText += "Title: \(config.reminderTitle)\n"
-
-        if !config.reminderNotes.isEmpty {
-            promptText += "Notes: \(config.reminderNotes)\n"
-        }
-
-        if config.hasDueDate {
-            promptText += "Due date: \(Self.apiDateFormatter.string(from: config.selectedDate))\n"
-        }
-
-        if config.selectedPriority != .none {
-            promptText += "Priority: \(config.selectedPriority.rawValue)\n"
-        }
-
-        let response = try await session.respond(to: Prompt(promptText))
-        return response.content
+    func makeRequest(from config: ExecutionConfig) -> ManageRemindersRequest {
+        ManageRemindersRequest(
+            mode: config.useCustomPrompt ? .customPrompt : .quickCreate,
+            customPrompt: config.useCustomPrompt ? config.customPrompt : nil,
+            title: config.useCustomPrompt ? nil : config.reminderTitle,
+            notes: config.useCustomPrompt ? nil : config.reminderNotes,
+            dueDate: config.useCustomPrompt ? nil : (config.hasDueDate ? config.selectedDate : nil),
+            priority: config.useCustomPrompt ? .none : config.selectedPriority.corePriority,
+            referenceDate: .now,
+            timeZoneIdentifier: TimeZone.current.identifier,
+            context: CapabilityInvocationContext(
+                source: .app,
+                localeIdentifier: Locale.current.identifier
+            )
+        )
     }
 
     func validateQuickCreateInput(reminderTitle: String) -> Bool {
@@ -129,5 +77,20 @@ extension RemindersToolView {
             useCustomPrompt ? "Process custom reminder request" : "Create new reminder"
         )
         .accessibilityHint(isRunning ? "Processing request" : "Tap to execute")
+    }
+}
+
+private extension ReminderPriority {
+    var corePriority: ReminderPriorityValue {
+        switch self {
+        case .none:
+            return .none
+        case .low:
+            return .low
+        case .medium:
+            return .medium
+        case .high:
+            return .high
+        }
     }
 }

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import FoundationLabCore
 import FoundationModels
 
 struct TranscriptEntryView: View {
@@ -103,15 +104,7 @@ struct TranscriptEntryView: View {
     }
 
     private func tokenCount(for entry: Transcript.Entry) async -> Int? {
-        #if compiler(>=6.3)
-        if #available(iOS 26.4, macOS 26.4, visionOS 26.4, *) {
-            if let real = try? await SystemLanguageModel.default.tokenUsage(for: [entry]).tokenCount {
-                return real
-            }
-        }
-        #endif
-
-        return entry.estimatedTokenCount
+        await entry.foundationLabTokenCount()
     }
 }
 

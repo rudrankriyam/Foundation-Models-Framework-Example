@@ -7,12 +7,12 @@
 
 import SwiftUI
 import AppIntents
-import FoundationModels
+import FoundationLabCore
 import SwiftData
 
 @main
 struct FoundationLabApp: App {
-    @State private var unavailabilityReason: SystemLanguageModel.Availability.UnavailableReason?
+    @State private var unavailabilityReason: ModelAvailabilityUnavailableReason?
     @State private var showModelUnavailableWarning = false
 
     var body: some Scene {
@@ -37,12 +37,11 @@ struct FoundationLabApp: App {
     }
 
     private func checkModelAvailability() {
-        let model = SystemLanguageModel.default
-        switch model.availability {
-        case .available:
+        let availability = CheckModelAvailabilityUseCase().execute()
+        if availability.isAvailable {
             showModelUnavailableWarning = false
-        case .unavailable(let reason):
-            unavailabilityReason = reason
+        } else {
+            unavailabilityReason = availability.reason
             showModelUnavailableWarning = true
         }
     }

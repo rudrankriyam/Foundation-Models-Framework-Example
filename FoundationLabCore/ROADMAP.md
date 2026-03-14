@@ -1,0 +1,45 @@
+# FoundationLabCore Roadmap
+
+This roadmap tracks the shared-capability refactor after the initial package boundary landed.
+
+## Working rules
+
+- Shared task logic, request/result models, and reusable Foundation Models-backed providers live in `FoundationLabCore`.
+- SwiftUI views, App Intents, and CLI commands stay as thin adapters over the same capabilities.
+- Additional packages are deferred until dependency pressure or platform constraints justify the split.
+- Multi-turn chat stays last so the single-shot capability pattern is proven first.
+
+## Completed
+
+- `#110` Create `FoundationLabCore` and define dependency rules.
+- `#112` Extract `GenerateBookRecommendation` as the first shared capability.
+- `#113` Add the first task-oriented App Intent backed by `GenerateBookRecommendation`.
+- `#114` Add the first thin CLI adapter over `GenerateBookRecommendation`.
+- `#115` Extract `AnalyzeNutrition` into `FoundationLabCore`.
+- `#116` Extract Weather and Web Search into shared capabilities with app, App Intent, and CLI adapters.
+- `#117` Expand task-oriented App Intents with capability-backed App Shortcuts, an indexed `SupportedLanguageEntity`, and a thin localized-response intent surface.
+- `#118` Extract the shared conversation/session core with transcript windowing, summarization, streaming, and reusable app/CLI adapters.
+- Extract the remaining tool-backed capabilities for Contacts, Calendar, Reminders, Location, Music, Web Metadata, and Health into `FoundationLabCore`.
+- Rewire the corresponding SwiftUI tool views so they invoke shared use cases instead of owning Foundation Models prompts and orchestration directly.
+- Add capability-backed App Intents for nutrition, contacts, calendar, reminders, location, music, web page summary, and health queries.
+- Extend the `fm` CLI with matching feature groups while returning consistent unsupported-environment errors for system-entitled capabilities outside the app.
+- Add shared core primitives for one-shot text, structured generation, streaming text, dynamic schema generation, model availability, supported language listing, and a basic reusable multi-turn conversation runner.
+- Rewire the example/language runtime surfaces so `ExampleExecutor`, model availability, supported-language loading, multilingual response generation, dynamic schema execution, and the session-management demo flow through `FoundationLabCore`.
+- Rewire chat, health chat, voice inference, RAG chat, generation-options execution, and transcript token-counting helpers so app-side adapters no longer own direct `LanguageModelSession` execution paths.
+
+## Next up
+
+### Final polish
+
+- Refresh user-facing docs and sample references so the shared-capability architecture is the default story.
+- Decide whether any remaining app-side `FoundationModels` imports should stay as adapter/configuration types or be wrapped behind `FoundationLabCore` enums.
+- Review educational snippets and prompt/code examples that intentionally still demonstrate raw `FoundationModels` APIs so they stay clearly separate from the shared runtime path.
+
+### Cleanup audit
+
+- The remaining direct `LanguageModelSession(...)`, `session.respond(...)`, and `Prompt(...)` references in the app target are now teaching snippets and example-code strings rather than live adapter execution.
+- Remaining runtime `FoundationModels` imports in the app are primarily used for model types, `@Generable` examples, or adapter-facing configuration such as guardrails and transcript display.
+
+## CLI note
+
+Closed PR `#108` is useful inspiration for command taxonomy and the `fm` surface area, but future CLI growth should continue to reuse `FoundationLabCore` rather than reimplement features in the executable layer.

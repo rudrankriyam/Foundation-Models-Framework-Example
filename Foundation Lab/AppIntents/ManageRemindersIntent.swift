@@ -1,0 +1,34 @@
+import AppIntents
+import Foundation
+import FoundationLabCore
+
+struct ManageRemindersIntent: AppIntent {
+    static let title: LocalizedStringResource = "Manage Reminders"
+    static let description = IntentDescription(
+        "Creates or manages reminders using Foundation Lab's shared reminders capability."
+    )
+    static let openAppWhenRun = true
+
+    @Parameter(
+        title: "Request",
+        requestValueDialog: IntentDialog("What would you like to do with reminders?")
+    )
+    var prompt: String
+
+    func perform() async throws -> some IntentResult & ReturnsValue<String> {
+        let response = try await ManageRemindersUseCase().execute(
+            ManageRemindersRequest(
+                mode: .customPrompt,
+                customPrompt: prompt,
+                referenceDate: .now,
+                timeZoneIdentifier: TimeZone.current.identifier,
+                context: CapabilityInvocationContext(
+                    source: .appIntent,
+                    localeIdentifier: Locale.current.identifier
+                )
+            )
+        )
+
+        return .result(value: response.content)
+    }
+}

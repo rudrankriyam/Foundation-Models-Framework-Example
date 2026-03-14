@@ -5,8 +5,7 @@
 //  Created by Rudrank Riyam on 6/29/25.
 //
 
-import FoundationModels
-import FoundationModelsTools
+import FoundationLabCore
 import SwiftUI
 
 struct RemindersToolView: View {
@@ -19,26 +18,8 @@ struct RemindersToolView: View {
     static let minPromptLines = 3
   }
 
-  // MARK: - Static Properties
-  static let displayDateFormatter: DateFormatter = {
-    let formatter = DateFormatter()
-    formatter.dateStyle = .full
-    formatter.timeStyle = .short
-    return formatter
-  }()
-
-  static let apiDateFormatter: DateFormatter = {
-    let formatter = DateFormatter()
-    formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-    return formatter
-  }()
-
   // MARK: - State Properties
   @State private var executor = ToolExecutor()
-  @State private var isRunning = false
-  @State private var result: String = ""
-  @State private var errorMessage: String?
-  @State private var successMessage: String?
 
   // Input fields
   @State private var reminderTitle: String = ""
@@ -55,18 +36,18 @@ struct RemindersToolView: View {
       title: "Reminders",
       icon: "checklist",
       description: "Create and manage reminders with AI assistance",
-      isRunning: isRunning,
-      errorMessage: errorMessage
+      isRunning: executor.isRunning,
+      errorMessage: executor.errorMessage
     ) {
       VStack(alignment: .leading, spacing: 20) {
-        if let success = successMessage {
+        if let success = executor.successMessage {
           SuccessBanner(message: success)
         }
 
         inputSection
 
-        if !result.isEmpty {
-          ResultDisplay(result: result, isSuccess: errorMessage == nil)
+        if !executor.result.isEmpty {
+          ResultDisplay(result: executor.result, isSuccess: executor.errorMessage == nil)
         }
       }
     }
@@ -91,9 +72,9 @@ struct RemindersToolView: View {
       // Action button
       actionButtonView(
         useCustomPrompt: useCustomPrompt,
-        isRunning: isRunning,
+        isRunning: executor.isRunning,
         action: executeReminder,
-        isDisabled: isRunning || (useCustomPrompt ?
+        isDisabled: executor.isRunning || (useCustomPrompt ?
           !validateCustomPromptInput(customPrompt: customPrompt) :
           !validateQuickCreateInput(reminderTitle: reminderTitle))
       )
@@ -188,57 +169,31 @@ struct RemindersToolView: View {
 
   @MainActor
   private func performReminderAction() async {
-    isRunning = true
-    errorMessage = nil
-    successMessage = nil
-    result = ""
+    let config = ExecutionConfig(
+      useCustomPrompt: useCustomPrompt,
+      customPrompt: customPrompt,
+      reminderTitle: reminderTitle,
+      reminderNotes: reminderNotes,
+      hasDueDate: hasDueDate,
+      selectedDate: selectedDate,
+      selectedPriority: selectedPriority
+    )
 
-    do {
-      let response: String
-
-      if useCustomPrompt {
-        let config = ExecutionConfig(
-          useCustomPrompt: useCustomPrompt,
-          customPrompt: customPrompt,
-          reminderTitle: reminderTitle,
-          reminderNotes: reminderNotes,
-          hasDueDate: hasDueDate,
-          selectedDate: selectedDate,
-          selectedPriority: selectedPriority
-        )
-        response = try await executeCustomPrompt(config: config)
-      } else {
-        let config = ExecutionConfig(
-          useCustomPrompt: useCustomPrompt,
-          customPrompt: customPrompt,
-          reminderTitle: reminderTitle,
-          reminderNotes: reminderNotes,
-          hasDueDate: hasDueDate,
-          selectedDate: selectedDate,
-          selectedPriority: selectedPriority
-        )
-        response = try await executeQuickCreate(config: config)
-      }
-
-      result = response
-      successMessage = "Request completed successfully!"
-
-      // Clear form on success for quick create
-      if !useCustomPrompt {
-        reminderTitle = ""
-        reminderNotes = ""
-        selectedDate = Date().addingTimeInterval(Constants.defaultDateOffset)
-        selectedPriority = .none
-        customPrompt = ""
-      }
-
-    } catch {
-      errorMessage = FoundationModelsErrorHandler.handleError(error)
-      // Clear success message on error
-      successMessage = nil
+    await executor.executeCapability(
+      successMessage: "Request completed successfully!",
+      clearForm: useCustomPrompt ? nil : resetQuickCreateForm
+    ) {
+      try await ManageRemindersUseCase().execute(makeRequest(from: config))
     }
+  }
 
-    isRunning = false
+  @MainActor
+  private func resetQuickCreateForm() {
+    reminderTitle = ""
+    reminderNotes = ""
+    selectedDate = Date().addingTimeInterval(Constants.defaultDateOffset)
+    selectedPriority = .none
+    customPrompt = ""
   }
 }
 

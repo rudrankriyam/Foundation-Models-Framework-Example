@@ -15,9 +15,15 @@ let package = Package(
             targets: ["FoundationLabCore"]
         )
     ],
+    dependencies: [
+        .package(url: "https://github.com/rudrankriyam/FoundationModelsTools.git", branch: "main")
+    ],
     targets: [
         .target(
-            name: "FoundationLabCore"
+            name: "FoundationLabCore",
+            dependencies: [
+                .product(name: "FoundationModelsTools", package: "FoundationModelsTools")
+            ]
         ),
         .testTarget(
             name: "FoundationLabCoreTests",

@@ -1,0 +1,31 @@
+import AppIntents
+import Foundation
+import FoundationLabCore
+
+struct GetWeatherIntent: AppIntent {
+    static let title: LocalizedStringResource = "Get Weather"
+    static let description = IntentDescription(
+        "Gets the latest weather information using Foundation Lab's shared weather capability."
+    )
+    static let openAppWhenRun = false
+
+    @Parameter(
+        title: "Location",
+        requestValueDialog: IntentDialog("Which location do you want weather information for?")
+    )
+    var location: String
+
+    func perform() async throws -> some IntentResult & ReturnsValue<String> {
+        let response = try await GetWeatherUseCase().execute(
+            GetWeatherRequest(
+                location: location,
+                context: CapabilityInvocationContext(
+                    source: .appIntent,
+                    localeIdentifier: Locale.current.identifier
+                )
+            )
+        )
+
+        return .result(value: response.content)
+    }
+}

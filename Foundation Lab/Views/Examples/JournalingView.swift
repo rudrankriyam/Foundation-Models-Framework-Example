@@ -5,18 +5,18 @@
 //  Created by Rudrank Riyam on 1/27/26.
 //
 
-import FoundationModels
+import FoundationLabCore
 import SwiftUI
 
 struct JournalingView: View {
-    @State private var currentPrompt = DefaultPrompts.journaling
+    @State private var currentPrompt = FoundationLabExampleDemo.journaling.defaultPrompt
     @State private var executor = ExampleExecutor()
 
     var body: some View {
         ExampleViewBase(
             title: "Journaling",
             description: "Gentle prompts and reflective summaries",
-            defaultPrompt: DefaultPrompts.journaling,
+            defaultPrompt: FoundationLabExampleDemo.journaling.defaultPrompt,
             currentPrompt: $currentPrompt,
             isRunning: executor.isRunning,
             errorMessage: executor.errorMessage,
@@ -40,7 +40,7 @@ struct JournalingView: View {
 
                 // Prompt Suggestions
                 PromptSuggestions(
-                    suggestions: DefaultPrompts.journalingSuggestions,
+                    suggestions: FoundationLabExampleDemo.journaling.suggestions,
                     onSelect: { currentPrompt = $0 }
                 )
 
@@ -74,9 +74,9 @@ struct JournalingView: View {
             await executor.executeStructured(
                 prompt: currentPrompt,
                 type: JournalEntrySummary.self,
-                instructions: DefaultPrompts.journalingInstructions
+                instructions: FoundationLabExampleDemo.journaling.defaultSystemPrompt
             ) { summary in
-                formattedSummary(summary)
+                summary.plainTextSummary
             }
         }
     }
@@ -84,30 +84,6 @@ struct JournalingView: View {
     private func resetToDefaults() {
         currentPrompt = "" // Clear the prompt completely
         executor.clearAll() // Clear all results, errors, and history
-    }
-}
-
-private extension JournalingView {
-    func formattedSummary(_ summary: JournalEntrySummary) -> String {
-        let starters = summary.sentenceStarters.map { "- \($0)" }.joined(separator: "\n")
-        let bullets = summary.summaryBullets.map { "- \($0)" }.joined(separator: "\n")
-        let themes = summary.themes.map { "- \($0)" }.joined(separator: "\n")
-        return """
-        Uplifting Message:
-        \(summary.upliftingMessage)
-
-        Prompt:
-        \(summary.prompt)
-
-        Sentence Starters:
-        \(starters)
-
-        Summary:
-        \(bullets)
-
-        Themes:
-        \(themes)
-        """
     }
 }
 

@@ -5,8 +5,7 @@
 //  Created by Rudrank Riyam on 6/29/25.
 //
 
-import FoundationModels
-import FoundationModelsTools
+import FoundationLabCore
 import SwiftUI
 
 struct ContactsToolView: View {
@@ -49,12 +48,20 @@ struct ContactsToolView: View {
 
   private func executeContactsSearch() {
     Task {
-      await executor.execute(
-        tool: ContactsTool(),
-        prompt: "Find contacts named \(searchQuery)",
+      await executor.executeCapability(
         successMessage: "Contact search completed successfully!",
         clearForm: { searchQuery = "" }
-      )
+      ) {
+        try await SearchContactsUseCase().execute(
+          SearchContactsRequest(
+            query: searchQuery,
+            context: CapabilityInvocationContext(
+              source: .app,
+              localeIdentifier: Locale.current.identifier
+            )
+          )
+        )
+      }
     }
   }
 }

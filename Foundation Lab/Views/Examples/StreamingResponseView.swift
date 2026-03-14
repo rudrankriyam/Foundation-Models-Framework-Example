@@ -5,11 +5,11 @@
 //  Created by Rudrank Riyam on 6/29/25.
 //
 
-import FoundationModels
+import FoundationLabCore
 import SwiftUI
 
 struct StreamingResponseView: View {
-    @State private var currentPrompt = DefaultPrompts.streaming
+    @State private var currentPrompt = FoundationLabExampleDemo.streaming.defaultPrompt
     @State private var executor = ExampleExecutor()
     @State private var streamingText = ""
     @State private var isStreaming = false
@@ -18,7 +18,7 @@ struct StreamingResponseView: View {
         ExampleViewBase(
             title: "Streaming Response",
             description: "Real-time response streaming as text is generated",
-            defaultPrompt: DefaultPrompts.streaming,
+            defaultPrompt: FoundationLabExampleDemo.streaming.defaultPrompt,
             currentPrompt: $currentPrompt,
             isRunning: isStreaming,
             errorMessage: executor.errorMessage,
@@ -42,7 +42,7 @@ struct StreamingResponseView: View {
 
                 // Prompt Suggestions
                 PromptSuggestions(
-                    suggestions: DefaultPrompts.streamingSuggestions,
+                    suggestions: FoundationLabExampleDemo.streaming.suggestions,
                     onSelect: { currentPrompt = $0 }
                 )
 
@@ -102,7 +102,7 @@ struct StreamingResponseView: View {
 
             await executor.executeStreaming(
                 prompt: currentPrompt,
-                instructions: "You are a creative writer. Generate engaging and vivid content."
+                instructions: FoundationLabExampleDemo.streaming.defaultSystemPrompt
             ) { partialResult in
                 streamingText = partialResult
             }

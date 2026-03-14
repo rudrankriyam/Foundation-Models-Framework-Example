@@ -6,10 +6,10 @@
 //
 
 import SwiftUI
-import FoundationModels
+import FoundationLabCore
 
 struct ModelUnavailableView: View {
-    let reason: SystemLanguageModel.Availability.UnavailableReason?
+    let reason: ModelAvailabilityUnavailableReason?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -55,7 +55,7 @@ struct ModelUnavailableView: View {
         case .modelNotReady:
             return "Apple Intelligence models are still downloading. Please wait for the download to complete " +
                    "and try again."
-        @unknown default:
+        case .unknown:
             return "Apple Intelligence is currently unavailable. Please try again later."
         }
     }

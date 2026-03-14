@@ -5,12 +5,12 @@
 //  Created by Rudrank Riyam on 6/29/25.
 //
 
-import FoundationModels
+import FoundationLabCore
 import SwiftUI
 
 struct CreativeWritingView: View {
-  @State private var currentPrompt = DefaultPrompts.creativeWriting
-  @State private var instructions = ""
+  @State private var currentPrompt = FoundationLabExampleDemo.creativeWriting.defaultPrompt
+  @State private var instructions = FoundationLabExampleDemo.creativeWriting.defaultSystemPrompt ?? ""
   @State private var executor = ExampleExecutor()
   @State private var showInstructions = false
 
@@ -18,7 +18,7 @@ struct CreativeWritingView: View {
     ExampleViewBase(
       title: "Creative Writing",
       description: "Generate stories, poems, and creative content",
-      defaultPrompt: DefaultPrompts.creativeWriting,
+      defaultPrompt: FoundationLabExampleDemo.creativeWriting.defaultPrompt,
       currentPrompt: $currentPrompt,
       isRunning: executor.isRunning,
       errorMessage: executor.errorMessage,
@@ -44,7 +44,7 @@ struct CreativeWritingView: View {
 
         // Prompt Suggestions
         PromptSuggestions(
-          suggestions: DefaultPrompts.creativeWritingSuggestions,
+          suggestions: FoundationLabExampleDemo.creativeWriting.suggestions,
           onSelect: { currentPrompt = $0 }
         )
 
@@ -77,31 +77,17 @@ struct CreativeWritingView: View {
     Task {
       await executor.executeStructured(
         prompt: currentPrompt,
-        type: StoryOutline.self
+        type: StoryOutline.self,
+        instructions: instructions.isEmpty ? nil : instructions
       ) { story in
-        """
-        📖 Title: \(story.title)
-
-        🎭 Genre: \(story.genre)
-
-        👤 Protagonist:
-        \(story.protagonist)
-
-        ⚔️ Central Conflict:
-        \(story.conflict)
-
-        📍 Setting:
-        \(story.setting)
-
-        🎯 Major Themes:
-        \(story.themes.map { "• \($0)" }.joined(separator: "\n"))
-        """
+        story.plainTextSummary
       }
     }
   }
 
   private func resetToDefaults() {
     currentPrompt = "" // Clear the prompt completely
+    instructions = FoundationLabExampleDemo.creativeWriting.defaultSystemPrompt ?? ""
     executor.clearAll() // Clear all results, errors, and history
   }
 }

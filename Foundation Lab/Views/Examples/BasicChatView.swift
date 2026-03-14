@@ -5,12 +5,12 @@
 //  Created by Rudrank Riyam on 6/29/25.
 //
 
-import FoundationModels
+import FoundationLabCore
 import SwiftUI
 
 struct BasicChatView: View {
-    @State private var currentPrompt = DefaultPrompts.basicChat
-    @State private var instructions = DefaultPrompts.basicChatInstructions
+    @State private var currentPrompt = FoundationLabExampleDemo.basicChat.defaultPrompt
+    @State private var instructions = FoundationLabExampleDemo.basicChat.defaultSystemPrompt ?? ""
     @State private var executor = ExampleExecutor()
     @State private var showInstructions = false
     @State private var usePermissiveGuardrails = false
@@ -19,7 +19,7 @@ struct BasicChatView: View {
         ExampleViewBase(
             title: "One-shot",
             description: "Single prompt-response interaction with the AI assistant",
-            defaultPrompt: DefaultPrompts.basicChat,
+            defaultPrompt: FoundationLabExampleDemo.basicChat.defaultPrompt,
             currentPrompt: $currentPrompt,
             isRunning: executor.isRunning,
             errorMessage: executor.errorMessage,
@@ -73,7 +73,7 @@ struct BasicChatView: View {
 
                 // Prompt Suggestions
                 PromptSuggestions(
-                    suggestions: DefaultPrompts.basicChatSuggestions,
+                    suggestions: FoundationLabExampleDemo.basicChat.suggestions,
                     onSelect: { currentPrompt = $0 }
                 )
 
@@ -99,7 +99,7 @@ struct BasicChatView: View {
 
     private func executeChat() {
         Task {
-            let guardrails: SystemLanguageModel.Guardrails = usePermissiveGuardrails ?
+            let guardrails: FoundationLabGuardrails = usePermissiveGuardrails ?
                 .permissiveContentTransformations : .default
 
             await executor.executeBasic(
@@ -112,7 +112,7 @@ struct BasicChatView: View {
 
     private func resetToDefaults() {
         currentPrompt = "" // Clear the prompt completely
-        instructions = DefaultPrompts.basicChatInstructions
+        instructions = FoundationLabExampleDemo.basicChat.defaultSystemPrompt ?? ""
         usePermissiveGuardrails = false
         executor.clearAll() // Clear all results, errors, and history
     }

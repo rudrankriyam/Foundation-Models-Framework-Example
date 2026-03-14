@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import FoundationLabCore
 import FoundationModels
 
 struct NestedDynamicSchemaView: View {
@@ -124,31 +125,31 @@ struct NestedDynamicSchemaView: View {
     }
 
     private func runExample() async {
-        await executor.execute {
+        do {
             let schema = try createSchema(for: selectedExample)
-            let session = LanguageModelSession()
-
             let prompt = """
             Extract the structured information from this text:
 
             \(currentInput)
             """
-
-            let response = try await session.respond(
-                to: Prompt(prompt),
+            await executor.executeDynamicSchema(
+                prompt: prompt,
                 schema: schema,
-                options: .init(temperature: 0.1)
-            )
+                generationOptions: .init(temperature: 0.1)
+            ) { content in
+                """
+                📝 Input:
+                \(currentInput)
 
-            return """
-            📝 Input:
-            \(currentInput)
+                📊 Extracted Nested Structure:
+                \(NestedSchemaFormatter.formatNestedContent(content, indent: 0))
 
-            📊 Extracted Nested Structure:
-            \(NestedSchemaFormatter.formatNestedContent(response.content, indent: 0))
-
-            🔍 Nesting Levels Found: \(NestedSchemaFormatter.countNestingLevels(response.content))
-            """
+                🔍 Nesting Levels Found: \(NestedSchemaFormatter.countNestingLevels(content))
+                """
+            }
+        } catch {
+            executor.errorMessage = FoundationModelsErrorHandler.handleError(error)
+            executor.result = ""
         }
     }
 

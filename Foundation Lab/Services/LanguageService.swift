@@ -6,12 +6,14 @@
 //
 
 import Foundation
-import FoundationModels
+import FoundationLabCore
 
 @MainActor
 @Observable
 final class LanguageService {
-    private(set) var supportedLanguages: [Locale.Language] = []
+    private let listSupportedLanguagesUseCase = ListSupportedLanguagesUseCase()
+
+    private(set) var supportedLanguages: [SupportedLanguageDescriptor] = []
     private(set) var isLoading = false
 
     init(autoLoad: Bool = true) {
@@ -25,23 +27,13 @@ final class LanguageService {
     func loadSupportedLanguages() async {
         isLoading = true
 
-        let model = SystemLanguageModel.default
-        supportedLanguages = Array(model.supportedLanguages)
+        supportedLanguages = listSupportedLanguagesUseCase.execute(locale: .current).languages
 
         isLoading = false
     }
 
-    func getDisplayName(for language: Locale.Language) -> String {
-        let code = language.languageCode?.identifier ?? ""
-        let region = language.region?.identifier ?? ""
-
-        let languageName = Locale.current.localizedString(forLanguageCode: code) ?? code
-
-        if !region.isEmpty {
-            return "\(languageName) (\(code)-\(region))"
-        } else {
-            return languageName
-        }
+    func getDisplayName(for language: SupportedLanguageDescriptor) -> String {
+        language.displayName(in: .current)
     }
 
     func getCurrentUserLanguage() -> String {
@@ -56,18 +48,20 @@ final class LanguageService {
     func getCurrentUserLanguageDisplayName() -> String {
         let userLocale = Locale.autoupdatingCurrent
         let languageCode = userLocale.language.languageCode?.identifier ?? "en"
+        let regionCode = userLocale.region?.identifier
 
-        // Find the matching supported language by code
-        for language in supportedLanguages where language.languageCode?.identifier == languageCode {
+        for language in supportedLanguages where language.languageCode == languageCode && language.regionCode == regionCode {
             return getDisplayName(for: language)
         }
 
-        // Fallback to first supported language
+        for language in supportedLanguages where language.languageCode == languageCode {
+            return getDisplayName(for: language)
+        }
+
         if let firstLanguage = supportedLanguages.first {
             return getDisplayName(for: firstLanguage)
         }
 
-        // Fallback to "English"
         return "English"
     }
 }

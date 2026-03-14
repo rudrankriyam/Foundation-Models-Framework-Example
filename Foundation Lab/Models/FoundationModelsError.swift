@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import FoundationLabCore
 import FoundationModels
 
 /// Custom error types for Foundation Models operations
@@ -70,6 +71,8 @@ struct FoundationModelsErrorHandler: Sendable {
             return handleGenerationError(generationError)
         } else if let toolCallError = error as? LanguageModelSession.ToolCallError {
             return handleToolCallError(toolCallError)
+        } else if let coreError = error as? FoundationLabCoreError {
+            return coreError.localizedDescription
         } else if let customError = error as? FoundationModelsError {
             return customError.localizedDescription
         } else {
