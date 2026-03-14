@@ -13,6 +13,7 @@ struct FMCLI: AsyncParsableCommand {
             NutritionCommand.self,
             WeatherCommand.self,
             WebCommand.self,
+            ChatCommand.self,
             ContactsCommand.self,
             CalendarCommand.self,
             RemindersCommand.self,
@@ -80,6 +81,17 @@ struct WebCommand: AsyncParsableCommand {
     )
 }
 
+struct ChatCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "chat",
+        abstract: "Multi-turn conversation capabilities.",
+        subcommands: [
+            RunChatCommand.self
+        ],
+        defaultSubcommand: RunChatCommand.self
+    )
+}
+
 struct ContactsCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "contacts",
@@ -144,6 +156,122 @@ struct HealthCommand: AsyncParsableCommand {
         ],
         defaultSubcommand: QueryHealthCommand.self
     )
+}
+
+struct RunChatCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "run",
+        abstract: "Run one or more messages through the shared conversation engine."
+    )
+
+    @OptionGroup var options: CLIOptions
+
+    @Option(
+        name: [.short, .long],
+        parsing: .upToNextOption,
+        help: "Message(s) to send through one shared session. Repeat the option for multi-turn chat."
+    )
+    var message: [String] = []
+
+    @Option(name: .long, help: "Optional system instructions for the shared conversation engine.")
+    var systemPrompt: String?
+
+    @Flag(name: .long, help: "Stream each assistant response while it is generated.")
+    var stream = false
+
+    mutating func run() async throws {
+        let validatedMessages = try validatedNonEmptyValues(message, optionName: "--message")
+
+        if options.dryRun {
+            CLIOutput.emit(
+                payload: [
+                    "status": "dry_run",
+                    "command": "chat run",
+                    "messages": validatedMessages,
+                    "systemPrompt": systemPrompt ?? "",
+                    "stream": stream
+                ],
+                human: """
+                [dry-run] fm chat run
+                Messages: \(validatedMessages.count)
+                Stream: \(stream ? "yes" : "no")
+                """,
+                json: options.json
+            )
+            return
+        }
+
+        do {
+            try requireFoundationModelsAvailability()
+
+            let engine = await MainActor.run {
+                FoundationLabConversationEngine(
+                    configuration: cliConversationConfiguration(systemPrompt: systemPrompt)
+                )
+            }
+
+            var exchanges: [[String: String]] = []
+
+            for entry in validatedMessages {
+                let response: String
+
+                if stream && !options.json {
+                    print("User: \(entry)")
+                    print("Assistant: ", terminator: "")
+                    fflush(stdout)
+
+                    var latestPrinted = ""
+                    response = try await engine.sendStreamingMessage(
+                        entry,
+                        onPartialResponse: { partialResponse in
+                            guard partialResponse.hasPrefix(latestPrinted) else {
+                                let suffix = partialResponse
+                                print(suffix, terminator: "")
+                                fflush(stdout)
+                                latestPrinted = partialResponse
+                                return
+                            }
+
+                            let suffix = String(partialResponse.dropFirst(latestPrinted.count))
+                            guard !suffix.isEmpty else { return }
+                            print(suffix, terminator: "")
+                            fflush(stdout)
+                            latestPrinted = partialResponse
+                        }
+                    )
+                    print("\n")
+                } else {
+                    response = try await engine.sendMessage(entry)
+                }
+
+                exchanges.append([
+                    "message": entry,
+                    "response": response
+                ])
+            }
+
+            let payload: [String: Any] = [
+                "exchanges": exchanges,
+                "sessionCount": await MainActor.run { engine.sessionCount },
+                "tokenCount": await MainActor.run { engine.currentTokenCount }
+            ]
+
+            CLIOutput.emit(
+                payload: payload,
+                human: humanReadableConversationOutput(
+                    exchanges: exchanges,
+                    sessionCount: await MainActor.run { engine.sessionCount },
+                    tokenCount: await MainActor.run { engine.currentTokenCount },
+                    verbose: options.verbose,
+                    streamed: stream && !options.json
+                ),
+                json: options.json
+            )
+        } catch {
+            CLIOutput.emitError(error, json: options.json)
+            throw ExitCode.failure
+        }
+    }
 }
 
 struct RecommendBookCommand: AsyncParsableCommand {
@@ -778,6 +906,38 @@ func humanReadableText(
     return lines.joined(separator: "\n")
 }
 
+func humanReadableConversationOutput(
+    exchanges: [[String: String]],
+    sessionCount: Int,
+    tokenCount: Int,
+    verbose: Bool,
+    streamed: Bool
+) -> String {
+    var lines: [String] = []
+
+    if !streamed {
+        for exchange in exchanges {
+            lines.append("User: \(exchange["message"] ?? "")")
+            lines.append("Assistant: \(exchange["response"] ?? "")")
+            lines.append("")
+        }
+
+        if !lines.isEmpty {
+            lines.removeLast()
+        }
+    }
+
+    if verbose {
+        if !lines.isEmpty {
+            lines.append("")
+        }
+        lines.append("Sessions: \(sessionCount)")
+        lines.append("Token count: \(tokenCount)")
+    }
+
+    return lines.joined(separator: "\n")
+}
+
 func metadataPayload(_ metadata: CapabilityExecutionMetadata) -> [String: Any] {
     [
         "provider": metadata.provider ?? "",
@@ -805,10 +965,53 @@ func validatedNonEmpty(_ value: String, optionName: String) throws -> String {
     return trimmedValue
 }
 
+func validatedNonEmptyValues(_ values: [String], optionName: String) throws -> [String] {
+    let trimmedValues = values.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        .filter { !$0.isEmpty }
+    guard !trimmedValues.isEmpty else {
+        throw ValidationError("Please provide at least one non-empty \(optionName).")
+    }
+    return trimmedValues
+}
+
 func cliContext() -> CapabilityInvocationContext {
     CapabilityInvocationContext(
         source: .cli,
         localeIdentifier: Locale.current.identifier
+    )
+}
+
+func cliConversationConfiguration(systemPrompt: String?) -> FoundationLabConversationConfiguration {
+    let trimmedSystemPrompt = systemPrompt?.trimmingCharacters(in: .whitespacesAndNewlines)
+    let baseInstructions: String
+
+    if let trimmedSystemPrompt, !trimmedSystemPrompt.isEmpty {
+        baseInstructions = trimmedSystemPrompt
+    } else {
+        baseInstructions = """
+        You are a helpful, friendly AI assistant. Engage in natural conversation and provide \
+        thoughtful, detailed responses.
+        """
+    }
+
+    return FoundationLabConversationConfiguration(
+        baseInstructions: baseInstructions,
+        summaryInstructions: """
+        You are an expert at summarizing conversations. Create concise summaries that preserve \
+        context needed to continue naturally.
+        """,
+        summaryPromptPreamble: """
+        Please summarize the following conversation so the assistant can continue it naturally:
+        """,
+        conversationUserLabel: "User:",
+        conversationAssistantLabel: "Assistant:",
+        continuationNote: """
+        Continue the conversation naturally, using this context when relevant.
+        """,
+        modelUseCase: .general,
+        guardrails: .default,
+        enableSlidingWindow: true,
+        defaultMaxContextSize: 4_096
     )
 }
 

@@ -73,7 +73,8 @@ public final class FoundationLabConversationEngine {
 
     public func sendStreamingMessage(
         _ content: String,
-        generationOptions: GenerationOptions? = nil
+        generationOptions: GenerationOptions? = nil,
+        onPartialResponse: (@MainActor @Sendable (String) -> Void)? = nil
     ) async throws -> String {
         let prompt = try validatedPrompt(from: content)
 
@@ -82,14 +83,19 @@ public final class FoundationLabConversationEngine {
                 await applySlidingWindow()
             }
 
-            let response = try await streamResponse(to: prompt, generationOptions: generationOptions)
+            let response = try await streamResponse(
+                to: prompt,
+                generationOptions: generationOptions,
+                onPartialResponse: onPartialResponse
+            )
             await updateTokenCount()
             return response
         } catch LanguageModelSession.GenerationError.exceededContextWindowSize {
             return try await recoverFromContextOverflow(
                 userMessage: prompt,
                 generationOptions: generationOptions,
-                responseMode: .streaming
+                responseMode: .streaming,
+                onPartialResponse: onPartialResponse
             )
         }
     }
@@ -112,7 +118,8 @@ public final class FoundationLabConversationEngine {
             return try await recoverFromContextOverflow(
                 userMessage: prompt,
                 generationOptions: generationOptions,
-                responseMode: .oneShot
+                responseMode: .oneShot,
+                onPartialResponse: nil
             )
         }
     }
@@ -187,7 +194,8 @@ private extension FoundationLabConversationEngine {
 
     func streamResponse(
         to prompt: String,
-        generationOptions: GenerationOptions?
+        generationOptions: GenerationOptions?,
+        onPartialResponse: (@MainActor @Sendable (String) -> Void)?
     ) async throws -> String {
         activeStreamingTask?.cancel()
         let task = Task<String, Error> { @MainActor [weak self] in
@@ -202,10 +210,12 @@ private extension FoundationLabConversationEngine {
                     options: generationOptions
                 ) {
                     latest = snapshot.content
+                    onPartialResponse?(snapshot.content)
                 }
             } else {
                 for try await snapshot in self.session.streamResponse(to: Prompt(prompt)) {
                     latest = snapshot.content
+                    onPartialResponse?(snapshot.content)
                 }
             }
             return latest.isEmpty ? self.latestResponseText() : latest
@@ -233,7 +243,8 @@ private extension FoundationLabConversationEngine {
     func recoverFromContextOverflow(
         userMessage: String,
         generationOptions: GenerationOptions?,
-        responseMode: ResponseMode
+        responseMode: ResponseMode,
+        onPartialResponse: (@MainActor @Sendable (String) -> Void)?
     ) async throws -> String {
         isSummarizing = true
         notifyStateChange()
@@ -249,7 +260,11 @@ private extension FoundationLabConversationEngine {
         let response: String
         switch responseMode {
         case .streaming:
-            response = try await streamResponse(to: userMessage, generationOptions: generationOptions)
+            response = try await streamResponse(
+                to: userMessage,
+                generationOptions: generationOptions,
+                onPartialResponse: onPartialResponse
+            )
         case .oneShot:
             response = try await respond(to: userMessage, generationOptions: generationOptions)
         }
