@@ -5,9 +5,9 @@
 //  Created by Rudrank Riyam on 6/23/25.
 //
 
+import FoundationLabCore
 import SwiftUI
 import SwiftData
-import FoundationModels
 
 struct HealthDashboardView: View {
     @Query(sort: \HealthMetric.timestamp, order: .reverse) private var metrics: [HealthMetric]
@@ -227,30 +227,20 @@ private extension HealthDashboardView {
         let activeEnergy = Int(todayMetrics[.activeEnergy] ?? 0)
 
         do {
-            let session = LanguageModelSession(
-                instructions: Instructions(
-                    """
-                    You are a supportive health coach.
-                    Generate a brief, encouraging message (max 15 words) based on the user's health data.
-                    Do NOT use quotes, numbers, specific metrics, or emojis.
-                    Focus on general encouragement and motivation.
-                    """
+            let response = try await GenerateHealthEncouragementUseCase().execute(
+                GenerateHealthEncouragementRequest(
+                    healthScore: Int(score),
+                    stepsProgressPercentage: Int(stepsProgress),
+                    sleepHours: sleepHours,
+                    activeEnergy: activeEnergy,
+                    timeOfDay: timeOfDay,
+                    context: CapabilityInvocationContext(
+                        source: .app,
+                        localeIdentifier: Locale.current.identifier
+                    )
                 )
             )
-
-            let prompt = """
-                Health Score: \(Int(score))/100
-                Steps Progress: \(Int(stepsProgress))% of daily goal
-                Sleep: \(String(format: "%.1f", sleepHours)) hours last night
-                Active Energy: \(activeEnergy) calories burned today
-                Time of Day: \(timeOfDay)
-
-                Generate a personalized, encouraging message.
-                """
-
-            let response = try await session.respond(to: Prompt(prompt))
-
-            encouragementMessage = response.content
+            encouragementMessage = response.message
                 .trimmingCharacters(in: .whitespacesAndNewlines)
                 .replacingOccurrences(of: "\"", with: "")
                 .replacingOccurrences(of: "\u{201C}", with: "")
