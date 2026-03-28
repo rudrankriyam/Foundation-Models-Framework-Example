@@ -424,7 +424,7 @@ private extension RAGChatViewModel {
             )
             let task = Task { @MainActor [streamingTextUseCase] in
                 let result = try await streamingTextUseCase.execute(request) { partialResponse in
-                    await updateStreamingEntry(entry, with: partialResponse)
+                    await self.updateStreamingEntry(entry, with: partialResponse)
                 }
                 self.lastTokenCount = result.metadata.tokenCount
             }
