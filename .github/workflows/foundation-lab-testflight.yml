@@ -41,15 +41,23 @@ jobs:
           xcode-version: latest-stable
 
       - name: Install asc
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          HOMEBREW_NO_AUTO_UPDATE=1 brew install asc
-          if ! asc builds next-build-number --help >/dev/null 2>&1; then
-            GOBIN="$RUNNER_TEMP/bin"
-            mkdir -p "$GOBIN"
-            export PATH="$GOBIN:$PATH"
-            echo "$GOBIN" >> "$GITHUB_PATH"
-            GOBIN="$GOBIN" go install github.com/rudrankriyam/App-Store-Connect-CLI@latest
-          fi
+          ASC_VERSION="$(gh release view \
+            --repo rudrankriyam/App-Store-Connect-CLI \
+            --json tagName \
+            --jq .tagName)"
+          ASC_ASSET="asc_${ASC_VERSION}_macOS_arm64"
+
+          gh release download "$ASC_VERSION" \
+            --repo rudrankriyam/App-Store-Connect-CLI \
+            --pattern "$ASC_ASSET" \
+            --dir "$RUNNER_TEMP"
+
+          install -m 0755 "$RUNNER_TEMP/$ASC_ASSET" "$RUNNER_TEMP/asc"
+          export PATH="$RUNNER_TEMP:$PATH"
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
           asc --version
           asc builds next-build-number --help >/dev/null
 
