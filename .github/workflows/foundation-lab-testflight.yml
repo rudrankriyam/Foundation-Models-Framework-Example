@@ -43,7 +43,15 @@ jobs:
       - name: Install asc
         run: |
           HOMEBREW_NO_AUTO_UPDATE=1 brew install asc
+          if ! asc builds next-build-number --help >/dev/null 2>&1; then
+            GOBIN="$RUNNER_TEMP/bin"
+            mkdir -p "$GOBIN"
+            export PATH="$GOBIN:$PATH"
+            echo "$GOBIN" >> "$GITHUB_PATH"
+            GOBIN="$GOBIN" go install github.com/rudrankriyam/App-Store-Connect-CLI@latest
+          fi
           asc --version
+          asc builds next-build-number --help >/dev/null
 
       - name: Validate repository configuration
         env:
