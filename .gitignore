@@ -14,6 +14,7 @@ xcuserdata/
 *.dSYM
 
 .asc/artifacts/
+.asc/ExportOptions/TestFlight.generated.plist
 .asc/runs/
 
 ## Playgrounds

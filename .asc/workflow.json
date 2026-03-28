@@ -3,7 +3,8 @@
     "PROJECT_PATH": "FoundationLab.xcodeproj",
     "SCHEME": "Foundation Lab",
     "CONFIGURATION": "Release",
-    "EXPORT_OPTIONS": ".asc/ExportOptions/TestFlight.plist"
+    "EXPORT_OPTIONS_TEMPLATE": ".asc/ExportOptions/TestFlight.plist.template",
+    "EXPORT_OPTIONS": ".asc/ExportOptions/TestFlight.generated.plist"
   },
   "before_all": "asc auth status --validate",
   "workflows": {
@@ -17,6 +18,10 @@
         {
           "name": "validate_inputs",
           "run": "for key in APP_ID TESTFLIGHT_GROUP TARGET_BUNDLE_ID TEAM_ID VERSION; do if [ -z \"${!key}\" ]; then echo \"$key is required\" >&2; exit 1; fi; done"
+        },
+        {
+          "name": "render_export_options",
+          "run": "sed \"s/__TEAM_ID__/$TEAM_ID/g\" \"$EXPORT_OPTIONS_TEMPLATE\" > \"$EXPORT_OPTIONS\" && plutil -lint \"$EXPORT_OPTIONS\" >/dev/null"
         },
         {
           "name": "resolve_next_build",
