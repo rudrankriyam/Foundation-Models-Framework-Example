@@ -5,7 +5,7 @@ import FoundationLabCore
 struct SearchMusicCatalogIntent: AppIntent {
     static let title: LocalizedStringResource = "Search Music Catalog"
     static let description = IntentDescription(
-        "Searches Apple Music using Foundation Lab's shared music capability."
+        "Searches music using Foundation Lab's shared music capability."
     )
     static let openAppWhenRun = true
 

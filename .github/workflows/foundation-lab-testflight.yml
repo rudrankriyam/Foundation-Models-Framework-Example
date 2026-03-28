@@ -100,11 +100,16 @@ jobs:
       - name: Resolve marketing version
         id: version
         run: |
-          VERSION="$(xcodebuild -showBuildSettings \
-            -project FoundationLab.xcodeproj \
-            -scheme 'Foundation Lab' \
-            -configuration Release \
-            -destination 'generic/platform=iOS' | awk '/MARKETING_VERSION = / { print $3; exit }')"
+          VERSION="$(awk -F' = ' '/MARKETING_VERSION = / { gsub(/;/, "", $2); print $2; exit }' \
+            FoundationLab.xcodeproj/project.pbxproj)"
+
+          if [ -z "$VERSION" ]; then
+            VERSION="$(xcodebuild -showBuildSettings \
+              -project FoundationLab.xcodeproj \
+              -scheme 'Foundation Lab' \
+              -configuration Release \
+              -destination 'generic/platform=iOS' | awk '/MARKETING_VERSION = / { print $3; exit }')"
+          fi
 
           if [ -z "$VERSION" ]; then
             echo "Failed to resolve MARKETING_VERSION" >&2

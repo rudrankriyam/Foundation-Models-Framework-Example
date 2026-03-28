@@ -22259,66 +22259,66 @@
         }
       }
     },
-    "Searches Apple Music using Foundation Lab's shared music capability." : {
+    "Searches music using Foundation Lab's shared music capability." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Searches Apple Music using Foundation Lab's shared music capability."
+            "value" : "Searches music using Foundation Lab's shared music capability."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Searches Apple Music using Foundation Lab's shared music capability."
+            "value" : "Searches music using Foundation Lab's shared music capability."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Searches Apple Music using Foundation Lab's shared music capability."
+            "value" : "Searches music using Foundation Lab's shared music capability."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Searches Apple Music using Foundation Lab's shared music capability."
+            "value" : "Searches music using Foundation Lab's shared music capability."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Searches Apple Music using Foundation Lab's shared music capability."
+            "value" : "Searches music using Foundation Lab's shared music capability."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Searches Apple Music using Foundation Lab's shared music capability."
+            "value" : "Searches music using Foundation Lab's shared music capability."
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Searches Apple Music using Foundation Lab's shared music capability."
+            "value" : "Searches music using Foundation Lab's shared music capability."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Searches Apple Music using Foundation Lab's shared music capability."
+            "value" : "Searches music using Foundation Lab's shared music capability."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Searches Apple Music using Foundation Lab's shared music capability."
+            "value" : "Searches music using Foundation Lab's shared music capability."
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Searches Apple Music using Foundation Lab's shared music capability."
+            "value" : "Searches music using Foundation Lab's shared music capability."
           }
         }
       }
