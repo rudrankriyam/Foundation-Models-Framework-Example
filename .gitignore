@@ -13,6 +13,10 @@ xcuserdata/
 *.dSYM.zip
 *.dSYM
 
+.asc/artifacts/
+.asc/ExportOptions/TestFlight.generated.plist
+.asc/runs/
+
 ## Playgrounds
 timeline.xctimeline
 playground.xcworkspace
