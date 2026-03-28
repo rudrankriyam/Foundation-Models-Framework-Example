@@ -13,6 +13,9 @@ xcuserdata/
 *.dSYM.zip
 *.dSYM
 
+.asc/artifacts/
+.asc/runs/
+
 ## Playgrounds
 timeline.xctimeline
 playground.xcworkspace

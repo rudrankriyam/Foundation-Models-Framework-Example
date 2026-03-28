@@ -47,6 +47,23 @@ It is part of the [Exploring Foundation Models](https://academy.rudrank.com/prod
 
 You can now try Foundation Lab on TestFlight! Join the beta: [https://testflight.apple.com/join/JWR9FpP3](https://testflight.apple.com/join/JWR9FpP3)
 
+## Automated TestFlight uploads
+
+This repo includes a repo-local ASC workflow in `.asc/workflow.json` and a GitHub Actions workflow in `.github/workflows/foundation-lab-testflight.yml` that uploads the iOS app to the external TestFlight Beta group whenever app changes land on `main`.
+
+GitHub Actions expects these repository secrets:
+
+- `ASC_KEY_ID`
+- `ASC_ISSUER_ID`
+- `ASC_PRIVATE_KEY_B64`
+
+It also expects these repository variables:
+
+- `FOUNDATION_LAB_APP_ID`
+- `FOUNDATION_LAB_EXTERNAL_GROUP_ID`
+- `FOUNDATION_LAB_BUNDLE_ID`
+- `FOUNDATION_LAB_TEAM_ID`
+
 ## Getting Started
 
 - Clone the repository

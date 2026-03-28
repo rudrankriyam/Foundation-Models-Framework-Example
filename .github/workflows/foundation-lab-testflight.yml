@@ -1,0 +1,107 @@
+name: Foundation Lab TestFlight
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Foundation Lab/**'
+      - 'Foundation Lab.icon/**'
+      - 'FoundationLabCore/**'
+      - 'FoundationLab.xcodeproj/**'
+      - 'SampleCode.xcconfig'
+      - '.asc/**'
+      - '.github/workflows/foundation-lab-testflight.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: foundation-lab-testflight
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    runs-on: macos-latest
+    timeout-minutes: 90
+    env:
+      ASC_BYPASS_KEYCHAIN: "1"
+      APP_ID: ${{ vars.FOUNDATION_LAB_APP_ID }}
+      TESTFLIGHT_GROUP: ${{ vars.FOUNDATION_LAB_EXTERNAL_GROUP_ID }}
+      TARGET_BUNDLE_ID: ${{ vars.FOUNDATION_LAB_BUNDLE_ID }}
+      TEAM_ID: ${{ vars.FOUNDATION_LAB_TEAM_ID }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Install asc
+        run: |
+          HOMEBREW_NO_AUTO_UPDATE=1 brew install asc
+          asc --version
+
+      - name: Validate repository configuration
+        env:
+          ASC_KEY_ID_SECRET: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID_SECRET: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_PRIVATE_KEY_B64_SECRET: ${{ secrets.ASC_PRIVATE_KEY_B64 }}
+        run: |
+          for key in APP_ID TESTFLIGHT_GROUP TARGET_BUNDLE_ID TEAM_ID; do
+            if [ -z "${!key}" ]; then
+              echo "Missing required repository variable: $key" >&2
+              exit 1
+            fi
+          done
+
+          for key in ASC_KEY_ID_SECRET ASC_ISSUER_ID_SECRET ASC_PRIVATE_KEY_B64_SECRET; do
+            if [ -z "${!key}" ]; then
+              echo "Missing required repository secret: ${key%_SECRET}" >&2
+              exit 1
+            fi
+          done
+
+      - name: Materialize ASC key
+        env:
+          ASC_KEY_ID_SECRET: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID_SECRET: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_PRIVATE_KEY_B64_SECRET: ${{ secrets.ASC_PRIVATE_KEY_B64 }}
+        run: |
+          KEY_PATH="$RUNNER_TEMP/AuthKey_${ASC_KEY_ID_SECRET}.p8"
+          printf '%s' "$ASC_PRIVATE_KEY_B64_SECRET" | base64 --decode > "$KEY_PATH"
+          chmod 600 "$KEY_PATH"
+
+          {
+            echo "ASC_KEY_ID=$ASC_KEY_ID_SECRET"
+            echo "ASC_ISSUER_ID=$ASC_ISSUER_ID_SECRET"
+            echo "ASC_PRIVATE_KEY_PATH=$KEY_PATH"
+          } >> "$GITHUB_ENV"
+
+      - name: Resolve marketing version
+        id: version
+        run: |
+          VERSION="$(xcodebuild -showBuildSettings \
+            -project FoundationLab.xcodeproj \
+            -scheme 'Foundation Lab' \
+            -configuration Release \
+            -destination 'generic/platform=iOS' | awk '/MARKETING_VERSION = / { print $3; exit }')"
+
+          if [ -z "$VERSION" ]; then
+            echo "Failed to resolve MARKETING_VERSION" >&2
+            exit 1
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Validate ASC workflow
+        run: asc workflow validate
+
+      - name: Dry run ASC workflow
+        run: asc workflow run --dry-run foundation_lab_testflight VERSION:${{ steps.version.outputs.version }}
+
+      - name: Upload to TestFlight external group
+        run: asc workflow run foundation_lab_testflight VERSION:${{ steps.version.outputs.version }}
