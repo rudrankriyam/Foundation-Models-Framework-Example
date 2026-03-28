@@ -41,7 +41,7 @@
         },
         {
           "name": "export",
-          "run": "asc xcode export --archive-path ${steps.archive.ARCHIVE_PATH} --export-options \"$EXPORT_OPTIONS\" --ipa-path \".asc/artifacts/FoundationLab-$VERSION-${steps.archive.BUILD_NUMBER}.ipa\" --overwrite --xcodebuild-flag=-allowProvisioningUpdates --xcodebuild-flag=-authenticationKeyID --xcodebuild-flag=$ASC_KEY_ID --xcodebuild-flag=-authenticationKeyIssuerID --xcodebuild-flag=$ASC_ISSUER_ID --xcodebuild-flag=-authenticationKeyPath --xcodebuild-flag=$ASC_PRIVATE_KEY_PATH --output json",
+          "run": "asc xcode export --archive-path \"${steps.archive.ARCHIVE_PATH}\" --export-options \"$EXPORT_OPTIONS\" --ipa-path \".asc/artifacts/FoundationLab-$VERSION-${steps.archive.BUILD_NUMBER}.ipa\" --overwrite --xcodebuild-flag=-allowProvisioningUpdates --xcodebuild-flag=-authenticationKeyID --xcodebuild-flag=$ASC_KEY_ID --xcodebuild-flag=-authenticationKeyIssuerID --xcodebuild-flag=$ASC_ISSUER_ID --xcodebuild-flag=-authenticationKeyPath --xcodebuild-flag=$ASC_PRIVATE_KEY_PATH --output json",
           "outputs": {
             "IPA_PATH": "$.ipa_path",
             "VERSION": "$.version",
@@ -50,7 +50,7 @@
         },
         {
           "name": "publish",
-          "run": "asc publish testflight --app \"$APP_ID\" --ipa ${steps.export.IPA_PATH} --group \"$TESTFLIGHT_GROUP\" --wait --poll-interval 10s --output json",
+          "run": "asc publish testflight --app \"$APP_ID\" --ipa \"${steps.export.IPA_PATH}\" --group \"$TESTFLIGHT_GROUP\" --wait --poll-interval 10s --output json",
           "outputs": {
             "BUILD_ID": "$.buildId",
             "BUILD_NUMBER": "$.buildNumber"
