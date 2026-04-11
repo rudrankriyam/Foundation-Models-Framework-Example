@@ -48,15 +48,28 @@ jobs:
           chmod +x "release/afm_${VERSION}_macOS_universal"
           shasum -a 256 "release/afm_${VERSION}_macOS_universal" > "release/afm_${VERSION}_checksums.txt"
 
+      - name: Detect signing configuration
+        id: signing
+        env:
+          APPLE_DEVELOPER_ID: ${{ secrets.APPLE_DEVELOPER_ID }}
+          APPLE_DEVELOPER_ID_CERT: ${{ secrets.APPLE_DEVELOPER_ID_CERT }}
+          APPLE_DEVELOPER_ID_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_PASSWORD }}
+        run: |
+          if [ -n "$APPLE_DEVELOPER_ID" ] && [ -n "$APPLE_DEVELOPER_ID_CERT" ] && [ -n "$APPLE_DEVELOPER_ID_PASSWORD" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Import Apple certificate
-        if: ${{ secrets.APPLE_DEVELOPER_ID_CERT != '' && secrets.APPLE_DEVELOPER_ID_PASSWORD != '' }}
+        if: ${{ steps.signing.outputs.enabled == 'true' }}
         uses: apple-actions/import-codesign-certs@v6
         with:
           p12-file-base64: ${{ secrets.APPLE_DEVELOPER_ID_CERT }}
           p12-password: ${{ secrets.APPLE_DEVELOPER_ID_PASSWORD }}
 
       - name: Code sign release binary
-        if: ${{ secrets.APPLE_DEVELOPER_ID != '' }}
+        if: ${{ steps.signing.outputs.enabled == 'true' }}
         env:
           APPLE_DEVELOPER_ID: ${{ secrets.APPLE_DEVELOPER_ID }}
         run: |
