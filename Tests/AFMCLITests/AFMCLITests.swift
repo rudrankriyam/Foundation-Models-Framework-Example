@@ -35,6 +35,9 @@ func leafCommandHelpCoverage() throws {
     let commands: [[String]] = [
         ["model", "status", "--help"],
         ["model", "languages", "--help"],
+        ["model", "use-cases", "--help"],
+        ["model", "guardrails", "--help"],
+        ["tag", "run", "--help"],
         ["session", "respond", "--help"],
         ["session", "stream", "--help"],
         ["session", "chat", "--help"],
@@ -61,9 +64,26 @@ func leafCommandHelpCoverage() throws {
             || command == ["schema", "run", "basic-object", "--help"]
             || command == ["schema", "run", "array-schema", "--help"]
             || command == ["schema", "run", "enum-schema", "--help"]
+            || command == ["schema", "run", "custom", "--help"]
             || command.contains("transcript")
-            || command.contains("feedback") {
+            || command.contains("feedback")
+            || command == ["tag", "run", "--help"] {
             #expect(result.stdout.contains("--guardrails <guardrails>"))
+        }
+        if command.contains("session")
+            || command.contains("feedback")
+            || command.contains("transcript")
+            || command.contains("schema")
+            || command == ["model", "status", "--help"]
+            || command == ["model", "languages", "--help"] {
+            #expect(result.stdout.contains("--use-case <use-case>") || command.contains("schema"))
+        }
+        if command == ["schema", "run", "custom", "--help"]
+            || command == ["schema", "run", "typed-person", "--help"]
+            || command == ["schema", "run", "basic-object", "--help"]
+            || command == ["schema", "run", "array-schema", "--help"]
+            || command == ["schema", "run", "enum-schema", "--help"] {
+            #expect(result.stdout.contains("--include-schema-in-prompt"))
         }
     }
 }
@@ -72,14 +92,20 @@ func leafCommandHelpCoverage() throws {
 func discoveryCommandsHonorDryRun() throws {
     let status = try runAFM("model", "status", "--output", "json", "--dry-run")
     let languages = try runAFM("model", "languages", "--output", "json", "--dry-run")
+    let useCases = try runAFM("model", "use-cases", "--output", "json", "--dry-run")
+    let guardrails = try runAFM("model", "guardrails", "--output", "json", "--dry-run")
     let schemaList = try runAFM("schema", "list", "--output", "json", "--dry-run")
 
     #expect(status.status == 0)
     #expect(languages.status == 0)
+    #expect(useCases.status == 0)
+    #expect(guardrails.status == 0)
     #expect(schemaList.status == 0)
 
     #expect((try parseJSONObject(status.stdout))["command"] as? String == "model status")
     #expect((try parseJSONObject(languages.stdout))["command"] as? String == "model languages")
+    #expect((try parseJSONObject(useCases.stdout))["command"] as? String == "model use-cases")
+    #expect((try parseJSONObject(guardrails.stdout))["command"] as? String == "model guardrails")
     #expect((try parseJSONObject(schemaList.stdout))["command"] as? String == "schema list")
 }
 
@@ -231,6 +257,67 @@ func schemaCommands() throws {
     #expect((schemas?.isEmpty == false))
     #expect(typedJSON["command"] as? String == "schema run typed-person")
     #expect(typedJSON["input"] as? String == "Alex Rivera is a designer in Berlin.")
+}
+
+@Test("Foundation Models flags surface in dry-run payloads")
+func foundationModelsFlagsSurfaceInDryRunPayloads() throws {
+    let directory = URL(fileURLWithPath: NSTemporaryDirectory())
+        .appending(path: "afm-fmf-\(UUID().uuidString)")
+    let schemaDirectory = directory.appending(path: ".afm/schemas")
+    defer { try? FileManager.default.removeItem(at: directory) }
+    try FileManager.default.createDirectory(at: schemaDirectory, withIntermediateDirectories: true)
+
+    let schema = """
+    title: PersonCard
+    type: object
+    properties:
+      name:
+        type: string
+    required:
+      - name
+    """
+    try schema.write(to: schemaDirectory.appending(path: "person-card.yaml"), atomically: true, encoding: .utf8)
+
+    let modelStatus = try runAFM(
+        "model", "status", "--output", "json", "--dry-run",
+        "--use-case", "content-tagging"
+    )
+    let customSchema = try runAFM(
+        "schema", "run", "custom", "--output", "json", "--dry-run",
+        "--schema", "person-card",
+        "--schema-dir", schemaDirectory.path(),
+        "--input", "Alex Rivera",
+        "--use-case", "content-tagging",
+        "--no-include-schema-in-prompt"
+    )
+    let feedback = try runAFM(
+        "feedback", "export", "--output", "json", "--dry-run",
+        "--prompt", "hello",
+        "--file", "/tmp/afm-feedback.json",
+        "--issue", "incorrect",
+        "--issue-explanation", "Wrong answer"
+    )
+    let tag = try runAFM(
+        "tag", "run", "--output", "json", "--dry-run",
+        "--prompt", "A joyful dog playing in a sunny park."
+    )
+
+    #expect(modelStatus.status == 0)
+    #expect(customSchema.status == 0)
+    #expect(feedback.status == 0)
+    #expect(tag.status == 0)
+
+    let modelJSON = try parseJSONObject(modelStatus.stdout)
+    let schemaJSON = try parseJSONObject(customSchema.stdout)
+    let feedbackJSON = try parseJSONObject(feedback.stdout)
+    let tagJSON = try parseJSONObject(tag.stdout)
+
+    #expect(modelJSON["useCase"] as? String == "content-tagging")
+    #expect(schemaJSON["useCase"] as? String == "content-tagging")
+    #expect(schemaJSON["includeSchemaInPrompt"] as? Bool == false)
+    #expect((feedbackJSON["feedbackIssues"] as? [String]) == ["incorrect"])
+    #expect(tagJSON["command"] as? String == "tag run")
+    #expect(tagJSON["useCase"] as? String == "content-tagging")
 }
 
 @Test("Custom schema files resolve from schema-dir and dry-run cleanly")
@@ -482,19 +569,29 @@ func unknownCommandSuggestions() throws {
 func modelCommandsReturnStructuredJSON() throws {
     let status = try runAFM("model", "status", "--output", "json")
     let languages = try runAFM("model", "languages", "--output", "json")
+    let useCases = try runAFM("model", "use-cases", "--output", "json")
+    let guardrails = try runAFM("model", "guardrails", "--output", "json")
 
     #expect(status.status == 0)
     #expect(languages.status == 0)
+    #expect(useCases.status == 0)
+    #expect(guardrails.status == 0)
 
     let statusJSON = try parseJSONObject(status.stdout)
     let languagesJSON = try parseJSONObject(languages.stdout)
+    let useCasesJSON = try parseJSONObject(useCases.stdout)
+    let guardrailsJSON = try parseJSONObject(guardrails.stdout)
 
     #expect(statusJSON["status"] as? String != nil)
     #expect(statusJSON["reason"] as? String != nil)
+    #expect(statusJSON["useCase"] as? String != nil)
 
     let supportedLanguages = languagesJSON["languages"] as? [[String: Any]]
     #expect((supportedLanguages?.isEmpty == false))
     #expect(languagesJSON["currentLanguage"] as? String != nil)
+    #expect(languagesJSON["useCase"] as? String != nil)
+    #expect((useCasesJSON["useCases"] as? [[String: Any]])?.isEmpty == false)
+    #expect((guardrailsJSON["guardrails"] as? [[String: Any]])?.isEmpty == false)
 }
 
 private func runAFM(

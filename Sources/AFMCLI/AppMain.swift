@@ -18,7 +18,7 @@ struct AFMEntryPoint {
         let firstArgument = arguments[1]
         guard !firstArgument.hasPrefix("-") else { return nil }
 
-        let rootCommands = ["model", "session", "schema", "tool", "transcript", "feedback", "help", "version"]
+        let rootCommands = ["model", "tag", "session", "schema", "tool", "transcript", "feedback", "help", "version"]
         if !rootCommands.contains(firstArgument) {
             if let suggestion = suggestRootCommand(for: firstArgument) {
                 return "Unknown command '\(firstArgument)'. Did you mean '\(suggestion)'?"
@@ -31,7 +31,8 @@ struct AFMEntryPoint {
         guard !secondArgument.hasPrefix("-") else { return nil }
 
         let subcommands: [String: [String]] = [
-            "model": ["status", "languages"],
+            "model": ["status", "languages", "use-cases", "guardrails"],
+            "tag": ["run"],
             "session": ["respond", "stream", "chat"],
             "schema": ["list", "run"],
             "tool": ["inspect", "validate", "call"],

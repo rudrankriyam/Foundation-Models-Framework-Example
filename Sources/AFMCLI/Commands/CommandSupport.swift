@@ -16,6 +16,10 @@ struct DryRunPayload: Encodable {
     let schema: String?
     let schemaFile: String?
     let schemaDirectory: String?
+    let useCase: String?
+    let guardrails: String?
+    let includeSchemaInPrompt: Bool?
+    let feedbackIssues: [String]?
     let toolFiles: [String]?
     let toolDirectory: String?
 
@@ -32,6 +36,10 @@ struct DryRunPayload: Encodable {
         schema: String? = nil,
         schemaFile: String? = nil,
         schemaDirectory: String? = nil,
+        useCase: String? = nil,
+        guardrails: String? = nil,
+        includeSchemaInPrompt: Bool? = nil,
+        feedbackIssues: [String]? = nil,
         toolFiles: [String]? = nil,
         toolDirectory: String? = nil
     ) {
@@ -47,6 +55,10 @@ struct DryRunPayload: Encodable {
         self.schema = schema
         self.schemaFile = schemaFile
         self.schemaDirectory = schemaDirectory
+        self.useCase = useCase
+        self.guardrails = guardrails
+        self.includeSchemaInPrompt = includeSchemaInPrompt
+        self.feedbackIssues = feedbackIssues
         self.toolFiles = toolFiles
         self.toolDirectory = toolDirectory
     }
@@ -169,6 +181,56 @@ struct GenerationFlags: ParsableArguments {
     }
 }
 
+struct ModelUseCaseFlags: ParsableArguments {
+    @Option(name: .customLong("use-case"), help: "Specialized system model use case.")
+    var useCase: AFMModelUseCase = .general
+}
+
+struct SchemaPromptFlags: ParsableArguments {
+    @Flag(
+        name: .customLong("include-schema-in-prompt"),
+        inversion: .prefixedNo,
+        help: "Inject the schema into the prompt to bias the model."
+    )
+    var includeSchemaInPrompt = true
+}
+
+struct FeedbackIssueFlags: ParsableArguments {
+    @Option(
+        name: .customLong("issue"),
+        parsing: .upToNextOption,
+        help: "Feedback issue category. Repeat to attach multiple issues."
+    )
+    var issue: [AFMFeedbackIssueCategory] = []
+
+    @Option(
+        name: .customLong("issue-explanation"),
+        parsing: .upToNextOption,
+        help: "Optional explanation matching each --issue in order."
+    )
+    var issueExplanation: [String] = []
+
+    func resolvedIssues() throws -> [LanguageModelFeedback.Issue] {
+        guard issueExplanation.count <= issue.count else {
+            throw ValidationError("Provide at most one --issue-explanation for each --issue.")
+        }
+
+        return try issue.enumerated().map { index, category in
+            let explanation: String?
+            if index < issueExplanation.count {
+                explanation = try validatedNonEmpty(issueExplanation[index], optionName: "--issue-explanation")
+            } else {
+                explanation = nil
+            }
+
+            return LanguageModelFeedback.Issue(
+                category: category.foundationModelsValue,
+                explanation: explanation
+            )
+        }
+    }
+}
+
 struct TranscriptIncludeFlags: ParsableArguments {
     @Flag(name: .long, help: "Include transcript entries in command output.")
     var transcript = false
@@ -202,7 +264,12 @@ func afmContext() -> AFMInvocationContext {
     AFMInvocationContext(source: .cli, localeIdentifier: Locale.current.identifier)
 }
 
-func defaultConversationConfiguration(systemPrompt: String?, tools: [any Tool] = []) -> AFMConversationConfiguration {
+func defaultConversationConfiguration(
+    systemPrompt: String?,
+    useCase: AFMModelUseCase = .general,
+    guardrails: AFMGuardrails = .default,
+    tools: [any Tool] = []
+) -> AFMConversationConfiguration {
     let trimmedSystemPrompt = systemPrompt?.trimmingCharacters(in: .whitespacesAndNewlines)
     let baseInstructions: String
 
@@ -219,16 +286,16 @@ func defaultConversationConfiguration(systemPrompt: String?, tools: [any Tool] =
         conversationUserLabel: "User:",
         conversationAssistantLabel: "Assistant:",
         continuationNote: "Continue the conversation naturally while preserving prior context.",
-        modelUseCase: .general,
-        guardrails: .default,
+        modelUseCase: useCase,
+        guardrails: guardrails,
         tools: tools,
         enableSlidingWindow: true,
         defaultMaxContextSize: 4_096
     )
 }
 
-func requireFoundationModelsAvailability() throws -> AFMAvailabilityResult {
-    let availability = CheckModelAvailabilityUseCase().execute()
+func requireFoundationModelsAvailability(useCase: AFMModelUseCase = .general) throws -> AFMAvailabilityResult {
+    let availability = CheckModelAvailabilityUseCase().execute(useCase: useCase)
     guard availability.isAvailable else {
         throw AFMRuntimeError.unavailableCapability(availabilityReasonDescription(availability))
     }
@@ -274,6 +341,9 @@ enum HelpText {
     MODEL COMMANDS
       model        Inspect model readiness and supported languages.
 
+    TAG COMMANDS
+      tag          Try the content tagging system model.
+
     SESSION COMMANDS
       session      Run one-shot, streaming, or multi-turn session flows.
 
@@ -289,9 +359,12 @@ enum HelpText {
 
     QUICK START
       afm model status
+      afm model use-cases
+      afm model guardrails
       afm session respond --prompt "Summarize Foundation Models in one paragraph."
       afm session stream --prompt "Write a short poem about rain"
       afm session chat --message "Hello" --message "Now answer in French."
+      afm tag run --prompt "A joyful dog playing in a sunny park."
       afm session respond --prompt @prompt.txt --tool demo-weather
       afm schema list
       afm schema run typed-person --input "Alex Rivera is a designer in Berlin."
@@ -316,7 +389,7 @@ enum HelpText {
 }
 
 func suggestRootCommand(for input: String) -> String? {
-    let commands = ["model", "session", "schema", "tool", "transcript", "feedback", "help", "version"]
+    let commands = ["model", "tag", "session", "schema", "tool", "transcript", "feedback", "help", "version"]
     return suggestCommand(input, in: commands)
 }
 

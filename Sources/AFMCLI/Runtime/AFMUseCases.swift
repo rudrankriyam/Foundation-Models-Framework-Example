@@ -14,8 +14,8 @@ struct CheckModelAvailabilityUseCase: Sendable {
         self.checker = checker
     }
 
-    func execute() -> AFMAvailabilityResult {
-        checker.currentAvailability()
+    func execute(useCase: AFMModelUseCase = .general) -> AFMAvailabilityResult {
+        checker.currentAvailability(useCase: useCase)
     }
 }
 
@@ -32,8 +32,8 @@ struct ListSupportedLanguagesUseCase: Sendable {
         self.lister = lister
     }
 
-    func execute(locale: Locale = .current) -> AFMSupportedLanguagesResult {
-        lister.supportedLanguages(locale: locale)
+    func execute(useCase: AFMModelUseCase = .general, locale: Locale = .current) -> AFMSupportedLanguagesResult {
+        lister.supportedLanguages(useCase: useCase, locale: locale)
     }
 }
 

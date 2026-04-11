@@ -19,6 +19,8 @@ struct ExportedTranscriptPayload: Encodable {
     }
 
     let command: String
+    let useCase: String
+    let guardrails: String
     let messages: [String]
     let entries: [Entry]
     let sessionCount: Int
@@ -33,6 +35,7 @@ struct TranscriptExportCommand: AsyncParsableCommand {
 
     @OptionGroup var options: GlobalCommandOptions
     @OptionGroup var generation: GenerationFlags
+    @OptionGroup var useCaseFlags: ModelUseCaseFlags
     @OptionGroup var outputFile: ArtifactOutputOptions
     @OptionGroup var session: SessionOptions
     @OptionGroup var toolSource: ToolSourceOptions
@@ -52,6 +55,8 @@ struct TranscriptExportCommand: AsyncParsableCommand {
                     messages: messages,
                     messageFiles: resolvedMessages.compactMap { $0.file },
                     file: exportPath,
+                    useCase: useCaseFlags.useCase.rawValue,
+                    guardrails: generation.guardrails.rawValue,
                     toolFiles: toolResolution.references.map { $0.filePath },
                     toolDirectory: toolSource.tool.isEmpty ? nil : expandedPathString(toolSource.toolDir)
                 ),
@@ -61,11 +66,13 @@ struct TranscriptExportCommand: AsyncParsableCommand {
             return
         }
 
-        _ = try requireFoundationModelsAvailability()
+        _ = try requireFoundationModelsAvailability(useCase: useCaseFlags.useCase)
         let engine = await MainActor.run {
             AFMConversationEngine(
                 configuration: defaultConversationConfiguration(
                     systemPrompt: generation.systemPrompt,
+                    useCase: useCaseFlags.useCase,
+                    guardrails: generation.guardrails,
                     tools: toolResolution.tools
                 )
             )
@@ -80,6 +87,8 @@ struct TranscriptExportCommand: AsyncParsableCommand {
         let tokenCount = await MainActor.run { engine.currentTokenCount }
         let payload = ExportedTranscriptPayload(
             command: "transcript export",
+            useCase: useCaseFlags.useCase.rawValue,
+            guardrails: generation.guardrails.rawValue,
             messages: messages,
             entries: entries.map { entry in
                 ExportedTranscriptPayload.Entry(role: entry.role, content: entry.content)
@@ -120,8 +129,11 @@ struct FeedbackCommand: AsyncParsableCommand {
 
 struct FeedbackExportSummaryPayload: Encodable {
     let command: String
+    let useCase: String
+    let guardrails: String
     let prompt: String
     let sentiment: String?
+    let issues: [String]
     let file: String
     let bytes: Int
 }
@@ -134,6 +146,8 @@ struct FeedbackExportCommand: AsyncParsableCommand {
 
     @OptionGroup var options: GlobalCommandOptions
     @OptionGroup var generation: GenerationFlags
+    @OptionGroup var useCaseFlags: ModelUseCaseFlags
+    @OptionGroup var issueFlags: FeedbackIssueFlags
     @OptionGroup var outputFile: ArtifactOutputOptions
     @OptionGroup var promptInput: PromptInputOptions
 
@@ -148,6 +162,7 @@ struct FeedbackExportCommand: AsyncParsableCommand {
         let exportPath = try validatedExportPath(outputFile.file)
         let resolvedOutput = try options.resolvedOutput()
         let generationOptions = try generation.validatedOptions()
+        let issues = try issueFlags.resolvedIssues()
 
         if options.dryRun {
             try CLIOutput.emit(
@@ -155,7 +170,10 @@ struct FeedbackExportCommand: AsyncParsableCommand {
                     command: "feedback export",
                     prompt: resolvedPrompt.value,
                     promptFile: resolvedPrompt.file,
-                    file: exportPath
+                    file: exportPath,
+                    useCase: useCaseFlags.useCase.rawValue,
+                    guardrails: generation.guardrails.rawValue,
+                    feedbackIssues: issueFlags.issue.map(\.rawValue)
                 ),
                 human: "[dry-run] afm feedback export\nFile: \(exportPath)",
                 options: resolvedOutput
@@ -163,9 +181,9 @@ struct FeedbackExportCommand: AsyncParsableCommand {
             return
         }
 
-        _ = try requireFoundationModelsAvailability()
+        _ = try requireFoundationModelsAvailability(useCase: useCaseFlags.useCase)
         let model = SystemLanguageModel(
-            useCase: AFMModelUseCase.general.foundationModelsValue,
+            useCase: useCaseFlags.useCase.foundationModelsValue,
             guardrails: generation.guardrails.foundationModelsValue
         )
         let session = makeFeedbackSession(model: model, systemPrompt: generation.systemPrompt)
@@ -186,14 +204,18 @@ struct FeedbackExportCommand: AsyncParsableCommand {
 
         let data = session.logFeedbackAttachment(
             sentiment: sentiment?.foundationModelsValue,
+            issues: issues,
             desiredOutput: desiredEntry
         )
         try writeFileData(data, to: exportPath)
 
         let payload = FeedbackExportSummaryPayload(
             command: "feedback export",
+            useCase: useCaseFlags.useCase.rawValue,
+            guardrails: generation.guardrails.rawValue,
             prompt: resolvedPrompt.value,
             sentiment: sentiment?.rawValue,
+            issues: issueFlags.issue.map(\.rawValue),
             file: exportPath,
             bytes: data.count
         )

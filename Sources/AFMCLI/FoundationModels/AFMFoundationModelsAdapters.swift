@@ -6,6 +6,8 @@ extension AFMModelUseCase {
         switch self {
         case .general:
             .general
+        case .contentTagging:
+            .contentTagging
         }
     }
 }
@@ -17,6 +19,29 @@ extension AFMGuardrails {
             .default
         case .permissiveContentTransformations:
             .permissiveContentTransformations
+        }
+    }
+}
+
+extension AFMFeedbackIssueCategory {
+    var foundationModelsValue: LanguageModelFeedback.Issue.Category {
+        switch self {
+        case .unhelpful:
+            .unhelpful
+        case .tooVerbose:
+            .tooVerbose
+        case .didNotFollowInstructions:
+            .didNotFollowInstructions
+        case .incorrect:
+            .incorrect
+        case .stereotypeOrBias:
+            .stereotypeOrBias
+        case .suggestiveOrSexual:
+            .suggestiveOrSexual
+        case .vulgarOrOffensive:
+            .vulgarOrOffensive
+        case .triggeredGuardrailUnexpectedly:
+            .triggeredGuardrailUnexpectedly
         }
     }
 }
@@ -45,18 +70,19 @@ extension AFMGenerationOptions {
 }
 
 struct AFMFoundationModelsAvailabilityChecker: AFMModelAvailabilityChecking {
-    func currentAvailability() -> AFMAvailabilityResult {
-        switch SystemLanguageModel.default.availability {
+    func currentAvailability(useCase: AFMModelUseCase = .general) -> AFMAvailabilityResult {
+        let model = makeModel(useCase: useCase, guardrails: .default)
+        switch model.availability {
         case .available:
-            AFMAvailabilityResult(
+            return AFMAvailabilityResult(
                 isAvailable: true,
-                metadata: AFMExecutionMetadata(provider: "Foundation Models")
+                metadata: AFMExecutionMetadata(provider: "Foundation Models", modelIdentifier: useCase.rawValue)
             )
         case .unavailable(let reason):
-            AFMAvailabilityResult(
+            return AFMAvailabilityResult(
                 isAvailable: false,
                 reason: map(reason),
-                metadata: AFMExecutionMetadata(provider: "Foundation Models")
+                metadata: AFMExecutionMetadata(provider: "Foundation Models", modelIdentifier: useCase.rawValue)
             )
         }
     }
@@ -76,8 +102,9 @@ struct AFMFoundationModelsAvailabilityChecker: AFMModelAvailabilityChecking {
 }
 
 struct AFMFoundationModelsSupportedLanguageLister: AFMSupportedLanguageListing {
-    func supportedLanguages(locale: Locale = .current) -> AFMSupportedLanguagesResult {
-        let languages = SystemLanguageModel.default.supportedLanguages.map { language in
+    func supportedLanguages(useCase: AFMModelUseCase = .general, locale: Locale = .current) -> AFMSupportedLanguagesResult {
+        let model = makeModel(useCase: useCase, guardrails: .default)
+        let languages = model.supportedLanguages.map { language in
             AFMSupportedLanguageDescriptor(
                 identifier: language.maximalIdentifier,
                 languageCode: language.languageCode?.identifier ?? "",
@@ -87,7 +114,7 @@ struct AFMFoundationModelsSupportedLanguageLister: AFMSupportedLanguageListing {
 
         return AFMSupportedLanguagesResult(
             languages: languages,
-            metadata: AFMExecutionMetadata(provider: "Foundation Models")
+            metadata: AFMExecutionMetadata(provider: "Foundation Models", modelIdentifier: useCase.rawValue)
         )
     }
 }
@@ -175,10 +202,15 @@ struct AFMFoundationModelsStructuredGenerator: AFMStructuredGenerationProviding 
             response = try await session.respond(
                 to: Prompt(prompt),
                 generating: type,
+                includeSchemaInPrompt: request.includeSchemaInPrompt,
                 options: generationOptions.foundationModelsValue
             )
         } else {
-            response = try await session.respond(to: Prompt(prompt), generating: type)
+            response = try await session.respond(
+                to: Prompt(prompt),
+                generating: type,
+                includeSchemaInPrompt: request.includeSchemaInPrompt
+            )
         }
 
         let tokenCount = await session.transcript.afmTokenCount(using: model)
@@ -204,10 +236,15 @@ struct AFMFoundationModelsDynamicSchemaGenerator: AFMDynamicSchemaGenerationProv
             output = try await session.respond(
                 to: Prompt(prompt),
                 schema: request.schema,
+                includeSchemaInPrompt: request.includeSchemaInPrompt,
                 options: generationOptions.foundationModelsValue
             ).content
         } else {
-            output = try await session.respond(to: Prompt(prompt), schema: request.schema).content
+            output = try await session.respond(
+                to: Prompt(prompt),
+                schema: request.schema,
+                includeSchemaInPrompt: request.includeSchemaInPrompt
+            ).content
         }
 
         let tokenCount = await session.transcript.afmTokenCount(using: model)

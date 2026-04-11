@@ -68,6 +68,58 @@ struct AFMInvocationContext: Sendable, Hashable, Codable {
 
 enum AFMModelUseCase: String, Sendable, Hashable, Codable {
     case general
+    case contentTagging = "content-tagging"
+}
+
+extension AFMModelUseCase: CaseIterable, ExpressibleByArgument {
+    init?(argument: String) {
+        let normalized = argument.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        switch normalized {
+        case "general":
+            self = .general
+        case "content-tagging", "contenttagging", "tagging":
+            self = .contentTagging
+        default:
+            return nil
+        }
+    }
+}
+
+enum AFMFeedbackIssueCategory: String, Sendable, Hashable, Codable, CaseIterable {
+    case unhelpful = "unhelpful"
+    case tooVerbose = "too-verbose"
+    case didNotFollowInstructions = "did-not-follow-instructions"
+    case incorrect = "incorrect"
+    case stereotypeOrBias = "stereotype-or-bias"
+    case suggestiveOrSexual = "suggestive-or-sexual"
+    case vulgarOrOffensive = "vulgar-or-offensive"
+    case triggeredGuardrailUnexpectedly = "triggered-guardrail-unexpectedly"
+}
+
+extension AFMFeedbackIssueCategory: ExpressibleByArgument {
+    init?(argument: String) {
+        let normalized = argument.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        switch normalized {
+        case "unhelpful":
+            self = .unhelpful
+        case "too-verbose", "tooverbose":
+            self = .tooVerbose
+        case "did-not-follow-instructions", "didnotfollowinstructions":
+            self = .didNotFollowInstructions
+        case "incorrect":
+            self = .incorrect
+        case "stereotype-or-bias", "stereotypeorbias":
+            self = .stereotypeOrBias
+        case "suggestive-or-sexual", "suggestiveorsexual":
+            self = .suggestiveOrSexual
+        case "vulgar-or-offensive", "vulgaroroffensive":
+            self = .vulgarOrOffensive
+        case "triggered-guardrail-unexpectedly", "triggeredguardrailunexpectedly":
+            self = .triggeredGuardrailUnexpectedly
+        default:
+            return nil
+        }
+    }
 }
 
 enum AFMGuardrails: String, Sendable, Hashable, Codable, CaseIterable {
@@ -297,6 +349,7 @@ struct AFMStructuredGenerationRequest<Output: Generable & Sendable>: AFMCapabili
     let modelUseCase: AFMModelUseCase
     let guardrails: AFMGuardrails?
     let generationOptions: AFMGenerationOptions?
+    let includeSchemaInPrompt: Bool
     let context: AFMInvocationContext
 }
 
@@ -307,6 +360,7 @@ struct AFMDynamicSchemaGenerationRequest: AFMCapabilityRequest, Sendable {
     let modelUseCase: AFMModelUseCase
     let guardrails: AFMGuardrails?
     let generationOptions: AFMGenerationOptions?
+    let includeSchemaInPrompt: Bool
     let context: AFMInvocationContext
 }
 
@@ -320,11 +374,11 @@ struct AFMRunConversationRequest: AFMCapabilityRequest, Sendable {
 }
 
 protocol AFMModelAvailabilityChecking: Sendable {
-    func currentAvailability() -> AFMAvailabilityResult
+    func currentAvailability(useCase: AFMModelUseCase) -> AFMAvailabilityResult
 }
 
 protocol AFMSupportedLanguageListing: Sendable {
-    func supportedLanguages(locale: Locale) -> AFMSupportedLanguagesResult
+    func supportedLanguages(useCase: AFMModelUseCase, locale: Locale) -> AFMSupportedLanguagesResult
 }
 
 protocol AFMTextGenerationProviding: Sendable {

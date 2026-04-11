@@ -17,6 +17,8 @@ struct SessionCommand: AsyncParsableCommand {
 
 struct SessionResponsePayload: Encodable {
     let command: String
+    let useCase: String
+    let guardrails: String
     let prompt: String?
     let messages: [String]?
     let response: String?
@@ -29,6 +31,8 @@ struct SessionResponsePayload: Encodable {
 private struct SessionStreamingEventPayload: Encodable {
     let event: String
     let command: String
+    let useCase: String?
+    let guardrails: String?
     let messageIndex: Int?
     let prompt: String?
     let content: String?
@@ -47,6 +51,7 @@ struct SessionRespondCommand: AsyncParsableCommand {
 
     @OptionGroup var options: GlobalCommandOptions
     @OptionGroup var generation: GenerationFlags
+    @OptionGroup var useCaseFlags: ModelUseCaseFlags
     @OptionGroup var transcriptFlags: TranscriptIncludeFlags
     @OptionGroup var promptInput: PromptInputOptions
     @OptionGroup var toolSource: ToolSourceOptions
@@ -63,6 +68,8 @@ struct SessionRespondCommand: AsyncParsableCommand {
                     command: "session respond",
                     prompt: resolvedPrompt.value,
                     promptFile: resolvedPrompt.file,
+                    useCase: useCaseFlags.useCase.rawValue,
+                    guardrails: generation.guardrails.rawValue,
                     toolFiles: toolResolution.references.map { $0.filePath },
                     toolDirectory: toolSource.tool.isEmpty ? nil : expandedPathString(toolSource.toolDir)
                 ),
@@ -72,11 +79,13 @@ struct SessionRespondCommand: AsyncParsableCommand {
             return
         }
 
-        _ = try requireFoundationModelsAvailability()
+        _ = try requireFoundationModelsAvailability(useCase: useCaseFlags.useCase)
         let engine = await MainActor.run {
             AFMConversationEngine(
                 configuration: defaultConversationConfiguration(
                     systemPrompt: generation.systemPrompt,
+                    useCase: useCaseFlags.useCase,
+                    guardrails: generation.guardrails,
                     tools: toolResolution.tools
                 )
             )
@@ -90,6 +99,8 @@ struct SessionRespondCommand: AsyncParsableCommand {
 
         let payload = SessionResponsePayload(
             command: "session respond",
+            useCase: useCaseFlags.useCase.rawValue,
+            guardrails: generation.guardrails.rawValue,
             prompt: resolvedPrompt.value,
             messages: nil,
             response: response,
@@ -117,6 +128,7 @@ struct SessionStreamCommand: AsyncParsableCommand {
 
     @OptionGroup var options: GlobalCommandOptions
     @OptionGroup var generation: GenerationFlags
+    @OptionGroup var useCaseFlags: ModelUseCaseFlags
     @OptionGroup var transcriptFlags: TranscriptIncludeFlags
     @OptionGroup var promptInput: PromptInputOptions
     @OptionGroup var toolSource: ToolSourceOptions
@@ -133,6 +145,8 @@ struct SessionStreamCommand: AsyncParsableCommand {
                     command: "session stream",
                     prompt: resolvedPrompt.value,
                     promptFile: resolvedPrompt.file,
+                    useCase: useCaseFlags.useCase.rawValue,
+                    guardrails: generation.guardrails.rawValue,
                     toolFiles: toolResolution.references.map { $0.filePath },
                     toolDirectory: toolSource.tool.isEmpty ? nil : expandedPathString(toolSource.toolDir)
                 ),
@@ -142,11 +156,13 @@ struct SessionStreamCommand: AsyncParsableCommand {
             return
         }
 
-        _ = try requireFoundationModelsAvailability()
+        _ = try requireFoundationModelsAvailability(useCase: useCaseFlags.useCase)
         let engine = await MainActor.run {
             AFMConversationEngine(
                 configuration: defaultConversationConfiguration(
                     systemPrompt: generation.systemPrompt,
+                    useCase: useCaseFlags.useCase,
+                    guardrails: generation.guardrails,
                     tools: toolResolution.tools
                 )
             )
@@ -154,6 +170,8 @@ struct SessionStreamCommand: AsyncParsableCommand {
 
         let streamToConsole = resolvedOutput.format == .text
         let streamToJSON = resolvedOutput.format == .json
+        let selectedUseCase = useCaseFlags.useCase.rawValue
+        let selectedGuardrails = generation.guardrails.rawValue
         if streamToJSON && options.pretty {
             throw ValidationError("--pretty is not supported with streaming JSON output")
         }
@@ -167,6 +185,8 @@ struct SessionStreamCommand: AsyncParsableCommand {
                 .init(
                     event: "started",
                     command: "session stream",
+                    useCase: selectedUseCase,
+                    guardrails: selectedGuardrails,
                     messageIndex: nil,
                     prompt: resolvedPrompt.value,
                     content: nil,
@@ -197,6 +217,8 @@ struct SessionStreamCommand: AsyncParsableCommand {
                     .init(
                         event: "delta",
                         command: "session stream",
+                        useCase: selectedUseCase,
+                        guardrails: selectedGuardrails,
                         messageIndex: nil,
                         prompt: resolvedPrompt.value,
                         content: partial,
@@ -221,6 +243,8 @@ struct SessionStreamCommand: AsyncParsableCommand {
         let tokenCount = await MainActor.run { engine.currentTokenCount }
         let payload = SessionResponsePayload(
             command: "session stream",
+            useCase: selectedUseCase,
+            guardrails: selectedGuardrails,
             prompt: resolvedPrompt.value,
             messages: nil,
             response: response,
@@ -234,6 +258,8 @@ struct SessionStreamCommand: AsyncParsableCommand {
                 .init(
                     event: "completed",
                     command: "session stream",
+                    useCase: selectedUseCase,
+                    guardrails: selectedGuardrails,
                     messageIndex: nil,
                     prompt: resolvedPrompt.value,
                     content: nil,
@@ -273,6 +299,7 @@ struct SessionChatCommand: AsyncParsableCommand {
 
     @OptionGroup var options: GlobalCommandOptions
     @OptionGroup var generation: GenerationFlags
+    @OptionGroup var useCaseFlags: ModelUseCaseFlags
     @OptionGroup var transcriptFlags: TranscriptIncludeFlags
     @OptionGroup var session: SessionOptions
     @OptionGroup var streaming: StreamingOptions
@@ -291,6 +318,8 @@ struct SessionChatCommand: AsyncParsableCommand {
                     command: "session chat",
                     messages: validatedMessages,
                     messageFiles: resolvedMessages.compactMap { $0.file },
+                    useCase: useCaseFlags.useCase.rawValue,
+                    guardrails: generation.guardrails.rawValue,
                     toolFiles: toolResolution.references.map { $0.filePath },
                     toolDirectory: toolSource.tool.isEmpty ? nil : expandedPathString(toolSource.toolDir)
                 ),
@@ -300,11 +329,13 @@ struct SessionChatCommand: AsyncParsableCommand {
             return
         }
 
-        _ = try requireFoundationModelsAvailability()
+        _ = try requireFoundationModelsAvailability(useCase: useCaseFlags.useCase)
         let engine = await MainActor.run {
             AFMConversationEngine(
                 configuration: defaultConversationConfiguration(
                     systemPrompt: generation.systemPrompt,
+                    useCase: useCaseFlags.useCase,
+                    guardrails: generation.guardrails,
                     tools: toolResolution.tools
                 )
             )
@@ -312,6 +343,8 @@ struct SessionChatCommand: AsyncParsableCommand {
         var exchanges: [AFMConversationExchange] = []
         let streamToConsole = streaming.stream && resolvedOutput.format == .text
         let streamToJSON = streaming.stream && resolvedOutput.format == .json
+        let selectedUseCase = useCaseFlags.useCase.rawValue
+        let selectedGuardrails = generation.guardrails.rawValue
         if streamToJSON && options.pretty {
             throw ValidationError("--pretty is not supported with streaming JSON output")
         }
@@ -327,6 +360,8 @@ struct SessionChatCommand: AsyncParsableCommand {
                     .init(
                         event: "message_started",
                         command: "session chat",
+                        useCase: selectedUseCase,
+                        guardrails: selectedGuardrails,
                         messageIndex: index,
                         prompt: entry,
                         content: nil,
@@ -360,6 +395,8 @@ struct SessionChatCommand: AsyncParsableCommand {
                             .init(
                                 event: "message_delta",
                                 command: "session chat",
+                                useCase: selectedUseCase,
+                                guardrails: selectedGuardrails,
                                 messageIndex: index,
                                 prompt: entry,
                                 content: partial,
@@ -385,6 +422,8 @@ struct SessionChatCommand: AsyncParsableCommand {
                     .init(
                         event: "message_completed",
                         command: "session chat",
+                        useCase: selectedUseCase,
+                        guardrails: selectedGuardrails,
                         messageIndex: index,
                         prompt: entry,
                         content: nil,
@@ -405,6 +444,8 @@ struct SessionChatCommand: AsyncParsableCommand {
         let tokenCount = await MainActor.run { engine.currentTokenCount }
         let payload = SessionResponsePayload(
             command: "session chat",
+            useCase: selectedUseCase,
+            guardrails: selectedGuardrails,
             prompt: nil,
             messages: validatedMessages,
             response: nil,
@@ -418,6 +459,8 @@ struct SessionChatCommand: AsyncParsableCommand {
                 .init(
                     event: "session_completed",
                     command: "session chat",
+                    useCase: selectedUseCase,
+                    guardrails: selectedGuardrails,
                     messageIndex: nil,
                     prompt: nil,
                     content: nil,
