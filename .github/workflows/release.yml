@@ -61,6 +61,17 @@ jobs:
             echo "enabled=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Detect tap publishing configuration
+        id: tap
+        env:
+          TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
+        run: |
+          if [ -n "$TAP_GITHUB_TOKEN" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Import Apple certificate
         if: ${{ steps.signing.outputs.enabled == 'true' }}
         uses: apple-actions/import-codesign-certs@v6
@@ -89,14 +100,10 @@ jobs:
           fi
 
       - name: Update Homebrew tap
+        if: ${{ steps.tap.outputs.enabled == 'true' }}
         env:
           TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
         run: |
-          if [ -z "$TAP_GITHUB_TOKEN" ]; then
-            echo "::error::TAP_GITHUB_TOKEN not set"
-            exit 1
-          fi
-
           export SHA256=$(shasum -a 256 "release/afm_${VERSION}_macOS_universal" | cut -d ' ' -f 1)
 
           git clone "https://x-access-token:${TAP_GITHUB_TOKEN}@github.com/rudrankriyam/homebrew-tap.git" homebrew-tap
@@ -142,3 +149,7 @@ jobs:
           git add Formula/afm.rb
           git commit -m "Update afm to ${VERSION}" || echo "No changes to commit"
           git push
+
+      - name: Note skipped Homebrew tap update
+        if: ${{ steps.tap.outputs.enabled != 'true' }}
+        run: echo "Skipping Homebrew tap update because TAP_GITHUB_TOKEN is not configured."
