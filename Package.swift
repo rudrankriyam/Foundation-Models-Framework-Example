@@ -16,6 +16,10 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "AFMCLI"
+        ),
+        .testTarget(
+            name: "AFMCLITests",
+            dependencies: ["AFMCLI"]
         )
     ]
 )
