@@ -21,12 +21,10 @@ extension Transcript.Entry {
         }
     }
 
-    func afmTokenCount(using model: SystemLanguageModel = .default) async -> Int {
-        if #available(macOS 26.4, *) {
-            if let realTokenCount = try? await model.tokenCount(for: [self]) {
-                return realTokenCount
-            }
-        }
+    // The CLI needs a portable budget estimate across GA and beta SDKs.
+    // Some local Xcode builds expose token-count helpers that aren't present
+    // on the hosted CI runner yet, so we intentionally stick to estimation here.
+    func afmTokenCount(using _: SystemLanguageModel = .default) async -> Int {
         return afmEstimatedTokenCount
     }
 
@@ -75,23 +73,11 @@ extension Transcript {
         reduce(0) { $0 + $1.afmEstimatedTokenCount }
     }
 
-    func afmTokenCount(using model: SystemLanguageModel = .default) async -> Int {
-        if #available(macOS 26.4, *) {
-            if let realTokenCount = try? await model.tokenCount(for: Array(self)) {
-                return realTokenCount
-            }
-        }
+    func afmTokenCount(using _: SystemLanguageModel = .default) async -> Int {
         return afmEstimatedTokenCount
     }
 
-    func afmSafeTokenCount(using model: SystemLanguageModel = .default) async -> Int {
-        if #available(macOS 26.4, *) {
-            if let realTokens = try? await model.tokenCount(for: Array(self)) {
-                let buffer = Int(Double(realTokens) * 0.05)
-                return realTokens + buffer
-            }
-        }
-
+    func afmSafeTokenCount(using _: SystemLanguageModel = .default) async -> Int {
         let baseTokens = afmEstimatedTokenCount
         let buffer = Int(Double(baseTokens) * 0.25)
         return baseTokens + buffer + 100
@@ -108,7 +94,7 @@ extension Transcript {
 
     func afmEntriesWithinTokenBudget(
         _ budget: Int,
-        using model: SystemLanguageModel = .default
+        using _: SystemLanguageModel = .default
     ) async -> [Transcript.Entry] {
         let instructionsEntry = first {
             if case .instructions = $0 { return true }
@@ -117,19 +103,6 @@ extension Transcript {
         let conversationEntries = filter { entry in
             if case .instructions = entry { return false }
             return true
-        }
-
-        if #available(macOS 26.4, *) {
-            return await afmRealTokenBudgetWindow(
-                instructions: instructionsEntry,
-                conversation: conversationEntries,
-                budget: budget,
-                model: model
-            ) ?? afmEstimatedTokenBudgetWindow(
-                instructions: instructionsEntry,
-                conversation: conversationEntries,
-                budget: budget
-            )
         }
 
         return afmEstimatedTokenBudgetWindow(
@@ -162,49 +135,6 @@ extension Transcript {
         }
 
         return base + Array(selectedConversation.reversed())
-    }
-
-    @available(macOS 26.4, *)
-    private func afmRealTokenBudgetWindow(
-        instructions: Transcript.Entry?,
-        conversation: [Transcript.Entry],
-        budget: Int,
-        model: SystemLanguageModel
-    ) async -> [Transcript.Entry]? {
-        let base: [Transcript.Entry] = instructions.map { [$0] } ?? []
-        let baseTokens: Int
-
-        if base.isEmpty {
-            baseTokens = 0
-        } else if let counted = try? await model.tokenCount(for: base) {
-            baseTokens = counted
-        } else {
-            return nil
-        }
-
-        if baseTokens > budget {
-            return base
-        }
-
-        var low = 0
-        var high = conversation.count
-        while low < high {
-            let mid = (low + high + 1) / 2
-            let recentEntries = Array(conversation.suffix(mid))
-            let candidate = base + recentEntries
-
-            guard let tokens = try? await model.tokenCount(for: candidate) else {
-                return nil
-            }
-
-            if tokens <= budget {
-                low = mid
-            } else {
-                high = mid - 1
-            }
-        }
-
-        return base + Array(conversation.suffix(low))
     }
 }
 
