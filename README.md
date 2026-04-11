@@ -2,7 +2,7 @@
 
 `afm` is a native command-line interface for Foundation Models on Apple platforms.
 
-Apple's examples are useful for learning the framework, but they are not the tool you keep installed for day-to-day work. `afm` is meant to fill that gap. It is a real CLI for checking model readiness, trying prompts, streaming responses, extracting structured data, validating tool manifests, and exporting artifacts you can keep or automate around.
+It is built for day-to-day work with Foundation Models: checking model readiness, trying prompts, streaming responses, extracting structured data, validating tool manifests, and exporting artifacts you can keep or automate around.
 
 ## Install
 
@@ -28,10 +28,10 @@ To run live model commands, you still need a supported Apple Intelligence Mac. F
 
 ## Why `afm`
 
-- The Foundation Models examples teach the framework, but they are not a serious CLI.
-- The Python SDK is useful, but there is room for a native macOS-first tool with better terminal ergonomics.
-- AI agents need predictable flags, JSON output, and file-based workflows.
-- Foundation Models deserves a tool that feels like a product, not a demo sidecar.
+- It gives Foundation Models a direct command-line workflow for prompting, tagging, schemas, tools, transcripts, and feedback.
+- It is built for real terminal use: explicit flags, readable help, file-based inputs, and clean JSON output.
+- It works well in automation and agent flows with dry-runs, stdin support, schema and tool directories, and NDJSON-style streaming events.
+- It keeps important runtime controls close at hand, including use cases, guardrails, schema prompting, and feedback issues.
 
 ## First Commands
 
@@ -144,7 +144,7 @@ afm session chat --stream --output json --message "Hello" --message "Keep going.
 
 ## Foundation Models Controls
 
-`afm` surfaces the important Foundation Models knobs directly instead of hiding them inside example-only code:
+`afm` surfaces the important Foundation Models knobs directly:
 
 ```bash
 afm model use-cases
