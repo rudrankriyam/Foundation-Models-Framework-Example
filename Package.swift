@@ -13,9 +13,15 @@ let package = Package(
             targets: ["AFMCLI"]
         )
     ],
+    dependencies: [
+        .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0")
+    ],
     targets: [
         .executableTarget(
-            name: "AFMCLI"
+            name: "AFMCLI",
+            dependencies: [
+                .product(name: "ArgumentParser", package: "swift-argument-parser")
+            ]
         ),
         .testTarget(
             name: "AFMCLITests",
