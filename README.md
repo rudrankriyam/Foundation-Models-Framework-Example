@@ -2,20 +2,20 @@
 
 `afm` is a native command-line interface for Foundation Models on Apple platforms.
 
-This repository is the standalone home for the `afm` command. The goal is simple: make Foundation Models fast to script, pleasant to explore, and reliable to automate. `afm` is built as a single Swift executable with a runtime-first architecture so it can grow into a serious tool for sessions, streaming, structured generation, transcripts, feedback export, evals, and future Foundation Models capabilities.
+Apple's examples are useful for learning the framework, but they are not the tool you keep installed for day-to-day work. `afm` is meant to fill that gap. It is a real CLI for checking model readiness, trying prompts, streaming responses, extracting structured data, validating tool manifests, and exporting artifacts you can keep or automate around.
 
-## Why `afm`
+## Install
 
-- A real CLI product instead of a demo companion
-- Natural workflows for model inspection, prompting, tagging, schemas, tools, transcripts, and feedback
-- TTY-aware output defaults: readable text in terminals, JSON for pipes and CI
-- Agent-friendly JSON streaming for live session output
-- File-backed schemas and tools that can be resolved from `.afm/` directories
-- `@file`, `--stdin`, and directory-based artifact loading for fast iteration
-- Strong upfront validation before model work starts
-- First-class Foundation Models controls for use cases, guardrails, schema prompting, and feedback issues
+Homebrew is the primary install path:
 
-## Install From Source
+```bash
+brew tap rudrankriyam/tap
+brew install afm
+```
+
+Tagged releases update the tap automatically.
+
+If you want to build it yourself:
 
 ```bash
 git clone https://github.com/rudrankriyam/Foundation-Models-Framework-CLI.git
@@ -24,28 +24,33 @@ swift build -c release
 .build/release/afm --help
 ```
 
-Start with a readiness check:
+To run live model commands, you still need a supported Apple Intelligence Mac. File-based workflows, dry-runs, schema inspection, and tool validation are still useful when the on-device model is unavailable.
 
-```bash
-afm model status
-```
+## Why `afm`
+
+- The Foundation Models examples teach the framework, but they are not a serious CLI.
+- The Python SDK is useful, but there is room for a native macOS-first tool with better terminal ergonomics.
+- AI agents need predictable flags, JSON output, and file-based workflows.
+- Foundation Models deserves a tool that feels like a product, not a demo sidecar.
 
 ## First Commands
 
+These are good starting points after install:
+
 ```bash
 afm model status
-afm tag run --prompt "A joyful dog playing in a sunny park."
 afm session respond --prompt "Summarize Foundation Models in one paragraph."
-afm schema run typed-person --input "Alex Rivera is a designer in Berlin."
 afm session stream --prompt "Write a short poem about rain."
+afm tag run --prompt "A joyful dog playing in a sunny park."
+afm schema run typed-person --input "Alex Rivera is a designer in Berlin."
 afm schema run custom --schema person-card --schema-dir .afm/schemas --input @person.txt
 ```
 
 ## Sample Workflows
 
-### Model inspection
+### Check the model
 
-Use `afm model` to inspect runtime readiness and Foundation Models capabilities.
+Use `afm model` when you want to know what the system can do right now.
 
 ```bash
 afm model status
@@ -55,9 +60,9 @@ afm model use-cases
 afm model guardrails
 ```
 
-### Prompting and chat
+### Try prompts and chat
 
-Use `afm session` for one-shot prompts, streaming responses, and multi-turn conversations.
+Use `afm session` for one-shot prompting, streaming, and shared-context conversations.
 
 ```bash
 afm session respond --prompt "Summarize Foundation Models in one paragraph."
@@ -67,17 +72,17 @@ afm session stream --prompt "Write a short poem about rain."
 afm session chat --message "Hello" --message "Now answer in French."
 ```
 
-### Content tagging
+### Try content tagging
 
-Use `afm tag` when you want to try the content-tagging system model directly.
+Use `afm tag` when you specifically want the content-tagging system model instead of general prompting.
 
 ```bash
 afm tag run --prompt "A joyful dog playing in a sunny park."
 ```
 
-### Structured generation
+### Extract structured data
 
-Use `afm schema` for typed generation and runtime-defined schemas.
+Use `afm schema` when you want the model to return data in a predictable shape.
 
 ```bash
 afm schema list
@@ -89,9 +94,9 @@ afm schema run custom --schema person-card --schema-dir .afm/schemas --input @pe
 afm schema run custom --schema person-card --input @person.txt --no-include-schema-in-prompt
 ```
 
-### Tool artifacts
+### Inspect and call tool manifests
 
-Use `afm tool` to inspect, validate, and execute file-backed tool manifests.
+Use `afm tool` to validate file-backed tools before wiring them into larger flows.
 
 ```bash
 afm tool inspect --tool echo-json --tool-dir .afm/tools
@@ -99,34 +104,18 @@ afm tool validate --tool echo-json --tool-dir .afm/tools
 afm tool call --tool echo-json --tool-dir .afm/tools --args @args.json
 ```
 
-### Transcript and feedback exports
+### Export transcripts and feedback
 
-Use export commands to persist transcripts and Feedback Assistant attachments.
+Use export commands when you want artifacts you can keep, diff, or send elsewhere.
 
 ```bash
 afm transcript export --message "Hello" --message "Summarize our conversation." --file transcript.json
 afm feedback export --prompt "What is the capital of France?" --sentiment positive --issue incorrect --file feedback.json
 ```
 
-## Output And Streaming
-
-`afm` defaults to text in an interactive terminal and JSON when piped or used in automation. You can always override that explicitly:
-
-```bash
-afm model status --output text
-afm model status --output json --pretty
-```
-
-Streaming JSON output is emitted as newline-delimited event objects so agents and scripts can react incrementally instead of waiting for one final blob:
-
-```bash
-afm session stream --output json --prompt "Reply with three short lines."
-afm session chat --stream --output json --message "Hello" --message "Keep going."
-```
-
 ## Files, Pipes, And Automation
 
-`afm` is designed to be easy to drive from files, pipes, and agent workflows:
+`afm` is designed to work well with files, pipes, and agent-style automation:
 
 ```bash
 afm session respond --prompt @prompt.md
@@ -137,9 +126,25 @@ afm tool call --tool echo-json --tool-dir .afm/tools --args @args.json
 
 Bare schema and tool identifiers are resolved through `--schema-dir` and `--tool-dir`, which default to `.afm/schemas` and `.afm/tools`.
 
+## Output And Streaming
+
+`afm` defaults to text in an interactive terminal and JSON when piped or used in automation:
+
+```bash
+afm model status --output text
+afm model status --output json --pretty
+```
+
+Streaming JSON output is emitted as newline-delimited event objects so scripts and agents can react incrementally instead of waiting for one final blob:
+
+```bash
+afm session stream --output json --prompt "Reply with three short lines."
+afm session chat --stream --output json --message "Hello" --message "Keep going."
+```
+
 ## Foundation Models Controls
 
-`afm` exposes the main Foundation Models controls directly instead of hiding them inside demo presets:
+`afm` surfaces the important Foundation Models knobs directly instead of hiding them inside example-only code:
 
 ```bash
 afm model use-cases
@@ -160,7 +165,7 @@ afm feedback export \
   --file feedback.json
 ```
 
-Supported Foundation Models use cases:
+Supported use cases:
 
 - `general`
 - `content-tagging`
@@ -170,15 +175,14 @@ Supported guardrails:
 - `default`
 - `permissive-content-transformations`
 
-## UX Principles
+## Design Goals
 
-- Explicit long-form flags in docs, tests, and examples
-- `--output text|json` for predictable integrations
-- `--pretty` only when JSON output is selected
-- `@file`, `--stdin`, and directory-backed artifact resolution for prompts, schemas, tools, and inputs
-- `--use-case`, `--guardrails`, `--include-schema-in-prompt`, and feedback `--issue` flags map cleanly to Foundation Models APIs
-- Unknown-command suggestions for root and grouped subcommands
-- Export commands that work cleanly with nested output paths
+- Long-form flags in docs and examples so commands stay readable
+- Human-readable output in a terminal, JSON when piped
+- NDJSON-style event streaming for agents and scripts
+- File-based schemas and tools instead of “edit Swift and rebuild”
+- Foundation Models concepts like use cases, guardrails, schema prompting, and feedback issues mapped directly into the CLI
+- Validation errors that fail early instead of silently doing the wrong thing
 
 ## Local Development
 

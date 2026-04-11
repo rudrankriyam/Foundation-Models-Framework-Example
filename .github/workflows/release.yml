@@ -1,0 +1,131 @@
+name: Release CLI
+
+on:
+  push:
+    tags:
+      - '[0-9]*.[0-9]*.[0-9]*'
+
+jobs:
+  release:
+    runs-on: macos-26
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Validate release tag
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+
+          if [[ ! "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Release tags must match x.y.z. Got: ${TAG}"
+            exit 1
+          fi
+
+          printf 'VERSION=%s\n' "$TAG" >> "$GITHUB_ENV"
+
+      - name: Show toolchain versions
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Resolve package dependencies
+        run: swift package resolve
+
+      - name: Run release guardrails
+        run: |
+          swift build
+          swift test \
+            --skip 'AFMCLITests\.(feedbackExportCreatesNestedDirectories|streamingJSONEmitsEvents|modelCommandsReturnStructuredJSON)'
+
+      - name: Build universal release binary
+        run: |
+          rm -rf .build-release release
+          mkdir -p release
+          swift build -c release --arch arm64 --arch x86_64 --product afm --scratch-path .build-release
+          cp .build-release/apple/Products/Release/afm "release/afm_${VERSION}_macOS_universal"
+          chmod +x "release/afm_${VERSION}_macOS_universal"
+          shasum -a 256 "release/afm_${VERSION}_macOS_universal" > "release/afm_${VERSION}_checksums.txt"
+
+      - name: Import Apple certificate
+        if: ${{ secrets.APPLE_DEVELOPER_ID_CERT != '' && secrets.APPLE_DEVELOPER_ID_PASSWORD != '' }}
+        uses: apple-actions/import-codesign-certs@v6
+        with:
+          p12-file-base64: ${{ secrets.APPLE_DEVELOPER_ID_CERT }}
+          p12-password: ${{ secrets.APPLE_DEVELOPER_ID_PASSWORD }}
+
+      - name: Code sign release binary
+        if: ${{ secrets.APPLE_DEVELOPER_ID != '' }}
+        env:
+          APPLE_DEVELOPER_ID: ${{ secrets.APPLE_DEVELOPER_ID }}
+        run: |
+          codesign --force --sign "$APPLE_DEVELOPER_ID" --timestamp --options=runtime "release/afm_${VERSION}_macOS_universal"
+
+      - name: Show release files
+        run: ls -la release
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "${VERSION}" >/dev/null 2>&1; then
+            gh release upload "${VERSION}" release/* --clobber
+          else
+            gh release create "${VERSION}" release/* --generate-notes --verify-tag
+          fi
+
+      - name: Update Homebrew tap
+        env:
+          TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
+        run: |
+          if [ -z "$TAP_GITHUB_TOKEN" ]; then
+            echo "::error::TAP_GITHUB_TOKEN not set"
+            exit 1
+          fi
+
+          export SHA256=$(shasum -a 256 "release/afm_${VERSION}_macOS_universal" | cut -d ' ' -f 1)
+
+          git clone "https://x-access-token:${TAP_GITHUB_TOKEN}@github.com/rudrankriyam/homebrew-tap.git" homebrew-tap
+          cd homebrew-tap
+
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          from textwrap import dedent
+
+          version = os.environ["VERSION"]
+          sha256 = os.environ["SHA256"]
+          formula = dedent(
+              f"""\
+              # typed: false
+              # frozen_string_literal: true
+
+              class Afm < Formula
+                desc "A native CLI for Foundation Models on Apple platforms"
+                homepage "https://github.com/rudrankriyam/Foundation-Models-Framework-CLI"
+                url "https://github.com/rudrankriyam/Foundation-Models-Framework-CLI/releases/download/{version}/afm_{version}_macOS_universal"
+                version "{version}"
+                sha256 "{sha256}"
+                license "MIT"
+
+                depends_on :macos
+
+                def install
+                  bin.install "afm_{version}_macOS_universal" => "afm"
+                end
+
+                test do
+                  assert_match "Foundation Models", shell_output("#{bin}/afm --help")
+                end
+              end
+              """
+          )
+          Path("Formula/afm.rb").write_text(formula, encoding="utf-8")
+          PY
+
+          git config user.name "Rudrank Riyam"
+          git config user.email "rudrankriyam@gmail.com"
+          git add Formula/afm.rb
+          git commit -m "Update afm to ${VERSION}" || echo "No changes to commit"
+          git push

@@ -1,0 +1,49 @@
+name: Main Branch
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: afm-main-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: macos-26
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Show toolchain versions
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Resolve package dependencies
+        run: swift package resolve
+
+      - name: Build debug binary
+        run: swift build
+
+      - name: Run deterministic CLI tests
+        run: |
+          swift test \
+            --skip 'AFMCLITests\.(feedbackExportCreatesNestedDirectories|streamingJSONEmitsEvents|modelCommandsReturnStructuredJSON)'
+
+      - name: Build universal release binary
+        run: |
+          rm -rf .build-release
+          swift build -c release --arch arm64 --arch x86_64 --product afm --scratch-path .build-release
+          mkdir -p build
+          cp .build-release/apple/Products/Release/afm build/afm_dev_macOS_universal
+          shasum -a 256 build/afm_dev_macOS_universal > build/afm_dev_checksums.txt
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: main-builds
+          path: build/
