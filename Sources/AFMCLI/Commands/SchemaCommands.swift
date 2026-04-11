@@ -55,6 +55,7 @@ struct SchemaRunCommand: AsyncParsableCommand {
         commandName: "run",
         abstract: "Execute one schema workflow.",
         subcommands: [
+            SchemaCustomCommand.self,
             TypedPersonSchemaCommand.self,
             BasicObjectSchemaCommand.self,
             ArraySchemaCommand.self,
@@ -77,6 +78,79 @@ struct DynamicSchemaPayload: Encodable {
     let input: String
     let json: String
     let tokenCount: Int?
+    let schemaFile: String?
+}
+
+struct SchemaCustomCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "custom",
+        abstract: "Run a dynamic schema loaded from a JSON or YAML file."
+    )
+
+    @OptionGroup var options: GlobalCommandOptions
+    @OptionGroup var generation: GenerationFlags
+    @OptionGroup var inputSource: InputSourceOptions
+    @OptionGroup var schemaSource: SchemaSourceOptions
+
+    mutating func run() async throws {
+        let resolvedOutput = try options.resolvedOutput()
+        let generationOptions = try generation.validatedOptions()
+        let schemaReference = try schemaSource.resolve()
+        let schemaDocument = try AFMArtifactRegistry.loadSchemaDocument(from: schemaReference)
+        let resolvedInput = try inputSource.resolve()
+
+        if options.dryRun {
+            try CLIOutput.emit(
+                payload: DryRunPayload(
+                    command: "schema run custom",
+                    input: resolvedInput.value,
+                    inputFile: resolvedInput.file,
+                    schema: schemaReference.identifier,
+                    schemaFile: schemaReference.filePath,
+                    schemaDirectory: schemaReference.directory
+                ),
+                human: "[dry-run] afm schema run custom\nSchema: \(schemaReference.filePath)\nInput: \(resolvedInput.value)",
+                options: resolvedOutput
+            )
+            return
+        }
+
+        _ = try requireFoundationModelsAvailability()
+        let result = try await GenerateDynamicSchemaContentUseCase().execute(
+            AFMDynamicSchemaGenerationRequest(
+                prompt: resolvedInput.value,
+                schema: try schemaDocument.generationSchema(fallbackName: schemaReference.identifier.camelizedSchemaName()),
+                systemPrompt: generation.systemPrompt,
+                modelUseCase: .general,
+                guardrails: generation.guardrails,
+                generationOptions: generationOptions,
+                context: afmContext()
+            )
+        )
+
+        let json = result.output.jsonString
+        let payload = DynamicSchemaPayload(
+            command: "schema run custom",
+            preset: schemaReference.identifier,
+            input: resolvedInput.value,
+            json: json,
+            tokenCount: result.metadata.tokenCount,
+            schemaFile: schemaReference.filePath
+        )
+        let human = """
+        Custom Schema
+
+        Schema: \(schemaReference.filePath)
+        \(json)
+        """
+        let verboseHuman: String
+        if options.verbose, let tokenCount = result.metadata.tokenCount {
+            verboseHuman = "\(human)\n\nToken count: \(tokenCount)"
+        } else {
+            verboseHuman = human
+        }
+        try CLIOutput.emit(payload: payload, human: verboseHuman, options: resolvedOutput)
+    }
 }
 
 struct TypedPersonSchemaCommand: AsyncParsableCommand {
@@ -87,9 +161,7 @@ struct TypedPersonSchemaCommand: AsyncParsableCommand {
 
     @OptionGroup var options: GlobalCommandOptions
     @OptionGroup var generation: GenerationFlags
-
-    @Option(name: .long, help: "Input to analyze.")
-    var input: String?
+    @OptionGroup var inputSource: InputSourceOptions
 
     mutating func run() async throws {
         let resolvedOutput = try options.resolvedOutput()
@@ -98,12 +170,16 @@ struct TypedPersonSchemaCommand: AsyncParsableCommand {
               let preset = example.presets.first else {
             throw AFMRuntimeError.invalidRequest("Missing typed-person schema preset")
         }
-        let resolvedInput = try validatedNonEmpty(input ?? preset.defaultInput, optionName: "--input")
+        let resolvedInput = try inputSource.resolve(defaultValue: preset.defaultInput)
 
         if options.dryRun {
             try CLIOutput.emit(
-                payload: DryRunPayload(command: "schema run typed-person", input: resolvedInput),
-                human: "[dry-run] afm schema run typed-person\nInput: \(resolvedInput)",
+                payload: DryRunPayload(
+                    command: "schema run typed-person",
+                    input: resolvedInput.value,
+                    inputFile: resolvedInput.file
+                ),
+                human: "[dry-run] afm schema run typed-person\nInput: \(resolvedInput.value)",
                 options: resolvedOutput
             )
             return
@@ -112,7 +188,7 @@ struct TypedPersonSchemaCommand: AsyncParsableCommand {
         _ = try requireFoundationModelsAvailability()
         let result = try await GenerateStructuredDataUseCase<AFMGeneratedPerson>().execute(
             AFMStructuredGenerationRequest(
-                prompt: resolvedInput,
+                prompt: resolvedInput.value,
                 systemPrompt: generation.systemPrompt,
                 modelUseCase: .general,
                 guardrails: generation.guardrails,
@@ -123,7 +199,7 @@ struct TypedPersonSchemaCommand: AsyncParsableCommand {
         let payload = TypedSchemaPayload(
             command: "schema run typed-person",
             preset: preset.id,
-            input: resolvedInput,
+            input: resolvedInput.value,
             output: result.output,
             tokenCount: result.metadata.tokenCount
         )
@@ -152,9 +228,7 @@ struct BasicObjectSchemaCommand: AsyncParsableCommand {
 
     @OptionGroup var options: GlobalCommandOptions
     @OptionGroup var generation: GenerationFlags
-
-    @Option(name: .long, help: "Input to analyze.")
-    var input: String?
+    @OptionGroup var inputSource: InputSourceOptions
 
     @Option(name: .long, help: "Preset to use.")
     var preset = "person"
@@ -164,7 +238,7 @@ struct BasicObjectSchemaCommand: AsyncParsableCommand {
             command: "schema run basic-object",
             exampleID: "basic-object",
             presetID: preset,
-            input: input,
+            inputSource: inputSource,
             schemaBuilder: makeBasicObjectSchema,
             options: options,
             generation: generation
@@ -180,9 +254,7 @@ struct ArraySchemaCommand: AsyncParsableCommand {
 
     @OptionGroup var options: GlobalCommandOptions
     @OptionGroup var generation: GenerationFlags
-
-    @Option(name: .long, help: "Input to analyze.")
-    var input: String?
+    @OptionGroup var inputSource: InputSourceOptions
 
     @Option(name: .long, help: "Preset to use.")
     var preset = "todo"
@@ -198,7 +270,7 @@ struct ArraySchemaCommand: AsyncParsableCommand {
             command: "schema run array-schema",
             exampleID: "array-schema",
             presetID: preset,
-            input: input,
+            inputSource: inputSource,
             schemaBuilder: { presetID in
                 try makeArraySchema(presetID: presetID, minimumItems: minimumItems, maximumItems: maximumItems)
             },
@@ -216,9 +288,7 @@ struct EnumSchemaCommand: AsyncParsableCommand {
 
     @OptionGroup var options: GlobalCommandOptions
     @OptionGroup var generation: GenerationFlags
-
-    @Option(name: .long, help: "Input to analyze.")
-    var input: String?
+    @OptionGroup var inputSource: InputSourceOptions
 
     @Option(name: .long, help: "Preset to use.")
     var preset = "sentiment"
@@ -231,7 +301,7 @@ struct EnumSchemaCommand: AsyncParsableCommand {
             command: "schema run enum-schema",
             exampleID: "enum-schema",
             presetID: preset,
-            input: input,
+            inputSource: inputSource,
             schemaBuilder: { presetID in
                 try makeEnumSchema(
                     presetID: presetID,
@@ -248,7 +318,7 @@ private func runDynamicSchemaCommand(
     command: String,
     exampleID: String,
     presetID: String,
-    input: String?,
+    inputSource: InputSourceOptions,
     schemaBuilder: (String) throws -> GenerationSchema,
     options: GlobalCommandOptions,
     generation: GenerationFlags
@@ -261,12 +331,12 @@ private func runDynamicSchemaCommand(
     guard let preset = example.presets.first(where: { $0.id == presetID }) else {
         throw ValidationError("Unknown preset '\(presetID)' for \(exampleID)")
     }
-    let resolvedInput = try validatedNonEmpty(input ?? preset.defaultInput, optionName: "--input")
+    let resolvedInput = try inputSource.resolve(defaultValue: preset.defaultInput)
 
     if options.dryRun {
         try CLIOutput.emit(
-            payload: DryRunPayload(command: command, preset: presetID, input: resolvedInput),
-            human: "[dry-run] afm \(command)\nPreset: \(presetID)\nInput: \(resolvedInput)",
+            payload: DryRunPayload(command: command, preset: presetID, input: resolvedInput.value, inputFile: resolvedInput.file),
+            human: "[dry-run] afm \(command)\nPreset: \(presetID)\nInput: \(resolvedInput.value)",
             options: resolvedOutput
         )
         return
@@ -275,7 +345,7 @@ private func runDynamicSchemaCommand(
     _ = try requireFoundationModelsAvailability()
     let result = try await GenerateDynamicSchemaContentUseCase().execute(
         AFMDynamicSchemaGenerationRequest(
-            prompt: resolvedInput,
+            prompt: resolvedInput.value,
             schema: try schemaBuilder(presetID),
             systemPrompt: generation.systemPrompt,
             modelUseCase: .general,
@@ -287,9 +357,10 @@ private func runDynamicSchemaCommand(
     let payload = DynamicSchemaPayload(
         command: command,
         preset: presetID,
-        input: resolvedInput,
+        input: resolvedInput.value,
         json: result.output.jsonString,
-        tokenCount: result.metadata.tokenCount
+        tokenCount: result.metadata.tokenCount,
+        schemaFile: nil
     )
     let human = """
     \(example.title)

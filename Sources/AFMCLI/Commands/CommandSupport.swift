@@ -6,25 +6,49 @@ struct DryRunPayload: Encodable {
     let status: String = "dry_run"
     let command: String
     let prompt: String?
+    let promptFile: String?
     let messages: [String]?
+    let messageFiles: [String]?
     let preset: String?
     let file: String?
     let input: String?
+    let inputFile: String?
+    let schema: String?
+    let schemaFile: String?
+    let schemaDirectory: String?
+    let toolFiles: [String]?
+    let toolDirectory: String?
 
     init(
         command: String,
         prompt: String? = nil,
+        promptFile: String? = nil,
         messages: [String]? = nil,
+        messageFiles: [String]? = nil,
         preset: String? = nil,
         file: String? = nil,
-        input: String? = nil
+        input: String? = nil,
+        inputFile: String? = nil,
+        schema: String? = nil,
+        schemaFile: String? = nil,
+        schemaDirectory: String? = nil,
+        toolFiles: [String]? = nil,
+        toolDirectory: String? = nil
     ) {
         self.command = command
         self.prompt = prompt
+        self.promptFile = promptFile
         self.messages = messages
+        self.messageFiles = messageFiles
         self.preset = preset
         self.file = file
         self.input = input
+        self.inputFile = inputFile
+        self.schema = schema
+        self.schemaFile = schemaFile
+        self.schemaDirectory = schemaDirectory
+        self.toolFiles = toolFiles
+        self.toolDirectory = toolDirectory
     }
 }
 
@@ -150,11 +174,6 @@ struct TranscriptIncludeFlags: ParsableArguments {
     var transcript = false
 }
 
-struct TranscriptFileFlags: ParsableArguments {
-    @Option(name: .long, help: "File path to write the exported artifact.")
-    var file: String
-}
-
 func validatedNonEmpty(_ value: String, optionName: String) throws -> String {
     let trimmedValue = value.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !trimmedValue.isEmpty else {
@@ -183,7 +202,7 @@ func afmContext() -> AFMInvocationContext {
     AFMInvocationContext(source: .cli, localeIdentifier: Locale.current.identifier)
 }
 
-func defaultConversationConfiguration(systemPrompt: String?) -> AFMConversationConfiguration {
+func defaultConversationConfiguration(systemPrompt: String?, tools: [any Tool] = []) -> AFMConversationConfiguration {
     let trimmedSystemPrompt = systemPrompt?.trimmingCharacters(in: .whitespacesAndNewlines)
     let baseInstructions: String
 
@@ -202,6 +221,7 @@ func defaultConversationConfiguration(systemPrompt: String?) -> AFMConversationC
         continuationNote: "Continue the conversation naturally while preserving prior context.",
         modelUseCase: .general,
         guardrails: .default,
+        tools: tools,
         enableSlidingWindow: true,
         defaultMaxContextSize: 4_096
     )
@@ -260,6 +280,9 @@ enum HelpText {
     SCHEMA COMMANDS
       schema       Run typed and dynamic schema workflows.
 
+    TOOL COMMANDS
+      tool         Inspect and validate dynamic tool manifests.
+
     EXPORT COMMANDS
       transcript   Export transcript data from a session flow.
       feedback     Export Foundation Models feedback attachments.
@@ -269,8 +292,11 @@ enum HelpText {
       afm session respond --prompt "Summarize Foundation Models in one paragraph."
       afm session stream --prompt "Write a short poem about rain"
       afm session chat --message "Hello" --message "Now answer in French."
+      afm session respond --prompt @prompt.txt --tool demo-weather
       afm schema list
-      afm schema run typed-person --input "Jane is a designer in Berlin."
+      afm schema run typed-person --input "Alex Rivera is a designer in Berlin."
+      afm schema run custom --schema demo-person --input @input.txt
+      afm tool inspect --tool demo-weather
       afm transcript export --message "Hello" --message "Summarize this conversation." --file transcript.json
       afm feedback export --prompt "What is the capital of France?" --sentiment positive --file feedback.json
     """
@@ -290,7 +316,7 @@ enum HelpText {
 }
 
 func suggestRootCommand(for input: String) -> String? {
-    let commands = ["model", "session", "schema", "transcript", "feedback", "help", "version"]
+    let commands = ["model", "session", "schema", "tool", "transcript", "feedback", "help", "version"]
     return suggestCommand(input, in: commands)
 }
 

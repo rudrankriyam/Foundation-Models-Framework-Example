@@ -33,20 +33,28 @@ struct TranscriptExportCommand: AsyncParsableCommand {
 
     @OptionGroup var options: GlobalCommandOptions
     @OptionGroup var generation: GenerationFlags
-    @OptionGroup var outputFile: TranscriptFileFlags
-
-    @Option(name: .long, parsing: .upToNextOption, help: "Message(s) to send through one shared session before exporting.")
-    var message: [String] = []
+    @OptionGroup var outputFile: ArtifactOutputOptions
+    @OptionGroup var session: SessionOptions
+    @OptionGroup var toolSource: ToolSourceOptions
 
     mutating func run() async throws {
-        let messages = try validatedNonEmptyValues(message, optionName: "--message")
+        let resolvedMessages = try session.resolveMessages()
+        let messages = resolvedMessages.map(\.value)
         let exportPath = try validatedExportPath(outputFile.file)
         let resolvedOutput = try options.resolvedOutput()
         let generationOptions = try generation.validatedOptions()
+        let toolResolution = try resolveToolManifests(toolSource)
 
         if options.dryRun {
             try CLIOutput.emit(
-                payload: DryRunPayload(command: "transcript export", messages: messages, file: exportPath),
+                payload: DryRunPayload(
+                    command: "transcript export",
+                    messages: messages,
+                    messageFiles: resolvedMessages.compactMap { $0.file },
+                    file: exportPath,
+                    toolFiles: toolResolution.references.map { $0.filePath },
+                    toolDirectory: toolSource.tool.isEmpty ? nil : expandedPathString(toolSource.toolDir)
+                ),
                 human: "[dry-run] afm transcript export\nFile: \(exportPath)",
                 options: resolvedOutput
             )
@@ -55,7 +63,12 @@ struct TranscriptExportCommand: AsyncParsableCommand {
 
         _ = try requireFoundationModelsAvailability()
         let engine = await MainActor.run {
-            AFMConversationEngine(configuration: defaultConversationConfiguration(systemPrompt: generation.systemPrompt))
+            AFMConversationEngine(
+                configuration: defaultConversationConfiguration(
+                    systemPrompt: generation.systemPrompt,
+                    tools: toolResolution.tools
+                )
+            )
         }
 
         for entry in messages {
@@ -121,10 +134,8 @@ struct FeedbackExportCommand: AsyncParsableCommand {
 
     @OptionGroup var options: GlobalCommandOptions
     @OptionGroup var generation: GenerationFlags
-    @OptionGroup var outputFile: TranscriptFileFlags
-
-    @Option(name: .long, help: "Prompt to send before exporting feedback.")
-    var prompt: String
+    @OptionGroup var outputFile: ArtifactOutputOptions
+    @OptionGroup var promptInput: PromptInputOptions
 
     @Option(name: .long, help: "Optional feedback sentiment.")
     var sentiment: CLIFeedbackSentiment?
@@ -133,14 +144,19 @@ struct FeedbackExportCommand: AsyncParsableCommand {
     var desiredOutput: String?
 
     mutating func run() async throws {
-        let trimmedPrompt = try validatedNonEmpty(prompt, optionName: "--prompt")
+        let resolvedPrompt = try requiredResolvedInput(promptInput.resolve())
         let exportPath = try validatedExportPath(outputFile.file)
         let resolvedOutput = try options.resolvedOutput()
         let generationOptions = try generation.validatedOptions()
 
         if options.dryRun {
             try CLIOutput.emit(
-                payload: DryRunPayload(command: "feedback export", prompt: trimmedPrompt, file: exportPath),
+                payload: DryRunPayload(
+                    command: "feedback export",
+                    prompt: resolvedPrompt.value,
+                    promptFile: resolvedPrompt.file,
+                    file: exportPath
+                ),
                 human: "[dry-run] afm feedback export\nFile: \(exportPath)",
                 options: resolvedOutput
             )
@@ -154,9 +170,9 @@ struct FeedbackExportCommand: AsyncParsableCommand {
         )
         let session = makeFeedbackSession(model: model, systemPrompt: generation.systemPrompt)
         if let generationOptions {
-            _ = try await session.respond(to: trimmedPrompt, options: generationOptions.foundationModelsValue)
+            _ = try await session.respond(to: resolvedPrompt.value, options: generationOptions.foundationModelsValue)
         } else {
-            _ = try await session.respond(to: trimmedPrompt)
+            _ = try await session.respond(to: resolvedPrompt.value)
         }
 
         let desiredEntry: Transcript.Entry?
@@ -176,7 +192,7 @@ struct FeedbackExportCommand: AsyncParsableCommand {
 
         let payload = FeedbackExportSummaryPayload(
             command: "feedback export",
-            prompt: trimmedPrompt,
+            prompt: resolvedPrompt.value,
             sentiment: sentiment?.rawValue,
             file: exportPath,
             bytes: data.count

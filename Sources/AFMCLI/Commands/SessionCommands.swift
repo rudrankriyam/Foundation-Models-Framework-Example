@@ -48,19 +48,25 @@ struct SessionRespondCommand: AsyncParsableCommand {
     @OptionGroup var options: GlobalCommandOptions
     @OptionGroup var generation: GenerationFlags
     @OptionGroup var transcriptFlags: TranscriptIncludeFlags
-
-    @Option(name: .long, help: "Prompt to send through the session.")
-    var prompt: String
+    @OptionGroup var promptInput: PromptInputOptions
+    @OptionGroup var toolSource: ToolSourceOptions
 
     mutating func run() async throws {
-        let trimmedPrompt = try validatedNonEmpty(prompt, optionName: "--prompt")
+        let resolvedPrompt = try requiredResolvedInput(promptInput.resolve())
         let resolvedOutput = try options.resolvedOutput()
         let generationOptions = try generation.validatedOptions()
+        let toolResolution = try resolveToolManifests(toolSource)
 
         if options.dryRun {
             try CLIOutput.emit(
-                payload: DryRunPayload(command: "session respond", prompt: trimmedPrompt),
-                human: "[dry-run] afm session respond\nPrompt: \(trimmedPrompt)",
+                payload: DryRunPayload(
+                    command: "session respond",
+                    prompt: resolvedPrompt.value,
+                    promptFile: resolvedPrompt.file,
+                    toolFiles: toolResolution.references.map { $0.filePath },
+                    toolDirectory: toolSource.tool.isEmpty ? nil : expandedPathString(toolSource.toolDir)
+                ),
+                human: "[dry-run] afm session respond\nPrompt: \(resolvedPrompt.value)",
                 options: resolvedOutput
             )
             return
@@ -68,9 +74,14 @@ struct SessionRespondCommand: AsyncParsableCommand {
 
         _ = try requireFoundationModelsAvailability()
         let engine = await MainActor.run {
-            AFMConversationEngine(configuration: defaultConversationConfiguration(systemPrompt: generation.systemPrompt))
+            AFMConversationEngine(
+                configuration: defaultConversationConfiguration(
+                    systemPrompt: generation.systemPrompt,
+                    tools: toolResolution.tools
+                )
+            )
         }
-        let response = try await engine.sendMessage(trimmedPrompt, generationOptions: generationOptions)
+        let response = try await engine.sendMessage(resolvedPrompt.value, generationOptions: generationOptions)
         let transcript = await MainActor.run {
             transcriptFlags.transcript ? transcriptPayload(engine.session.transcript) : nil
         }
@@ -79,7 +90,7 @@ struct SessionRespondCommand: AsyncParsableCommand {
 
         let payload = SessionResponsePayload(
             command: "session respond",
-            prompt: trimmedPrompt,
+            prompt: resolvedPrompt.value,
             messages: nil,
             response: response,
             exchanges: nil,
@@ -107,19 +118,25 @@ struct SessionStreamCommand: AsyncParsableCommand {
     @OptionGroup var options: GlobalCommandOptions
     @OptionGroup var generation: GenerationFlags
     @OptionGroup var transcriptFlags: TranscriptIncludeFlags
-
-    @Option(name: .long, help: "Prompt to send through the session.")
-    var prompt: String
+    @OptionGroup var promptInput: PromptInputOptions
+    @OptionGroup var toolSource: ToolSourceOptions
 
     mutating func run() async throws {
-        let trimmedPrompt = try validatedNonEmpty(prompt, optionName: "--prompt")
+        let resolvedPrompt = try requiredResolvedInput(promptInput.resolve())
         let resolvedOutput = try options.resolvedOutput()
         let generationOptions = try generation.validatedOptions()
+        let toolResolution = try resolveToolManifests(toolSource)
 
         if options.dryRun {
             try CLIOutput.emit(
-                payload: DryRunPayload(command: "session stream", prompt: trimmedPrompt),
-                human: "[dry-run] afm session stream\nPrompt: \(trimmedPrompt)",
+                payload: DryRunPayload(
+                    command: "session stream",
+                    prompt: resolvedPrompt.value,
+                    promptFile: resolvedPrompt.file,
+                    toolFiles: toolResolution.references.map { $0.filePath },
+                    toolDirectory: toolSource.tool.isEmpty ? nil : expandedPathString(toolSource.toolDir)
+                ),
+                human: "[dry-run] afm session stream\nPrompt: \(resolvedPrompt.value)",
                 options: resolvedOutput
             )
             return
@@ -127,7 +144,12 @@ struct SessionStreamCommand: AsyncParsableCommand {
 
         _ = try requireFoundationModelsAvailability()
         let engine = await MainActor.run {
-            AFMConversationEngine(configuration: defaultConversationConfiguration(systemPrompt: generation.systemPrompt))
+            AFMConversationEngine(
+                configuration: defaultConversationConfiguration(
+                    systemPrompt: generation.systemPrompt,
+                    tools: toolResolution.tools
+                )
+            )
         }
 
         let streamToConsole = resolvedOutput.format == .text
@@ -146,7 +168,7 @@ struct SessionStreamCommand: AsyncParsableCommand {
                     event: "started",
                     command: "session stream",
                     messageIndex: nil,
-                    prompt: trimmedPrompt,
+                    prompt: resolvedPrompt.value,
                     content: nil,
                     response: nil,
                     exchanges: nil,
@@ -157,7 +179,7 @@ struct SessionStreamCommand: AsyncParsableCommand {
             )
         }
 
-        let response = try await engine.sendStreamingMessage(trimmedPrompt, generationOptions: generationOptions) { partial in
+        let response = try await engine.sendStreamingMessage(resolvedPrompt.value, generationOptions: generationOptions) { partial in
             if streamToConsole {
                 if partial.hasPrefix(latestPrinted) {
                     let suffix = String(partial.dropFirst(latestPrinted.count))
@@ -176,7 +198,7 @@ struct SessionStreamCommand: AsyncParsableCommand {
                         event: "delta",
                         command: "session stream",
                         messageIndex: nil,
-                        prompt: trimmedPrompt,
+                        prompt: resolvedPrompt.value,
                         content: partial,
                         response: nil,
                         exchanges: nil,
@@ -199,7 +221,7 @@ struct SessionStreamCommand: AsyncParsableCommand {
         let tokenCount = await MainActor.run { engine.currentTokenCount }
         let payload = SessionResponsePayload(
             command: "session stream",
-            prompt: trimmedPrompt,
+            prompt: resolvedPrompt.value,
             messages: nil,
             response: response,
             exchanges: nil,
@@ -213,7 +235,7 @@ struct SessionStreamCommand: AsyncParsableCommand {
                     event: "completed",
                     command: "session stream",
                     messageIndex: nil,
-                    prompt: trimmedPrompt,
+                    prompt: resolvedPrompt.value,
                     content: nil,
                     response: response,
                     exchanges: nil,
@@ -252,21 +274,26 @@ struct SessionChatCommand: AsyncParsableCommand {
     @OptionGroup var options: GlobalCommandOptions
     @OptionGroup var generation: GenerationFlags
     @OptionGroup var transcriptFlags: TranscriptIncludeFlags
-
-    @Option(name: .long, parsing: .upToNextOption, help: "Message(s) to send through one shared session. Repeat for multi-turn chat.")
-    var message: [String] = []
-
-    @Flag(name: .long, help: "Stream each assistant response while it is generated.")
-    var stream = false
+    @OptionGroup var session: SessionOptions
+    @OptionGroup var streaming: StreamingOptions
+    @OptionGroup var toolSource: ToolSourceOptions
 
     mutating func run() async throws {
-        let validatedMessages = try validatedNonEmptyValues(message, optionName: "--message")
+        let resolvedMessages = try session.resolveMessages()
+        let validatedMessages = resolvedMessages.map(\.value)
         let resolvedOutput = try options.resolvedOutput()
         let generationOptions = try generation.validatedOptions()
+        let toolResolution = try resolveToolManifests(toolSource)
 
         if options.dryRun {
             try CLIOutput.emit(
-                payload: DryRunPayload(command: "session chat", messages: validatedMessages),
+                payload: DryRunPayload(
+                    command: "session chat",
+                    messages: validatedMessages,
+                    messageFiles: resolvedMessages.compactMap { $0.file },
+                    toolFiles: toolResolution.references.map { $0.filePath },
+                    toolDirectory: toolSource.tool.isEmpty ? nil : expandedPathString(toolSource.toolDir)
+                ),
                 human: "[dry-run] afm session chat\nMessages: \(validatedMessages.count)",
                 options: resolvedOutput
             )
@@ -275,11 +302,16 @@ struct SessionChatCommand: AsyncParsableCommand {
 
         _ = try requireFoundationModelsAvailability()
         let engine = await MainActor.run {
-            AFMConversationEngine(configuration: defaultConversationConfiguration(systemPrompt: generation.systemPrompt))
+            AFMConversationEngine(
+                configuration: defaultConversationConfiguration(
+                    systemPrompt: generation.systemPrompt,
+                    tools: toolResolution.tools
+                )
+            )
         }
         var exchanges: [AFMConversationExchange] = []
-        let streamToConsole = stream && resolvedOutput.format == .text
-        let streamToJSON = stream && resolvedOutput.format == .json
+        let streamToConsole = streaming.stream && resolvedOutput.format == .text
+        let streamToJSON = streaming.stream && resolvedOutput.format == .json
         if streamToJSON && options.pretty {
             throw ValidationError("--pretty is not supported with streaming JSON output")
         }
@@ -481,4 +513,29 @@ private func humanReadableConversation(
         lines.append("Token count: \(tokenCount)")
     }
     return lines.joined(separator: "\n")
+}
+
+struct ResolvedToolSet {
+    let references: [ResolvedArtifactReference]
+    let tools: [any Tool]
+}
+
+func resolveToolManifests(_ toolSource: ToolSourceOptions) throws -> ResolvedToolSet {
+    let references = try toolSource.resolveTools()
+    if references.isEmpty {
+        return ResolvedToolSet(references: [], tools: [])
+    }
+
+    let manifests = try AFMArtifactRegistry.loadTools(from: references)
+    return ResolvedToolSet(
+        references: references,
+        tools: manifests.map { $0 as any Tool }
+    )
+}
+
+func requiredResolvedInput(_ input: ResolvedTextInput?) throws -> ResolvedTextInput {
+    guard let input else {
+        throw ValidationError("Please provide --prompt, --prompt-file, or stdin.")
+    }
+    return input
 }

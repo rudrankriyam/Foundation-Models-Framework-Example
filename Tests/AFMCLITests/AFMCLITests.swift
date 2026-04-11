@@ -15,6 +15,7 @@ func rootHelpShowsGroupedCommands() throws {
     #expect(result.stdout.contains("MODEL COMMANDS"))
     #expect(result.stdout.contains("SESSION COMMANDS"))
     #expect(result.stdout.contains("SCHEMA COMMANDS"))
+    #expect(result.stdout.contains("TOOL COMMANDS"))
     #expect(result.stdout.contains("EXPORT COMMANDS"))
     #expect(result.stdout.contains("afm model status"))
 }
@@ -38,10 +39,14 @@ func leafCommandHelpCoverage() throws {
         ["session", "stream", "--help"],
         ["session", "chat", "--help"],
         ["schema", "list", "--help"],
+        ["schema", "run", "custom", "--help"],
         ["schema", "run", "typed-person", "--help"],
         ["schema", "run", "basic-object", "--help"],
         ["schema", "run", "array-schema", "--help"],
         ["schema", "run", "enum-schema", "--help"],
+        ["tool", "inspect", "--help"],
+        ["tool", "validate", "--help"],
+        ["tool", "call", "--help"],
         ["transcript", "export", "--help"],
         ["feedback", "export", "--help"]
     ]
@@ -164,12 +169,51 @@ func sessionDryRunCommands() throws {
     #expect((chatJSON["messages"] as? [String]) == ["Hello", "Now answer in French."])
 }
 
+@Test("Prompt and message sources resolve from files and stdin")
+func promptAndMessageSourceResolution() throws {
+    let directory = URL(fileURLWithPath: NSTemporaryDirectory())
+        .appending(path: "afm-inputs-\(UUID().uuidString)")
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: directory) }
+
+    let promptFile = directory.appending(path: "prompt.txt")
+    let messageFile = directory.appending(path: "message.txt")
+    try "Prompt from file".write(to: promptFile, atomically: true, encoding: .utf8)
+    try "Message from file".write(to: messageFile, atomically: true, encoding: .utf8)
+
+    let promptFromFile = try runAFM(
+        ["session", "respond", "--output", "json", "--dry-run", "--prompt", "@\(promptFile.path())"]
+    )
+    let promptFromStdin = try runAFM(
+        ["session", "respond", "--output", "json", "--dry-run"],
+        environment: ["AFM_FORCE_NON_TTY": "1"],
+        stdin: "Prompt from stdin\n"
+    )
+    let chatFromFile = try runAFM(
+        ["session", "chat", "--output", "json", "--dry-run", "--message-file", messageFile.path()]
+    )
+
+    #expect(promptFromFile.status == 0)
+    #expect(promptFromStdin.status == 0)
+    #expect(chatFromFile.status == 0)
+
+    let fileJSON = try parseJSONObject(promptFromFile.stdout)
+    let stdinJSON = try parseJSONObject(promptFromStdin.stdout)
+    let chatJSON = try parseJSONObject(chatFromFile.stdout)
+
+    #expect(fileJSON["prompt"] as? String == "Prompt from file")
+    #expect(fileJSON["promptFile"] as? String == promptFile.path())
+    #expect(stdinJSON["prompt"] as? String == "Prompt from stdin")
+    #expect((chatJSON["messageFiles"] as? [String]) == [messageFile.path()])
+    #expect((chatJSON["messages"] as? [String]) == ["Message from file"])
+}
+
 @Test("Schema commands expose list and run flows")
 func schemaCommands() throws {
     let list = try runAFM("schema", "list", "--output", "json")
     let typedPerson = try runAFM(
         "schema", "run", "typed-person", "--output", "json", "--dry-run",
-        "--input", "Jane is a designer in Berlin."
+        "--input", "Alex Rivera is a designer in Berlin."
     )
     let badPreset = try runAFM(
         "schema", "run", "enum-schema", "--dry-run", "--preset", "missing"
@@ -186,7 +230,53 @@ func schemaCommands() throws {
     let schemas = listJSON["schemas"] as? [[String: Any]]
     #expect((schemas?.isEmpty == false))
     #expect(typedJSON["command"] as? String == "schema run typed-person")
-    #expect(typedJSON["input"] as? String == "Jane is a designer in Berlin.")
+    #expect(typedJSON["input"] as? String == "Alex Rivera is a designer in Berlin.")
+}
+
+@Test("Custom schema files resolve from schema-dir and dry-run cleanly")
+func customSchemaFilesResolve() throws {
+    let directory = URL(fileURLWithPath: NSTemporaryDirectory())
+        .appending(path: "afm-schemas-\(UUID().uuidString)")
+    let schemaDirectory = directory.appending(path: ".afm/schemas")
+    let inputFile = directory.appending(path: "input.txt")
+
+    try FileManager.default.createDirectory(at: schemaDirectory, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: directory) }
+
+    let schema = """
+    title: PersonCard
+    type: object
+    properties:
+      name:
+        type: string
+      age:
+        type: integer
+      occupation:
+        type: string
+    required:
+      - name
+      - age
+      - occupation
+    """
+    try schema.write(to: schemaDirectory.appending(path: "person-card.yaml"), atomically: true, encoding: .utf8)
+    try "Alex Rivera is a 34-year-old designer in Berlin.".write(to: inputFile, atomically: true, encoding: .utf8)
+
+    let result = try runAFM(
+        "schema", "run", "custom",
+        "--output", "json",
+        "--dry-run",
+        "--schema", "person-card",
+        "--schema-dir", schemaDirectory.path(),
+        "--input", "@\(inputFile.path())"
+    )
+
+    #expect(result.status == 0)
+    let json = try parseJSONObject(result.stdout)
+    #expect(json["command"] as? String == "schema run custom")
+    #expect(json["schema"] as? String == "person-card")
+    #expect(json["schemaFile"] as? String == schemaDirectory.appending(path: "person-card.yaml").path())
+    #expect(json["input"] as? String == "Alex Rivera is a 34-year-old designer in Berlin.")
+    #expect(json["inputFile"] as? String == inputFile.path())
 }
 
 @Test("All dynamic schema workflows dry-run cleanly")
@@ -214,6 +304,71 @@ func dynamicSchemaDryRuns() throws {
     #expect(basicJSON["command"] as? String == "schema run basic-object")
     #expect(arrayJSON["command"] as? String == "schema run array-schema")
     #expect(enumJSON["command"] as? String == "schema run enum-schema")
+}
+
+@Test("Tool manifests validate, inspect, and call through the CLI")
+func toolManifestCommands() throws {
+    let directory = URL(fileURLWithPath: NSTemporaryDirectory())
+        .appending(path: "afm-tools-\(UUID().uuidString)")
+    let toolDirectory = directory.appending(path: ".afm/tools")
+    let argsFile = directory.appending(path: "args.json")
+
+    try FileManager.default.createDirectory(at: toolDirectory, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: directory) }
+
+    let toolManifest = """
+    name: echo_json
+    description: Echoes JSON arguments back to the caller.
+    parameters:
+      title: EchoPayload
+      type: object
+      properties:
+        city:
+          type: string
+      required:
+        - city
+    runner:
+      kind: shell
+      outputFormat: json
+      command: /bin/sh
+      args:
+        - -lc
+        - cat
+    """
+    try toolManifest.write(to: toolDirectory.appending(path: "echo-json.yaml"), atomically: true, encoding: .utf8)
+    try #"{"city":"Berlin"}"#.write(to: argsFile, atomically: true, encoding: .utf8)
+
+    let inspect = try runAFM(
+        "tool", "inspect", "--output", "json",
+        "--tool", "echo-json",
+        "--tool-dir", toolDirectory.path()
+    )
+    let validate = try runAFM(
+        "tool", "validate", "--output", "json",
+        "--tool", "echo-json",
+        "--tool-dir", toolDirectory.path()
+    )
+    let call = try runAFM(
+        "tool", "call", "--output", "json",
+        "--tool", "echo-json",
+        "--tool-dir", toolDirectory.path(),
+        "--args-file", argsFile.path()
+    )
+
+    #expect(inspect.status == 0)
+    #expect(validate.status == 0)
+    #expect(call.status == 0)
+
+    let inspectJSON = try parseJSONObject(inspect.stdout)
+    let validateJSON = try parseJSONObject(validate.stdout)
+    let callJSON = try parseJSONObject(call.stdout)
+    let echoedOutput = try #require(callJSON["output"] as? String)
+    let echoedJSON = try parseJSONObject(echoedOutput)
+
+    #expect(inspectJSON["name"] as? String == "echo_json")
+    #expect(validateJSON["status"] as? String == "valid")
+    #expect(callJSON["name"] as? String == "echo_json")
+    #expect(echoedJSON["city"] as? String == "Berlin")
 }
 
 @Test("Transcript and feedback export validate file paths up front")
@@ -344,14 +499,16 @@ func modelCommandsReturnStructuredJSON() throws {
 
 private func runAFM(
     _ arguments: String...,
-    environment: [String: String] = [:]
+    environment: [String: String] = [:],
+    stdin: String? = nil
 ) throws -> CommandResult {
-    try runAFM(arguments, environment: environment)
+    try runAFM(arguments, environment: environment, stdin: stdin)
 }
 
 private func runAFM(
     _ arguments: [String],
-    environment: [String: String] = [:]
+    environment: [String: String] = [:],
+    stdin: String? = nil
 ) throws -> CommandResult {
     let process = Process()
     process.executableURL = try findAFMBinary()
@@ -362,6 +519,12 @@ private func runAFM(
     let stderrPipe = Pipe()
     process.standardOutput = stdoutPipe
     process.standardError = stderrPipe
+    if let stdin {
+        let stdinPipe = Pipe()
+        process.standardInput = stdinPipe
+        stdinPipe.fileHandleForWriting.write(Data(stdin.utf8))
+        try? stdinPipe.fileHandleForWriting.close()
+    }
     process.arguments = arguments
 
     try process.run()
