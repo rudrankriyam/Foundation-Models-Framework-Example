@@ -28,11 +28,23 @@ struct SchemaListCommand: AsyncParsableCommand {
 
     mutating func run() async throws {
         let resolvedOutput = try options.resolvedOutput()
+        if options.dryRun {
+            try CLIOutput.emit(
+                payload: DryRunPayload(command: "schema list"),
+                human: "[dry-run] afm schema list",
+                options: resolvedOutput
+            )
+            return
+        }
         let payload = SchemaListPayload(schemas: AFMSchemaCatalog.examples)
-        let human = AFMSchemaCatalog.examples.map { example in
+        var lines = AFMSchemaCatalog.examples.map { example in
             let presetNames = example.presets.map(\.id).joined(separator: ", ")
             return "\(example.id): \(example.title)\n  \(example.summary)\n  Presets: \(presetNames)"
-        }.joined(separator: "\n\n")
+        }
+        if options.verbose {
+            lines.append("Schema count: \(AFMSchemaCatalog.examples.count)")
+        }
+        let human = lines.joined(separator: "\n\n")
 
         try CLIOutput.emit(payload: payload, human: human, options: resolvedOutput)
     }
@@ -122,7 +134,13 @@ struct TypedPersonSchemaCommand: AsyncParsableCommand {
         Age: \(result.output.age)
         Occupation: \(result.output.occupation)
         """
-        try CLIOutput.emit(payload: payload, human: human, options: resolvedOutput)
+        let verboseHuman: String
+        if options.verbose, let tokenCount = result.metadata.tokenCount {
+            verboseHuman = "\(human)\n\nToken count: \(tokenCount)"
+        } else {
+            verboseHuman = human
+        }
+        try CLIOutput.emit(payload: payload, human: verboseHuman, options: resolvedOutput)
     }
 }
 
@@ -278,7 +296,13 @@ private func runDynamicSchemaCommand(
 
     \(result.output.jsonString)
     """
-    try CLIOutput.emit(payload: payload, human: human, options: resolvedOutput)
+    let verboseHuman: String
+    if options.verbose, let tokenCount = result.metadata.tokenCount {
+        verboseHuman = "\(human)\n\nToken count: \(tokenCount)"
+    } else {
+        verboseHuman = human
+    }
+    try CLIOutput.emit(payload: payload, human: verboseHuman, options: resolvedOutput)
 }
 
 private func makeBasicObjectSchema(presetID: String) throws -> GenerationSchema {

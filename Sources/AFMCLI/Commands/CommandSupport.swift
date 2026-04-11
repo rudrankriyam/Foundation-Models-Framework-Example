@@ -151,7 +151,7 @@ struct TranscriptIncludeFlags: ParsableArguments {
 }
 
 struct TranscriptFileFlags: ParsableArguments {
-    @Option(name: .long, help: "File path to write the exported transcript JSON.")
+    @Option(name: .long, help: "File path to write the exported artifact.")
     var file: String
 }
 

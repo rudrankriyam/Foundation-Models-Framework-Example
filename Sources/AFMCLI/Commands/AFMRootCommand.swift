@@ -26,15 +26,35 @@ struct AFMRootCommand: AsyncParsableCommand {
 
     mutating func run() async throws {
         let resolvedOutput = try options.resolvedOutput()
+        if options.dryRun {
+            try CLIOutput.emit(
+                payload: DryRunPayload(command: "afm"),
+                human: "[dry-run] afm",
+                options: resolvedOutput
+            )
+            return
+        }
+
         let payload = RootStatusPayload(
             name: Self.configuration.commandName ?? "afm",
             summary: "Workflow-first CLI for Foundation Models sessions, schemas, transcripts, and feedback.",
             commands: ["model", "session", "schema", "transcript", "feedback"]
         )
+        let human: String
+        if options.verbose {
+            human = """
+            \(HelpText.root)
+
+            Version: \(Self.configuration.version)
+            Command count: \(payload.commands.count)
+            """
+        } else {
+            human = HelpText.root
+        }
 
         try CLIOutput.emit(
             payload: payload,
-            human: HelpText.root,
+            human: human,
             options: resolvedOutput
         )
     }

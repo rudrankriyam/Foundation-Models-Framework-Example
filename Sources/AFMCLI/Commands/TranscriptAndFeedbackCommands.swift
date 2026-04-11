@@ -81,7 +81,17 @@ struct TranscriptExportCommand: AsyncParsableCommand {
         File: \(exportPath)
         Entries: \(entries.count)
         """
-        try CLIOutput.emit(payload: payload, human: human, options: resolvedOutput)
+        let verboseHuman: String
+        if options.verbose {
+            verboseHuman = """
+            \(human)
+            Sessions: \(sessionCount)
+            Token count: \(tokenCount)
+            """
+        } else {
+            verboseHuman = human
+        }
+        try CLIOutput.emit(payload: payload, human: verboseHuman, options: resolvedOutput)
     }
 }
 
@@ -176,7 +186,17 @@ struct FeedbackExportCommand: AsyncParsableCommand {
         File: \(exportPath)
         Bytes: \(data.count)
         """
-        try CLIOutput.emit(payload: payload, human: human, options: resolvedOutput)
+        let verboseHuman: String
+        if options.verbose {
+            let sentimentValue = sentiment?.rawValue ?? "unspecified"
+            verboseHuman = """
+            \(human)
+            Sentiment: \(sentimentValue)
+            """
+        } else {
+            verboseHuman = human
+        }
+        try CLIOutput.emit(payload: payload, human: verboseHuman, options: resolvedOutput)
     }
 }
 

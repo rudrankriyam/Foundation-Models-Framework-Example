@@ -19,6 +19,16 @@ func rootHelpShowsGroupedCommands() throws {
     #expect(result.stdout.contains("afm model status"))
 }
 
+@Test("Root dry-run emits a request shape instead of normal help output")
+func rootDryRun() throws {
+    let result = try runAFM("--output", "json", "--dry-run")
+
+    #expect(result.status == 0)
+    let json = try parseJSONObject(result.stdout)
+    #expect(json["command"] as? String == "afm")
+    #expect(json["status"] as? String == "dry_run")
+}
+
 @Test("Leaf command help covers every shipped public workflow")
 func leafCommandHelpCoverage() throws {
     let commands: [[String]] = [
@@ -41,7 +51,31 @@ func leafCommandHelpCoverage() throws {
         #expect(result.status == 0)
         #expect(result.stdout.contains("USAGE:"))
         #expect(result.stdout.contains("--help"))
+        if command.contains("session")
+            || command == ["schema", "run", "typed-person", "--help"]
+            || command == ["schema", "run", "basic-object", "--help"]
+            || command == ["schema", "run", "array-schema", "--help"]
+            || command == ["schema", "run", "enum-schema", "--help"]
+            || command.contains("transcript")
+            || command.contains("feedback") {
+            #expect(result.stdout.contains("--guardrails <guardrails>"))
+        }
     }
+}
+
+@Test("Model and schema discovery commands honor dry-run")
+func discoveryCommandsHonorDryRun() throws {
+    let status = try runAFM("model", "status", "--output", "json", "--dry-run")
+    let languages = try runAFM("model", "languages", "--output", "json", "--dry-run")
+    let schemaList = try runAFM("schema", "list", "--output", "json", "--dry-run")
+
+    #expect(status.status == 0)
+    #expect(languages.status == 0)
+    #expect(schemaList.status == 0)
+
+    #expect((try parseJSONObject(status.stdout))["command"] as? String == "model status")
+    #expect((try parseJSONObject(languages.stdout))["command"] as? String == "model languages")
+    #expect((try parseJSONObject(schemaList.stdout))["command"] as? String == "schema list")
 }
 
 @Test("TTY-aware defaults choose text for terminals and json for pipes")
@@ -73,6 +107,17 @@ func prettyJSONOutput() throws {
     #expect(result.status == 0)
     #expect(result.stdout.contains("\n  \"command\" : \"session respond\""))
     #expect(result.stdout.contains("\n  \"status\" : \"dry_run\""))
+}
+
+@Test("Verbose mode adds extra operator-facing detail")
+func verboseModeAddsDetail() throws {
+    let status = try runAFM("model", "status", "--verbose", environment: ["AFM_FORCE_TTY": "1"])
+    let schemaList = try runAFM("schema", "list", "--verbose", environment: ["AFM_FORCE_TTY": "1"])
+
+    #expect(status.status == 0)
+    #expect(schemaList.status == 0)
+    #expect(status.stdout.contains("Provider: Foundation Models"))
+    #expect(schemaList.stdout.contains("Schema count:"))
 }
 
 @Test("Output and generation flags validate before runtime work starts")

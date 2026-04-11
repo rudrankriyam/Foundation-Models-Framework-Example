@@ -29,6 +29,15 @@ struct ModelStatusCommand: AsyncParsableCommand {
 
     mutating func run() async throws {
         let resolvedOutput = try options.resolvedOutput()
+        if options.dryRun {
+            try CLIOutput.emit(
+                payload: DryRunPayload(command: "model status"),
+                human: "[dry-run] afm model status",
+                options: resolvedOutput
+            )
+            return
+        }
+
         let availability = CheckModelAvailabilityUseCase().execute()
         let payload = ModelStatusPayload(
             status: availability.isAvailable ? "available" : "unavailable",
@@ -36,11 +45,15 @@ struct ModelStatusCommand: AsyncParsableCommand {
             reason: availabilityReasonDescription(availability),
             provider: availability.metadata.provider
         )
-        let human = """
-        Foundation Models
-        Status: \(availability.isAvailable ? "Available" : "Unavailable")
-        Reason: \(availabilityReasonDescription(availability))
-        """
+        var lines = [
+            "Foundation Models",
+            "Status: \(availability.isAvailable ? "Available" : "Unavailable")",
+            "Reason: \(availabilityReasonDescription(availability))"
+        ]
+        if options.verbose, let provider = availability.metadata.provider {
+            lines.append("Provider: \(provider)")
+        }
+        let human = lines.joined(separator: "\n")
 
         try CLIOutput.emit(payload: payload, human: human, options: resolvedOutput)
     }
@@ -66,6 +79,15 @@ struct ModelLanguagesCommand: AsyncParsableCommand {
 
     mutating func run() async throws {
         let resolvedOutput = try options.resolvedOutput()
+        if options.dryRun {
+            try CLIOutput.emit(
+                payload: DryRunPayload(command: "model languages"),
+                human: "[dry-run] afm model languages",
+                options: resolvedOutput
+            )
+            return
+        }
+
         let result = ListSupportedLanguagesUseCase().execute(locale: .current)
         let currentLanguage = currentSupportedLanguageDisplayName(from: result.languages)
         let payload = ModelLanguagesPayload(
@@ -74,11 +96,16 @@ struct ModelLanguagesCommand: AsyncParsableCommand {
                 .init(identifier: language.identifier, displayName: language.displayName(in: .current))
             }
         )
-        let human = """
-        Current language: \(currentLanguage)
-
-        \(result.languages.map { $0.displayName(in: .current) }.joined(separator: "\n"))
-        """
+        var lines = [
+            "Current language: \(currentLanguage)",
+            "",
+            result.languages.map { $0.displayName(in: .current) }.joined(separator: "\n")
+        ]
+        if options.verbose {
+            lines.append("")
+            lines.append("Supported language count: \(result.languages.count)")
+        }
+        let human = lines.joined(separator: "\n")
 
         try CLIOutput.emit(payload: payload, human: human, options: resolvedOutput)
     }

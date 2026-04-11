@@ -71,19 +71,27 @@ enum AFMModelUseCase: String, Sendable, Hashable, Codable {
 }
 
 enum AFMGuardrails: String, Sendable, Hashable, Codable, CaseIterable {
-    case `default`
-    case permissiveContentTransformations
+    case `default` = "default"
+    case permissiveContentTransformations = "permissive-content-transformations"
 }
 
 extension AFMGuardrails: ExpressibleByArgument {
     init?(argument: String) {
-        switch argument.lowercased() {
-        case "default":
+        let normalized = argument.trimmingCharacters(in: .whitespacesAndNewlines)
+        switch normalized {
+        case "default", "DEFAULT":
             self = .default
-        case "permissive-content-transformations", "permissivecontenttransformations":
+        case "permissive-content-transformations", "permissiveContentTransformations":
             self = .permissiveContentTransformations
         default:
-            return nil
+            switch normalized.lowercased() {
+            case "default":
+                self = .default
+            case "permissive-content-transformations", "permissivecontenttransformations":
+                self = .permissiveContentTransformations
+            default:
+                return nil
+            }
         }
     }
 }
