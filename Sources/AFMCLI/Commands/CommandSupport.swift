@@ -5,6 +5,7 @@ import FoundationModels
 struct DryRunPayload: Encodable {
     let status: String = "dry_run"
     let command: String
+    let adapter: String?
     let prompt: String?
     let promptFile: String?
     let messages: [String]?
@@ -25,6 +26,7 @@ struct DryRunPayload: Encodable {
 
     init(
         command: String,
+        adapter: String? = nil,
         prompt: String? = nil,
         promptFile: String? = nil,
         messages: [String]? = nil,
@@ -44,6 +46,7 @@ struct DryRunPayload: Encodable {
         toolDirectory: String? = nil
     ) {
         self.command = command
+        self.adapter = adapter
         self.prompt = prompt
         self.promptFile = promptFile
         self.messages = messages
@@ -268,6 +271,7 @@ func defaultConversationConfiguration(
     systemPrompt: String?,
     useCase: AFMModelUseCase = .general,
     guardrails: AFMGuardrails = .default,
+    adapterPath: String? = nil,
     tools: [any Tool] = []
 ) -> AFMConversationConfiguration {
     let trimmedSystemPrompt = systemPrompt?.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -288,6 +292,7 @@ func defaultConversationConfiguration(
         continuationNote: "Continue the conversation naturally while preserving prior context.",
         modelUseCase: useCase,
         guardrails: guardrails,
+        adapterPath: adapterPath,
         tools: tools,
         enableSlidingWindow: true,
         defaultMaxContextSize: 4_096
@@ -362,6 +367,7 @@ enum HelpText {
       afm model use-cases
       afm model guardrails
       afm session respond --prompt "Summarize Foundation Models in one paragraph."
+      afm session respond --adapter ~/MyAdapter.fmadapter --prompt "Rewrite this in my style."
       afm session stream --prompt "Write a short poem about rain"
       afm session chat --message "Hello" --message "Now answer in French."
       afm tag run --prompt "A joyful dog playing in a sunny park."
@@ -379,6 +385,8 @@ enum HelpText {
       respond     Send one prompt through a fresh session and print the final response.
       stream      Stream one response from a fresh session as it is generated.
       chat        Send multiple prompts through one shared session.
+
+    All session commands also accept --adapter to load a .fmadapter package.
     """
 
     static let schema = """

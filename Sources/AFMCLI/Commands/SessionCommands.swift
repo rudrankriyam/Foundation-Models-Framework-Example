@@ -17,6 +17,7 @@ struct SessionCommand: AsyncParsableCommand {
 
 struct SessionResponsePayload: Encodable {
     let command: String
+    let adapter: String?
     let useCase: String
     let guardrails: String
     let prompt: String?
@@ -31,6 +32,7 @@ struct SessionResponsePayload: Encodable {
 private struct SessionStreamingEventPayload: Encodable {
     let event: String
     let command: String
+    let adapter: String?
     let useCase: String?
     let guardrails: String?
     let messageIndex: Int?
@@ -51,6 +53,7 @@ struct SessionRespondCommand: AsyncParsableCommand {
 
     @OptionGroup var options: GlobalCommandOptions
     @OptionGroup var generation: GenerationFlags
+    @OptionGroup var adapterOptions: AdapterOptions
     @OptionGroup var useCaseFlags: ModelUseCaseFlags
     @OptionGroup var transcriptFlags: TranscriptIncludeFlags
     @OptionGroup var promptInput: PromptInputOptions
@@ -60,12 +63,14 @@ struct SessionRespondCommand: AsyncParsableCommand {
         let resolvedPrompt = try requiredResolvedInput(promptInput.resolve())
         let resolvedOutput = try options.resolvedOutput()
         let generationOptions = try generation.validatedOptions()
+        let adapterPath = try adapterOptions.resolveAdapterPath()
         let toolResolution = try resolveToolManifests(toolSource)
 
         if options.dryRun {
             try CLIOutput.emit(
                 payload: DryRunPayload(
                     command: "session respond",
+                    adapter: adapterPath,
                     prompt: resolvedPrompt.value,
                     promptFile: resolvedPrompt.file,
                     useCase: useCaseFlags.useCase.rawValue,
@@ -80,12 +85,13 @@ struct SessionRespondCommand: AsyncParsableCommand {
         }
 
         _ = try requireFoundationModelsAvailability(useCase: useCaseFlags.useCase)
-        let engine = await MainActor.run {
-            AFMConversationEngine(
+        let engine = try await MainActor.run {
+            try AFMConversationEngine(
                 configuration: defaultConversationConfiguration(
                     systemPrompt: generation.systemPrompt,
                     useCase: useCaseFlags.useCase,
                     guardrails: generation.guardrails,
+                    adapterPath: adapterPath,
                     tools: toolResolution.tools
                 )
             )
@@ -99,6 +105,7 @@ struct SessionRespondCommand: AsyncParsableCommand {
 
         let payload = SessionResponsePayload(
             command: "session respond",
+            adapter: adapterPath,
             useCase: useCaseFlags.useCase.rawValue,
             guardrails: generation.guardrails.rawValue,
             prompt: resolvedPrompt.value,
@@ -128,6 +135,7 @@ struct SessionStreamCommand: AsyncParsableCommand {
 
     @OptionGroup var options: GlobalCommandOptions
     @OptionGroup var generation: GenerationFlags
+    @OptionGroup var adapterOptions: AdapterOptions
     @OptionGroup var useCaseFlags: ModelUseCaseFlags
     @OptionGroup var transcriptFlags: TranscriptIncludeFlags
     @OptionGroup var promptInput: PromptInputOptions
@@ -137,12 +145,14 @@ struct SessionStreamCommand: AsyncParsableCommand {
         let resolvedPrompt = try requiredResolvedInput(promptInput.resolve())
         let resolvedOutput = try options.resolvedOutput()
         let generationOptions = try generation.validatedOptions()
+        let adapterPath = try adapterOptions.resolveAdapterPath()
         let toolResolution = try resolveToolManifests(toolSource)
 
         if options.dryRun {
             try CLIOutput.emit(
                 payload: DryRunPayload(
                     command: "session stream",
+                    adapter: adapterPath,
                     prompt: resolvedPrompt.value,
                     promptFile: resolvedPrompt.file,
                     useCase: useCaseFlags.useCase.rawValue,
@@ -157,12 +167,13 @@ struct SessionStreamCommand: AsyncParsableCommand {
         }
 
         _ = try requireFoundationModelsAvailability(useCase: useCaseFlags.useCase)
-        let engine = await MainActor.run {
-            AFMConversationEngine(
+        let engine = try await MainActor.run {
+            try AFMConversationEngine(
                 configuration: defaultConversationConfiguration(
                     systemPrompt: generation.systemPrompt,
                     useCase: useCaseFlags.useCase,
                     guardrails: generation.guardrails,
+                    adapterPath: adapterPath,
                     tools: toolResolution.tools
                 )
             )
@@ -185,6 +196,7 @@ struct SessionStreamCommand: AsyncParsableCommand {
                 .init(
                     event: "started",
                     command: "session stream",
+                    adapter: adapterPath,
                     useCase: selectedUseCase,
                     guardrails: selectedGuardrails,
                     messageIndex: nil,
@@ -217,6 +229,7 @@ struct SessionStreamCommand: AsyncParsableCommand {
                     .init(
                         event: "delta",
                         command: "session stream",
+                        adapter: adapterPath,
                         useCase: selectedUseCase,
                         guardrails: selectedGuardrails,
                         messageIndex: nil,
@@ -243,6 +256,7 @@ struct SessionStreamCommand: AsyncParsableCommand {
         let tokenCount = await MainActor.run { engine.currentTokenCount }
         let payload = SessionResponsePayload(
             command: "session stream",
+            adapter: adapterPath,
             useCase: selectedUseCase,
             guardrails: selectedGuardrails,
             prompt: resolvedPrompt.value,
@@ -258,6 +272,7 @@ struct SessionStreamCommand: AsyncParsableCommand {
                 .init(
                     event: "completed",
                     command: "session stream",
+                    adapter: adapterPath,
                     useCase: selectedUseCase,
                     guardrails: selectedGuardrails,
                     messageIndex: nil,
@@ -299,6 +314,7 @@ struct SessionChatCommand: AsyncParsableCommand {
 
     @OptionGroup var options: GlobalCommandOptions
     @OptionGroup var generation: GenerationFlags
+    @OptionGroup var adapterOptions: AdapterOptions
     @OptionGroup var useCaseFlags: ModelUseCaseFlags
     @OptionGroup var transcriptFlags: TranscriptIncludeFlags
     @OptionGroup var session: SessionOptions
@@ -310,12 +326,14 @@ struct SessionChatCommand: AsyncParsableCommand {
         let validatedMessages = resolvedMessages.map(\.value)
         let resolvedOutput = try options.resolvedOutput()
         let generationOptions = try generation.validatedOptions()
+        let adapterPath = try adapterOptions.resolveAdapterPath()
         let toolResolution = try resolveToolManifests(toolSource)
 
         if options.dryRun {
             try CLIOutput.emit(
                 payload: DryRunPayload(
                     command: "session chat",
+                    adapter: adapterPath,
                     messages: validatedMessages,
                     messageFiles: resolvedMessages.compactMap { $0.file },
                     useCase: useCaseFlags.useCase.rawValue,
@@ -330,12 +348,13 @@ struct SessionChatCommand: AsyncParsableCommand {
         }
 
         _ = try requireFoundationModelsAvailability(useCase: useCaseFlags.useCase)
-        let engine = await MainActor.run {
-            AFMConversationEngine(
+        let engine = try await MainActor.run {
+            try AFMConversationEngine(
                 configuration: defaultConversationConfiguration(
                     systemPrompt: generation.systemPrompt,
                     useCase: useCaseFlags.useCase,
                     guardrails: generation.guardrails,
+                    adapterPath: adapterPath,
                     tools: toolResolution.tools
                 )
             )
@@ -360,6 +379,7 @@ struct SessionChatCommand: AsyncParsableCommand {
                     .init(
                         event: "message_started",
                         command: "session chat",
+                        adapter: adapterPath,
                         useCase: selectedUseCase,
                         guardrails: selectedGuardrails,
                         messageIndex: index,
@@ -395,6 +415,7 @@ struct SessionChatCommand: AsyncParsableCommand {
                             .init(
                                 event: "message_delta",
                                 command: "session chat",
+                                adapter: adapterPath,
                                 useCase: selectedUseCase,
                                 guardrails: selectedGuardrails,
                                 messageIndex: index,
@@ -422,6 +443,7 @@ struct SessionChatCommand: AsyncParsableCommand {
                     .init(
                         event: "message_completed",
                         command: "session chat",
+                        adapter: adapterPath,
                         useCase: selectedUseCase,
                         guardrails: selectedGuardrails,
                         messageIndex: index,
@@ -444,6 +466,7 @@ struct SessionChatCommand: AsyncParsableCommand {
         let tokenCount = await MainActor.run { engine.currentTokenCount }
         let payload = SessionResponsePayload(
             command: "session chat",
+            adapter: adapterPath,
             useCase: selectedUseCase,
             guardrails: selectedGuardrails,
             prompt: nil,
@@ -459,6 +482,7 @@ struct SessionChatCommand: AsyncParsableCommand {
                 .init(
                     event: "session_completed",
                     command: "session chat",
+                    adapter: adapterPath,
                     useCase: selectedUseCase,
                     guardrails: selectedGuardrails,
                     messageIndex: nil,

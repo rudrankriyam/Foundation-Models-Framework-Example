@@ -71,7 +71,10 @@ extension AFMGenerationOptions {
 
 struct AFMFoundationModelsAvailabilityChecker: AFMModelAvailabilityChecking {
     func currentAvailability(useCase: AFMModelUseCase = .general) -> AFMAvailabilityResult {
-        let model = makeModel(useCase: useCase, guardrails: .default)
+        let model = SystemLanguageModel(
+            useCase: useCase.foundationModelsValue,
+            guardrails: AFMGuardrails.default.foundationModelsValue
+        )
         switch model.availability {
         case .available:
             return AFMAvailabilityResult(
@@ -103,7 +106,10 @@ struct AFMFoundationModelsAvailabilityChecker: AFMModelAvailabilityChecking {
 
 struct AFMFoundationModelsSupportedLanguageLister: AFMSupportedLanguageListing {
     func supportedLanguages(useCase: AFMModelUseCase = .general, locale: Locale = .current) -> AFMSupportedLanguagesResult {
-        let model = makeModel(useCase: useCase, guardrails: .default)
+        let model = SystemLanguageModel(
+            useCase: useCase.foundationModelsValue,
+            guardrails: AFMGuardrails.default.foundationModelsValue
+        )
         let languages = model.supportedLanguages.map { language in
             AFMSupportedLanguageDescriptor(
                 identifier: language.maximalIdentifier,
@@ -126,7 +132,11 @@ struct AFMFoundationModelsTextGenerator: AFMTextGenerationProviding {
             throw AFMRuntimeError.invalidRequest("Missing prompt")
         }
 
-        let model = makeModel(useCase: request.modelUseCase, guardrails: request.guardrails)
+        let model = try makeModel(
+            useCase: request.modelUseCase,
+            guardrails: request.guardrails,
+            adapterPath: request.adapterPath
+        )
         let session = makeSession(model: model, systemPrompt: request.systemPrompt)
 
         let responseContent: String
@@ -142,7 +152,7 @@ struct AFMFoundationModelsTextGenerator: AFMTextGenerationProviding {
         let tokenCount = await session.transcript.afmTokenCount(using: model)
         return AFMTextGenerationResult(
             content: responseContent,
-            metadata: AFMExecutionMetadata(provider: "Foundation Models", tokenCount: tokenCount)
+            metadata: executionMetadata(for: request.modelUseCase, adapterPath: request.adapterPath, tokenCount: tokenCount)
         )
     }
 }
@@ -157,7 +167,11 @@ struct AFMFoundationModelsStreamingTextGenerator: AFMStreamingTextGenerationProv
             throw AFMRuntimeError.invalidRequest("Missing prompt")
         }
 
-        let model = makeModel(useCase: request.modelUseCase, guardrails: request.guardrails)
+        let model = try makeModel(
+            useCase: request.modelUseCase,
+            guardrails: request.guardrails,
+            adapterPath: request.adapterPath
+        )
         let session = makeSession(model: model, systemPrompt: request.systemPrompt)
 
         var finalContent = ""
@@ -179,7 +193,7 @@ struct AFMFoundationModelsStreamingTextGenerator: AFMStreamingTextGenerationProv
         let tokenCount = await session.transcript.afmTokenCount(using: model)
         return AFMTextGenerationResult(
             content: finalContent,
-            metadata: AFMExecutionMetadata(provider: "Foundation Models", tokenCount: tokenCount)
+            metadata: executionMetadata(for: request.modelUseCase, adapterPath: request.adapterPath, tokenCount: tokenCount)
         )
     }
 }
@@ -194,7 +208,11 @@ struct AFMFoundationModelsStructuredGenerator: AFMStructuredGenerationProviding 
             throw AFMRuntimeError.invalidRequest("Missing prompt")
         }
 
-        let model = makeModel(useCase: request.modelUseCase, guardrails: request.guardrails)
+        let model = try makeModel(
+            useCase: request.modelUseCase,
+            guardrails: request.guardrails,
+            adapterPath: request.adapterPath
+        )
         let session = makeSession(model: model, systemPrompt: request.systemPrompt)
         let response: LanguageModelSession.Response<Output>
 
@@ -216,7 +234,7 @@ struct AFMFoundationModelsStructuredGenerator: AFMStructuredGenerationProviding 
         let tokenCount = await session.transcript.afmTokenCount(using: model)
         return AFMStructuredGenerationResult(
             output: response.content,
-            metadata: AFMExecutionMetadata(provider: "Foundation Models", tokenCount: tokenCount)
+            metadata: executionMetadata(for: request.modelUseCase, adapterPath: request.adapterPath, tokenCount: tokenCount)
         )
     }
 }
@@ -228,7 +246,11 @@ struct AFMFoundationModelsDynamicSchemaGenerator: AFMDynamicSchemaGenerationProv
             throw AFMRuntimeError.invalidRequest("Missing prompt")
         }
 
-        let model = makeModel(useCase: request.modelUseCase, guardrails: request.guardrails)
+        let model = try makeModel(
+            useCase: request.modelUseCase,
+            guardrails: request.guardrails,
+            adapterPath: request.adapterPath
+        )
         let session = makeSession(model: model, systemPrompt: request.systemPrompt)
         let output: GeneratedContent
 
@@ -250,15 +272,50 @@ struct AFMFoundationModelsDynamicSchemaGenerator: AFMDynamicSchemaGenerationProv
         let tokenCount = await session.transcript.afmTokenCount(using: model)
         return AFMDynamicSchemaGenerationResult(
             output: output,
-            metadata: AFMExecutionMetadata(provider: "Foundation Models", tokenCount: tokenCount)
+            metadata: executionMetadata(for: request.modelUseCase, adapterPath: request.adapterPath, tokenCount: tokenCount)
         )
     }
 }
 
-private func makeModel(useCase: AFMModelUseCase, guardrails: AFMGuardrails?) -> SystemLanguageModel {
-    SystemLanguageModel(
+func makeModel(
+    useCase: AFMModelUseCase,
+    guardrails: AFMGuardrails?,
+    adapterPath: String? = nil
+) throws -> SystemLanguageModel {
+    if let adapterPath {
+        let adapter = try SystemLanguageModel.Adapter(fileURL: URL(fileURLWithPath: adapterPath))
+        return SystemLanguageModel(adapter: adapter)
+    }
+
+    return SystemLanguageModel(
         useCase: useCase.foundationModelsValue,
         guardrails: (guardrails ?? .default).foundationModelsValue
+    )
+}
+
+func makeModel(
+    useCase: SystemLanguageModel.UseCase,
+    guardrails: SystemLanguageModel.Guardrails,
+    adapterPath: String? = nil
+) throws -> SystemLanguageModel {
+    if let adapterPath {
+        let adapter = try SystemLanguageModel.Adapter(fileURL: URL(fileURLWithPath: adapterPath))
+        return SystemLanguageModel(adapter: adapter)
+    }
+
+    return SystemLanguageModel(useCase: useCase, guardrails: guardrails)
+}
+
+private func executionMetadata(
+    for useCase: AFMModelUseCase,
+    adapterPath: String?,
+    tokenCount: Int?
+) -> AFMExecutionMetadata {
+    let modelIdentifier = adapterPath.map { URL(fileURLWithPath: $0).lastPathComponent } ?? useCase.rawValue
+    return AFMExecutionMetadata(
+        provider: "Foundation Models",
+        modelIdentifier: modelIdentifier,
+        tokenCount: tokenCount
     )
 }
 

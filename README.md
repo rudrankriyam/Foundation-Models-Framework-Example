@@ -31,7 +31,7 @@ To run live model commands, you still need a supported Apple Intelligence Mac. F
 - It gives Foundation Models a direct command-line workflow for prompting, tagging, schemas, tools, transcripts, and feedback.
 - It is built for real terminal use: explicit flags, readable help, file-based inputs, and clean JSON output.
 - It works well in automation and agent flows with dry-runs, stdin support, schema and tool directories, and NDJSON-style streaming events.
-- It keeps important runtime controls close at hand, including use cases, guardrails, schema prompting, and feedback issues.
+- It keeps important runtime controls close at hand, including adapters, use cases, guardrails, schema prompting, and feedback issues.
 
 ## First Commands
 
@@ -40,6 +40,7 @@ These are good starting points after install:
 ```bash
 afm model status
 afm session respond --prompt "Summarize Foundation Models in one paragraph."
+afm session respond --adapter ~/MyAdapter.fmadapter --prompt "Rewrite this in my house style."
 afm session stream --prompt "Write a short poem about rain."
 afm tag run --prompt "A joyful dog playing in a sunny park."
 afm schema run typed-person --input "Alex Rivera is a designer in Berlin."
@@ -67,10 +68,23 @@ Use `afm session` for one-shot prompting, streaming, and shared-context conversa
 ```bash
 afm session respond --prompt "Summarize Foundation Models in one paragraph."
 afm session respond --prompt @prompt.txt
+afm session respond --adapter ~/MyAdapter.fmadapter --prompt "Rewrite this in my house style."
 afm session respond --use-case content-tagging --prompt "Organize this photo library item."
 afm session stream --prompt "Write a short poem about rain."
 afm session chat --message "Hello" --message "Now answer in French."
 ```
+
+### Load adapters
+
+Use `--adapter` when you want to run a Foundation Models adapter package instead of the default system model:
+
+```bash
+afm session respond --adapter ~/MyAdapter.fmadapter --prompt "Summarize this contract."
+afm schema run typed-person --adapter ~/MyAdapter.fmadapter --input "Alex Rivera is a designer in Berlin."
+afm feedback export --adapter ~/MyAdapter.fmadapter --prompt "Review this answer." --file feedback.bin
+```
+
+The path must point to an existing `.fmadapter` package. The same flag is available on `tag run`, `session ...`, `schema run ...`, `transcript export`, and `feedback export`.
 
 ### Try content tagging
 

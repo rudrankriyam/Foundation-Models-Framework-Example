@@ -19,6 +19,7 @@ struct ExportedTranscriptPayload: Encodable {
     }
 
     let command: String
+    let adapter: String?
     let useCase: String
     let guardrails: String
     let messages: [String]
@@ -35,6 +36,7 @@ struct TranscriptExportCommand: AsyncParsableCommand {
 
     @OptionGroup var options: GlobalCommandOptions
     @OptionGroup var generation: GenerationFlags
+    @OptionGroup var adapterOptions: AdapterOptions
     @OptionGroup var useCaseFlags: ModelUseCaseFlags
     @OptionGroup var outputFile: ArtifactOutputOptions
     @OptionGroup var session: SessionOptions
@@ -46,12 +48,14 @@ struct TranscriptExportCommand: AsyncParsableCommand {
         let exportPath = try validatedExportPath(outputFile.file)
         let resolvedOutput = try options.resolvedOutput()
         let generationOptions = try generation.validatedOptions()
+        let adapterPath = try adapterOptions.resolveAdapterPath()
         let toolResolution = try resolveToolManifests(toolSource)
 
         if options.dryRun {
             try CLIOutput.emit(
                 payload: DryRunPayload(
                     command: "transcript export",
+                    adapter: adapterPath,
                     messages: messages,
                     messageFiles: resolvedMessages.compactMap { $0.file },
                     file: exportPath,
@@ -67,12 +71,13 @@ struct TranscriptExportCommand: AsyncParsableCommand {
         }
 
         _ = try requireFoundationModelsAvailability(useCase: useCaseFlags.useCase)
-        let engine = await MainActor.run {
-            AFMConversationEngine(
+        let engine = try await MainActor.run {
+            try AFMConversationEngine(
                 configuration: defaultConversationConfiguration(
                     systemPrompt: generation.systemPrompt,
                     useCase: useCaseFlags.useCase,
                     guardrails: generation.guardrails,
+                    adapterPath: adapterPath,
                     tools: toolResolution.tools
                 )
             )
@@ -87,6 +92,7 @@ struct TranscriptExportCommand: AsyncParsableCommand {
         let tokenCount = await MainActor.run { engine.currentTokenCount }
         let payload = ExportedTranscriptPayload(
             command: "transcript export",
+            adapter: adapterPath,
             useCase: useCaseFlags.useCase.rawValue,
             guardrails: generation.guardrails.rawValue,
             messages: messages,
@@ -129,6 +135,7 @@ struct FeedbackCommand: AsyncParsableCommand {
 
 struct FeedbackExportSummaryPayload: Encodable {
     let command: String
+    let adapter: String?
     let useCase: String
     let guardrails: String
     let prompt: String
@@ -146,6 +153,7 @@ struct FeedbackExportCommand: AsyncParsableCommand {
 
     @OptionGroup var options: GlobalCommandOptions
     @OptionGroup var generation: GenerationFlags
+    @OptionGroup var adapterOptions: AdapterOptions
     @OptionGroup var useCaseFlags: ModelUseCaseFlags
     @OptionGroup var issueFlags: FeedbackIssueFlags
     @OptionGroup var outputFile: ArtifactOutputOptions
@@ -162,12 +170,14 @@ struct FeedbackExportCommand: AsyncParsableCommand {
         let exportPath = try validatedExportPath(outputFile.file)
         let resolvedOutput = try options.resolvedOutput()
         let generationOptions = try generation.validatedOptions()
+        let adapterPath = try adapterOptions.resolveAdapterPath()
         let issues = try issueFlags.resolvedIssues()
 
         if options.dryRun {
             try CLIOutput.emit(
                 payload: DryRunPayload(
                     command: "feedback export",
+                    adapter: adapterPath,
                     prompt: resolvedPrompt.value,
                     promptFile: resolvedPrompt.file,
                     file: exportPath,
@@ -182,9 +192,10 @@ struct FeedbackExportCommand: AsyncParsableCommand {
         }
 
         _ = try requireFoundationModelsAvailability(useCase: useCaseFlags.useCase)
-        let model = SystemLanguageModel(
+        let model = try makeModel(
             useCase: useCaseFlags.useCase.foundationModelsValue,
-            guardrails: generation.guardrails.foundationModelsValue
+            guardrails: generation.guardrails.foundationModelsValue,
+            adapterPath: adapterPath
         )
         let session = makeFeedbackSession(model: model, systemPrompt: generation.systemPrompt)
         if let generationOptions {
@@ -211,6 +222,7 @@ struct FeedbackExportCommand: AsyncParsableCommand {
 
         let payload = FeedbackExportSummaryPayload(
             command: "feedback export",
+            adapter: adapterPath,
             useCase: useCaseFlags.useCase.rawValue,
             guardrails: generation.guardrails.rawValue,
             prompt: resolvedPrompt.value,

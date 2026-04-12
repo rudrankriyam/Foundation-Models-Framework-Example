@@ -13,6 +13,7 @@ struct TagCommand: AsyncParsableCommand {
 
 struct TagRunPayload: Encodable {
     let command: String
+    let adapter: String?
     let prompt: String
     let useCase: String
     let guardrails: String
@@ -29,17 +30,20 @@ struct TagRunCommand: AsyncParsableCommand {
 
     @OptionGroup var options: GlobalCommandOptions
     @OptionGroup var generation: GenerationFlags
+    @OptionGroup var adapterOptions: AdapterOptions
     @OptionGroup var promptInput: PromptInputOptions
 
     mutating func run() async throws {
         let resolvedPrompt = try requiredResolvedInput(promptInput.resolve())
         let resolvedOutput = try options.resolvedOutput()
         let generationOptions = try generation.validatedOptions()
+        let adapterPath = try adapterOptions.resolveAdapterPath()
 
         if options.dryRun {
             try CLIOutput.emit(
                 payload: DryRunPayload(
                     command: "tag run",
+                    adapter: adapterPath,
                     prompt: resolvedPrompt.value,
                     promptFile: resolvedPrompt.file,
                     useCase: AFMModelUseCase.contentTagging.rawValue,
@@ -58,6 +62,7 @@ struct TagRunCommand: AsyncParsableCommand {
                 systemPrompt: generation.systemPrompt,
                 modelUseCase: .contentTagging,
                 guardrails: generation.guardrails,
+                adapterPath: adapterPath,
                 generationOptions: generationOptions,
                 context: afmContext()
             )
@@ -66,6 +71,7 @@ struct TagRunCommand: AsyncParsableCommand {
         let tags = extractTags(from: result.content)
         let payload = TagRunPayload(
             command: "tag run",
+            adapter: adapterPath,
             prompt: resolvedPrompt.value,
             useCase: AFMModelUseCase.contentTagging.rawValue,
             guardrails: generation.guardrails.rawValue,

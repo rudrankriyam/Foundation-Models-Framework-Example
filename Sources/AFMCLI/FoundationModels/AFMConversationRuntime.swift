@@ -14,11 +14,12 @@ final class AFMConversationEngine {
     private var model: SystemLanguageModel
     private var activeStreamingTask: Task<String, Error>?
 
-    init(configuration: AFMConversationConfiguration) {
+    init(configuration: AFMConversationConfiguration) throws {
         self.configuration = configuration
-        self.model = SystemLanguageModel(
-            useCase: configuration.modelUseCase.foundationModelsValue,
-            guardrails: configuration.guardrails.foundationModelsValue
+        self.model = try makeModel(
+            useCase: configuration.modelUseCase,
+            guardrails: configuration.guardrails,
+            adapterPath: configuration.adapterPath
         )
         self.maxContextSize = configuration.defaultMaxContextSize
         self.session = Self.makeSession(

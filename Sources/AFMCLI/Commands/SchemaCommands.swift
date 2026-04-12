@@ -66,6 +66,7 @@ struct SchemaRunCommand: AsyncParsableCommand {
 
 struct TypedSchemaPayload<Output: Encodable>: Encodable {
     let command: String
+    let adapter: String?
     let preset: String
     let useCase: String
     let guardrails: String
@@ -77,6 +78,7 @@ struct TypedSchemaPayload<Output: Encodable>: Encodable {
 
 struct DynamicSchemaPayload: Encodable {
     let command: String
+    let adapter: String?
     let preset: String
     let useCase: String
     let guardrails: String
@@ -95,6 +97,7 @@ struct SchemaCustomCommand: AsyncParsableCommand {
 
     @OptionGroup var options: GlobalCommandOptions
     @OptionGroup var generation: GenerationFlags
+    @OptionGroup var adapterOptions: AdapterOptions
     @OptionGroup var useCaseFlags: ModelUseCaseFlags
     @OptionGroup var schemaPromptFlags: SchemaPromptFlags
     @OptionGroup var inputSource: InputSourceOptions
@@ -103,6 +106,7 @@ struct SchemaCustomCommand: AsyncParsableCommand {
     mutating func run() async throws {
         let resolvedOutput = try options.resolvedOutput()
         let generationOptions = try generation.validatedOptions()
+        let adapterPath = try adapterOptions.resolveAdapterPath()
         let schemaReference = try schemaSource.resolve()
         let schemaDocument = try AFMArtifactRegistry.loadSchemaDocument(from: schemaReference)
         let resolvedInput = try inputSource.resolve()
@@ -111,6 +115,7 @@ struct SchemaCustomCommand: AsyncParsableCommand {
             try CLIOutput.emit(
                 payload: DryRunPayload(
                     command: "schema run custom",
+                    adapter: adapterPath,
                     input: resolvedInput.value,
                     inputFile: resolvedInput.file,
                     schema: schemaReference.identifier,
@@ -134,6 +139,7 @@ struct SchemaCustomCommand: AsyncParsableCommand {
                 systemPrompt: generation.systemPrompt,
                 modelUseCase: useCaseFlags.useCase,
                 guardrails: generation.guardrails,
+                adapterPath: adapterPath,
                 generationOptions: generationOptions,
                 includeSchemaInPrompt: schemaPromptFlags.includeSchemaInPrompt,
                 context: afmContext()
@@ -143,6 +149,7 @@ struct SchemaCustomCommand: AsyncParsableCommand {
         let json = result.output.jsonString
         let payload = DynamicSchemaPayload(
             command: "schema run custom",
+            adapter: adapterPath,
             preset: schemaReference.identifier,
             useCase: useCaseFlags.useCase.rawValue,
             guardrails: generation.guardrails.rawValue,
@@ -176,6 +183,7 @@ struct TypedPersonSchemaCommand: AsyncParsableCommand {
 
     @OptionGroup var options: GlobalCommandOptions
     @OptionGroup var generation: GenerationFlags
+    @OptionGroup var adapterOptions: AdapterOptions
     @OptionGroup var useCaseFlags: ModelUseCaseFlags
     @OptionGroup var schemaPromptFlags: SchemaPromptFlags
     @OptionGroup var inputSource: InputSourceOptions
@@ -183,6 +191,7 @@ struct TypedPersonSchemaCommand: AsyncParsableCommand {
     mutating func run() async throws {
         let resolvedOutput = try options.resolvedOutput()
         let generationOptions = try generation.validatedOptions()
+        let adapterPath = try adapterOptions.resolveAdapterPath()
         guard let example = AFMSchemaCatalog.example(id: "typed-person"),
               let preset = example.presets.first else {
             throw AFMRuntimeError.invalidRequest("Missing typed-person schema preset")
@@ -193,6 +202,7 @@ struct TypedPersonSchemaCommand: AsyncParsableCommand {
             try CLIOutput.emit(
                 payload: DryRunPayload(
                     command: "schema run typed-person",
+                    adapter: adapterPath,
                     input: resolvedInput.value,
                     inputFile: resolvedInput.file,
                     useCase: useCaseFlags.useCase.rawValue,
@@ -212,6 +222,7 @@ struct TypedPersonSchemaCommand: AsyncParsableCommand {
                 systemPrompt: generation.systemPrompt,
                 modelUseCase: useCaseFlags.useCase,
                 guardrails: generation.guardrails,
+                adapterPath: adapterPath,
                 generationOptions: generationOptions,
                 includeSchemaInPrompt: schemaPromptFlags.includeSchemaInPrompt,
                 context: afmContext()
@@ -219,6 +230,7 @@ struct TypedPersonSchemaCommand: AsyncParsableCommand {
         )
         let payload = TypedSchemaPayload(
             command: "schema run typed-person",
+            adapter: adapterPath,
             preset: preset.id,
             useCase: useCaseFlags.useCase.rawValue,
             guardrails: generation.guardrails.rawValue,
@@ -252,6 +264,7 @@ struct BasicObjectSchemaCommand: AsyncParsableCommand {
 
     @OptionGroup var options: GlobalCommandOptions
     @OptionGroup var generation: GenerationFlags
+    @OptionGroup var adapterOptions: AdapterOptions
     @OptionGroup var useCaseFlags: ModelUseCaseFlags
     @OptionGroup var schemaPromptFlags: SchemaPromptFlags
     @OptionGroup var inputSource: InputSourceOptions
@@ -268,6 +281,7 @@ struct BasicObjectSchemaCommand: AsyncParsableCommand {
             schemaBuilder: makeBasicObjectSchema,
             options: options,
             generation: generation,
+            adapterPath: try adapterOptions.resolveAdapterPath(),
             useCase: useCaseFlags.useCase,
             includeSchemaInPrompt: schemaPromptFlags.includeSchemaInPrompt
         )
@@ -282,6 +296,7 @@ struct ArraySchemaCommand: AsyncParsableCommand {
 
     @OptionGroup var options: GlobalCommandOptions
     @OptionGroup var generation: GenerationFlags
+    @OptionGroup var adapterOptions: AdapterOptions
     @OptionGroup var useCaseFlags: ModelUseCaseFlags
     @OptionGroup var schemaPromptFlags: SchemaPromptFlags
     @OptionGroup var inputSource: InputSourceOptions
@@ -306,6 +321,7 @@ struct ArraySchemaCommand: AsyncParsableCommand {
             },
             options: options,
             generation: generation,
+            adapterPath: try adapterOptions.resolveAdapterPath(),
             useCase: useCaseFlags.useCase,
             includeSchemaInPrompt: schemaPromptFlags.includeSchemaInPrompt
         )
@@ -320,6 +336,7 @@ struct EnumSchemaCommand: AsyncParsableCommand {
 
     @OptionGroup var options: GlobalCommandOptions
     @OptionGroup var generation: GenerationFlags
+    @OptionGroup var adapterOptions: AdapterOptions
     @OptionGroup var useCaseFlags: ModelUseCaseFlags
     @OptionGroup var schemaPromptFlags: SchemaPromptFlags
     @OptionGroup var inputSource: InputSourceOptions
@@ -344,6 +361,7 @@ struct EnumSchemaCommand: AsyncParsableCommand {
             },
             options: options,
             generation: generation,
+            adapterPath: try adapterOptions.resolveAdapterPath(),
             useCase: useCaseFlags.useCase,
             includeSchemaInPrompt: schemaPromptFlags.includeSchemaInPrompt
         )
@@ -358,6 +376,7 @@ private func runDynamicSchemaCommand(
     schemaBuilder: (String) throws -> GenerationSchema,
     options: GlobalCommandOptions,
     generation: GenerationFlags,
+    adapterPath: String?,
     useCase: AFMModelUseCase,
     includeSchemaInPrompt: Bool
 ) async throws {
@@ -375,6 +394,7 @@ private func runDynamicSchemaCommand(
         try CLIOutput.emit(
             payload: DryRunPayload(
                 command: command,
+                adapter: adapterPath,
                 preset: presetID,
                 input: resolvedInput.value,
                 inputFile: resolvedInput.file,
@@ -396,6 +416,7 @@ private func runDynamicSchemaCommand(
             systemPrompt: generation.systemPrompt,
             modelUseCase: useCase,
             guardrails: generation.guardrails,
+            adapterPath: adapterPath,
             generationOptions: generationOptions,
             includeSchemaInPrompt: includeSchemaInPrompt,
             context: afmContext()
@@ -403,6 +424,7 @@ private func runDynamicSchemaCommand(
     )
     let payload = DynamicSchemaPayload(
         command: command,
+        adapter: adapterPath,
         preset: presetID,
         useCase: useCase.rawValue,
         guardrails: generation.guardrails.rawValue,
