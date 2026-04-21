@@ -274,6 +274,7 @@ struct AFMConversationConfiguration {
     var overflowResetMessage: String?
     var modelUseCase: AFMModelUseCase
     var guardrails: AFMGuardrails
+    var adapterPath: String?
     var tools: [any Tool]
     var enableSlidingWindow: Bool
     var windowThreshold: Double
@@ -290,6 +291,7 @@ struct AFMConversationConfiguration {
         overflowResetMessage: String? = nil,
         modelUseCase: AFMModelUseCase = .general,
         guardrails: AFMGuardrails = .default,
+        adapterPath: String? = nil,
         tools: [any Tool] = [],
         enableSlidingWindow: Bool = false,
         windowThreshold: Double = 0.70,
@@ -305,6 +307,7 @@ struct AFMConversationConfiguration {
         self.overflowResetMessage = overflowResetMessage
         self.modelUseCase = modelUseCase
         self.guardrails = guardrails
+        self.adapterPath = adapterPath
         self.tools = tools
         self.enableSlidingWindow = enableSlidingWindow
         self.windowThreshold = windowThreshold
@@ -330,6 +333,7 @@ struct AFMTextGenerationRequest: AFMCapabilityRequest, Sendable {
     let systemPrompt: String?
     let modelUseCase: AFMModelUseCase
     let guardrails: AFMGuardrails?
+    let adapterPath: String?
     let generationOptions: AFMGenerationOptions?
     let context: AFMInvocationContext
 }
@@ -339,6 +343,7 @@ struct AFMStreamingTextGenerationRequest: AFMCapabilityRequest, Sendable {
     let systemPrompt: String?
     let modelUseCase: AFMModelUseCase
     let guardrails: AFMGuardrails?
+    let adapterPath: String?
     let generationOptions: AFMGenerationOptions?
     let context: AFMInvocationContext
 }
@@ -348,6 +353,7 @@ struct AFMStructuredGenerationRequest<Output: Generable & Sendable>: AFMCapabili
     let systemPrompt: String?
     let modelUseCase: AFMModelUseCase
     let guardrails: AFMGuardrails?
+    let adapterPath: String?
     let generationOptions: AFMGenerationOptions?
     let includeSchemaInPrompt: Bool
     let context: AFMInvocationContext
@@ -359,6 +365,7 @@ struct AFMDynamicSchemaGenerationRequest: AFMCapabilityRequest, Sendable {
     let systemPrompt: String?
     let modelUseCase: AFMModelUseCase
     let guardrails: AFMGuardrails?
+    let adapterPath: String?
     let generationOptions: AFMGenerationOptions?
     let includeSchemaInPrompt: Bool
     let context: AFMInvocationContext
@@ -369,6 +376,7 @@ struct AFMRunConversationRequest: AFMCapabilityRequest, Sendable {
     let systemPrompt: String?
     let modelUseCase: AFMModelUseCase
     let guardrails: AFMGuardrails?
+    let adapterPath: String?
     let generationOptions: AFMGenerationOptions?
     let context: AFMInvocationContext
 }

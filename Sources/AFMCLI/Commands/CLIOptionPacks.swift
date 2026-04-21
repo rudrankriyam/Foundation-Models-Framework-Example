@@ -161,6 +161,18 @@ struct ToolSourceOptions: ParsableArguments {
     }
 }
 
+struct AdapterOptions: ParsableArguments {
+    @Option(name: .long, help: "Path to a Foundation Models adapter package (.fmadapter).")
+    var adapter: String?
+
+    func resolveAdapterPath() throws -> String? {
+        guard let adapter else {
+            return nil
+        }
+        return try validatedAdapterPath(adapter, optionName: "--adapter")
+    }
+}
+
 struct ResolvedArtifactReference: Sendable, Encodable {
     let rawValue: String
     let identifier: String
@@ -246,6 +258,20 @@ func validatedResolvedText(_ value: String, optionName: String) throws -> String
         throw ValidationError("Please provide a non-empty \(optionName).")
     }
     return trimmedValue
+}
+
+func validatedAdapterPath(_ value: String, optionName: String) throws -> String {
+    let trimmedValue = try validatedResolvedText(value, optionName: optionName)
+    let expandedPath = expandedPathString(trimmedValue)
+    guard URL(fileURLWithPath: expandedPath).pathExtension.lowercased() == "fmadapter" else {
+        throw ValidationError("\(optionName) must point to a .fmadapter package.")
+    }
+
+    guard FileManager.default.fileExists(atPath: expandedPath) else {
+        throw ValidationError("Could not find \(optionName) at \(expandedPath).")
+    }
+
+    return expandedPath
 }
 
 func shouldAutomaticallyReadFromStdin() -> Bool {

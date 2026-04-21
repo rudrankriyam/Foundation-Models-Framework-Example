@@ -85,6 +85,17 @@ func leafCommandHelpCoverage() throws {
             || command == ["schema", "run", "enum-schema", "--help"] {
             #expect(result.stdout.contains("--include-schema-in-prompt"))
         }
+        if command.contains("session")
+            || command.contains("feedback")
+            || command.contains("transcript")
+            || command == ["schema", "run", "custom", "--help"]
+            || command == ["schema", "run", "typed-person", "--help"]
+            || command == ["schema", "run", "basic-object", "--help"]
+            || command == ["schema", "run", "array-schema", "--help"]
+            || command == ["schema", "run", "enum-schema", "--help"]
+            || command == ["tag", "run", "--help"] {
+            #expect(result.stdout.contains("--adapter <adapter>"))
+        }
     }
 }
 
@@ -232,6 +243,33 @@ func promptAndMessageSourceResolution() throws {
     #expect(stdinJSON["prompt"] as? String == "Prompt from stdin")
     #expect((chatJSON["messageFiles"] as? [String]) == [messageFile.path()])
     #expect((chatJSON["messages"] as? [String]) == ["Message from file"])
+}
+
+@Test("Adapter paths validate early and appear in dry-run payloads")
+func adapterDryRunAndValidation() throws {
+    let directory = URL(fileURLWithPath: NSTemporaryDirectory())
+        .appending(path: "afm-adapters-\(UUID().uuidString)")
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: directory) }
+
+    let adapterPath = directory.appending(path: "Demo.fmadapter")
+    let invalidPath = directory.appending(path: "Demo.txt")
+    try FileManager.default.createDirectory(at: adapterPath, withIntermediateDirectories: true)
+    try Data().write(to: invalidPath)
+
+    let valid = try runAFM(
+        ["session", "respond", "--output", "json", "--dry-run", "--adapter", adapterPath.path(), "--prompt", "hello"]
+    )
+    let invalid = try runAFM(
+        ["session", "respond", "--dry-run", "--adapter", invalidPath.path(), "--prompt", "hello"]
+    )
+
+    #expect(valid.status == 0)
+    #expect(invalid.status == 64)
+
+    let validJSON = try parseJSONObject(valid.stdout)
+    #expect(validJSON["adapter"] as? String == adapterPath.path())
+    #expect(invalid.stderr.contains("--adapter must point to a .fmadapter package"))
 }
 
 @Test("Schema commands expose list and run flows")
