@@ -6,9 +6,11 @@
 //
 
 import SwiftUI
+import FoundationLabCore
 
 struct HomeView: View {
     @State private var showingSettings = false
+    @State private var modelAvailability = CheckModelAvailabilityUseCase().execute()
 
     var body: some View {
         ScrollView {
@@ -40,19 +42,20 @@ struct HomeView: View {
         .navigationDestination(for: ExampleType.self) { exampleType in
             exampleType.destination
         }
+        .onAppear(perform: refreshModelAvailability)
     }
 
     private var modelStatusSection: some View {
         HStack(spacing: Spacing.medium) {
-            Image(systemName: "checkmark.circle.fill")
+            Image(systemName: modelStatusIcon)
                 .font(.title2)
-                .foregroundStyle(.green)
+                .foregroundStyle(modelStatusTint)
 
             VStack(alignment: .leading, spacing: Spacing.xSmall) {
-                Text("Model Ready")
+                Text(modelStatusTitle)
                     .font(.headline)
 
-                Text("Apple Intelligence availability is checked when the app opens.")
+                Text(modelStatusMessage)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -65,6 +68,35 @@ struct HomeView: View {
 #else
         .background(Color.gray.opacity(0.1), in: .rect(cornerRadius: CornerRadius.large))
 #endif
+    }
+
+    private var modelStatusIcon: String {
+        modelAvailability.isAvailable ? "checkmark.circle.fill" : "exclamationmark.triangle.fill"
+    }
+
+    private var modelStatusTint: Color {
+        modelAvailability.isAvailable ? .green : .orange
+    }
+
+    private var modelStatusTitle: String {
+        modelAvailability.isAvailable ? "Model Ready" : "Model Unavailable"
+    }
+
+    private var modelStatusMessage: String {
+        guard !modelAvailability.isAvailable else {
+            return "Apple Intelligence is ready for local Foundation Models."
+        }
+
+        switch modelAvailability.reason {
+        case .deviceNotEligible:
+            return "This device does not support Apple Intelligence."
+        case .appleIntelligenceNotEnabled:
+            return "Enable Apple Intelligence in Settings to use local models."
+        case .modelNotReady:
+            return "Apple Intelligence models are still downloading."
+        case .unknown, .none:
+            return "Apple Intelligence is currently unavailable."
+        }
     }
 
     private var examplesSection: some View {
@@ -96,6 +128,10 @@ struct HomeView: View {
 #else
         [GridItem(.adaptive(minimum: 240), spacing: Spacing.large)]
 #endif
+    }
+
+    private func refreshModelAvailability() {
+        modelAvailability = CheckModelAvailabilityUseCase().execute()
     }
 }
 

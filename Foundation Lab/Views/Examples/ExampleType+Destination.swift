@@ -33,7 +33,7 @@ extension ExampleType {
         case .rag:
             RAGChatView()
         case .chat:
-            ChatView(title: "Session")
+            ChatView(title: "Session", showsDoneButton: false, tearsDownOnDisappear: false)
         }
     }
 

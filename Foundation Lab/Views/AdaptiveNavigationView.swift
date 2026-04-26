@@ -48,7 +48,7 @@ struct AdaptiveNavigationView: View {
 
             Tab(TabSelection.session.displayName, systemImage: "bubble.left.and.bubble.right.fill", value: .session) {
                 NavigationStack {
-                    ChatView(title: "Session", showsDoneButton: false)
+                    ChatView(title: "Session", showsDoneButton: false, tearsDownOnDisappear: false)
                 }
             }
 
@@ -104,7 +104,7 @@ struct AdaptiveNavigationView: View {
             }
         case .session:
             NavigationStack {
-                ChatView(title: "Session", showsDoneButton: false)
+                ChatView(title: "Session", showsDoneButton: false, tearsDownOnDisappear: false)
             }
         case .studio:
             NavigationStack(path: $navigationCoordinator.studioPath) {

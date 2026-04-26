@@ -11,6 +11,7 @@ import FoundationModels
 struct ChatView: View {
     let title: String
     let showsDoneButton: Bool
+    let tearsDownOnDisappear: Bool
 
     @State private var viewModel = ChatViewModel()
     @State private var scrollID: String?
@@ -19,9 +20,10 @@ struct ChatView: View {
     @FocusState private var isTextFieldFocused: Bool
     @Environment(\.dismiss) private var dismiss
 
-    init(title: String = "Chat", showsDoneButton: Bool = true) {
+    init(title: String = "Chat", showsDoneButton: Bool = true, tearsDownOnDisappear: Bool = true) {
         self.title = title
         self.showsDoneButton = showsDoneButton
+        self.tearsDownOnDisappear = tearsDownOnDisappear
     }
 
     var body: some View {
@@ -83,7 +85,9 @@ struct ChatView: View {
             }
         }
         .onDisappear {
-            viewModel.tearDown()
+            if tearsDownOnDisappear {
+                viewModel.tearDown()
+            }
         }
 #if os(iOS)
         .fullScreenCover(isPresented: $showInstructionsSheet) {
