@@ -21,13 +21,36 @@ final class RAGService {
     }
 
     func indexDocument(url: URL) async throws -> [UUID] {
-        let accessing = url.startAccessingSecurityScopedResource()
-        defer {
-            if accessing {
-                url.stopAccessingSecurityScopedResource()
-            }
+        let readableURL = try await copyImportedDocumentToAppStorage(from: url)
+
+        do {
+            return try await lumoKit.parseAndIndex(url: readableURL, chunkingConfig: chunkingConfig)
+        } catch {
+            await removeImportedDocumentIfPossible(at: readableURL)
+            throw error
         }
-        return try await lumoKit.parseAndIndex(url: url, chunkingConfig: chunkingConfig)
+    }
+
+    private func copyImportedDocumentToAppStorage(from url: URL) async throws -> URL {
+        try await Task.detached(priority: .userInitiated) {
+            let accessing = url.startAccessingSecurityScopedResource()
+            defer {
+                if accessing {
+                    url.stopAccessingSecurityScopedResource()
+                }
+            }
+
+            let importsDirectory = try Self.importsDirectoryURL()
+            try FileManager.default.createDirectory(
+                at: importsDirectory,
+                withIntermediateDirectories: true
+            )
+
+            let fileName = url.lastPathComponent.isEmpty ? "ImportedDocument" : url.lastPathComponent
+            let destinationURL = importsDirectory.appendingPathComponent("\(UUID().uuidString)-\(fileName)")
+            try FileManager.default.copyItem(at: url, to: destinationURL)
+            return destinationURL
+        }.value
     }
 
     func indexText(_ text: String) async throws -> [UUID] {
@@ -51,12 +74,42 @@ final class RAGService {
 
     func resetDatabase() async throws {
         try await lumoKit.resetDB()
+        // Keep the user-visible reset consistent even if cached import cleanup fails.
+        await removeImportedDocumentsIfPossible()
     }
 
     var documentCount: Int {
         get async throws {
             try await lumoKit.documentCount()
         }
+    }
+}
+
+private extension RAGService {
+    nonisolated static func importsDirectoryURL() throws -> URL {
+        try FileManager.default.url(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
+        )
+        .appendingPathComponent("RAGImports", isDirectory: true)
+    }
+
+    func removeImportedDocumentsIfPossible() async {
+        _ = await Task.detached(priority: .utility) {
+            let importsDirectory = try Self.importsDirectoryURL()
+            guard FileManager.default.fileExists(atPath: importsDirectory.path) else {
+                return
+            }
+            try? FileManager.default.removeItem(at: importsDirectory)
+        }.result
+    }
+
+    func removeImportedDocumentIfPossible(at url: URL) async {
+        _ = await Task.detached(priority: .utility) {
+            try? FileManager.default.removeItem(at: url)
+        }.result
     }
 }
 
