@@ -33,14 +33,7 @@ final class RAGService {
             }
         }
 
-        let importsDirectory = try FileManager.default.url(
-            for: .applicationSupportDirectory,
-            in: .userDomainMask,
-            appropriateFor: nil,
-            create: true
-        )
-        .appendingPathComponent("RAGImports", isDirectory: true)
-
+        let importsDirectory = try importsDirectoryURL()
         try FileManager.default.createDirectory(
             at: importsDirectory,
             withIntermediateDirectories: true
@@ -73,12 +66,33 @@ final class RAGService {
 
     func resetDatabase() async throws {
         try await lumoKit.resetDB()
+        try removeImportedDocuments()
     }
 
     var documentCount: Int {
         get async throws {
             try await lumoKit.documentCount()
         }
+    }
+}
+
+private extension RAGService {
+    func importsDirectoryURL() throws -> URL {
+        try FileManager.default.url(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
+        )
+        .appendingPathComponent("RAGImports", isDirectory: true)
+    }
+
+    func removeImportedDocuments() throws {
+        let importsDirectory = try importsDirectoryURL()
+        guard FileManager.default.fileExists(atPath: importsDirectory.path) else {
+            return
+        }
+        try FileManager.default.removeItem(at: importsDirectory)
     }
 }
 
