@@ -66,7 +66,8 @@ final class RAGService {
 
     func resetDatabase() async throws {
         try await lumoKit.resetDB()
-        try removeImportedDocuments()
+        // Keep the user-visible reset consistent even if cached import cleanup fails.
+        try? removeImportedDocuments()
     }
 
     var documentCount: Int {
