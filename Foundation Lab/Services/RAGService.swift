@@ -21,28 +21,36 @@ final class RAGService {
     }
 
     func indexDocument(url: URL) async throws -> [UUID] {
-        let readableURL = try copyImportedDocumentToAppStorage(from: url)
-        return try await lumoKit.parseAndIndex(url: readableURL, chunkingConfig: chunkingConfig)
+        let readableURL = try await copyImportedDocumentToAppStorage(from: url)
+
+        do {
+            return try await lumoKit.parseAndIndex(url: readableURL, chunkingConfig: chunkingConfig)
+        } catch {
+            await removeImportedDocumentIfPossible(at: readableURL)
+            throw error
+        }
     }
 
-    private func copyImportedDocumentToAppStorage(from url: URL) throws -> URL {
-        let accessing = url.startAccessingSecurityScopedResource()
-        defer {
-            if accessing {
-                url.stopAccessingSecurityScopedResource()
+    private func copyImportedDocumentToAppStorage(from url: URL) async throws -> URL {
+        try await Task.detached(priority: .userInitiated) {
+            let accessing = url.startAccessingSecurityScopedResource()
+            defer {
+                if accessing {
+                    url.stopAccessingSecurityScopedResource()
+                }
             }
-        }
 
-        let importsDirectory = try importsDirectoryURL()
-        try FileManager.default.createDirectory(
-            at: importsDirectory,
-            withIntermediateDirectories: true
-        )
+            let importsDirectory = try Self.importsDirectoryURL()
+            try FileManager.default.createDirectory(
+                at: importsDirectory,
+                withIntermediateDirectories: true
+            )
 
-        let fileName = url.lastPathComponent.isEmpty ? "ImportedDocument" : url.lastPathComponent
-        let destinationURL = importsDirectory.appendingPathComponent("\(UUID().uuidString)-\(fileName)")
-        try FileManager.default.copyItem(at: url, to: destinationURL)
-        return destinationURL
+            let fileName = url.lastPathComponent.isEmpty ? "ImportedDocument" : url.lastPathComponent
+            let destinationURL = importsDirectory.appendingPathComponent("\(UUID().uuidString)-\(fileName)")
+            try FileManager.default.copyItem(at: url, to: destinationURL)
+            return destinationURL
+        }.value
     }
 
     func indexText(_ text: String) async throws -> [UUID] {
@@ -78,7 +86,7 @@ final class RAGService {
 }
 
 private extension RAGService {
-    func importsDirectoryURL() throws -> URL {
+    nonisolated static func importsDirectoryURL() throws -> URL {
         try FileManager.default.url(
             for: .applicationSupportDirectory,
             in: .userDomainMask,
@@ -89,11 +97,17 @@ private extension RAGService {
     }
 
     func removeImportedDocuments() throws {
-        let importsDirectory = try importsDirectoryURL()
+        let importsDirectory = try Self.importsDirectoryURL()
         guard FileManager.default.fileExists(atPath: importsDirectory.path) else {
             return
         }
         try FileManager.default.removeItem(at: importsDirectory)
+    }
+
+    func removeImportedDocumentIfPossible(at url: URL) async {
+        _ = await Task.detached(priority: .utility) {
+            try? FileManager.default.removeItem(at: url)
+        }.result
     }
 }
 
