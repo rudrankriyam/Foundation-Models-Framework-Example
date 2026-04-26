@@ -75,7 +75,7 @@ final class RAGService {
     func resetDatabase() async throws {
         try await lumoKit.resetDB()
         // Keep the user-visible reset consistent even if cached import cleanup fails.
-        try? removeImportedDocuments()
+        await removeImportedDocumentsIfPossible()
     }
 
     var documentCount: Int {
@@ -96,12 +96,14 @@ private extension RAGService {
         .appendingPathComponent("RAGImports", isDirectory: true)
     }
 
-    func removeImportedDocuments() throws {
-        let importsDirectory = try Self.importsDirectoryURL()
-        guard FileManager.default.fileExists(atPath: importsDirectory.path) else {
-            return
-        }
-        try FileManager.default.removeItem(at: importsDirectory)
+    func removeImportedDocumentsIfPossible() async {
+        _ = await Task.detached(priority: .utility) {
+            let importsDirectory = try Self.importsDirectoryURL()
+            guard FileManager.default.fileExists(atPath: importsDirectory.path) else {
+                return
+            }
+            try? FileManager.default.removeItem(at: importsDirectory)
+        }.result
     }
 
     func removeImportedDocumentIfPossible(at url: URL) async {
