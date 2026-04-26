@@ -8,13 +8,19 @@
 import SwiftUI
 
 struct StudioView: View {
+    @State private var searchText = ""
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.xLarge) {
-                examplesSection
-                toolsSection
-                schemasSection
-                languagesSection
+                if hasResults {
+                    examplesSection
+                    toolsSection
+                    schemasSection
+                    languagesSection
+                } else {
+                    ContentUnavailableView.search(text: searchText)
+                }
             }
             .padding(.horizontal, Spacing.medium)
             .padding(.vertical, Spacing.large)
@@ -23,6 +29,7 @@ struct StudioView: View {
 #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
 #endif
+        .searchable(text: $searchText, prompt: "Search Studio")
         .navigationDestination(for: ExampleType.self) { exampleType in
             exampleType.destination
         }
@@ -42,7 +49,7 @@ struct StudioView: View {
             title: "Model Controls",
             subtitle: "Generation options, guides, and structured output."
         ) {
-            ForEach(ExampleType.studioExamples) { exampleType in
+            ForEach(filteredStudioExamples) { exampleType in
                 NavigationLink(value: exampleType) {
                     GenericCardView(
                         icon: exampleType.icon,
@@ -60,7 +67,7 @@ struct StudioView: View {
             title: "Tools",
             subtitle: "System capabilities the model can call."
         ) {
-            ForEach(ToolExample.allCases, id: \.self) { tool in
+            ForEach(filteredTools, id: \.self) { tool in
                 NavigationLink(value: tool) {
                     GenericCardView(
                         icon: tool.icon,
@@ -78,7 +85,7 @@ struct StudioView: View {
             title: "Dynamic Schemas",
             subtitle: "Build and validate generation schemas."
         ) {
-            ForEach(DynamicSchemaExampleType.allCases) { example in
+            ForEach(filteredSchemas) { example in
                 NavigationLink(value: example) {
                     GenericCardView(
                         icon: example.icon,
@@ -96,7 +103,7 @@ struct StudioView: View {
             title: "Languages",
             subtitle: "Detect, select, and manage multilingual sessions."
         ) {
-            ForEach(LanguageExample.allCases) { languageExample in
+            ForEach(filteredLanguages) { languageExample in
                 NavigationLink(value: languageExample) {
                     GenericCardView(
                         icon: languageExample.icon,
@@ -107,6 +114,41 @@ struct StudioView: View {
                 .buttonStyle(.plain)
             }
         }
+    }
+
+    private var filteredStudioExamples: [ExampleType] {
+        ExampleType.studioExamples.filter { matches($0.title, $0.subtitle) }
+    }
+
+    private var filteredTools: [ToolExample] {
+        ToolExample.allCases.filter { matches($0.displayName, $0.shortDescription) }
+    }
+
+    private var filteredSchemas: [DynamicSchemaExampleType] {
+        DynamicSchemaExampleType.allCases.filter { matches($0.title, $0.subtitle) }
+    }
+
+    private var filteredLanguages: [LanguageExample] {
+        LanguageExample.allCases.filter { matches($0.title, $0.subtitle) }
+    }
+
+    private var hasResults: Bool {
+        !filteredStudioExamples.isEmpty ||
+        !filteredTools.isEmpty ||
+        !filteredSchemas.isEmpty ||
+        !filteredLanguages.isEmpty
+    }
+
+    private var trimmedSearchText: String {
+        searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func matches(_ title: String, _ subtitle: String) -> Bool {
+        let query = trimmedSearchText
+        guard !query.isEmpty else { return true }
+
+        return title.localizedStandardContains(query) ||
+        subtitle.localizedStandardContains(query)
     }
 }
 

@@ -51,7 +51,7 @@ extension ExampleType {
     }
 
     static var homeExamples: [ExampleType] {
-        [.modelAvailability, .basicChat, .streamingResponse, .journaling, .creativeWriting]
+        [.modelAvailability, .streamingResponse, .journaling, .creativeWriting]
     }
 
     static var studioExamples: [ExampleType] {

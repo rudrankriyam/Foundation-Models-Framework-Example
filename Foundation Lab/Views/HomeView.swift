@@ -8,14 +8,12 @@
 import SwiftUI
 
 struct HomeView: View {
-    @Environment(NavigationCoordinator.self) private var navigationCoordinator
     @State private var showingSettings = false
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.xLarge) {
                 modelStatusSection
-                continueSection
                 examplesSection
             }
             .padding(.horizontal, Spacing.medium)
@@ -67,47 +65,6 @@ struct HomeView: View {
 #else
         .background(Color.gray.opacity(0.1), in: .rect(cornerRadius: CornerRadius.large))
 #endif
-    }
-
-    private var continueSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.medium) {
-            SectionHeader(title: "Continue", subtitle: "Jump into the main model session.")
-
-            Button {
-                navigationCoordinator.openChat()
-            } label: {
-                HStack(spacing: Spacing.medium) {
-                    Image(systemName: "bubble.left.and.bubble.right.fill")
-                        .font(.title2)
-                        .foregroundStyle(.tint)
-                        .frame(width: 32, height: 32)
-
-                    VStack(alignment: .leading, spacing: Spacing.xSmall) {
-                        Text("Session")
-                            .font(.headline)
-                            .foregroundStyle(.primary)
-
-                        Text("Chat, stream, speak, and watch context windowing.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    Spacer(minLength: 0)
-
-                    Image(systemName: "chevron.right")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.tertiary)
-                }
-                .padding()
-                .contentShape(.rect)
-#if os(iOS) || os(macOS)
-                .glassEffect(.regular.interactive(), in: .rect(cornerRadius: CornerRadius.large))
-#else
-                .background(Color.gray.opacity(0.1), in: .rect(cornerRadius: CornerRadius.large))
-#endif
-            }
-            .buttonStyle(.plain)
-        }
     }
 
     private var examplesSection: some View {
