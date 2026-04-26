@@ -21,13 +21,35 @@ final class RAGService {
     }
 
     func indexDocument(url: URL) async throws -> [UUID] {
+        let readableURL = try copyImportedDocumentToAppStorage(from: url)
+        return try await lumoKit.parseAndIndex(url: readableURL, chunkingConfig: chunkingConfig)
+    }
+
+    private func copyImportedDocumentToAppStorage(from url: URL) throws -> URL {
         let accessing = url.startAccessingSecurityScopedResource()
         defer {
             if accessing {
                 url.stopAccessingSecurityScopedResource()
             }
         }
-        return try await lumoKit.parseAndIndex(url: url, chunkingConfig: chunkingConfig)
+
+        let importsDirectory = try FileManager.default.url(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
+        )
+        .appendingPathComponent("RAGImports", isDirectory: true)
+
+        try FileManager.default.createDirectory(
+            at: importsDirectory,
+            withIntermediateDirectories: true
+        )
+
+        let fileName = url.lastPathComponent.isEmpty ? "ImportedDocument" : url.lastPathComponent
+        let destinationURL = importsDirectory.appendingPathComponent("\(UUID().uuidString)-\(fileName)")
+        try FileManager.default.copyItem(at: url, to: destinationURL)
+        return destinationURL
     }
 
     func indexText(_ text: String) async throws -> [UUID] {
