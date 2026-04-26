@@ -34,30 +34,7 @@ struct SchemaExamplesView: View {
         .navigationBarTitleDisplayMode(.large)
 #endif
         .navigationDestination(for: DynamicSchemaExampleType.self) { example in
-            switch example {
-            case .basicObject:
-                BasicDynamicSchemaView()
-            case .arraySchema:
-                ArrayDynamicSchemaView()
-            case .enumSchema:
-                EnumDynamicSchemaView()
-            case .nestedObjects:
-                NestedDynamicSchemaView()
-            case .schemaReferences:
-                ReferencedSchemaView()
-            case .generationGuides:
-                GuidedDynamicSchemaView()
-            case .generablePattern:
-                GenerablePatternView()
-            case .unionTypes:
-                UnionTypesSchemaView()
-            case .formBuilder:
-                FormBuilderSchemaView()
-            case .errorHandling:
-                SchemaErrorHandlingView()
-            case .invoiceProcessing:
-                InvoiceProcessingSchemaView()
-            }
+            example.destination
         }
     }
 }

@@ -40,33 +40,27 @@ struct AdaptiveNavigationView: View {
             get: { navigationCoordinator.tabSelection },
             set: { navigationCoordinator.tabSelection = $0 }
         )) {
-            Tab(TabSelection.examples.displayName, systemImage: "sparkles", value: .examples) {
-                NavigationStack(path: $navigationCoordinator.examplesPath) {
-                    ExamplesView()
+            Tab(TabSelection.home.displayName, systemImage: "house.fill", value: .home) {
+                NavigationStack(path: $navigationCoordinator.homePath) {
+                    HomeView()
                 }
             }
 
-            Tab(TabSelection.tools.displayName, systemImage: "wrench.and.screwdriver", value: .tools) {
-                NavigationStack(path: $navigationCoordinator.toolsPath) {
-                    ToolsView()
-                }
-            }
-
-            Tab(TabSelection.schemas.displayName, systemImage: "doc.text", value: .schemas) {
-                NavigationStack(path: $navigationCoordinator.schemasPath) {
-                    SchemaExamplesView()
-                }
-            }
-
-            Tab(TabSelection.languages.displayName, systemImage: "globe.badge.chevron.backward", value: .languages) {
-                NavigationStack(path: $navigationCoordinator.languagesPath) {
-                    LanguagesIntegrationsView()
-                }
-            }
-
-            Tab(TabSelection.settings.displayName, systemImage: "gear", value: .settings) {
+            Tab(TabSelection.session.displayName, systemImage: "bubble.left.and.bubble.right.fill", value: .session) {
                 NavigationStack {
-                    SettingsView()
+                    ChatView(title: "Session", showsDoneButton: false)
+                }
+            }
+
+            Tab(TabSelection.studio.displayName, systemImage: "slider.horizontal.3", value: .studio) {
+                NavigationStack(path: $navigationCoordinator.studioPath) {
+                    StudioView()
+                }
+            }
+
+            Tab(TabSelection.insights.displayName, systemImage: "sparkle.magnifyingglass", value: .insights) {
+                NavigationStack(path: $navigationCoordinator.insightsPath) {
+                    InsightsView()
                 }
             }
         }
@@ -103,26 +97,22 @@ struct AdaptiveNavigationView: View {
     @ViewBuilder
     private var detailView: some View {
         @Bindable var navigationCoordinator = navigationCoordinator
-        switch navigationCoordinator.splitViewSelection ?? .examples {
-        case .examples:
-            NavigationStack(path: $navigationCoordinator.examplesPath) {
-                ExamplesView()
+        switch navigationCoordinator.splitViewSelection ?? .home {
+        case .home:
+            NavigationStack(path: $navigationCoordinator.homePath) {
+                HomeView()
             }
-        case .tools:
-            NavigationStack(path: $navigationCoordinator.toolsPath) {
-                ToolsView()
-            }
-        case .schemas:
-            NavigationStack(path: $navigationCoordinator.schemasPath) {
-                SchemaExamplesView()
-            }
-        case .languages:
-            NavigationStack(path: $navigationCoordinator.languagesPath) {
-                LanguagesIntegrationsView()
-            }
-        case .settings:
+        case .session:
             NavigationStack {
-                SettingsView()
+                ChatView(title: "Session", showsDoneButton: false)
+            }
+        case .studio:
+            NavigationStack(path: $navigationCoordinator.studioPath) {
+                StudioView()
+            }
+        case .insights:
+            NavigationStack(path: $navigationCoordinator.insightsPath) {
+                InsightsView()
             }
         }
     }

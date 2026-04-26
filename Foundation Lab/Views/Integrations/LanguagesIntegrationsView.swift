@@ -36,16 +36,7 @@ struct LanguagesIntegrationsView: View {
         .navigationBarTitleDisplayMode(.large)
 #endif
         .navigationDestination(for: LanguageExample.self) { languageExample in
-            switch languageExample {
-            case .languageDetection:
-                LanguageDetectionView()
-            case .multilingualResponses:
-                MultilingualResponsesView()
-            case .sessionManagement:
-                SessionManagementView()
-            case .productionExample:
-                ProductionLanguageExampleView()
-            }
+            languageExample.destination
         }
     }
 

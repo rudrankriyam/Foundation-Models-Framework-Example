@@ -13,13 +13,11 @@ import Observation
 final class NavigationCoordinator {
     static let shared = NavigationCoordinator()
 
-    var tabSelection: TabSelection = .examples
-    var splitViewSelection: TabSelection? = .examples
-    var examplesPath: [ExampleType] = []
-    var toolsPath: [ToolExample] = []
-    var schemasPath: [DynamicSchemaExampleType] = []
-    var languagesPath: [LanguageExample] = []
-    var showChat: Bool = false
+    var tabSelection: TabSelection = .home
+    var splitViewSelection: TabSelection? = .home
+    var homePath = NavigationPath()
+    var studioPath = NavigationPath()
+    var insightsPath = NavigationPath()
 
     private init() {}
 
@@ -29,36 +27,50 @@ final class NavigationCoordinator {
     }
 
     public func navigateToExample(_ example: ExampleType) {
-        tabSelection = .examples
-        splitViewSelection = .examples
-        showChat = false
-        examplesPath = [example]
+        switch example.preferredTab {
+        case .home:
+            tabSelection = .home
+            splitViewSelection = .home
+            homePath = NavigationPath()
+            homePath.append(example)
+        case .session:
+            openChat()
+        case .studio:
+            tabSelection = .studio
+            splitViewSelection = .studio
+            studioPath = NavigationPath()
+            studioPath.append(example)
+        case .insights:
+            tabSelection = .insights
+            splitViewSelection = .insights
+            insightsPath = NavigationPath()
+            insightsPath.append(example)
+        }
     }
 
     public func navigateToTool(_ tool: ToolExample) {
-        tabSelection = .tools
-        splitViewSelection = .tools
-        showChat = false
-        toolsPath = [tool]
+        tabSelection = .studio
+        splitViewSelection = .studio
+        studioPath = NavigationPath()
+        studioPath.append(tool)
     }
 
     public func navigateToSchema(_ schema: DynamicSchemaExampleType) {
-        tabSelection = .schemas
-        splitViewSelection = .schemas
-        showChat = false
-        schemasPath = [schema]
+        tabSelection = .studio
+        splitViewSelection = .studio
+        studioPath = NavigationPath()
+        studioPath.append(schema)
     }
 
     public func navigateToLanguage(_ language: LanguageExample) {
-        tabSelection = .languages
-        splitViewSelection = .languages
-        showChat = false
-        languagesPath = [language]
+        tabSelection = .studio
+        splitViewSelection = .studio
+        studioPath = NavigationPath()
+        studioPath.append(language)
     }
 
     public func openChat() {
-        tabSelection = .examples
-        splitViewSelection = .examples
-        showChat = true
+        tabSelection = .session
+        splitViewSelection = .session
     }
 }

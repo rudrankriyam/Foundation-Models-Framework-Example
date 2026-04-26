@@ -9,12 +9,20 @@ import SwiftUI
 import FoundationModels
 
 struct ChatView: View {
+    let title: String
+    let showsDoneButton: Bool
+
     @State private var viewModel = ChatViewModel()
     @State private var scrollID: String?
     @State private var messageText = ""
     @State private var showInstructionsSheet = false
     @FocusState private var isTextFieldFocused: Bool
     @Environment(\.dismiss) private var dismiss
+
+    init(title: String = "Chat", showsDoneButton: Bool = true) {
+        self.title = title
+        self.showsDoneButton = showsDoneButton
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -37,16 +45,18 @@ struct ChatView: View {
             )
         }
         .environment(viewModel)
-        .navigationTitle(viewModel.voiceState.isActive ? "Voice" : "Chat")
+        .navigationTitle(viewModel.voiceState.isActive ? "Voice" : title)
 #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
 #endif
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Done") {
-                    dismiss()
+            if showsDoneButton {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                    .keyboardShortcut(.defaultAction)
                 }
-                .keyboardShortcut(.defaultAction)
             }
 
             ToolbarItemGroup(placement: .primaryAction) {

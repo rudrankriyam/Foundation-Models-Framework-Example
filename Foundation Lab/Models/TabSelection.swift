@@ -8,13 +8,21 @@
 import Foundation
 
 enum TabSelection: String, CaseIterable, Hashable {
-  case examples
-  case tools
-  case schemas
-  case languages
-  case settings
+  case home
+  case session
+  case studio
+  case insights
 
   var displayName: String {
-    rawValue.capitalized
+    switch self {
+    case .home:
+      return "Home"
+    case .session:
+      return "Session"
+    case .studio:
+      return "Studio"
+    case .insights:
+      return "Insights"
+    }
   }
 }

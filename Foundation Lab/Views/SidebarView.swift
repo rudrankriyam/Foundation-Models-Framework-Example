@@ -31,27 +31,24 @@ struct SidebarView: View {
 extension TabSelection {
     var systemImage: String {
         switch self {
-        case .examples:
-            return "sparkles"
-        case .tools:
-            return "wrench.and.screwdriver"
-        case .schemas:
-            return "doc.text"
-        case .languages:
-            return "globe.badge.chevron.backward"
-        case .settings:
-            return "gear"
+        case .home:
+            return "house.fill"
+        case .session:
+            return "bubble.left.and.bubble.right.fill"
+        case .studio:
+            return "slider.horizontal.3"
+        case .insights:
+            return "sparkle.magnifyingglass"
         }
     }
 
 #if os(macOS)
     var keyboardShortcut: KeyEquivalent {
         switch self {
-        case .examples: return "1"
-        case .tools: return "2"
-        case .schemas: return "3"
-        case .languages: return "4"
-        case .settings: return "5"
+        case .home: return "1"
+        case .session: return "2"
+        case .studio: return "3"
+        case .insights: return "4"
         }
     }
 #endif
@@ -59,7 +56,7 @@ extension TabSelection {
 
 #Preview {
     NavigationSplitView {
-        SidebarView(selection: .constant(.examples))
+        SidebarView(selection: .constant(.home))
     } detail: {
         Text("Detail View")
     }
