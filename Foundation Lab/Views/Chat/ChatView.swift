@@ -9,12 +9,22 @@ import SwiftUI
 import FoundationModels
 
 struct ChatView: View {
+    let title: String
+    let showsDoneButton: Bool
+    let tearsDownOnDisappear: Bool
+
     @State private var viewModel = ChatViewModel()
     @State private var scrollID: String?
     @State private var messageText = ""
     @State private var showInstructionsSheet = false
     @FocusState private var isTextFieldFocused: Bool
     @Environment(\.dismiss) private var dismiss
+
+    init(title: String = "Chat", showsDoneButton: Bool = true, tearsDownOnDisappear: Bool = true) {
+        self.title = title
+        self.showsDoneButton = showsDoneButton
+        self.tearsDownOnDisappear = tearsDownOnDisappear
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -37,16 +47,18 @@ struct ChatView: View {
             )
         }
         .environment(viewModel)
-        .navigationTitle(viewModel.voiceState.isActive ? "Voice" : "Chat")
+        .navigationTitle(viewModel.voiceState.isActive ? "Voice" : title)
 #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
 #endif
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Done") {
-                    dismiss()
+            if showsDoneButton {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                    .keyboardShortcut(.defaultAction)
                 }
-                .keyboardShortcut(.defaultAction)
             }
 
             ToolbarItemGroup(placement: .primaryAction) {
@@ -73,7 +85,9 @@ struct ChatView: View {
             }
         }
         .onDisappear {
-            viewModel.tearDown()
+            if tearsDownOnDisappear {
+                viewModel.tearDown()
+            }
         }
 #if os(iOS)
         .fullScreenCover(isPresented: $showInstructionsSheet) {
