@@ -5,7 +5,7 @@ This roadmap tracks the shared-capability refactor after the initial package bou
 ## Working rules
 
 - Shared task logic, request/result models, and reusable Foundation Models-backed providers live in `FoundationLabCore`.
-- SwiftUI views, App Intents, and CLI commands stay as thin adapters over the same capabilities.
+- SwiftUI views and App Intents stay as thin adapters over the same capabilities.
 - Additional packages are deferred until dependency pressure or platform constraints justify the split.
 - Multi-turn chat stays last so the single-shot capability pattern is proven first.
 
@@ -22,7 +22,7 @@ This roadmap tracks the shared-capability refactor after the initial package bou
 - Extract the remaining tool-backed capabilities for Contacts, Calendar, Reminders, Location, Music, Web Metadata, and Health into `FoundationLabCore`.
 - Rewire the corresponding SwiftUI tool views so they invoke shared use cases instead of owning Foundation Models prompts and orchestration directly.
 - Add capability-backed App Intents for nutrition, contacts, calendar, reminders, location, music, web page summary, and health queries.
-- Extend the `fm` CLI with matching feature groups while returning consistent unsupported-environment errors for system-entitled capabilities outside the app.
+- Retire the bundled CLI after the standalone Foundation Models CLI became the canonical command-line surface.
 - Add shared core primitives for one-shot text, structured generation, streaming text, dynamic schema generation, model availability, supported language listing, and a basic reusable multi-turn conversation runner.
 - Rewire the example/language runtime surfaces so `ExampleExecutor`, model availability, supported-language loading, multilingual response generation, dynamic schema execution, and the session-management demo flow through `FoundationLabCore`.
 - Rewire chat, health chat, voice inference, RAG chat, generation-options execution, and transcript token-counting helpers so app-side adapters no longer own direct `LanguageModelSession` execution paths.
@@ -39,7 +39,3 @@ This roadmap tracks the shared-capability refactor after the initial package bou
 
 - The remaining direct `LanguageModelSession(...)`, `session.respond(...)`, and `Prompt(...)` references in the app target are now teaching snippets and example-code strings rather than live adapter execution.
 - Remaining runtime `FoundationModels` imports in the app are primarily used for model types, `@Generable` examples, or adapter-facing configuration such as guardrails and transcript display.
-
-## CLI note
-
-Closed PR `#108` is useful inspiration for command taxonomy and the `fm` surface area, but future CLI growth should continue to reuse `FoundationLabCore` rather than reimplement features in the executable layer.
