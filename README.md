@@ -1,6 +1,5 @@
 # Foundation Models Framework Example
 
-
 <div align="center">
   <table>
     <tr>
@@ -29,12 +28,6 @@
     </tr>
   </table>
 </div>
-
-## Exploring Foundation Models
-
-This project includes playground examples organized by chapters to help you learn everything about Apple's Foundation Models framework.
-
-It is part of the [Exploring Foundation Models](https://academy.rudrank.com/product/foundation-models) book.
 
 ## Requirements
 
