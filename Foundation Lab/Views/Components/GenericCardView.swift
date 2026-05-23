@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import LiquidGlasKit
 
 /// Generic card view used across example and tool lists
 struct GenericCardView: View {
@@ -40,9 +39,11 @@ struct GenericCardView: View {
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
-#if os(iOS) || os(macOS)
-        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
-#endif
+        .background(Color.secondaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.small))
+        .overlay {
+            RoundedRectangle(cornerRadius: CornerRadius.small)
+                .stroke(.quaternary, lineWidth: 1)
+        }
         .accessibilityElement(children: .combine)
     }
 }

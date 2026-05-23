@@ -185,7 +185,11 @@ struct ProductionLanguageExampleView: View {
                         Text(result.insights)
                             .font(.body)
                             .padding()
-                            .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
+                            .background(Color.secondaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.small))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: CornerRadius.small)
+                                    .stroke(.quaternary, lineWidth: 1)
+                            }
                     }
                 }
             }
@@ -245,7 +249,11 @@ struct NutritionCard: View {
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 12))
+        .background(Color.secondaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.small))
+        .overlay {
+            RoundedRectangle(cornerRadius: CornerRadius.small)
+                .stroke(.quaternary, lineWidth: 1)
+        }
     }
 }
 

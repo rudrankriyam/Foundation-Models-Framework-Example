@@ -147,8 +147,11 @@ struct ChatInstructionsView: View {
             }
         }
         .padding(Spacing.medium)
-        .glassEffect(.regular.interactive(true), in: .rect(cornerRadius: 12))
-        .glassEffectID("sampling-strategy", in: glassNamespace)
+        .background(Color.secondaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.small))
+        .overlay {
+            RoundedRectangle(cornerRadius: CornerRadius.small)
+                .stroke(.quaternary, lineWidth: 1)
+        }
     }
 
     private var samplingConfigurationView: some View {
