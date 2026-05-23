@@ -20,8 +20,6 @@ struct ChatInstructionsView: View {
     let onApply: () -> Void
     @Environment(\.dismiss) private var dismiss
 
-    @Namespace private var glassNamespace
-
     private var clampedTopKSamplingValue: Binding<Int> {
         Binding(
             get: { viewModel.topKSamplingValue },
@@ -147,8 +145,11 @@ struct ChatInstructionsView: View {
             }
         }
         .padding(Spacing.medium)
-        .glassEffect(.regular.interactive(true), in: .rect(cornerRadius: 12))
-        .glassEffectID("sampling-strategy", in: glassNamespace)
+        .background(Color.tertiaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.large))
+        .overlay {
+            RoundedRectangle(cornerRadius: CornerRadius.large)
+                .stroke(.quaternary, lineWidth: 1)
+        }
     }
 
     private var samplingConfigurationView: some View {

@@ -63,11 +63,11 @@ struct HomeView: View {
             Spacer(minLength: 0)
         }
         .padding()
-#if os(iOS) || os(macOS)
-        .glassEffect(.regular, in: .rect(cornerRadius: CornerRadius.large))
-#else
-        .background(Color.gray.opacity(0.1), in: .rect(cornerRadius: CornerRadius.large))
-#endif
+        .background(Color.tertiaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.large))
+        .overlay {
+            RoundedRectangle(cornerRadius: CornerRadius.large)
+                .stroke(.quaternary, lineWidth: 1)
+        }
     }
 
     private var modelStatusIcon: String {

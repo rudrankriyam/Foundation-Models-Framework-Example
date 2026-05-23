@@ -10,6 +10,7 @@ import Foundation
 enum TabSelection: String, CaseIterable, Hashable {
   case home
   case session
+  case lab
   case studio
   case insights
 
@@ -19,6 +20,8 @@ enum TabSelection: String, CaseIterable, Hashable {
       return "Home"
     case .session:
       return "Session"
+    case .lab:
+      return "Lab"
     case .studio:
       return "Studio"
     case .insights:

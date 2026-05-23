@@ -35,6 +35,8 @@ extension TabSelection {
             return "house.fill"
         case .session:
             return "bubble.left.and.bubble.right.fill"
+        case .lab:
+            return "flask.fill"
         case .studio:
             return "slider.horizontal.3"
         case .insights:
@@ -47,8 +49,9 @@ extension TabSelection {
         switch self {
         case .home: return "1"
         case .session: return "2"
-        case .studio: return "3"
-        case .insights: return "4"
+        case .lab: return "3"
+        case .studio: return "4"
+        case .insights: return "5"
         }
     }
 #endif

@@ -52,6 +52,12 @@ struct AdaptiveNavigationView: View {
                 }
             }
 
+            Tab(TabSelection.lab.displayName, systemImage: "flask.fill", value: .lab) {
+                NavigationStack(path: $navigationCoordinator.labPath) {
+                    LabView()
+                }
+            }
+
             Tab(TabSelection.studio.displayName, systemImage: "slider.horizontal.3", value: .studio) {
                 NavigationStack(path: $navigationCoordinator.studioPath) {
                     StudioView()
@@ -105,6 +111,10 @@ struct AdaptiveNavigationView: View {
         case .session:
             NavigationStack {
                 ChatView(title: "Session", showsDoneButton: false, tearsDownOnDisappear: false)
+            }
+        case .lab:
+            NavigationStack(path: $navigationCoordinator.labPath) {
+                LabView()
             }
         case .studio:
             NavigationStack(path: $navigationCoordinator.studioPath) {

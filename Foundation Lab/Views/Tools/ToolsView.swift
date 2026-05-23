@@ -13,8 +13,6 @@ import SwiftUI
 #endif
 
 struct ToolsView: View {
-  @Namespace private var glassNamespace
-
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 20) {
@@ -29,39 +27,19 @@ struct ToolsView: View {
   }
 
   private var toolButtonsView: some View {
-    #if os(iOS) || os(macOS)
-      GlassEffectContainer(spacing: gridSpacing) {
-        LazyVGrid(columns: adaptiveGridColumns, spacing: gridSpacing) {
-          ForEach(ToolExample.allCases, id: \.self) { tool in
-            NavigationLink(value: tool) {
-              ToolButton(
-                tool: tool,
-                isSelected: false,
-                isRunning: false,
-                namespace: glassNamespace
-              )
-            }
-            .buttonStyle(PlainButtonStyle())
-          }
+    LazyVGrid(columns: adaptiveGridColumns, spacing: gridSpacing) {
+      ForEach(ToolExample.allCases, id: \.self) { tool in
+        NavigationLink(value: tool) {
+          ToolButton(
+            tool: tool,
+            isSelected: false,
+            isRunning: false
+          )
         }
+        .buttonStyle(PlainButtonStyle())
       }
-      .padding(.horizontal)
-    #else
-      LazyVGrid(columns: adaptiveGridColumns, spacing: gridSpacing) {
-        ForEach(ToolExample.allCases, id: \.self) { tool in
-          NavigationLink(value: tool) {
-            ToolButton(
-              tool: tool,
-              isSelected: false,
-              isRunning: false,
-              namespace: glassNamespace
-            )
-          }
-          .buttonStyle(PlainButtonStyle())
-        }
-      }
-      .padding(.horizontal)
-    #endif
+    }
+    .padding(.horizontal)
   }
 
   private var adaptiveGridColumns: [GridItem] {
@@ -100,7 +78,6 @@ struct ToolButton: View {
   let tool: ToolExample
   let isSelected: Bool
   let isRunning: Bool
-  let namespace: Namespace.ID
 
   var body: some View {
     VStack(spacing: 12) {
@@ -134,13 +111,11 @@ struct ToolButton: View {
     .padding()
     .frame(maxWidth: .infinity, minHeight: 140)
     .contentShape(.rect)
-    #if os(iOS) || os(macOS)
-      .glassEffect(
-        isSelected ? .regular.tint(.main).interactive(true) : .regular.interactive(true),
-        in: .rect(cornerRadius: 12)
-      )
-      .glassEffectID("tool-\(tool.rawValue)", in: namespace)
-    #endif
+    .background(isSelected ? Color.main : Color.tertiaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.large))
+    .overlay {
+      RoundedRectangle(cornerRadius: CornerRadius.large)
+        .stroke(isSelected ? Color.clear : Color.secondary.opacity(0.2), lineWidth: 1)
+    }
     .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isSelected)
     .animation(.spring(response: 0.3, dampingFraction: 0.9), value: isRunning)
     .accessibilityElement(children: .combine)

@@ -23,7 +23,6 @@ struct GenerationOptionsView: View {
     @State private var lastTokenCount: Int?
     @State private var contextSize: Int = AppConfiguration.TokenManagement.defaultMaxTokens
 
-    @Namespace private var glassNamespace
     private let generateTextUseCase = GenerateTextUseCase()
 
     var body: some View {
@@ -137,7 +136,11 @@ struct GenerationOptionsView: View {
             }
         }
         .padding()
-        .background(.thinMaterial, in: .rect(cornerRadius: CornerRadius.small))
+        .background(Color.tertiaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.large))
+        .overlay {
+            RoundedRectangle(cornerRadius: CornerRadius.large)
+                .stroke(.quaternary, lineWidth: 1)
+        }
     }
 
     private var generateSection: some View {

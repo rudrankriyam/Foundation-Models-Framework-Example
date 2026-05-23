@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import LiquidGlasKit
 
 struct SettingsView: View {
     var body: some View {
@@ -45,7 +44,11 @@ struct SettingsView: View {
                     .foregroundColor(.secondary)
             }
             .padding()
-            .glassCard()
+            .background(Color.tertiaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.large))
+            .overlay {
+                RoundedRectangle(cornerRadius: CornerRadius.large)
+                    .stroke(.quaternary, lineWidth: 1)
+            }
             .padding([.horizontal, .top])
         }
 #if os(macOS)

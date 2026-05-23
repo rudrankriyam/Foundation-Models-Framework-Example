@@ -114,7 +114,11 @@ private extension HealthDashboardView {
                 .foregroundStyle(.secondary)
         }
         .padding()
-        .glassEffect(.regular, in: .rect(cornerRadius: 20))
+        .background(Color.tertiaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.large))
+        .overlay {
+            RoundedRectangle(cornerRadius: CornerRadius.large)
+                .stroke(.quaternary, lineWidth: 1)
+        }
     }
 
     var dailyProgressSection: some View {
@@ -132,7 +136,11 @@ private extension HealthDashboardView {
                             goalValue: type.defaultGoal,
                             animationNamespace: animationNamespace
                         )
-                        .glassEffect(.regular, in: .rect(cornerRadius: 16))
+                        .background(Color.tertiaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.large))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: CornerRadius.large)
+                                .stroke(.quaternary, lineWidth: 1)
+                        }
                     }
                 }
             }
@@ -340,7 +348,11 @@ struct InsightPlaceholderView: View {
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .glassEffect(.regular, in: .rect(cornerRadius: 16))
+        .background(Color.tertiaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.large))
+        .overlay {
+            RoundedRectangle(cornerRadius: CornerRadius.large)
+                .stroke(.quaternary, lineWidth: 1)
+        }
     }
 }
 

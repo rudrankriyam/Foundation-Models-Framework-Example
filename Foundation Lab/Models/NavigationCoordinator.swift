@@ -16,6 +16,7 @@ final class NavigationCoordinator {
     var tabSelection: TabSelection = .home
     var splitViewSelection: TabSelection? = .home
     var homePath = NavigationPath()
+    var labPath = NavigationPath()
     var studioPath = NavigationPath()
     var insightsPath = NavigationPath()
 
@@ -35,6 +36,11 @@ final class NavigationCoordinator {
             homePath.append(example)
         case .session:
             openChat()
+        case .lab:
+            tabSelection = .lab
+            splitViewSelection = .lab
+            labPath = NavigationPath()
+            labPath.append(example)
         case .studio:
             tabSelection = .studio
             splitViewSelection = .studio
@@ -49,24 +55,24 @@ final class NavigationCoordinator {
     }
 
     public func navigateToTool(_ tool: ToolExample) {
-        tabSelection = .studio
-        splitViewSelection = .studio
-        studioPath = NavigationPath()
-        studioPath.append(tool)
+        tabSelection = .lab
+        splitViewSelection = .lab
+        labPath = NavigationPath()
+        labPath.append(tool)
     }
 
     public func navigateToSchema(_ schema: DynamicSchemaExampleType) {
-        tabSelection = .studio
-        splitViewSelection = .studio
-        studioPath = NavigationPath()
-        studioPath.append(schema)
+        tabSelection = .lab
+        splitViewSelection = .lab
+        labPath = NavigationPath()
+        labPath.append(schema)
     }
 
     public func navigateToLanguage(_ language: LanguageExample) {
-        tabSelection = .studio
-        splitViewSelection = .studio
-        studioPath = NavigationPath()
-        studioPath.append(language)
+        tabSelection = .lab
+        splitViewSelection = .lab
+        labPath = NavigationPath()
+        labPath.append(language)
     }
 
     public func openChat() {

@@ -31,13 +31,10 @@ struct InsightCardView: View {
         cardContent
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)
-            .glassEffect(
-                .regular,
-                in: .rect(cornerRadius: 16)
-            )
+            .background(Color.tertiaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.large))
             .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(insight.isRead ? Color.clear : Color.primary.opacity(0.1), lineWidth: 1)
+                RoundedRectangle(cornerRadius: CornerRadius.large)
+                    .stroke(insight.isRead ? Color.secondary.opacity(0.2) : Color.primary.opacity(0.1), lineWidth: 1)
             )
             .onTapGesture {
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {

@@ -40,8 +40,8 @@ struct ModelAvailabilityView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, Spacing.xxLarge)
-        .background(Color.secondaryBackgroundColor)
-        .cornerRadius(CornerRadius.medium)
+        .background(Color.tertiaryBackgroundColor)
+        .cornerRadius(CornerRadius.large)
 
         // Info Section
         VStack(alignment: .leading, spacing: 12) {
@@ -69,8 +69,8 @@ struct ModelAvailabilityView: View {
           }
         }
         .padding()
-        .background(Color.secondaryBackgroundColor)
-        .cornerRadius(8)
+        .background(Color.tertiaryBackgroundColor)
+        .cornerRadius(CornerRadius.large)
       }
     }
   }

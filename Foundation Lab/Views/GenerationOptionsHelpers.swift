@@ -77,7 +77,11 @@ extension GenerationOptionsView {
                 .foregroundStyle(.secondary)
         }
         .padding()
-        .background(.thinMaterial, in: .rect(cornerRadius: CornerRadius.small))
+        .background(Color.tertiaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.large))
+        .overlay {
+            RoundedRectangle(cornerRadius: CornerRadius.large)
+                .stroke(.quaternary, lineWidth: 1)
+        }
     }
 
     @ViewBuilder
@@ -103,6 +107,10 @@ extension GenerationOptionsView {
                 .foregroundStyle(.secondary)
         }
         .padding()
-        .background(.thinMaterial, in: .rect(cornerRadius: CornerRadius.small))
+        .background(Color.tertiaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.large))
+        .overlay {
+            RoundedRectangle(cornerRadius: CornerRadius.large)
+                .stroke(.quaternary, lineWidth: 1)
+        }
     }
 }

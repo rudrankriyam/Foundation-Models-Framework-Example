@@ -240,7 +240,11 @@ struct WelcomeMessageView: View {
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
-        .glassEffect(.regular, in: .rect(cornerRadius: 16))
+        .background(Color.tertiaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.large))
+        .overlay {
+            RoundedRectangle(cornerRadius: CornerRadius.large)
+                .stroke(.quaternary, lineWidth: 1)
+        }
         .padding(.horizontal)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Welcome to Health AI. I'm your personal health coach.")
@@ -264,7 +268,11 @@ struct ToolCallView: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
-        .glassEffect(.regular, in: .rect(cornerRadius: 12))
+        .background(Color.tertiaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.large))
+        .overlay {
+            RoundedRectangle(cornerRadius: CornerRadius.large)
+                .stroke(.quaternary, lineWidth: 1)
+        }
         .padding(.horizontal)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Analyzing your \(formatToolName(toolName))")

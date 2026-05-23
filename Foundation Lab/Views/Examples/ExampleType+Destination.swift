@@ -40,7 +40,7 @@ extension ExampleType {
     var preferredTab: TabSelection {
         switch self {
         case .structuredData, .generationGuides, .generationOptions:
-            return .studio
+            return .lab
         case .health, .rag:
             return .insights
         case .chat:
