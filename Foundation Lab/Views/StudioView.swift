@@ -35,12 +35,14 @@ struct StudioView: View {
         .navigationBarTitleDisplayMode(.inline)
 #endif
         .toolbar {
+#if os(iOS)
             ToolbarItem(placement: .primaryAction) {
                 Button(action: runPromptTests) {
                     Label("Run", systemImage: isRunningPromptTests ? "hourglass" : "play.fill")
                 }
                 .disabled(isRunningPromptTests || !canRunPromptTests)
             }
+#endif
         }
     }
 
@@ -73,13 +75,13 @@ struct StudioView: View {
 
     private var compactLayout: some View {
         VStack(spacing: 0) {
-            stageBar
+            compactStageBar
             Divider()
 
             ScrollView {
                 VStack(alignment: .leading, spacing: Spacing.large) {
                     compactWorkspacePicker
-                    stageContent
+                    compactStageContent
                     activityInspectorContent
                 }
                 .padding()
@@ -184,6 +186,7 @@ struct StudioView: View {
 
     private var stageBar: some View {
         HStack(spacing: Spacing.large) {
+#if os(macOS)
             Button(action: runPromptTests) {
                 Image(systemName: isRunningPromptTests ? "hourglass" : "play.fill")
                     .font(.title3)
@@ -192,6 +195,7 @@ struct StudioView: View {
             .buttonStyle(.borderless)
             .disabled(isRunningPromptTests || !canRunPromptTests)
             .help("Run selected prompt variants")
+#endif
 
             Picker("Stage", selection: $selectedStage) {
                 ForEach(StudioPipelineStage.allCases) { stage in
@@ -205,6 +209,31 @@ struct StudioView: View {
             Spacer(minLength: 0)
         }
         .padding(.horizontal, Spacing.xLarge)
+        .padding(.vertical, Spacing.small)
+        .background(.bar)
+    }
+
+    private var compactStageBar: some View {
+        HStack(spacing: Spacing.xSmall) {
+            ForEach(StudioPipelineStage.allCases) { stage in
+                Button {
+                    selectedStage = stage
+                } label: {
+                    Text(stage.title)
+                        .font(.caption.weight(.semibold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.78)
+                        .frame(maxWidth: .infinity, minHeight: 32)
+                        .foregroundStyle(selectedStage == stage ? .white : .primary)
+                        .background(
+                            selectedStage == stage ? Color.accentColor : Color.secondaryBackgroundColor,
+                            in: .capsule
+                        )
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, Spacing.medium)
         .padding(.vertical, Spacing.small)
         .background(.bar)
     }
@@ -238,6 +267,22 @@ struct StudioView: View {
         switch selectedStage {
         case .settings:
             promptSettingsContent
+        case .runs:
+            runsContent
+        case .evaluation:
+            evaluationContent
+        case .preview:
+            previewContent
+        case .output:
+            outputContent
+        }
+    }
+
+    @ViewBuilder
+    private var compactStageContent: some View {
+        switch selectedStage {
+        case .settings:
+            compactPromptSettingsContent
         case .runs:
             runsContent
         case .evaluation:
@@ -303,6 +348,88 @@ struct StudioView: View {
                     .foregroundStyle(.red)
             }
         }
+    }
+
+    private var compactPromptSettingsContent: some View {
+        VStack(alignment: .leading, spacing: Spacing.large) {
+            compactPanel(title: "Base Prompt", systemImage: "text.quote") {
+                TextEditor(text: $promptText)
+                    .font(.body)
+                    .frame(minHeight: 180)
+                    .scrollContentBackground(.hidden)
+                    .padding(Spacing.small)
+                    .background(.background, in: .rect(cornerRadius: CornerRadius.small))
+            }
+
+            compactPanel(title: "Variants", systemImage: "square.stack.3d.up") {
+                VStack(spacing: 0) {
+                    ForEach(StudioPromptVariant.allCases) { variant in
+                        Toggle(isOn: variantBinding(for: variant)) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(variant.title)
+                                    .font(.callout.weight(.semibold))
+
+                                Text(variant.subtitle)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                        .padding(.vertical, Spacing.medium)
+
+                        if variant != StudioPromptVariant.allCases.last {
+                            Divider()
+                        }
+                    }
+                }
+            }
+
+            compactPanel(title: "Run Configuration", systemImage: "slider.horizontal.3") {
+                VStack(spacing: 0) {
+                    compactParameterRow(title: "Execution", value: "Sequential")
+                    compactParameterRow(title: "Variants", value: "\(selectedPromptVariants.count)")
+                    compactParameterRow(title: "Prompt", value: "\(promptText.count) characters")
+                    compactParameterRow(title: "Capture", value: "Output, latency, tokens")
+                }
+            }
+
+            if let promptTestError {
+                Label(promptTestError, systemImage: "exclamationmark.triangle.fill")
+                    .font(.callout)
+                    .foregroundStyle(.red)
+            }
+        }
+    }
+
+    private func compactPanel<Content: View>(
+        title: String,
+        systemImage: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: Spacing.medium) {
+            Label(title, systemImage: systemImage)
+                .font(.headline)
+
+            content()
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.secondaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.medium))
+    }
+
+    private func compactParameterRow(title: String, value: String) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(title)
+                .font(.callout.weight(.medium))
+
+            Spacer(minLength: Spacing.medium)
+
+            Text(value)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.trailing)
+        }
+        .padding(.vertical, Spacing.small)
     }
 
     private func settingsPanel<Content: View>(
@@ -562,13 +689,24 @@ struct StudioView: View {
     }
 
     private var compactWorkspacePicker: some View {
-        Picker("Workspace", selection: $selectedWorkspace) {
-            ForEach(StudioWorkspace.allCases) { workspace in
-                Label(workspace.title, systemImage: workspace.icon)
-                    .tag(workspace)
+        VStack(alignment: .leading, spacing: Spacing.small) {
+            Text("Workspace")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+
+            Picker("Workspace", selection: $selectedWorkspace) {
+                ForEach(StudioWorkspace.allCases) { workspace in
+                    Label(workspace.title, systemImage: workspace.icon)
+                        .tag(workspace)
+                }
             }
+            .pickerStyle(.menu)
+
+            Text(selectedWorkspace.subtitle)
+                .font(.callout)
+                .foregroundStyle(.secondary)
         }
-        .pickerStyle(.menu)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var statusBar: some View {
