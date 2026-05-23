@@ -18,6 +18,7 @@ struct StudioView: View {
     @State private var promptRuns: [StudioPromptRun] = []
     @State private var isRunningPromptTests = false
     @State private var promptTestError: String?
+    @State private var studioCreatedAt = Date.now
 
     private let generateTextUseCase = GenerateTextUseCase()
 
@@ -438,7 +439,7 @@ struct StudioView: View {
 
     private var previewContent: some View {
         Group {
-            if let latestRun = promptRuns.first {
+            if let latestRun = latestFinishedRun {
                 VStack(alignment: .leading, spacing: Spacing.medium) {
                     Text(latestRun.variant.title)
                         .font(.title3.bold())
@@ -597,19 +598,25 @@ struct StudioView: View {
         return (totalDuration / Double(promptRuns.count)).formatted(.number.precision(.fractionLength(2))) + "s"
     }
 
+    private var latestFinishedRun: StudioPromptRun? {
+        promptRuns.max { $0.finishedAt < $1.finishedAt }
+    }
+
     private var activityEvents: [StudioActivityEvent] {
         if promptRuns.isEmpty {
             return [
                 StudioActivityEvent(
+                    id: "studio-created",
                     title: "Studio Created",
                     detail: "Local Evaluation Studio",
-                    date: Date.now
+                    date: studioCreatedAt
                 )
             ]
         }
 
         return promptRuns.prefix(6).map {
             StudioActivityEvent(
+                id: $0.id.uuidString,
                 title: "Prompt Variant Completed",
                 detail: $0.variant.title,
                 date: $0.finishedAt

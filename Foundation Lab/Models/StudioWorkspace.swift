@@ -190,7 +190,7 @@ struct StudioRunSummary: Identifiable {
 }
 
 struct StudioActivityEvent: Identifiable {
-    let id = UUID()
+    let id: String
     let title: String
     let detail: String
     let date: Date
