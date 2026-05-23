@@ -86,9 +86,6 @@ struct StudioView: View {
                 }
                 .padding()
             }
-
-            Divider()
-            statusBar
         }
     }
 
@@ -689,22 +686,36 @@ struct StudioView: View {
     }
 
     private var compactWorkspacePicker: some View {
-        VStack(alignment: .leading, spacing: Spacing.small) {
-            Text("Workspace")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: Spacing.xSmall) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Workspace")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
 
-            Picker("Workspace", selection: $selectedWorkspace) {
-                ForEach(StudioWorkspace.allCases) { workspace in
-                    Label(workspace.title, systemImage: workspace.icon)
-                        .tag(workspace)
+                Spacer(minLength: Spacing.medium)
+
+                Menu {
+                    Picker("Workspace", selection: $selectedWorkspace) {
+                        ForEach(StudioWorkspace.allCases) { workspace in
+                            Label(workspace.title, systemImage: workspace.icon)
+                                .tag(workspace)
+                        }
+                    }
+                } label: {
+                    HStack(spacing: Spacing.xSmall) {
+                        Text(selectedWorkspace.title)
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.caption2.weight(.semibold))
+                    }
+                    .font(.callout.weight(.medium))
                 }
+                .buttonStyle(.plain)
             }
-            .pickerStyle(.menu)
 
             Text(selectedWorkspace.subtitle)
-                .font(.callout)
+                .font(.caption)
                 .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

@@ -8,12 +8,16 @@
 import SwiftUI
 
 struct LabView: View {
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
     @State private var searchText = ""
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.xLarge) {
-                labHeader
+                if horizontalSizeClass != .compact {
+                    labHeader
+                }
 
                 if hasResults {
                     examplesSection
