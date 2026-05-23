@@ -495,7 +495,9 @@ struct StudioView: View {
 
     private var runsContent: some View {
         Group {
-            if promptRuns.isEmpty {
+            if promptRuns.isEmpty, isRunningPromptTests {
+                runningPromptState
+            } else if promptRuns.isEmpty {
                 unavailableState(
                     title: "Prompt runs unavailable",
                     subtitle: "Set up the prompt source and run selected variants to view run progress."
@@ -509,6 +511,26 @@ struct StudioView: View {
                 }
             }
         }
+    }
+
+    private var runningPromptState: some View {
+        VStack(spacing: Spacing.medium) {
+            Spacer(minLength: 120)
+
+            ProgressView()
+                .controlSize(.large)
+
+            Text("Running selected variants")
+                .font(.headline)
+
+            Text("Results will appear here as soon as the first prompt run finishes.")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+
+            Spacer(minLength: 120)
+        }
+        .frame(maxWidth: .infinity)
     }
 
     private func runRow(_ run: StudioPromptRun) -> some View {
