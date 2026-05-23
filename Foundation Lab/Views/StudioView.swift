@@ -656,6 +656,10 @@ struct StudioView: View {
     }
 
     private func runPromptTests() {
+        guard canRunPromptTests, !isRunningPromptTests else { return }
+
+        isRunningPromptTests = true
+
         Task {
             await performPromptTests()
         }
@@ -664,11 +668,14 @@ struct StudioView: View {
     @MainActor
     private func performPromptTests() async {
         let trimmedPrompt = promptText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedPrompt.isEmpty, !selectedPromptVariants.isEmpty else { return }
+        guard !trimmedPrompt.isEmpty, !selectedPromptVariants.isEmpty else {
+            isRunningPromptTests = false
+            return
+        }
 
-        isRunningPromptTests = true
         promptTestError = nil
         selectedStage = .runs
+        defer { isRunningPromptTests = false }
 
         var newRuns: [StudioPromptRun] = []
         let variants = StudioPromptVariant.allCases.filter { selectedPromptVariants.contains($0) }
@@ -702,11 +709,13 @@ struct StudioView: View {
 
             promptRuns = newRuns + promptRuns
         } catch {
-            promptTestError = error.localizedDescription
-            selectedStage = .settings
-        }
+            if !newRuns.isEmpty {
+                promptRuns = newRuns + promptRuns
+            }
 
-        isRunningPromptTests = false
+            promptTestError = error.localizedDescription
+            selectedStage = newRuns.isEmpty ? .settings : .runs
+        }
     }
 }
 
