@@ -20,8 +20,6 @@ struct ChatInstructionsView: View {
     let onApply: () -> Void
     @Environment(\.dismiss) private var dismiss
 
-    @Namespace private var glassNamespace
-
     private var clampedTopKSamplingValue: Binding<Int> {
         Binding(
             get: { viewModel.topKSamplingValue },
@@ -147,9 +145,9 @@ struct ChatInstructionsView: View {
             }
         }
         .padding(Spacing.medium)
-        .background(Color.secondaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.small))
+        .background(Color.tertiaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.large))
         .overlay {
-            RoundedRectangle(cornerRadius: CornerRadius.small)
+            RoundedRectangle(cornerRadius: CornerRadius.large)
                 .stroke(.quaternary, lineWidth: 1)
         }
     }

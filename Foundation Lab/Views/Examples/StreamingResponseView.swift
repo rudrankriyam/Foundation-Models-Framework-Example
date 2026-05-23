@@ -38,7 +38,7 @@ struct StreamingResponseView: View {
                 }
                 .padding()
                 .background(Color.green.opacity(0.1))
-                .cornerRadius(8)
+                .cornerRadius(CornerRadius.large)
 
                 // Prompt Suggestions
                 PromptSuggestions(
@@ -77,8 +77,8 @@ struct StreamingResponseView: View {
                                     .textSelection(.enabled)
                                     .padding()
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                    .background(Color.secondaryBackgroundColor)
-                                    .cornerRadius(8)
+                                    .background(Color.tertiaryBackgroundColor)
+                                    .cornerRadius(CornerRadius.large)
                                     .id("streamingText")
                                     .drawingGroup()
                             }

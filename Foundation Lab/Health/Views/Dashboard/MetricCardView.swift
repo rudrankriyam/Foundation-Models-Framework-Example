@@ -40,13 +40,10 @@ struct MetricCardView: View {
         .frame(height: 120)
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
-        .glassEffect(
-            .regular,
-            in: .rect(cornerRadius: 16)
-        )
+        .background(Color.tertiaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.large))
         .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(isSelected ? Color.primary.opacity(0.2) : Color.clear, lineWidth: 1)
+            RoundedRectangle(cornerRadius: CornerRadius.large)
+                .stroke(isSelected ? Color.primary.opacity(0.2) : Color.secondary.opacity(0.2), lineWidth: 1)
         )
         .scaleEffect(isSelected ? 1.02 : 1.0)
         .animation(.easeInOut(duration: 0.2), value: isSelected)

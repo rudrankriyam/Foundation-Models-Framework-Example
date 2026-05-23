@@ -23,4 +23,15 @@ extension Color {
         Color.gray.opacity(0.1)
         #endif
     }
+
+    /// Tertiary background color for quieter grouped content surfaces
+    static var tertiaryBackgroundColor: Color {
+        #if os(iOS)
+        Color(UIColor.tertiarySystemBackground)
+        #elseif os(macOS)
+        Color(NSColor.underPageBackgroundColor)
+        #else
+        Color.gray.opacity(0.06)
+        #endif
+    }
 }

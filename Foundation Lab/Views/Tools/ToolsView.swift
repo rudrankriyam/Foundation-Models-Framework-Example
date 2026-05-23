@@ -111,9 +111,9 @@ struct ToolButton: View {
     .padding()
     .frame(maxWidth: .infinity, minHeight: 140)
     .contentShape(.rect)
-    .background(isSelected ? Color.main : Color.secondaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.small))
+    .background(isSelected ? Color.main : Color.tertiaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.large))
     .overlay {
-      RoundedRectangle(cornerRadius: CornerRadius.small)
+      RoundedRectangle(cornerRadius: CornerRadius.large)
         .stroke(isSelected ? Color.clear : Color.secondary.opacity(0.2), lineWidth: 1)
     }
     .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isSelected)

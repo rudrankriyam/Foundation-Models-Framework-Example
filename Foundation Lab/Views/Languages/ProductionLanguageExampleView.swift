@@ -185,9 +185,9 @@ struct ProductionLanguageExampleView: View {
                         Text(result.insights)
                             .font(.body)
                             .padding()
-                            .background(Color.secondaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.small))
+                            .background(Color.tertiaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.large))
                             .overlay {
-                                RoundedRectangle(cornerRadius: CornerRadius.small)
+                                RoundedRectangle(cornerRadius: CornerRadius.large)
                                     .stroke(.quaternary, lineWidth: 1)
                             }
                     }
@@ -249,9 +249,9 @@ struct NutritionCard: View {
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .background(Color.secondaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.small))
+        .background(Color.tertiaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.large))
         .overlay {
-            RoundedRectangle(cornerRadius: CornerRadius.small)
+            RoundedRectangle(cornerRadius: CornerRadius.large)
                 .stroke(.quaternary, lineWidth: 1)
         }
     }

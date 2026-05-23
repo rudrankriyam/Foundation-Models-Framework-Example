@@ -16,6 +16,7 @@ struct StudioView: View {
     @State private var promptText = "Summarize what makes Apple Foundation Models useful for an offline journaling app."
     @State private var selectedPromptVariants: Set<StudioPromptVariant> = Set(StudioPromptVariant.allCases)
     @State private var promptRuns: [StudioPromptRun] = []
+    @State private var selectedPromptRun: StudioPromptRun?
     @State private var isRunningPromptTests = false
     @State private var promptTestError: String?
     @State private var studioCreatedAt = Date.now
@@ -48,6 +49,23 @@ struct StudioView: View {
 
     private var workbenchLayout: some View {
         VStack(spacing: 0) {
+#if os(macOS)
+            GeometryReader { proxy in
+                if proxy.size.width < 920 {
+                    narrowWorkbenchLayout
+                } else {
+                    HSplitView {
+                        primaryWorkbenchColumn
+                            .frame(minWidth: 0, idealWidth: 820, maxWidth: .infinity, maxHeight: .infinity)
+                            .layoutPriority(1)
+
+                        activityInspector
+                            .frame(minWidth: 240, idealWidth: 300, maxWidth: 320)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+#else
             HStack(spacing: 0) {
                 studioSourceList
                     .frame(width: 250)
@@ -66,11 +84,35 @@ struct StudioView: View {
                 activityInspector
                     .frame(width: 280)
             }
+#endif
 
             Divider()
             statusBar
         }
         .background(Color.secondaryBackgroundColor.opacity(0.28))
+    }
+
+    private var primaryWorkbenchColumn: some View {
+        VStack(spacing: 0) {
+            stageBar
+            Divider()
+            mainWorkspace
+        }
+    }
+
+    private var narrowWorkbenchLayout: some View {
+        VStack(spacing: 0) {
+            stageBar
+            Divider()
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: Spacing.large) {
+                    workspaceHeader
+                    compactStageContent
+                }
+                .padding()
+            }
+        }
     }
 
     private var compactLayout: some View {
@@ -305,7 +347,7 @@ struct StudioView: View {
                             .frame(minHeight: 140)
                             .scrollContentBackground(.hidden)
                             .padding(Spacing.small)
-                            .background(Color.secondaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.small))
+                            .background(Color.tertiaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.large))
                     }
 
                     promptDataSlot(
@@ -411,7 +453,7 @@ struct StudioView: View {
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.secondaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.medium))
+        .background(Color.tertiaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.large))
     }
 
     private func compactParameterRow(title: String, value: String) -> some View {
@@ -460,7 +502,7 @@ struct StudioView: View {
             }
             .padding(.horizontal, Spacing.medium)
             .padding(.vertical, Spacing.small)
-            .background(Color.secondaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.small))
+            .background(Color.tertiaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.large))
 
             content()
 
@@ -469,7 +511,7 @@ struct StudioView: View {
         .padding()
         .frame(maxWidth: .infinity, minHeight: 260, alignment: .topLeading)
         .overlay {
-            RoundedRectangle(cornerRadius: CornerRadius.small)
+            RoundedRectangle(cornerRadius: CornerRadius.large)
                 .stroke(.quaternary, lineWidth: 1)
         }
     }
@@ -534,32 +576,103 @@ struct StudioView: View {
     }
 
     private func runRow(_ run: StudioPromptRun) -> some View {
-        HStack(alignment: .top, spacing: Spacing.large) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(run.variant.title)
-                    .font(.headline)
-                Text(run.finishedAt, style: .time)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+        Button {
+            selectedPromptRun = run
+        } label: {
+            HStack(alignment: .top, spacing: Spacing.large) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(run.variant.title)
+                        .font(.headline)
+                    Text(run.finishedAt, style: .time)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(width: 150, alignment: .leading)
+
+                Text(run.output)
+                    .font(.callout)
+                    .foregroundStyle(.primary)
+                    .lineLimit(3)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                VStack(alignment: .trailing, spacing: 3) {
+                    Text(run.durationLabel)
+                        .font(.headline.monospacedDigit())
+                    Text(run.tokenLabel)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(width: 100, alignment: .trailing)
             }
-            .frame(width: 150, alignment: .leading)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .padding(.vertical, Spacing.small)
+        .help("Show full prompt run")
+        .popover(
+            isPresented: Binding(
+                get: { selectedPromptRun?.id == run.id },
+                set: { isPresented in
+                    if !isPresented, selectedPromptRun?.id == run.id {
+                        selectedPromptRun = nil
+                    }
+                }
+            ),
+            arrowEdge: .trailing
+        ) {
+            runDetailPopover(run)
+                .presentationCompactAdaptation(.popover)
+        }
+    }
 
-            Text(run.output)
-                .font(.callout)
-                .lineLimit(4)
-                .textSelection(.enabled)
+    private func runDetailPopover(_ run: StudioPromptRun) -> some View {
+        VStack(alignment: .leading, spacing: Spacing.medium) {
+            HStack(alignment: .firstTextBaseline) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(run.variant.title)
+                        .font(.headline)
+                    Text(run.finishedAt, style: .time)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
 
-            Spacer(minLength: 0)
+                Spacer()
 
-            VStack(alignment: .trailing, spacing: 3) {
-                Text(run.durationLabel)
-                    .font(.headline.monospacedDigit())
-                Text(run.tokenLabel)
-                    .font(.caption)
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(run.durationLabel)
+                        .font(.headline.monospacedDigit())
+                    Text(run.tokenLabel)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Divider()
+
+            VStack(alignment: .leading, spacing: Spacing.xSmall) {
+                Text("Prompt")
+                    .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
+                Text(run.prompt)
+                    .font(.callout)
+                    .textSelection(.enabled)
+            }
+
+            VStack(alignment: .leading, spacing: Spacing.xSmall) {
+                Text("Output")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                ScrollView {
+                    Text(run.output)
+                        .font(.body)
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .frame(maxHeight: 260)
             }
         }
-        .padding(.vertical, Spacing.small)
+        .padding()
+        .frame(width: 420)
     }
 
     private var evaluationContent: some View {

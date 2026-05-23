@@ -9,8 +9,6 @@ import SwiftUI
 import FoundationModels
 
 struct LanguagesIntegrationsView: View {
-    @Namespace private var glassNamespace
-
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.large) {

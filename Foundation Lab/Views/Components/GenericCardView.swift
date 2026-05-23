@@ -39,9 +39,9 @@ struct GenericCardView: View {
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
-        .background(Color.secondaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.small))
+        .background(Color.tertiaryBackgroundColor, in: .rect(cornerRadius: CornerRadius.large))
         .overlay {
-            RoundedRectangle(cornerRadius: CornerRadius.small)
+            RoundedRectangle(cornerRadius: CornerRadius.large)
                 .stroke(.quaternary, lineWidth: 1)
         }
         .accessibilityElement(children: .combine)
