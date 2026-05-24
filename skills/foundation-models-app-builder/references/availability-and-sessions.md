@@ -1,8 +1,10 @@
-# Foundation Models Recipes
+# Availability And Sessions
 
-Use these recipes for sessions, availability, streaming, generation options, errors, and multilingual basics.
+Use this reference for model availability checks, one-shot sessions, persistent sessions, instructions, generation options, streaming snapshots, and prewarming.
 
 ## Availability Gate
+
+Check availability before showing an AI-first surface. Treat unavailable models as normal product state.
 
 ```swift
 import FoundationModels
@@ -33,7 +35,9 @@ func currentFoundationModelsAvailability() -> ModelAvailabilityStatus {
 }
 ```
 
-## One-Shot Response
+## One-Shot Session
+
+Use a fresh session for unrelated commands so hidden conversation context does not leak across features.
 
 ```swift
 import FoundationModels
@@ -49,6 +53,8 @@ func generateTitle(for topic: String) async throws -> String {
 
 ## Instructions
 
+Keep instructions short, domain-specific, and stable across prompts.
+
 ```swift
 let instructions = Instructions("""
 You are a concise writing assistant.
@@ -63,6 +69,8 @@ let response = try await session.respond(
 ```
 
 ## Generation Options
+
+Use low temperature for extraction, classification, summaries, and app logic. Use higher temperature for brainstorming and creative writing.
 
 ```swift
 let deterministic = GenerationOptions(
@@ -83,9 +91,9 @@ let response = try await LanguageModelSession().respond(
 )
 ```
 
-Use low temperature for extraction, classification, summaries, and app logic. Use higher temperature for brainstorming and creative writing.
+## Streaming Snapshots
 
-## Streaming Text
+Foundation Models streaming returns snapshots of the current response state. Assign the latest snapshot content instead of blindly appending unless your target SDK returns deltas.
 
 ```swift
 import FoundationModels
@@ -117,7 +125,7 @@ final class StreamingTextViewModel {
                 }
             } catch {
                 guard !Task.isCancelled else { return }
-                errorMessage = AppAIError.userMessage(for: error)
+                errorMessage = FoundationModelsErrorPresenter.message(for: error)
             }
 
             isStreaming = false
@@ -131,25 +139,25 @@ final class StreamingTextViewModel {
 }
 ```
 
-Foundation Models streaming snapshots represent the current response state. Assign the latest snapshot content rather than appending blindly unless the API surface returns deltas in your target SDK.
-
 ## Multi-Turn Session
+
+Use a persistent session only when conversation memory is part of the feature.
 
 ```swift
 let session = LanguageModelSession(
     instructions: "Remember user preferences during this conversation."
 )
 
-let first = try await session.respond(to: "I am planning a trip to Japan.")
-let second = try await session.respond(to: "What should I pack?")
+let first = try await session.respond(to: Prompt("I am planning a trip to Japan."))
+let second = try await session.respond(to: Prompt("What should I pack?"))
 
 print(first.content)
 print(second.content)
 ```
 
-Use a persistent session only when conversation memory is part of the feature. Use fresh sessions for unrelated commands to avoid accidental context bleed.
-
 ## Prewarming
+
+Prewarm when the user is likely to submit soon and the prompt prefix is stable. Avoid prewarming every route in the app.
 
 ```swift
 let session = LanguageModelSession(
@@ -159,51 +167,6 @@ let session = LanguageModelSession(
 session.prewarm(promptPrefix: "Suggest a 20-minute workout for")
 
 let response = try await session.respond(
-    to: "Suggest a 20-minute workout for a beginner with no equipment."
+    to: Prompt("Suggest a 20-minute workout for a beginner with no equipment.")
 )
 ```
-
-Prewarm when the user is likely to submit soon and the prompt prefix is stable. Do not prewarm for every possible route in an app.
-
-## Error Handling
-
-```swift
-func friendlyMessage(for error: Error) -> String {
-    switch error {
-    case LanguageModelSession.GenerationError.exceededContextWindowSize:
-        "The conversation is too long. Start a new chat or summarize earlier messages."
-    case LanguageModelSession.GenerationError.guardrailViolation:
-        "The request was blocked by safety guardrails."
-    case LanguageModelSession.GenerationError.assetsUnavailable:
-        "Foundation Models are temporarily unavailable."
-    case LanguageModelSession.GenerationError.concurrentRequests:
-        "Wait for the current response to finish."
-    case LanguageModelSession.GenerationError.rateLimited:
-        "Too many requests. Try again shortly."
-    case LanguageModelSession.GenerationError.unsupportedLanguageOrLocale:
-        "This language is not supported by Foundation Models."
-    case LanguageModelSession.GenerationError.decodingFailure:
-        "The response could not be decoded. Try a simpler prompt."
-    case LanguageModelSession.GenerationError.unsupportedGuide:
-        "A generation guide is unsupported."
-    case LanguageModelSession.GenerationError.refusal(_, _):
-        "The model declined to respond."
-    default:
-        error.localizedDescription
-    }
-}
-```
-
-## Multilingual Session Choice
-
-```swift
-func respondInFreshSession(prompt: String, languageName: String) async throws -> String {
-    let session = LanguageModelSession(
-        instructions: Instructions("Respond in \(languageName). Keep the answer concise.")
-    )
-
-    return try await session.respond(to: Prompt(prompt)).content
-}
-```
-
-Use fresh sessions when switching languages for independent tasks. Use one persistent session only when mixed-language memory is desired.

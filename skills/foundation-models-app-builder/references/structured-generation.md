@@ -1,8 +1,10 @@
-# Structured Generation Recipes
+# Structured Generation
 
-Use these recipes for `@Generable`, `@Guide`, enums, arrays, nested objects, dynamic schemas, decoding failures, and retries.
+Use this reference for compile-time structured output with `@Generable`, `@Guide`, enums, arrays, nested objects, and decoding retries.
 
-## Compile-Time Model With `@Generable`
+Use `@Generable` when the app owns the output type. Use `references/dynamic-schemas.md` only when the schema must be assembled at runtime.
+
+## Basic Model
 
 ```swift
 import FoundationModels
@@ -40,7 +42,7 @@ func recommendBook(for request: String) async throws -> BookRecommendation {
 
 ```swift
 @Generable
-enum ReviewSentiment: String, Sendable {
+enum ReviewSentiment: Sendable {
     case positive
     case mixed
     case negative
@@ -83,77 +85,38 @@ struct NutritionAnalysis: Sendable {
 }
 ```
 
-## Dynamic Schema For Runtime Fields
+## Classification
 
 ```swift
-import FoundationModels
+@Generable
+struct SupportTicketClassification: Sendable {
+    let category: Category
+    let urgency: Urgency
 
-func makeReceiptSchema() throws -> GenerationSchema {
-    let lineItem = DynamicGenerationSchema(
-        name: "LineItem",
-        description: "One purchased item",
-        properties: [
-            DynamicGenerationSchema.Property(
-                name: "name",
-                description: "Item name",
-                schema: DynamicGenerationSchema(type: String.self)
-            ),
-            DynamicGenerationSchema.Property(
-                name: "price",
-                description: "Item price in the receipt currency",
-                schema: DynamicGenerationSchema(type: Double.self)
-            )
-        ]
-    )
+    @Guide(description: "One sentence explaining the classification")
+    let rationale: String
 
-    let receipt = DynamicGenerationSchema(
-        name: "Receipt",
-        description: "Receipt extracted from plain text",
-        properties: [
-            DynamicGenerationSchema.Property(
-                name: "merchant",
-                schema: DynamicGenerationSchema(type: String.self)
-            ),
-            DynamicGenerationSchema.Property(
-                name: "items",
-                schema: DynamicGenerationSchema(
-                    arrayOf: DynamicGenerationSchema(referenceTo: "LineItem"),
-                    minimumElements: 1
-                )
-            ),
-            DynamicGenerationSchema.Property(
-                name: "total",
-                schema: DynamicGenerationSchema(type: Double.self)
-            )
-        ]
-    )
+    @Generable
+    enum Category: Sendable {
+        case billing
+        case bug
+        case featureRequest
+        case account
+        case other
+    }
 
-    return try GenerationSchema(root: receipt, dependencies: [lineItem])
-}
-
-func extractReceipt(from text: String) async throws -> GeneratedContent {
-    let schema = try makeReceiptSchema()
-    let session = LanguageModelSession()
-
-    return try await session.respond(
-        to: Prompt("Extract the receipt data from this text:\n\(text)"),
-        schema: schema,
-        options: GenerationOptions(temperature: 0.1)
-    ).content
+    @Generable
+    enum Urgency: Sendable {
+        case low
+        case medium
+        case high
+    }
 }
 ```
 
-## Reading Dynamic Output
+## Retry Strategy
 
-```swift
-let output = try await extractReceipt(from: receiptText)
-let merchant: String = try output.value(forProperty: "merchant")
-let total: Double = try output.value(forProperty: "total")
-
-print("\(merchant): \(total)")
-```
-
-## Retry Strategy For Decoding Failure
+Retry only after changing constraints. For structured output, lower temperature and make the prompt stricter.
 
 ```swift
 func generateStructuredWithRetry<Output: Generable & Sendable>(
@@ -169,7 +132,8 @@ func generateStructuredWithRetry<Output: Generable & Sendable>(
         let stricterPrompt = """
         \(prompt)
 
-        Return only values that fit the requested schema. Avoid unknown, null, or extra fields.
+        Return only values that fit the requested Swift type.
+        Avoid unknown, null, or extra fields.
         """
 
         return try await session.respond(
@@ -181,8 +145,10 @@ func generateStructuredWithRetry<Output: Generable & Sendable>(
 }
 ```
 
-## Choosing Static vs Dynamic
+## Checklist
 
-- Use `@Generable` for app-owned models such as recommendations, summaries, classifications, health summaries, reminders, or intent results.
-- Use dynamic schemas for user-built forms, imported JSON schema-like definitions, runtime invoice/receipt formats, and admin-configured extraction templates.
-- Do not use dynamic schemas just to avoid defining Swift types. Static types are clearer, safer, and easier to test.
+- Prefer concrete property names over generic fields like `value`.
+- Add guides for meaning, count, ranges, allowed style, or ambiguity.
+- Keep generated types `Sendable` when crossing concurrency boundaries.
+- Use lower temperature for extraction and classification.
+- Handle `decodingFailure` with user-facing recovery.

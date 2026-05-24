@@ -18,11 +18,17 @@ Use this skill as a self-contained Foundation Models app-building playbook. The 
 
 ## Reference Routing
 
-- **Reusable architecture, use cases, providers, SwiftUI adapters, App Intent adapters**: `references/architecture.md`
-- **Availability, sessions, instructions, streaming, generation options, token budgets, errors**: `references/foundation-models-recipes.md`
-- **`@Generable`, `@Guide`, `DynamicGenerationSchema`, schema decoding and retries**: `references/structured-generation.md`
-- **Tool calling, RAG, voice, HealthKit, multilingual, permissions**: `references/integrations.md`
-- **Build commands, manual checks, PR checklist**: `references/verification.md`
+- **Reusable app architecture, providers, use cases, SwiftUI adapters**: `references/architecture.md`
+- **Availability, sessions, instructions, generation options, streaming, prewarming**: `references/availability-and-sessions.md`
+- **Compile-time structured output with `@Generable` and `@Guide`**: `references/structured-generation.md`
+- **Runtime schemas with `DynamicGenerationSchema` and `GeneratedContent`**: `references/dynamic-schemas.md`
+- **Foundation Models tools and permission-aware app integrations**: `references/tool-calling.md`
+- **Retrieval-augmented generation and grounded prompts**: `references/rag.md`
+- **Speech recognition, text-to-speech, and voice state machines**: `references/voice.md`
+- **App Intents backed by shared Foundation Models capabilities**: `references/app-intents.md`
+- **HealthKit-backed AI features and safety wording**: `references/healthkit.md`
+- **Supported languages, language selection, and code switching**: `references/multilingual.md`
+- **Generation errors, guardrails, retries, and verification checks**: `references/common-errors.md`
 
 ## Core Rules
 
