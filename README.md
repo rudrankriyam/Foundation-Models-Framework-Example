@@ -65,6 +65,43 @@ It also expects these repository variables:
 - Build and run the project
 - Explore the different capabilities through the examples!
 
+## Agent Skill
+
+This repo includes a `foundation-models-app-builder` agent skill with self-contained Swift recipes for Foundation Models app development. It gives agents packaged patterns for sessions, structured generation, dynamic schemas, tool calling, RAG, voice, HealthKit, App Intents, multilingual support, and shared capability extraction without needing to inspect this repo's source files.
+
+The skill is organized into focused references:
+
+```text
+skills/
+  foundation-models-app-builder/
+    SKILL.md
+    references/
+      architecture.md
+      availability-and-sessions.md
+      structured-generation.md
+      dynamic-schemas.md
+      tool-calling.md
+      rag.md
+      voice.md
+      app-intents.md
+      healthkit.md
+      multilingual.md
+      common-errors.md
+```
+
+Install it with the open skills CLI:
+
+```bash
+npx skills add rudrankriyam/Foundation-Models-Framework-Example --skill foundation-models-app-builder
+```
+
+To target a specific agent explicitly:
+
+```bash
+npx skills add rudrankriyam/Foundation-Models-Framework-Example --skill foundation-models-app-builder --agent codex
+npx skills add rudrankriyam/Foundation-Models-Framework-Example --skill foundation-models-app-builder --agent claude-code
+```
+
 ## What's Inside
 
 The app has four main sections:
