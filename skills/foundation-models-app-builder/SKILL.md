@@ -7,6 +7,14 @@ description: Build or modify Apple Foundation Models features in Swift, SwiftUI,
 
 Use this skill as a self-contained Foundation Models app-building playbook. The recipes live inside this skill so agents can apply the patterns in any Swift app without needing to inspect the Foundation Lab repository.
 
+## What This Skill Optimizes For
+
+- Shipping app features, not reciting API docs.
+- Turning Foundation Models into reusable app capabilities with clear Swift types.
+- Keeping model orchestration separate from SwiftUI, App Intents, permissions, and persistence.
+- Choosing the smallest useful pattern: text, structured output, dynamic schema, tool, RAG, voice, or domain-specific integration.
+- Leaving every feature with availability handling, cancellation, recovery, and verification.
+
 ## Workflow
 
 1. Identify the feature shape: availability, one-shot text, streaming, structured output, dynamic schema, tool calling, RAG, voice, HealthKit, multilingual, App Intent, or reusable capability extraction.
@@ -40,3 +48,16 @@ Use this skill as a self-contained Foundation Models app-building playbook. The 
 - Avoid App Intent-only prompt logic. Shared tasks should be callable from the app UI too.
 - Prefer compact, domain-specific instructions over giant prompts.
 - Do not assume Foundation Models are available; check `SystemLanguageModel.default.availability`.
+
+## Feature Contract
+
+When adding a Foundation Models feature, aim to leave behind these pieces:
+
+- a Swift type that names the task input
+- a Swift type that names the task output
+- a small generation provider or use case
+- a UI, App Intent, or service adapter that calls the use case
+- a model-unavailable path
+- a cancellation path for streaming or long-running work
+- a user-facing recovery path for generation errors
+- a narrow verification command or manual check
