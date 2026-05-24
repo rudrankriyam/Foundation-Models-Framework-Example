@@ -27,8 +27,10 @@ enum MultilingualGenerationError: Error, LocalizedError {
 func respondInLanguage(
     prompt: String,
     languageName: String,
-    locale: Locale = .current
+    localeIdentifier: String
 ) async throws -> String {
+    let locale = Locale(identifier: localeIdentifier)
+
     guard canUseFoundationModels(for: locale) else {
         throw MultilingualGenerationError.unsupportedLocale
     }
@@ -73,12 +75,17 @@ Use `supportsLocale(_:)` for eligibility checks because it accounts for language
 ```swift
 func localizedGeneration(
     prompt: String,
-    languageName: String
+    language: SupportedLanguageOption
 ) async -> Result<String, String> {
     do {
-        let text = try await respondInLanguage(prompt: prompt, languageName: languageName)
+        let text = try await respondInLanguage(
+            prompt: prompt,
+            languageName: language.displayName,
+            localeIdentifier: language.localeIdentifier
+        )
         return .success(text)
-    } catch LanguageModelSession.GenerationError.unsupportedLanguageOrLocale {
+    } catch MultilingualGenerationError.unsupportedLocale,
+            LanguageModelSession.GenerationError.unsupportedLanguageOrLocale {
         return .failure("This language is not supported by Foundation Models on this device.")
     } catch {
         return .failure(FoundationModelsErrorPresenter.message(for: error))
