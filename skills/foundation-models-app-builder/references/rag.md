@@ -68,24 +68,38 @@ final class RAGChatViewModel {
     var errorMessage: String?
 
     private let responder: RAGResponder
+    private var task: Task<Void, Never>?
 
     init(responder: RAGResponder) {
         self.responder = responder
     }
 
     func ask() {
+        task?.cancel()
+        let currentQuestion = question
+
         isLoading = true
         errorMessage = nil
 
-        Task {
+        task = Task {
             do {
-                answer = try await responder.respond(to: question)
+                let response = try await responder.respond(to: currentQuestion)
+                guard !Task.isCancelled else { return }
+                answer = response
             } catch {
+                guard !Task.isCancelled else { return }
                 errorMessage = FoundationModelsErrorPresenter.message(for: error)
             }
 
+            guard !Task.isCancelled else { return }
             isLoading = false
         }
+    }
+
+    func cancel() {
+        task?.cancel()
+        task = nil
+        isLoading = false
     }
 }
 ```

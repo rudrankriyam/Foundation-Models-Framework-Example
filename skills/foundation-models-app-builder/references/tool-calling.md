@@ -35,6 +35,17 @@ struct CalculatorTool: Tool {
         let result: Double
     }
 
+    enum CalculationError: Error, LocalizedError {
+        case divisionByZero
+
+        var errorDescription: String? {
+            switch self {
+            case .divisionByZero:
+                "Cannot divide by zero."
+            }
+        }
+    }
+
     func call(arguments: Arguments) async throws -> CalculationResult {
         let result = switch arguments.operation {
         case .add:
@@ -44,6 +55,9 @@ struct CalculatorTool: Tool {
         case .multiply:
             arguments.firstNumber * arguments.secondNumber
         case .divide:
+            guard arguments.secondNumber != 0 else {
+                throw CalculationError.divisionByZero
+            }
             arguments.firstNumber / arguments.secondNumber
         }
 
