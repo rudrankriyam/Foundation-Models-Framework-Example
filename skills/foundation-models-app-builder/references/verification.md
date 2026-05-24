@@ -2,45 +2,54 @@
 
 Use this reference before finishing Foundation Models app changes.
 
-## Baseline Commands
-
-Run the narrowest useful command:
+## Build Commands
 
 ```bash
 xcodebuild -project FoundationLab.xcodeproj -scheme "Foundation Lab" -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
 cd FoundationLabCore && swift test
 ```
 
-If a command is unavailable because the installed Xcode, simulator, or macOS version is too old, report that explicitly.
+For another app, replace the project, scheme, destination, and package path with the target app's equivalents.
 
 ## Manual Checks
 
-For user-facing features, check:
+- Apple Intelligence unavailable
+- Apple Intelligence disabled
+- model still downloading or not ready
+- denied permissions
+- cancellation during streaming
+- retry after decoding failure
+- long conversation near the context limit
+- unsupported language or locale
+- guardrail refusal
+- SwiftUI state updates on the main actor
 
-- model unavailable path
-- Apple Intelligence disabled path when feasible
-- permission denied path
-- cancellation during generation or streaming
-- retry behavior after an error
-- localization impact if strings changed
-- app navigation on iPhone and larger layouts
+## Structured Generation Checks
 
-## Code Review Checklist
+- Static output uses `@Generable` instead of runtime schemas.
+- Dynamic schema output uses explicit dependencies for references.
+- Optional fields are intentionally optional.
+- Retry prompts lower temperature and narrow constraints.
+- Decoding failures become user-facing recovery.
 
-- Reusable task logic lives in core use cases/providers where appropriate.
-- SwiftUI views do not own long prompt orchestration unless intentionally educational.
-- App Intents call shared capabilities instead of duplicating app logic.
-- Tool outputs are bounded and safe to show to the model.
-- Errors become user-facing recovery, not only console logs.
-- Streaming updates are main-actor safe and cancellable.
-- Structured generation has a fallback for decoding or schema failure.
-- Health, contacts, calendar, reminders, location, music, speech, and microphone permissions are handled at the app boundary.
+## Tool Checks
+
+- Read-only tools can execute directly.
+- Write tools require user confirmation.
+- Tool arguments are bounded and validated.
+- Tool output avoids leaking unnecessary private data back to the model.
+- Permission denial is a normal path.
 
 ## PR Summary Template
 
-When summarizing changes, include:
+```markdown
+## Summary
+- added/changed the Foundation Models feature
+- included availability, permission, and error handling
+- kept shared model orchestration reusable where appropriate
 
-- feature or skill surface changed
-- files added or touched
-- verification command and result
-- any environment limitation
+## Verification
+- `xcodebuild ...`
+- `swift test`
+- manual: unavailable model, denied permission, cancellation, retry
+```

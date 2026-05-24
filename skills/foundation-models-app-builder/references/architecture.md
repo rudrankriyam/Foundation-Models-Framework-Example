@@ -1,48 +1,213 @@
-# Architecture
+# Architecture Recipes
 
-Use this reference when deciding where Foundation Models code belongs.
+Use these patterns when a Foundation Models feature should be reusable across SwiftUI, App Intents, CLI commands, widgets, or tests.
 
-## Repo Shape
+## Shared Text Capability
 
-- `Foundation Lab/` is the iOS/macOS app target. Keep SwiftUI, navigation, permissions, app lifecycle, and screen-local state here.
-- `FoundationLabCore/` is the shared task boundary. Keep reusable request/result models, provider protocols, use cases, domain errors, and Foundation Models-backed implementations here.
-- `BookPlaygrounds/` contains educational snippets. Use these for teaching small API concepts, not as the default shape for production app code.
-- `Agents.md` describes repo conventions for AI agents working in this codebase.
+```swift
+import Foundation
+import FoundationModels
 
-## Shared Capability Pattern
+public struct TextGenerationRequest: Sendable, Hashable {
+    public var prompt: String
+    public var systemPrompt: String?
+    public var options: GenerationOptions?
 
-Prefer this pattern for reusable features:
+    public init(prompt: String, systemPrompt: String? = nil, options: GenerationOptions? = nil) {
+        self.prompt = prompt
+        self.systemPrompt = systemPrompt
+        self.options = options
+    }
+}
 
-1. Define a request in `FoundationLabCore/Sources/FoundationLabCore/Requests/`.
-2. Define a result in `FoundationLabCore/Sources/FoundationLabCore/Results/`.
-3. Define a provider protocol in `FoundationLabCore/Sources/FoundationLabCore/Providers/`.
-4. Add a Foundation Models-backed provider implementation.
-5. Add a task-oriented use case in `FoundationLabCore/Sources/FoundationLabCore/Capabilities/`.
-6. Make SwiftUI, App Intents, and other adapters call the use case instead of owning prompt orchestration.
+public struct TextGenerationResult: Sendable, Hashable {
+    public var content: String
+    public var estimatedTokenCount: Int?
+}
 
-Examples to inspect:
+public protocol TextGenerating: Sendable {
+    func generateText(for request: TextGenerationRequest) async throws -> TextGenerationResult
+}
 
-- `GenerateBookRecommendationUseCase.swift`
-- `AnalyzeNutritionUseCase.swift`
-- `GenerateStructuredDataUseCase.swift`
-- `GenerateDynamicSchemaContentUseCase.swift`
-- `RunConversationUseCase.swift`
-- `CheckModelAvailabilityUseCase.swift`
+public struct FoundationModelsTextGenerator: TextGenerating {
+    public init() {}
 
-## Dependency Rules
+    public func generateText(for request: TextGenerationRequest) async throws -> TextGenerationResult {
+        let prompt = request.prompt.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !prompt.isEmpty else {
+            throw AppAIError.invalidPrompt
+        }
 
-- `FoundationLabCore` must not import `SwiftUI`, `AppIntents`, or UI frameworks.
-- App targets may depend on `FoundationLabCore`.
-- App Intents should be thin adapters over shared capabilities.
-- Educational example views may show direct Foundation Models code, but runtime features should prefer shared capabilities once the pattern exists.
+        let model = SystemLanguageModel.default
+        let session: LanguageModelSession
 
-## Design Bias
+        if let systemPrompt = request.systemPrompt?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !systemPrompt.isEmpty {
+            session = LanguageModelSession(
+                model: model,
+                instructions: Instructions(systemPrompt)
+            )
+        } else {
+            session = LanguageModelSession(model: model)
+        }
 
-Favor app-building patterns over API demos. A good change handles:
+        let content: String
+        if let options = request.options {
+            content = try await session.respond(to: Prompt(prompt), options: options).content
+        } else {
+            content = try await session.respond(to: Prompt(prompt)).content
+        }
 
-- availability and unsupported hardware
-- cancellation and concurrency
-- permission boundaries
-- user-facing errors
-- testability or dry-run seams
-- localization when text reaches UI
+        return TextGenerationResult(
+            content: content,
+            estimatedTokenCount: session.transcript.estimatedTokenCount
+        )
+    }
+}
+```
+
+## Use Case Wrapper
+
+```swift
+public struct GenerateSummaryUseCase: Sendable {
+    private let generator: any TextGenerating
+
+    public init(generator: any TextGenerating = FoundationModelsTextGenerator()) {
+        self.generator = generator
+    }
+
+    public func execute(notes: String) async throws -> TextGenerationResult {
+        try await generator.generateText(
+            for: TextGenerationRequest(
+                prompt: notes,
+                systemPrompt: "Summarize the notes into three concise bullets.",
+                options: GenerationOptions(temperature: 0.2, maximumResponseTokens: 180)
+            )
+        )
+    }
+}
+```
+
+## SwiftUI Adapter
+
+```swift
+import Observation
+import SwiftUI
+
+@MainActor
+@Observable
+final class SummaryViewModel {
+    var input = ""
+    var output = ""
+    var isGenerating = false
+    var errorMessage: String?
+
+    private let useCase: GenerateSummaryUseCase
+    private var task: Task<Void, Never>?
+
+    init(useCase: GenerateSummaryUseCase = GenerateSummaryUseCase()) {
+        self.useCase = useCase
+    }
+
+    func generate() {
+        task?.cancel()
+        isGenerating = true
+        errorMessage = nil
+
+        task = Task {
+            do {
+                let result = try await useCase.execute(notes: input)
+                guard !Task.isCancelled else { return }
+                output = result.content
+            } catch {
+                guard !Task.isCancelled else { return }
+                errorMessage = AppAIError.userMessage(for: error)
+            }
+
+            isGenerating = false
+        }
+    }
+
+    func cancel() {
+        task?.cancel()
+        isGenerating = false
+    }
+}
+```
+
+## App Intent Adapter
+
+```swift
+import AppIntents
+
+struct SummarizeNotesIntent: AppIntent {
+    static let title: LocalizedStringResource = "Summarize Notes"
+
+    @Parameter(title: "Notes")
+    var notes: String
+
+    func perform() async throws -> some IntentResult & ReturnsValue<String> {
+        let result = try await GenerateSummaryUseCase().execute(notes: notes)
+        return .result(value: result.content)
+    }
+}
+```
+
+## Shared Error Mapping
+
+```swift
+enum AppAIError: Error, LocalizedError {
+    case invalidPrompt
+    case modelUnavailable(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidPrompt:
+            "Enter a prompt before generating."
+        case .modelUnavailable(let reason):
+            "Apple Intelligence is not available: \(reason)"
+        }
+    }
+
+    static func userMessage(for error: Error) -> String {
+        switch error {
+        case LanguageModelSession.GenerationError.exceededContextWindowSize:
+            "This conversation is too long. Start a new chat or remove earlier messages."
+        case LanguageModelSession.GenerationError.guardrailViolation:
+            "The request was blocked by the safety system."
+        case LanguageModelSession.GenerationError.assetsUnavailable:
+            "Foundation Models are temporarily unavailable."
+        case LanguageModelSession.GenerationError.concurrentRequests:
+            "Wait for the current response to finish."
+        case LanguageModelSession.GenerationError.rateLimited:
+            "Too many requests. Try again in a moment."
+        case LanguageModelSession.GenerationError.unsupportedLanguageOrLocale:
+            "This language or locale is not supported."
+        case LanguageModelSession.GenerationError.decodingFailure:
+            "The response could not be decoded. Try simplifying the request."
+        case LanguageModelSession.GenerationError.unsupportedGuide:
+            "One of the generation guides is not supported."
+        case LanguageModelSession.GenerationError.refusal(_, _):
+            "The model declined to respond."
+        default:
+            error.localizedDescription
+        }
+    }
+}
+```
+
+## Token Estimate Helper
+
+Use real token counting when available in the deployment target; otherwise keep a conservative fallback.
+
+```swift
+import FoundationModels
+
+extension Transcript {
+    var estimatedTokenCount: Int {
+        reduce(0) { partial, entry in
+            partial + String(describing: entry).count / 4 + 1
+        }
+    }
+}
+```

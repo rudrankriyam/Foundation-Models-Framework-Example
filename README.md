@@ -67,7 +67,7 @@ It also expects these repository variables:
 
 ## Agent Skill
 
-This repo includes a `foundation-models-app-builder` agent skill for applying Foundation Lab's real app patterns in Foundation Models projects. It helps agents work from the app's existing examples for sessions, structured generation, dynamic schemas, tool calling, RAG, voice, HealthKit, App Intents, multilingual support, and shared capability extraction.
+This repo includes a `foundation-models-app-builder` agent skill with self-contained Swift recipes for Foundation Models app development. It gives agents packaged patterns for sessions, structured generation, dynamic schemas, tool calling, RAG, voice, HealthKit, App Intents, multilingual support, and shared capability extraction without needing to inspect this repo's source files.
 
 Install it with the open skills CLI:
 

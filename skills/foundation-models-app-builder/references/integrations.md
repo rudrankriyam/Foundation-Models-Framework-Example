@@ -1,73 +1,211 @@
-# Integrations
+# Integration Recipes
 
-Use this reference for tool calling, RAG, voice, HealthKit, App Intents, and other app integrations.
+Use these recipes for tool calling, RAG, voice, HealthKit, App Intents, permissions, and multilingual app features.
 
 ## Tool Calling
 
-Treat tools as product integrations with model-facing descriptions and app-facing safety boundaries.
+```swift
+import Foundation
+import FoundationModels
 
-Before adding a tool, define:
+struct CalculatorTool: Tool {
+    let name = "calculate"
+    let description = "Perform basic arithmetic."
 
-- the user intent it supports
-- required permissions or API access
-- model-visible input and output shape
-- failure cases and user-facing recovery
-- whether the action reads data, writes data, or requires confirmation
+    @Generable
+    struct Arguments: Sendable {
+        let firstNumber: Double
+        let operation: Operation
+        let secondNumber: Double
+    }
 
-Inspect:
+    @Generable
+    enum Operation: String, Sendable {
+        case add
+        case subtract
+        case multiply
+        case divide
+    }
 
-- `FoundationLabCore/Sources/FoundationLabCore/Providers/FoundationModelsToolInvoker.swift`
-- `FoundationLabCore/Sources/FoundationLabCore/Tools/Search1WebSearchTool.swift`
-- `Foundation Lab/Views/Tools/`
-- `Foundation Lab/AppIntents/`
-- `BookPlaygrounds/08_BasicToolUse/`
+    @Generable
+    struct CalculationResult: Sendable {
+        let expression: String
+        let result: Double
+    }
 
-## RAG
+    func call(arguments: Arguments) async throws -> CalculationResult {
+        let result = switch arguments.operation {
+        case .add:
+            arguments.firstNumber + arguments.secondNumber
+        case .subtract:
+            arguments.firstNumber - arguments.secondNumber
+        case .multiply:
+            arguments.firstNumber * arguments.secondNumber
+        case .divide:
+            arguments.firstNumber / arguments.secondNumber
+        }
 
-Use RAG for user-provided or app-provided documents that should ground responses. Keep retrieval, indexing, and prompt assembly separated from SwiftUI state.
+        return CalculationResult(
+            expression: "\(arguments.firstNumber) \(arguments.operation.rawValue) \(arguments.secondNumber)",
+            result: result
+        )
+    }
+}
 
-Inspect:
+let session = LanguageModelSession(
+    tools: [CalculatorTool()],
+    instructions: "Use the calculator tool for arithmetic. Explain the result briefly."
+)
 
-- `Foundation Lab/Services/RAGService.swift`
-- `Foundation Lab/ViewModels/RAGChatViewModel.swift`
-- `Foundation Lab/Views/Examples/RAGChatView.swift`
+let response = try await session.respond(
+    to: Prompt("What is 19.5 multiplied by 4.2?")
+)
+```
 
-Check cancellation, empty document states, reset behavior, and user-visible source handling.
+For tools that write data, require confirmation in the UI before committing changes. Examples: creating reminders, calendar events, health notes, messages, or files.
 
-## Voice
+## Tool Error Output
 
-Voice features need a state machine, permission flow, speech recognition, model inference, text-to-speech, cancellation, and accessibility behavior.
+Prefer a structured failure result when the model can recover, and throw only when the app should stop the tool call.
 
-Inspect:
+```swift
+@Generable
+struct ToolResult: Sendable {
+    let success: Bool
+    let message: String
+    let value: String?
+}
+```
 
-- `Foundation Lab/Voice/VoiceViewModel.swift`
-- `Foundation Lab/Voice/VoiceView.swift`
-- `Foundation Lab/Voice/Services/`
-- `Foundation Lab/Voice/State/`
+## RAG Skeleton
 
-Keep audio/session state separate from Foundation Models prompt logic. Do not let voice recording, model response generation, and speech synthesis collapse into one untestable method.
+```swift
+struct RetrievedChunk: Sendable, Hashable {
+    var title: String
+    var text: String
+}
 
-## HealthKit
+protocol DocumentRetrieving: Sendable {
+    func relevantChunks(for query: String) async throws -> [RetrievedChunk]
+}
 
-Health features must be conservative with permissions, wording, and claims. Prefer insights and summaries over diagnosis.
+struct RAGResponder {
+    var retriever: any DocumentRetrieving
 
-Inspect:
+    func respond(to question: String) async throws -> String {
+        let chunks = try await retriever.relevantChunks(for: question)
+        let context = chunks.map { "Source: \($0.title)\n\($0.text)" }.joined(separator: "\n\n")
 
-- `Foundation Lab/Health/`
-- `FoundationLabCore/Sources/FoundationLabCore/Capabilities/AnalyzeNutritionUseCase.swift`
-- `FoundationLabCore/Sources/FoundationLabCore/Capabilities/QueryHealthDataUseCase.swift`
-- `FoundationLabCore/Sources/FoundationLabCore/Providers/FoundationModelsHealthDataQuerier.swift`
+        let session = LanguageModelSession(
+            instructions: Instructions("""
+            Answer using only the provided context.
+            If the context is insufficient, say what is missing.
+            """)
+        )
 
-Always handle denied HealthKit authorization and unavailable data.
+        let prompt = """
+        Context:
+        \(context)
 
-## App Intents
+        Question:
+        \(question)
+        """
 
-App Intents should be thin adapters over shared capabilities. Avoid duplicating prompts or business logic in intent files.
+        return try await session.respond(to: Prompt(prompt)).content
+    }
+}
+```
 
-Inspect:
+## Voice State Machine Shape
 
-- `Foundation Lab/AppIntents/GenerateBookRecommendationIntent.swift`
-- `Foundation Lab/AppIntents/AnalyzeNutritionIntent.swift`
-- `Foundation Lab/AppIntents/GetWeatherIntent.swift`
-- `Foundation Lab/AppIntents/SearchWebIntent.swift`
-- `Foundation Lab/AppIntents/FoundationLabAppShortcuts.swift`
+```swift
+enum VoiceInteractionState: Equatable {
+    case idle
+    case requestingPermission
+    case listening
+    case transcribing
+    case generating
+    case speaking
+    case failed(String)
+}
+
+@MainActor
+@Observable
+final class VoiceAssistantViewModel {
+    var state: VoiceInteractionState = .idle
+    var transcript = ""
+    var response = ""
+
+    func handleFinalTranscript(_ text: String) {
+        transcript = text
+        state = .generating
+
+        Task {
+            do {
+                response = try await LanguageModelSession().respond(to: Prompt(text)).content
+                state = .speaking
+                // Send response to AVSpeechSynthesizer or Speech framework wrapper here.
+            } catch {
+                state = .failed(AppAIError.userMessage(for: error))
+            }
+        }
+    }
+}
+```
+
+Keep speech recognition, model inference, and speech synthesis as separate services. This makes cancellation, permissions, and tests much easier.
+
+## HealthKit Safety
+
+```swift
+let healthInstructions = Instructions("""
+You are a wellness assistant.
+Summarize trends and encourage healthy habits.
+Do not diagnose, prescribe, or claim medical certainty.
+Tell the user to consult a qualified professional for medical concerns.
+""")
+```
+
+For HealthKit-backed features:
+
+- request HealthKit authorization before model generation
+- pass only the minimum relevant metrics to the prompt
+- avoid diagnosis and treatment language
+- provide source/date ranges for metrics
+- handle missing or denied data as a normal UI state
+
+## App Intent Over Shared Capability
+
+```swift
+import AppIntents
+
+struct GenerateLocalizedResponseIntent: AppIntent {
+    static let title: LocalizedStringResource = "Generate Localized Response"
+
+    @Parameter(title: "Prompt")
+    var prompt: String
+
+    @Parameter(title: "Language")
+    var language: String
+
+    func perform() async throws -> some IntentResult & ReturnsValue<String> {
+        let session = LanguageModelSession(
+            instructions: Instructions("Respond in \(language).")
+        )
+        let response = try await session.respond(to: Prompt(prompt))
+        return .result(value: response.content)
+    }
+}
+```
+
+When the same task appears in both the app and App Intents, move the model call into a shared use case and let the intent call that use case.
+
+## Permission Boundary Checklist
+
+- Contacts: explain why search is needed; avoid dumping full contact details into prompts.
+- Calendar: preview event creation before saving.
+- Reminders: preview title, due date, priority, and notes before saving.
+- Location: request foreground location only when the feature needs it.
+- Music: handle no subscription or denied media access.
+- Speech and microphone: show listening state, cancellation, and retry controls.
+- HealthKit: show selected metric types and date range clearly.
