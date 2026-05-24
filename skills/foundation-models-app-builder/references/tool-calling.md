@@ -147,5 +147,6 @@ Flow:
 - The `description` tells the model when to use the tool.
 - Arguments are strongly typed and constrained with `@Generable`.
 - The tool validates input before touching app data.
+- Tool implementations are safe if called concurrently.
 - The output is bounded and does not leak unnecessary private data.
 - Permission denial is a normal result path.

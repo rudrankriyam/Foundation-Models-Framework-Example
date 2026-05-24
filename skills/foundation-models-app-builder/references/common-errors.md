@@ -83,6 +83,7 @@ final class GenerationTaskStore {
 - App Intents do not duplicate shared prompt logic.
 - Health wording avoids diagnosis and prescription.
 - Unsupported language path is user-facing.
+- Long prompts are checked against `SystemLanguageModel.contextSize` or `tokenCount(for:)` where available.
 
 ## Build Commands
 

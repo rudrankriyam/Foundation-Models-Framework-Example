@@ -164,9 +164,29 @@ let session = LanguageModelSession(
     instructions: "You generate short workout suggestions."
 )
 
-session.prewarm(promptPrefix: "Suggest a 20-minute workout for")
+session.prewarm(promptPrefix: Prompt("Suggest a 20-minute workout for"))
 
 let response = try await session.respond(
     to: Prompt("Suggest a 20-minute workout for a beginner with no equipment.")
 )
+```
+
+## Context Budget
+
+Use the model's context size instead of hard-coding a token limit. On current SDKs, `SystemLanguageModel` also exposes token counting helpers for prompts, instructions, tools, schemas, and transcript entries.
+
+```swift
+func canFitPrompt(_ prompt: String) async -> Bool {
+    let model = SystemLanguageModel.default
+    let budget = model.contextSize
+    let promptTokens: Int
+
+    if #available(iOS 26.4, macOS 26.4, visionOS 26.4, *) {
+        promptTokens = (try? await model.tokenCount(for: Prompt(prompt))) ?? prompt.count / 4
+    } else {
+        promptTokens = prompt.count / 4
+    }
+
+    return promptTokens < Int(Double(budget) * 0.7)
+}
 ```

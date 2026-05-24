@@ -9,10 +9,30 @@ Use fresh sessions when switching languages for independent tasks.
 ```swift
 import FoundationModels
 
+func canUseFoundationModels(for locale: Locale = .current) -> Bool {
+    SystemLanguageModel.default.supportsLocale(locale)
+}
+
+enum MultilingualGenerationError: Error, LocalizedError {
+    case unsupportedLocale
+
+    var errorDescription: String? {
+        switch self {
+        case .unsupportedLocale:
+            "Foundation Models does not support this language or locale on this device."
+        }
+    }
+}
+
 func respondInLanguage(
     prompt: String,
-    languageName: String
+    languageName: String,
+    locale: Locale = .current
 ) async throws -> String {
+    guard canUseFoundationModels(for: locale) else {
+        throw MultilingualGenerationError.unsupportedLocale
+    }
+
     let session = LanguageModelSession(
         instructions: Instructions("Respond in \(languageName). Keep the answer concise.")
     )
@@ -45,6 +65,8 @@ struct SupportedLanguageOption: Identifiable, Hashable, Sendable {
     var nativeName: String
 }
 ```
+
+Use `supportsLocale(_:)` for eligibility checks because it accounts for language fallbacks. Use `supportedLanguages` when you need to display the model's language list.
 
 ## Unsupported Language Handling
 
