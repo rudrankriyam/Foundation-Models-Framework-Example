@@ -65,6 +65,23 @@ It also expects these repository variables:
 - Build and run the project
 - Explore the different capabilities through the examples!
 
+## Agent Skill
+
+This repo includes a `foundation-models-app-builder` agent skill for applying Foundation Lab's real app patterns in Foundation Models projects. It helps agents work from the app's existing examples for sessions, structured generation, dynamic schemas, tool calling, RAG, voice, HealthKit, App Intents, multilingual support, and shared capability extraction.
+
+Install it with the open skills CLI:
+
+```bash
+npx skills add rudrankriyam/Foundation-Models-Framework-Example --skill foundation-models-app-builder
+```
+
+To target a specific agent explicitly:
+
+```bash
+npx skills add rudrankriyam/Foundation-Models-Framework-Example --skill foundation-models-app-builder --agent codex
+npx skills add rudrankriyam/Foundation-Models-Framework-Example --skill foundation-models-app-builder --agent claude-code
+```
+
 ## What's Inside
 
 The app has four main sections:

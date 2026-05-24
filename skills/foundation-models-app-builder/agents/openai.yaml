@@ -1,0 +1,4 @@
+interface:
+  display_name: "Foundation Models App Builder"
+  short_description: "Build Foundation Models features from Foundation Lab patterns."
+  default_prompt: "Use Foundation Lab patterns to add or improve a Foundation Models feature in a Swift app."
