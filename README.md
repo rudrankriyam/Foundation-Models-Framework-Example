@@ -80,6 +80,8 @@ It also expects these repository variables:
 
 This repo includes a `foundation-models-app-builder` agent skill with self-contained Swift recipes for Foundation Models app development. It gives agents packaged patterns for sessions, structured generation, dynamic schemas, tool calling, RAG, voice, HealthKit, App Intents, multilingual support, and shared capability extraction without needing to inspect this repo's source files.
 
+It also includes a `foundation-models-os27-updater` skill for migrating any Foundation Models project from OS 26-era APIs to OS 27/Xcode 27. Use it when updating apps, packages, examples, and docs for Private Cloud Compute, shared `LanguageModel` execution, context windows, image input, tool-calling modes, dynamic profiles, reasoning controls, transcripts, custom executors, and build verification.
+
 The skill is organized into focused references:
 
 ```text
@@ -98,12 +100,15 @@ skills/
       healthkit.md
       multilingual.md
       common-errors.md
+  foundation-models-os27-updater/
+    SKILL.md
 ```
 
 Install it with the open skills CLI:
 
 ```bash
 npx skills add rudrankriyam/Foundation-Models-Framework-Example --skill foundation-models-app-builder
+npx skills add rudrankriyam/Foundation-Models-Framework-Example --skill foundation-models-os27-updater
 ```
 
 To target a specific agent explicitly:
@@ -111,6 +116,7 @@ To target a specific agent explicitly:
 ```bash
 npx skills add rudrankriyam/Foundation-Models-Framework-Example --skill foundation-models-app-builder --agent codex
 npx skills add rudrankriyam/Foundation-Models-Framework-Example --skill foundation-models-app-builder --agent claude-code
+npx skills add rudrankriyam/Foundation-Models-Framework-Example --skill foundation-models-os27-updater --agent codex
 ```
 
 ## What's Inside
