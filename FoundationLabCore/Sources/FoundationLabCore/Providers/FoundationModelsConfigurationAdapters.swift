@@ -37,7 +37,7 @@ extension FoundationLabGenerationOptions.SamplingMode {
 extension FoundationLabGenerationOptions {
     var foundationModelsValue: GenerationOptions {
         GenerationOptions(
-            sampling: sampling?.foundationModelsValue,
+            samplingMode: sampling?.foundationModelsValue,
             temperature: temperature,
             maximumResponseTokens: maximumResponseTokens
         )

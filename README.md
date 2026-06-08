@@ -31,10 +31,21 @@
 
 ## Requirements
 
-- iOS 26.0+ or macOS 26.0+ (Xcode 26.0+)
-- **Xcode 26 official is required**
+- iOS 26.0+ or macOS 26.0+
+- **Xcode 27 beta is required** for the latest Foundation Models APIs used in this repo
 - Apple Intelligence enabled
 - Compatible Apple device with Apple Silicon
+
+## Xcode 27 Foundation Models Notes
+
+Xcode 27 adds several Foundation Models surfaces that are not available in the Xcode 26 SDK:
+
+- `PrivateCloudComputeLanguageModel` for Private Cloud Compute-backed language model sessions, with availability, quota usage, context size, supported languages, and network/quota/service errors.
+- `LanguageModel` and executor APIs that abstract over `SystemLanguageModel` and `PrivateCloudComputeLanguageModel`.
+- Image attachments and references through `Attachment<ImageAttachmentContent>` and `ImageReference`, including UIKit convenience initializers through the new `_FoundationModels_UIKit` overlay.
+- `GenerationOptions.samplingMode`, replacing the deprecated `sampling` spelling.
+- `GenerationOptions.toolCallingMode` with `.allowed`, `.required`, and `.disallowed`.
+- Foundation Models types are now available to watchOS 27 for many prompting, schema, transcript, tool, and feedback surfaces, while tvOS remains unavailable.
 
 ## Try it on TestFlight
 
