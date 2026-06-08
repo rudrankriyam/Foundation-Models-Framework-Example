@@ -25,6 +25,18 @@ enum ExampleType: String, CaseIterable, Identifiable {
     case dynamicProfileBuilder = "dynamic_profile_builder"
     case reasoningLevelComparison = "reasoning_level_comparison"
     case transcriptExplorer = "transcript_explorer"
+    case agentFlowInspector = "agent_flow_inspector"
+    case historyTransformLab = "history_transform_lab"
+    case riskyToolConfirmation = "risky_tool_confirmation"
+    case modelRouterDashboard = "model_router_dashboard"
+    case contextBudgetVisualizer = "context_budget_visualizer"
+    case toolCallTrajectoryViewer = "tool_call_trajectory_viewer"
+    case foundationModelsSecurityPlayground = "foundation_models_security_playground"
+    case usagePerformanceTrace = "usage_performance_trace"
+    case spotlightRAGExplorer = "spotlight_rag_explorer"
+    case providerBridgeWalkthrough = "provider_bridge_walkthrough"
+    case evaluationsLab = "evaluations_lab"
+    case fmCLIPythonPlayground = "fm_cli_python_playground"
     case health = "health"
     case rag = "rag"
     case chat = "chat"
@@ -65,6 +77,30 @@ enum ExampleType: String, CaseIterable, Identifiable {
             return "Reasoning Levels"
         case .transcriptExplorer:
             return "Transcript Explorer"
+        case .agentFlowInspector:
+            return "Agent Flow"
+        case .historyTransformLab:
+            return "History Lab"
+        case .riskyToolConfirmation:
+            return "Tool Safety"
+        case .modelRouterDashboard:
+            return "Model Router"
+        case .contextBudgetVisualizer:
+            return "Budget Visualizer"
+        case .toolCallTrajectoryViewer:
+            return "Trajectory"
+        case .foundationModelsSecurityPlayground:
+            return "Agent Security"
+        case .usagePerformanceTrace:
+            return "Usage Trace"
+        case .spotlightRAGExplorer:
+            return "Spotlight RAG"
+        case .providerBridgeWalkthrough:
+            return "Provider Bridge"
+        case .evaluationsLab:
+            return "Evaluations"
+        case .fmCLIPythonPlayground:
+            return "fm Scripts"
         case .health:
             return "Health Dashboard"
         case .rag:
@@ -108,6 +144,30 @@ enum ExampleType: String, CaseIterable, Identifiable {
             return "Compare light, moderate, and deep reasoning"
         case .transcriptExplorer:
             return "Browse reasoning, attachments, and custom segments"
+        case .agentFlowInspector:
+            return "Inspect an agent turn from profile to usage"
+        case .historyTransformLab:
+            return "Compare trimming, redaction, and spotlighting"
+        case .riskyToolConfirmation:
+            return "Pause risky tools before side effects"
+        case .modelRouterDashboard:
+            return "Explain system, PCC, Core AI, and provider choices"
+        case .contextBudgetVisualizer:
+            return "Show kept, summarized, and dropped context"
+        case .toolCallTrajectoryViewer:
+            return "Compare expected and actual tool paths"
+        case .foundationModelsSecurityPlayground:
+            return "Make untrusted context and action boundaries visible"
+        case .usagePerformanceTrace:
+            return "Read tokens, latency, cache, and reasoning metrics"
+        case .spotlightRAGExplorer:
+            return "Explore Core Spotlight grounded answers"
+        case .providerBridgeWalkthrough:
+            return "Map custom models into LanguageModelSession"
+        case .evaluationsLab:
+            return "Evaluate judges, samples, and tool trajectories"
+        case .fmCLIPythonPlayground:
+            return "Prototype workflows with fm CLI and Python"
         case .health:
             return "AI-powered health insights and tracking"
         case .rag:
@@ -151,6 +211,30 @@ enum ExampleType: String, CaseIterable, Identifiable {
             return "brain.head.profile"
         case .transcriptExplorer:
             return "list.bullet.rectangle.portrait"
+        case .agentFlowInspector:
+            return "point.topleft.down.curvedto.point.bottomright.up"
+        case .historyTransformLab:
+            return "clock.arrow.circlepath"
+        case .riskyToolConfirmation:
+            return "hand.raised"
+        case .modelRouterDashboard:
+            return "arrow.triangle.branch"
+        case .contextBudgetVisualizer:
+            return "chart.pie"
+        case .toolCallTrajectoryViewer:
+            return "checklist.checked"
+        case .foundationModelsSecurityPlayground:
+            return "exclamationmark.shield"
+        case .usagePerformanceTrace:
+            return "speedometer"
+        case .spotlightRAGExplorer:
+            return "magnifyingglass.circle"
+        case .providerBridgeWalkthrough:
+            return "link"
+        case .evaluationsLab:
+            return "checkmark.seal"
+        case .fmCLIPythonPlayground:
+            return "terminal"
         case .health:
             return "heart.fill"
         case .rag:

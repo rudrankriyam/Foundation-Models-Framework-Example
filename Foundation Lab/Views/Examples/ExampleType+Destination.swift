@@ -44,6 +44,30 @@ extension ExampleType {
             ReasoningLevelComparisonView()
         case .transcriptExplorer:
             TranscriptExplorerView()
+        case .agentFlowInspector:
+            AgentFlowInspectorView()
+        case .historyTransformLab:
+            HistoryTransformLabView()
+        case .riskyToolConfirmation:
+            RiskyToolConfirmationDemoView()
+        case .modelRouterDashboard:
+            ModelRouterDashboardView()
+        case .contextBudgetVisualizer:
+            ContextBudgetVisualizerView()
+        case .toolCallTrajectoryViewer:
+            ToolCallTrajectoryViewerView()
+        case .foundationModelsSecurityPlayground:
+            FoundationModelsSecurityPlaygroundView()
+        case .usagePerformanceTrace:
+            UsagePerformanceTraceView()
+        case .spotlightRAGExplorer:
+            SpotlightRAGExplorerView()
+        case .providerBridgeWalkthrough:
+            ProviderBridgeWalkthroughView()
+        case .evaluationsLab:
+            EvaluationsLabView()
+        case .fmCLIPythonPlayground:
+            FMCLIPythonPlaygroundView()
         case .health:
             HealthExampleView()
         case .rag:
@@ -58,7 +82,11 @@ extension ExampleType {
         case .structuredData, .generationGuides, .generationOptions, .modelRuntime,
              .contextWindowInspector, .privateCloudCompute, .imageInputPlayground,
              .toolCallingModeLab, .dynamicProfileBuilder, .reasoningLevelComparison,
-             .transcriptExplorer:
+             .transcriptExplorer, .agentFlowInspector, .historyTransformLab,
+             .riskyToolConfirmation, .modelRouterDashboard, .contextBudgetVisualizer,
+             .toolCallTrajectoryViewer, .foundationModelsSecurityPlayground,
+             .usagePerformanceTrace, .spotlightRAGExplorer, .providerBridgeWalkthrough,
+             .evaluationsLab, .fmCLIPythonPlayground:
             return .lab
         case .health, .rag:
             return .insights
@@ -85,7 +113,19 @@ extension ExampleType {
             .toolCallingModeLab,
             .dynamicProfileBuilder,
             .reasoningLevelComparison,
-            .transcriptExplorer
+            .transcriptExplorer,
+            .agentFlowInspector,
+            .historyTransformLab,
+            .riskyToolConfirmation,
+            .modelRouterDashboard,
+            .contextBudgetVisualizer,
+            .toolCallTrajectoryViewer,
+            .foundationModelsSecurityPlayground,
+            .usagePerformanceTrace,
+            .spotlightRAGExplorer,
+            .providerBridgeWalkthrough,
+            .evaluationsLab,
+            .fmCLIPythonPlayground
         ]
     }
 
