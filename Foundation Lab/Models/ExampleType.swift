@@ -17,6 +17,14 @@ enum ExampleType: String, CaseIterable, Identifiable {
     case modelAvailability = "model_availability"
     case generationGuides = "generation_guides"
     case generationOptions = "generation_options"
+    case modelRuntime = "model_runtime"
+    case contextWindowInspector = "context_window_inspector"
+    case privateCloudCompute = "private_cloud_compute"
+    case imageInputPlayground = "image_input_playground"
+    case toolCallingModeLab = "tool_calling_mode_lab"
+    case dynamicProfileBuilder = "dynamic_profile_builder"
+    case reasoningLevelComparison = "reasoning_level_comparison"
+    case transcriptExplorer = "transcript_explorer"
     case health = "health"
     case rag = "rag"
     case chat = "chat"
@@ -41,6 +49,22 @@ enum ExampleType: String, CaseIterable, Identifiable {
             return "Generation Guides"
         case .generationOptions:
             return "Generation Options"
+        case .modelRuntime:
+            return "Model Runtime"
+        case .contextWindowInspector:
+            return "Context Window"
+        case .privateCloudCompute:
+            return "Private Cloud"
+        case .imageInputPlayground:
+            return "Image Input"
+        case .toolCallingModeLab:
+            return "Tool Modes"
+        case .dynamicProfileBuilder:
+            return "Dynamic Profile"
+        case .reasoningLevelComparison:
+            return "Reasoning Levels"
+        case .transcriptExplorer:
+            return "Transcript Explorer"
         case .health:
             return "Health Dashboard"
         case .rag:
@@ -68,6 +92,22 @@ enum ExampleType: String, CaseIterable, Identifiable {
             return "Guided generation with constraints"
         case .generationOptions:
             return "Experiment with model parameters"
+        case .modelRuntime:
+            return "Compare system and cloud model surfaces"
+        case .contextWindowInspector:
+            return "Inspect context size and token budget"
+        case .privateCloudCompute:
+            return "Probe PCC availability, quota, and context size"
+        case .imageInputPlayground:
+            return "Explore image attachments and references"
+        case .toolCallingModeLab:
+            return "Compare allowed, required, and disallowed tools"
+        case .dynamicProfileBuilder:
+            return "Compose Xcode 27 session profiles"
+        case .reasoningLevelComparison:
+            return "Compare light, moderate, and deep reasoning"
+        case .transcriptExplorer:
+            return "Browse reasoning, attachments, and custom segments"
         case .health:
             return "AI-powered health insights and tracking"
         case .rag:
@@ -95,6 +135,22 @@ enum ExampleType: String, CaseIterable, Identifiable {
             return "slider.horizontal.3"
         case .generationOptions:
             return "tuningfork"
+        case .modelRuntime:
+            return "cpu"
+        case .contextWindowInspector:
+            return "text.page.badge.magnifyingglass"
+        case .privateCloudCompute:
+            return "icloud.and.arrow.up"
+        case .imageInputPlayground:
+            return "photo.on.rectangle.angled"
+        case .toolCallingModeLab:
+            return "hammer"
+        case .dynamicProfileBuilder:
+            return "slider.horizontal.below.rectangle"
+        case .reasoningLevelComparison:
+            return "brain.head.profile"
+        case .transcriptExplorer:
+            return "list.bullet.rectangle.portrait"
         case .health:
             return "heart.fill"
         case .rag:

@@ -28,6 +28,22 @@ extension ExampleType {
             ModelAvailabilityView()
         case .generationOptions:
             GenerationOptionsView()
+        case .modelRuntime:
+            ModelRuntimeView()
+        case .contextWindowInspector:
+            ContextWindowInspectorView()
+        case .privateCloudCompute:
+            PrivateCloudComputeView()
+        case .imageInputPlayground:
+            ImageInputPlaygroundView()
+        case .toolCallingModeLab:
+            ToolCallingModeLabView()
+        case .dynamicProfileBuilder:
+            DynamicProfileBuilderView()
+        case .reasoningLevelComparison:
+            ReasoningLevelComparisonView()
+        case .transcriptExplorer:
+            TranscriptExplorerView()
         case .health:
             HealthExampleView()
         case .rag:
@@ -39,7 +55,10 @@ extension ExampleType {
 
     var preferredTab: TabSelection {
         switch self {
-        case .structuredData, .generationGuides, .generationOptions:
+        case .structuredData, .generationGuides, .generationOptions, .modelRuntime,
+             .contextWindowInspector, .privateCloudCompute, .imageInputPlayground,
+             .toolCallingModeLab, .dynamicProfileBuilder, .reasoningLevelComparison,
+             .transcriptExplorer:
             return .lab
         case .health, .rag:
             return .insights
@@ -55,7 +74,19 @@ extension ExampleType {
     }
 
     static var studioExamples: [ExampleType] {
-        [.structuredData, .generationGuides, .generationOptions]
+        [
+            .structuredData,
+            .generationGuides,
+            .generationOptions,
+            .modelRuntime,
+            .contextWindowInspector,
+            .privateCloudCompute,
+            .imageInputPlayground,
+            .toolCallingModeLab,
+            .dynamicProfileBuilder,
+            .reasoningLevelComparison,
+            .transcriptExplorer
+        ]
     }
 
     static var insightExamples: [ExampleType] {
