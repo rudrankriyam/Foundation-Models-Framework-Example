@@ -1,3 +1,188 @@
+## Xcode 27 Foundation Models API Delta
+
+Source: `/Users/rudrank/Downloads/Xcode-beta.app` (`Xcode 27.0`, build `27A5194q`), iOS SDK interface:
+`Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/System/Library/Frameworks/FoundationModels.framework/Modules/FoundationModels.swiftmodule/arm64e-apple-ios.swiftinterface`.
+
+This section records the new public API shape found in Xcode 27. The older commented reference below remains useful for the Xcode 26-era API documentation.
+
+### Private Cloud Compute model
+
+```swift
+@available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *)
+@available(tvOS, unavailable)
+final public class PrivateCloudComputeLanguageModel: Sendable, Observable, LanguageModel {
+    public convenience init()
+
+    public var availability: PrivateCloudComputeLanguageModel.Availability { get }
+    public var quotaUsage: PrivateCloudComputeLanguageModel.QuotaUsage { get }
+    public var isAvailable: Bool { get }
+    public var capabilities: LanguageModelCapabilities { get }
+    public var contextSize: Int { get async throws }
+    public var supportedLanguages: Set<Locale.Language> { get }
+
+    public func supportsLocale(_ locale: Locale = .current) -> Bool
+}
+```
+
+`PrivateCloudComputeLanguageModel.Availability.UnavailableReason` has `deviceNotEligible` and `systemNotReady`. `PrivateCloudComputeLanguageModel.Error` adds `networkFailure`, `quotaLimitReached`, and `serviceUnavailable`. Quota usage reports whether the limit is reached, when it resets, and may expose a `LimitIncreaseSuggestion.show()` action.
+
+### Shared language model execution
+
+```swift
+@available(iOS 27.0, macOS 27.0, visionOS 27.0, *)
+@available(watchOS, unavailable)
+@available(tvOS, unavailable)
+extension SystemLanguageModel: LanguageModel {
+    public var capabilities: LanguageModelCapabilities { get }
+}
+
+@available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *)
+@available(tvOS, unavailable)
+public protocol LanguageModel: Sendable {
+    var capabilities: LanguageModelCapabilities { get }
+}
+```
+
+`LanguageModelCapabilities` includes `.vision`, `.guidedGeneration`, `.reasoning`, and `.toolCalling`.
+
+### Dynamic instructions and profiles
+
+Xcode 27 adds a richer session configuration DSL:
+
+```swift
+public protocol DynamicInstructions { associatedtype Body: DynamicInstructions }
+public struct AnyDynamicInstructions: DynamicInstructions
+public struct DynamicInstructionsBuilder
+
+extension LanguageModelSession {
+    public struct Profile
+    public protocol DynamicProfile
+
+    public convenience init(profile: LanguageModelSession.Profile, history: Transcript = Transcript())
+    public convenience init(
+        model: some LanguageModel,
+        dynamicInstructions: some DynamicInstructions,
+        history: Transcript = Transcript()
+    )
+}
+```
+
+Dynamic profile modifiers include model selection, temperature, `samplingMode`, `maximumResponseTokens`, `reasoningLevel`, `toolCallingMode`, history transforms, and lifecycle hooks such as prompt, response, tool-call, and tool-output handlers.
+
+### Image attachments and generated image references
+
+```swift
+@available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *)
+@available(tvOS, unavailable)
+public struct Attachment<Content> where Content: AttachmentContent {
+    public func label(_ label: String) -> Attachment<Content>
+}
+
+public struct ImageAttachmentContent: AttachmentContent, Sendable, Equatable {}
+
+extension Attachment where Content == ImageAttachmentContent {
+    public init(_ cgImage: CGImage, orientation: CGImagePropertyOrientation? = nil)
+    public init(_ ciImage: CIImage, orientation: CGImagePropertyOrientation? = nil)
+    public init(_ pixelBuffer: CVPixelBuffer, orientation: CGImagePropertyOrientation? = nil)
+    public init(imageURL: URL, orientation: CGImagePropertyOrientation? = nil)
+}
+
+public struct ImageReference: Sendable, Equatable, Generable {
+    public let attachmentLabel: String
+    public func resolve(in transcript: Transcript) -> Transcript.ImageAttachment?
+}
+```
+
+The `_FoundationModels_UIKit` overlay also adds:
+
+```swift
+extension Attachment where Content == ImageAttachmentContent {
+    public init(_ uiImage: UIImage, orientation: UIImage.Orientation? = nil)
+}
+```
+
+### Generation options
+
+```swift
+public struct GenerationOptions: Sendable, Equatable {
+    @available(*, deprecated, renamed: "samplingMode")
+    public var sampling: GenerationOptions.SamplingMode?
+
+    public var samplingMode: GenerationOptions.SamplingMode?
+    public var temperature: Double?
+    public var maximumResponseTokens: Int?
+
+    @available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *)
+    public var toolCallingMode: GenerationOptions.ToolCallingMode?
+}
+
+extension GenerationOptions.ToolCallingMode {
+    public static let allowed: GenerationOptions.ToolCallingMode
+    public static let required: GenerationOptions.ToolCallingMode
+    public static let disallowed: GenerationOptions.ToolCallingMode
+}
+```
+
+The Xcode 26 `GenerationOptions(sampling:temperature:maximumResponseTokens:)` initializer is deprecated in favor of `GenerationOptions(samplingMode:temperature:maximumResponseTokens:)`.
+
+### Context options and reasoning
+
+```swift
+@available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *)
+public struct ContextOptions: Sendable, Equatable {
+    public enum ReasoningLevel: Sendable, Equatable {
+        case light
+        case moderate
+        case deep
+        case custom(String)
+    }
+
+    public var includeSchemaInPrompt: Bool?
+    public var reasoningLevel: ContextOptions.ReasoningLevel?
+}
+```
+
+Newer response and streaming overloads can carry context options and metadata, so schema inclusion and reasoning level are no longer only ad hoc overload arguments.
+
+### Transcript and response changes
+
+```swift
+extension Transcript.Entry {
+    case reasoning(Transcript.Reasoning)
+}
+
+extension Transcript.Segment {
+    case attachment(Transcript.AttachmentSegment)
+    case custom(any Transcript.CustomSegment)
+}
+
+extension LanguageModelSession.Response {
+    public let usage: LanguageModelSession.Usage
+}
+```
+
+`Transcript.StructuredSegment.source` is deprecated in favor of `schemaName`, with `init(id:schemaName:content:)` replacing `init(id:source:content:)` for Xcode 27 code. `Transcript` also gains mutable/range-replaceable collection behavior.
+
+`LanguageModelSession.GenerationError.concurrentRequests` is deprecated in favor of `LanguageModelSession.Error.concurrentRequests`.
+
+### Adapter migration
+
+`SystemLanguageModel.init(adapter:guardrails:)` is obsoleted for iOS, macOS, and visionOS 27. Keep adapter examples guarded for 26.x and prefer the new `LanguageModel` / `LanguageModelExecutor` direction for Xcode 27-era custom model behavior.
+
+### Related framework overlays
+
+Xcode 27 ships additional Foundation Models bridge frameworks:
+
+- `_FoundationModels_UIKit` adds `Attachment(UIImage, orientation:)`.
+- `_FoundationModels_AppKit` provides macOS image attachment bridging.
+- `_FoundationModels_SwiftUI` re-exports FoundationModels for SwiftUI integration.
+- `_Vision_FoundationModels` exposes vision-oriented tools such as OCR and barcode reading.
+- `_CoreSpotlight_FoundationModels` exposes Spotlight/file search tooling.
+
+### Platform availability
+
+Many Foundation Models prompting, schema, transcript, tool, feedback, and dynamic generation types now include `watchOS 27.0` availability. `tvOS` remains unavailable in the public API annotations even though Xcode 27 ships tvOS framework stubs.
+
 import BackgroundAssets
 import CoreGraphics
 import Foundation
@@ -4667,4 +4852,3 @@ extension Array : PromptRepresentable where Element : PromptRepresentable {
     /// An instance that represents a prompt.
     public var promptRepresentation: Prompt { get }
 }
-

@@ -4,7 +4,7 @@ This file provides guidance to AI agents when working with code in this reposito
 
 ## Project Overview
 
-Foundation Lab is an iOS/macOS app demonstrating Apple's Foundation Models framework (iOS 26.0+/macOS 26.0+). It accompanies the "Exploring Foundation Models" book and showcases:
+Foundation Lab is an iOS/macOS app demonstrating Apple's Foundation Models framework (iOS 26.0+/macOS 26.0+). Xcode 27 adds new Foundation Models APIs for Private Cloud Compute, image attachments, shared `LanguageModel` execution, and explicit tool-calling control. It accompanies the "Exploring Foundation Models" book and showcases:
 - Multi-turn chat with streaming responses using `LanguageModelSession`
 - 9 system integration tools (Weather, Web Search, Contacts, Calendar, Reminders, Location, Health, Music, Web Metadata)
 - Voice interface with speech-to-text (`SpeechRecognitionStateMachine`) and text-to-speech
@@ -26,7 +26,7 @@ xcodebuild -project FoundationLab.xcodeproj -scheme "Foundation Lab" -destinatio
 xcodebuild -project FoundationLab.xcodeproj -scheme "Foundation Lab" -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath ./build test
 ```
 
-**Requirements:** Xcode 26.0+, iOS 26.0+/macOS 26.0+, Apple Silicon device with Apple Intelligence.
+**Requirements:** Xcode 27 beta, iOS 26.0+/macOS 26.0+, Apple Silicon device with Apple Intelligence. Xcode 27 is required for `PrivateCloudComputeLanguageModel`, image attachments, `GenerationOptions.toolCallingMode`, and the `samplingMode` spelling.
 
 **Dependencies (SPM):**
 - `HighlightSwift` - Syntax highlighting
