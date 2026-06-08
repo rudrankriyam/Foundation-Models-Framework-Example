@@ -13,6 +13,7 @@ struct PrivateCloudComputeView: View {
     @State private var currentPrompt = "Inspect Private Cloud Compute availability."
     @State private var report = PrivateCloudComputeReport.pending
     @State private var isInspecting = false
+    @State private var inspectionID = UUID()
     @State private var errorMessage: String?
 
     var body: some View {
@@ -61,12 +62,22 @@ struct PrivateCloudComputeView: View {
     }
 
     private func inspect() {
-        Task {
+        let id = UUID()
+        inspectionID = id
+        isInspecting = true
+        errorMessage = nil
+
+        Task { @MainActor in
+            defer {
+                if inspectionID == id {
+                    isInspecting = false
+                }
+            }
+
             isInspecting = true
-            errorMessage = nil
-            defer { isInspecting = false }
 
             guard #available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *) else {
+                guard inspectionID == id else { return }
                 report = .unsupported
                 return
             }
@@ -90,6 +101,7 @@ struct PrivateCloudComputeView: View {
 
             do {
                 let contextSize = try await model.contextSize
+                guard inspectionID == id else { return }
                 report = PrivateCloudComputeReport(
                     availability: availabilityText,
                     isAvailable: model.isAvailable,
@@ -99,6 +111,7 @@ struct PrivateCloudComputeView: View {
                     supportedLanguages: languages.isEmpty ? "No languages reported yet." : languages
                 )
             } catch {
+                guard inspectionID == id else { return }
                 report = PrivateCloudComputeReport(
                     availability: availabilityText,
                     isAvailable: model.isAvailable,
@@ -113,6 +126,8 @@ struct PrivateCloudComputeView: View {
     }
 
     private func reset() {
+        inspectionID = UUID()
+        isInspecting = false
         currentPrompt = ""
         report = .pending
         errorMessage = nil
@@ -195,4 +210,3 @@ private struct PrivateCloudComputeReport {
         PrivateCloudComputeView()
     }
 }
-

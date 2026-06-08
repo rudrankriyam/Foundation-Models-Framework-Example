@@ -67,17 +67,24 @@ struct TranscriptExplorerView: View {
 
     private var codeExample: String {
         """
-        switch segment {
-        case .text(let text):
-            render(text.content)
-        case .structure(let structured):
-            render(structured.schemaName)
-        case .attachment(let attachment):
-            render(attachment.label)
-        case .custom(let custom):
-            render(custom.description)
+        switch entry {
+        case .reasoning(let reasoning):
+            renderReasoning(reasoning)
+        case .segment(let segment):
+            switch segment {
+            case .text(let text):
+                render(text.content)
+            case .structure(let structured):
+                render(structured.schemaName)
+            case .attachment(let attachment):
+                render(attachment.label)
+            case .custom(let custom):
+                render(custom.description)
+            @unknown default:
+                render("Unknown segment")
+            }
         @unknown default:
-            render("Unknown segment")
+            render("Unknown entry")
         }
         """
     }
@@ -140,4 +147,3 @@ private enum TranscriptSegmentExample: String, CaseIterable, Identifiable {
         TranscriptExplorerView()
     }
 }
-
