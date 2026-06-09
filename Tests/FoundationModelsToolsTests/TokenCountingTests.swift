@@ -262,6 +262,177 @@ struct TranscriptHistoryTransformTests {
       "Second",
     ])
   }
+
+  @Test("Summarizing history preserves entries when under threshold")
+  func summarizingHistoryPreservesEntriesWhenUnderThreshold() async throws {
+    let entries: [Transcript.Entry] = [
+      .prompt(.foundationModelsTools("First")),
+      .toolOutput(.foundationModelsTools(id: "first-output", text: "First answer")),
+    ]
+
+    let summarized = await entries.summarizingHistory(entryThreshold: 10) { _ in
+      Issue.record("Summarizer should not be called under threshold")
+      return "Unused"
+    }
+
+    #expect(summarized == entries)
+  }
+
+  @Test("Summarizing history preserves entries when latest entry is not a prompt")
+  func summarizingHistoryPreservesEntriesWhenLatestEntryIsNotPrompt() async throws {
+    let entries: [Transcript.Entry] = [
+      .prompt(.foundationModelsTools("First")),
+      .toolOutput(.foundationModelsTools(id: "first-output", text: "First answer")),
+    ]
+
+    let summarized = await entries.summarizingHistory(entryThreshold: 1) { _ in
+      Issue.record("Summarizer should not be called unless the latest entry is a prompt")
+      return "Unused"
+    }
+
+    #expect(summarized == entries)
+  }
+
+  @Test("Summarizing history collapses prior entries into latest prompt")
+  func summarizingHistoryCollapsesPriorEntriesIntoLatestPrompt() async throws {
+    let entries: [Transcript.Entry] = [
+      .instructions(.foundationModelsTools("System")),
+      .prompt(.foundationModelsTools("First topic.")),
+      .toolOutput(.foundationModelsTools(id: "first-output", text: "First answer.")),
+      .prompt(.foundationModelsTools("Second topic.")),
+    ]
+
+    var receivedPrompt = ""
+    let summarized = await entries.summarizingHistory(entryThreshold: 2) { prompt in
+      receivedPrompt = prompt
+      return "User asked about the first topic."
+    }
+
+    #expect(receivedPrompt == """
+      Summarize this conversation:
+
+      User: First topic.
+      Tool output (testTool): First answer.
+      User: Second topic.
+      """)
+    #expect(summarized.count == 2)
+    #expect(summarized.map { $0.foundationModelsToolsKind } == [
+      "instructions",
+      "prompt",
+    ])
+    #expect(summarized.last?.foundationModelsToolsText == """
+      Summary of the conversation so far:
+      User asked about the first topic.
+
+      Do not begin with phrases like "Based on the context", "Based on the facts", "Based on the summary", or any reference to a summary or the facts provided. Treat the summary and facts above as things you naturally remember.
+
+      Second topic.
+      """)
+  }
+
+  @Test("Summarizing history preserves instruction tool definitions")
+  func summarizingHistoryPreservesInstructionToolDefinitions() async throws {
+    let toolDefinition = Transcript.ToolDefinition(
+      name: "search",
+      description: "Searches documents",
+      parameters: GenerationSchema(type: String.self, properties: [])
+    )
+    let instructions = Transcript.Instructions(
+      segments: [.text(Transcript.TextSegment(content: "Use tools carefully."))],
+      toolDefinitions: [toolDefinition]
+    )
+    let entries: [Transcript.Entry] = [
+      .instructions(instructions),
+      .prompt(.foundationModelsTools("First topic.")),
+      .prompt(.foundationModelsTools("Second topic.")),
+    ]
+
+    let summarized = await entries.summarizingHistory(entryThreshold: 1) { _ in
+      "The user is discussing two topics."
+    }
+
+    guard case .instructions(let preservedInstructions) = summarized.first else {
+      Issue.record("Expected summarized history to preserve instructions")
+      return
+    }
+
+    #expect(preservedInstructions == instructions)
+    #expect(preservedInstructions.toolDefinitions == [toolDefinition])
+  }
+
+  @Test("Summarizing history uses custom postamble")
+  func summarizingHistoryUsesCustomPostamble() async throws {
+    let entries: [Transcript.Entry] = [
+      .prompt(.foundationModelsTools("First topic.")),
+      .prompt(.foundationModelsTools("Second topic.")),
+    ]
+
+    let summarized = await entries.summarizingHistory(
+      entryThreshold: 1,
+      summaryPostamble: "Continue naturally."
+    ) { _ in
+      "The user is discussing two topics."
+    }
+
+    #expect(summarized.first?.foundationModelsToolsText == """
+      Summary of the conversation so far:
+      The user is discussing two topics.
+
+      Continue naturally.
+
+      Second topic.
+      """)
+  }
+
+  @Test("Summarizing history omits empty postamble")
+  func summarizingHistoryOmitsEmptyPostamble() async throws {
+    let entries: [Transcript.Entry] = [
+      .prompt(.foundationModelsTools("First topic.")),
+      .prompt(.foundationModelsTools("Second topic.")),
+    ]
+
+    let summarized = await entries.summarizingHistory(
+      entryThreshold: 1,
+      summaryPostamble: ""
+    ) { _ in
+      "The user is discussing two topics."
+    }
+
+    #expect(summarized.first?.foundationModelsToolsText == """
+      Summary of the conversation so far:
+      The user is discussing two topics.
+
+      Second topic.
+      """)
+  }
+
+  @Test("Summarizing history preserves latest prompt options and response format")
+  func summarizingHistoryPreservesLatestPromptOptionsAndResponseFormat() async throws {
+    let responseFormat = Transcript.ResponseFormat(
+      schema: GenerationSchema(type: String.self, properties: [])
+    )
+    let latestPrompt = Transcript.Prompt(
+      segments: [.text(Transcript.TextSegment(content: "Second topic."))],
+      options: GenerationOptions(temperature: 0.3),
+      responseFormat: responseFormat
+    )
+    let entries: [Transcript.Entry] = [
+      .prompt(.foundationModelsTools("First topic.")),
+      .prompt(latestPrompt),
+    ]
+
+    let summarized = await entries.summarizingHistory(entryThreshold: 1) { _ in
+      "The user is discussing two topics."
+    }
+
+    guard case .prompt(let prompt) = summarized.first else {
+      Issue.record("Expected summarized history to contain a prompt")
+      return
+    }
+
+    #expect(prompt.options == latestPrompt.options)
+    #expect(prompt.responseFormat == latestPrompt.responseFormat)
+  }
 }
 
 private extension Transcript.Entry {
@@ -301,7 +472,7 @@ private extension [Transcript.Segment] {
         return text.content
       }
       return nil
-    }.joined(separator: "\n")
+    }.joined()
   }
 }
 

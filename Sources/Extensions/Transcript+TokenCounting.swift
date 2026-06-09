@@ -182,7 +182,7 @@ extension Transcript {
   /// ```swift
   /// let transcript = Transcript(...)
   /// let trimmed = transcript.entriesWithinTokenBudget(2000)
-  /// let newTranscript = Transcript(trimmed)
+  /// let newTranscript = Transcript(entries: trimmed)
   /// ```
   public func entriesWithinTokenBudget(_ budget: Int) -> [Transcript.Entry] {
     var tokenCount = 0

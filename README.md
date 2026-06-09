@@ -667,6 +667,7 @@ FoundationModelsTools provides comprehensive token counting and context window m
 - `entriesWithinTokenBudget(_:)` - Sliding window implementation for long conversations
 - `rollingWindow(entries:)` - Keep the most recent transcript entries by count
 - `droppingCompletedToolCalls()` - Remove older completed tool-call exchanges
+- `summarizingHistory(entryThreshold:summaryPostamble:summarize:)` - Collapse older history into a summary prompt when a conversation grows past a threshold
 
 #### Basic Token Counting
 
@@ -674,10 +675,24 @@ FoundationModelsTools provides comprehensive token counting and context window m
 import FoundationModels
 import FoundationModelsTools
 
-let transcript = Transcript([
-    .instructions("You are a helpful assistant"),
-    .prompt("What's the weather like?"),
-    .response("The weather is sunny and 72°F")
+let transcript = Transcript(entries: [
+    .instructions(
+        Transcript.Instructions(
+            segments: [.text(Transcript.TextSegment(content: "You are a helpful assistant"))],
+            toolDefinitions: []
+        )
+    ),
+    .prompt(
+        Transcript.Prompt(
+            segments: [.text(Transcript.TextSegment(content: "What's the weather like?"))]
+        )
+    ),
+    .response(
+        Transcript.Response(
+            assetIDs: [],
+            segments: [.text(Transcript.TextSegment(content: "The weather is sunny and 72°F"))]
+        )
+    )
 ])
 
 // Get token estimate
@@ -710,7 +725,7 @@ When conversations exceed token limits, use `entriesWithinTokenBudget(_:)` to ma
 ```swift
 let maxTokens = 2000
 let trimmedEntries = transcript.entriesWithinTokenBudget(maxTokens)
-let newTranscript = Transcript(trimmedEntries)
+let newTranscript = Transcript(entries: trimmedEntries)
 
 // The trimmed transcript:
 // - Includes the first instructions entry if it fits within the budget
@@ -720,15 +735,38 @@ let newTranscript = Transcript(trimmedEntries)
 
 ### Transcript History Transforms
 
-Use entry-level history transforms when you want lightweight transcript cleanup before building the next session or prompt history.
+Use entry-level history transforms when you want lightweight transcript cleanup before building the next session or prompt history. These helpers work with `Transcript.Entry` collections directly, so you can use them before creating a new `Transcript` or `LanguageModelSession`.
 
 ```swift
 let compactEntries = transcript
     .droppingCompletedToolCalls()
     .rollingWindow(entries: 10)
+
+let compactTranscript = Transcript(entries: compactEntries)
 ```
 
 `rollingWindow(entries:)` keeps the latest entries exactly by count. `droppingCompletedToolCalls()` removes older tool-call and tool-output entries while preserving the latest active tool exchange and all non-tool entries.
+
+For longer conversations, use `summarizingHistory(entryThreshold:summaryPostamble:summarize:)` to replace earlier conversational history with a single summary block attached to the latest prompt. Instruction entries are preserved, including tool definitions. The summarizer is a closure, so you can use the on-device Foundation Models session, a server model, or a deterministic test double.
+
+```swift
+let summarizer = LanguageModelSession(instructions: """
+Compress the conversation into concise facts, decisions, preferences, \
+and unresolved questions. Preserve the latest active thread.
+""")
+
+let summarizedEntries = try await transcript
+    .droppingCompletedToolCalls()
+    .summarizingHistory(entryThreshold: 24) { prompt in
+        try await summarizer.respond(to: prompt).content
+    }
+
+let nextSession = LanguageModelSession(
+    transcript: Transcript(entries: summarizedEntries)
+)
+```
+
+Summarization only runs when the entry count is above the threshold and the latest entry is a prompt. If the latest entry is a tool output or the transcript is still small, the original entries are returned unchanged.
 
 #### Token Estimation Functions
 
@@ -752,41 +790,30 @@ print("Content tokens: \(contentTokens)")
 3. **Preserve Instructions:** The sliding window attempts to keep the first system instructions entry for consistency, provided it fits within the token budget
 4. **Monitor Long Conversations:** Check token counts periodically in chat applications
 
-#### Example: Chat with Token Management
+#### Example: Preparing History for a New Session
 
 ```swift
 import FoundationModels
 import FoundationModelsTools
 
-class ChatManager {
-    private var transcript = Transcript()
-    private let maxTokens = 4096
-    private let threshold = 0.7
+func preparedTranscript(
+    from transcript: Transcript,
+    maxTokens: Int = 4096,
+    summarizer: LanguageModelSession
+) async throws -> Transcript {
+    var entries = Array(transcript)
 
-    init(systemInstructions: String) {
-        transcript = Transcript([.instructions(systemInstructions)])
+    if transcript.isApproachingLimit(threshold: 0.7, maxTokens: maxTokens) {
+        entries = transcript.entriesWithinTokenBudget(Int(Double(maxTokens) * 0.6))
     }
 
-    func addMessage(_ message: String) async throws -> String {
-        // Add user message
-        transcript.append(.prompt(message))
-
-        // Check if we're approaching the limit
-        if transcript.isApproachingLimit(threshold: threshold, maxTokens: maxTokens) {
-            // Trim to fit budget (leaving room for response)
-            let budget = Int(Double(maxTokens) * 0.6) // Use 60% for history
-            let trimmedEntries = transcript.entriesWithinTokenBudget(budget)
-            transcript = Transcript(trimmedEntries)
-            print("Trimmed transcript to \(transcript.estimatedTokenCount) tokens")
+    entries = try await entries
+        .droppingCompletedToolCalls()
+        .summarizingHistory(entryThreshold: 24) { prompt in
+            try await summarizer.respond(to: prompt).content
         }
 
-        // Generate response with managed context
-        let session = LanguageModelSession(model: .instant)
-        let response = try await session.generate(from: transcript)
-        transcript.append(.response(response))
-
-        return response.text
-    }
+    return Transcript(entries: entries)
 }
 ```
 
