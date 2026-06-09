@@ -444,15 +444,28 @@ private extension ChatViewModel {
     }
 
     func message(for error: Error) -> String {
-        if selectedModelRuntime == .privateCloudCompute {
-            return """
-            PCC request failed. Private Cloud Compute is available on this device, but the signed app still needs the PCC entitlement and a matching provisioning profile.
+        let handledMessage = FoundationModelsErrorHandler.handleError(error)
 
-            Confirm com.apple.developer.private-cloud-compute is present, then try again. Details: \(FoundationModelsErrorHandler.handleError(error))
+        guard selectedModelRuntime == .privateCloudCompute else {
+            return handledMessage
+        }
+
+        if handledMessage.hasPrefix("PCC ") {
+            return handledMessage
+        }
+
+        let opaqueLanguageModelFailure = handledMessage.contains("LanguageModel-Error error -1")
+            || error.localizedDescription.contains("LanguageModel-Error error -1")
+
+        if opaqueLanguageModelFailure {
+            return """
+            PCC request failed. Private Cloud Compute is available on this device, but this signed app may be missing the PCC entitlement or a matching provisioning profile.
+
+            Confirm com.apple.developer.private-cloud-compute is present, then try again. Details: \(handledMessage)
             """
         }
 
-        return FoundationModelsErrorHandler.handleError(error)
+        return "PCC request failed. \(handledMessage)"
     }
 
     func observeSpeechState() async {
