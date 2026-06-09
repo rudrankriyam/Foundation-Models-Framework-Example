@@ -142,7 +142,10 @@ struct ChatView: View {
                     }
 
                     ForEach(transcriptDisplayEntries, id: \.id) { displayEntry in
-                        TranscriptEntryView(entry: displayEntry.entry)
+                        TranscriptEntryView(
+                            entry: displayEntry.entry,
+                            transcriptIndex: displayEntry.index
+                        )
                             .id(displayEntry.id)
                     }
 
@@ -230,9 +233,9 @@ struct ChatView: View {
         .help(viewModel.modelRuntimeStatus)
     }
 
-    private var transcriptDisplayEntries: [(id: String, entry: Transcript.Entry)] {
+    private var transcriptDisplayEntries: [(id: String, index: Int, entry: Transcript.Entry)] {
         viewModel.session.transcript.enumerated().map { index, entry in
-            ("\(index)-\(entry.id)", entry)
+            ("\(index)-\(entry.id)", index, entry)
         }
     }
 
