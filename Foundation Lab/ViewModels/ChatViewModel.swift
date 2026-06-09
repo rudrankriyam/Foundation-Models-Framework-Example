@@ -224,12 +224,7 @@ final class ChatViewModel {
         }
 
         selectedReasoningLevel = level
-        conversationEngine.rebuild(
-            reasoningLevel: level,
-            guardrails: currentGuardrails()
-        )
-        feedbackState.removeAll()
-        isLoading = false
+        conversationEngine.setReasoningLevel(level)
         syncConversationState()
     }
 

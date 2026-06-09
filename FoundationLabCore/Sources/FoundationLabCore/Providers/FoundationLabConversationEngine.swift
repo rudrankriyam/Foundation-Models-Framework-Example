@@ -43,6 +43,12 @@ public final class FoundationLabConversationEngine {
         notifyStateChange()
     }
 
+    public func setReasoningLevel(_ level: FoundationLabReasoningLevel) {
+        guard configuration.reasoningLevel != level else { return }
+        configuration.reasoningLevel = level
+        notifyStateChange()
+    }
+
     public func rebuild(
         baseInstructions: String? = nil,
         modelRuntime: FoundationLabModelRuntime? = nil,
