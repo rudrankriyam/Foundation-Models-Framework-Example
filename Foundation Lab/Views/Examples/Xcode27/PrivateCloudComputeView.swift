@@ -76,6 +76,7 @@ struct PrivateCloudComputeView: View {
 
             isInspecting = true
 
+            #if compiler(>=6.4)
             guard #available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *) else {
                 guard inspectionID == id else { return }
                 report = .unsupported
@@ -122,6 +123,11 @@ struct PrivateCloudComputeView: View {
                 )
                 errorMessage = error.localizedDescription
             }
+            #else
+            guard inspectionID == id else { return }
+            report = .unsupported
+            errorMessage = "PrivateCloudComputeLanguageModel requires the Xcode 27 SDK."
+            #endif
         }
     }
 
@@ -133,6 +139,7 @@ struct PrivateCloudComputeView: View {
         errorMessage = nil
     }
 
+    #if compiler(>=6.4)
     @available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *)
     private func unavailableReasonDescription(
         _ reason: PrivateCloudComputeLanguageModel.Availability.UnavailableReason
@@ -156,13 +163,14 @@ struct PrivateCloudComputeView: View {
             return belowLimit.isApproachingLimit ? "Below limit, approaching cap" : "Below limit"
         case .limitReached:
             if let resetDate = quotaUsage.resetDate {
-                return "Limit reached. Resets \(resetDate.formatted(.relative(presentation: .named)))"
+                return "Limit reached. Resets \(resetDate.formatted(date: .abbreviated, time: .shortened))"
             }
             return "Limit reached"
         @unknown default:
             return "Unknown"
         }
     }
+    #endif
 
     private var codeExample: String {
         """

@@ -9,6 +9,8 @@ public struct FoundationLabConversationConfiguration {
     public var conversationAssistantLabel: String
     public var continuationNote: String
     public var overflowResetMessage: String?
+    public var modelRuntime: FoundationLabModelRuntime
+    public var reasoningLevel: FoundationLabReasoningLevel
     public var modelUseCase: FoundationLabModelUseCase
     public var guardrails: FoundationLabGuardrails
     public var tools: [any Tool]
@@ -25,6 +27,8 @@ public struct FoundationLabConversationConfiguration {
         conversationAssistantLabel: String,
         continuationNote: String,
         overflowResetMessage: String? = nil,
+        modelRuntime: FoundationLabModelRuntime = .onDevice,
+        reasoningLevel: FoundationLabReasoningLevel = .none,
         modelUseCase: FoundationLabModelUseCase = .general,
         guardrails: FoundationLabGuardrails = .default,
         tools: [any Tool] = [],
@@ -40,6 +44,8 @@ public struct FoundationLabConversationConfiguration {
         self.conversationAssistantLabel = conversationAssistantLabel
         self.continuationNote = continuationNote
         self.overflowResetMessage = overflowResetMessage
+        self.modelRuntime = modelRuntime
+        self.reasoningLevel = reasoningLevel
         self.modelUseCase = modelUseCase
         self.guardrails = guardrails
         self.tools = tools

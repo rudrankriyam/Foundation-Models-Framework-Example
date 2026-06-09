@@ -29,6 +29,10 @@ extension Transcript.Entry {
             return response.segments.textContentJoined()
         case .toolOutput(let toolOutput):
             return toolOutput.segments.textContentJoined()
+        #if compiler(>=6.4)
+        case .reasoning(let reasoning):
+            return reasoning.segments.textContentJoined()
+        #endif
         default:
             return nil
         }

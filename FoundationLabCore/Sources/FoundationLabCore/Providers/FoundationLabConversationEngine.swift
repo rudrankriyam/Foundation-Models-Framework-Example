@@ -11,6 +11,12 @@ public final class FoundationLabConversationEngine {
     public private(set) var maxContextSize: Int
     public private(set) var isSummarizing: Bool = false
     public private(set) var isApplyingWindow: Bool = false
+    public var modelRuntime: FoundationLabModelRuntime {
+        configuration.modelRuntime
+    }
+    public var reasoningLevel: FoundationLabReasoningLevel {
+        configuration.reasoningLevel
+    }
 
     private var configuration: FoundationLabConversationConfiguration
     private var model: SystemLanguageModel
@@ -24,6 +30,7 @@ public final class FoundationLabConversationEngine {
         )
         self.maxContextSize = configuration.defaultMaxContextSize
         self.session = Self.makeSession(
+            runtime: configuration.modelRuntime,
             model: model,
             tools: configuration.tools,
             instructions: configuration.baseInstructions
@@ -38,10 +45,18 @@ public final class FoundationLabConversationEngine {
 
     public func rebuild(
         baseInstructions: String? = nil,
+        modelRuntime: FoundationLabModelRuntime? = nil,
+        reasoningLevel: FoundationLabReasoningLevel? = nil,
         guardrails: FoundationLabGuardrails? = nil
     ) {
         if let baseInstructions {
             configuration.baseInstructions = baseInstructions
+        }
+        if let modelRuntime {
+            configuration.modelRuntime = modelRuntime
+        }
+        if let reasoningLevel {
+            configuration.reasoningLevel = reasoningLevel
         }
         if let guardrails {
             configuration.guardrails = guardrails
@@ -156,6 +171,7 @@ private extension FoundationLabConversationEngine {
         isSummarizing = false
         isApplyingWindow = false
         session = Self.makeSession(
+            runtime: configuration.modelRuntime,
             model: model,
             tools: configuration.tools,
             instructions: configuration.baseInstructions
@@ -164,7 +180,7 @@ private extension FoundationLabConversationEngine {
     }
 
     func shouldApplyWindow() async -> Bool {
-        guard configuration.enableSlidingWindow, configuration.tools.isEmpty else {
+        guard configuration.enableSlidingWindow, configuration.tools.isEmpty, configuration.modelRuntime == .onDevice else {
             return false
         }
 
@@ -176,7 +192,7 @@ private extension FoundationLabConversationEngine {
     }
 
     func applySlidingWindow() async {
-        guard configuration.enableSlidingWindow, configuration.tools.isEmpty else {
+        guard configuration.enableSlidingWindow, configuration.tools.isEmpty, configuration.modelRuntime == .onDevice else {
             return
         }
 
@@ -198,7 +214,12 @@ private extension FoundationLabConversationEngine {
     }
 
     func updateTokenCount() async {
-        currentTokenCount = await session.transcript.foundationLabTokenCount(using: model)
+        switch configuration.modelRuntime {
+        case .onDevice:
+            currentTokenCount = await session.transcript.foundationLabTokenCount(using: model)
+        case .privateCloudCompute:
+            currentTokenCount = session.transcript.foundationLabEstimatedTokenCount
+        }
         notifyStateChange()
     }
 
@@ -215,6 +236,20 @@ private extension FoundationLabConversationEngine {
 
             var latest = ""
             if let generationOptions {
+                #if compiler(>=6.4)
+                if #available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *) {
+                    for try await snapshot in self.session.streamResponse(
+                        to: Prompt(prompt),
+                        options: generationOptions.foundationModelsValue,
+                        contextOptions: self.contextOptions()
+                    ) {
+                        latest = snapshot.content
+                        onPartialResponse?(snapshot.content)
+                    }
+                    return latest.isEmpty ? self.latestResponseText() : latest
+                }
+                #endif
+
                 for try await snapshot in self.session.streamResponse(
                     to: Prompt(prompt),
                     options: generationOptions.foundationModelsValue
@@ -223,6 +258,19 @@ private extension FoundationLabConversationEngine {
                     onPartialResponse?(snapshot.content)
                 }
             } else {
+                #if compiler(>=6.4)
+                if #available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *) {
+                    for try await snapshot in self.session.streamResponse(
+                        to: Prompt(prompt),
+                        contextOptions: self.contextOptions()
+                    ) {
+                        latest = snapshot.content
+                        onPartialResponse?(snapshot.content)
+                    }
+                    return latest.isEmpty ? self.latestResponseText() : latest
+                }
+                #endif
+
                 for try await snapshot in self.session.streamResponse(to: Prompt(prompt)) {
                     latest = snapshot.content
                     onPartialResponse?(snapshot.content)
@@ -241,11 +289,30 @@ private extension FoundationLabConversationEngine {
         generationOptions: FoundationLabGenerationOptions?
     ) async throws -> String {
         if let generationOptions {
+            #if compiler(>=6.4)
+            if #available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *) {
+                return try await session.respond(
+                    to: Prompt(prompt),
+                    options: generationOptions.foundationModelsValue,
+                    contextOptions: contextOptions()
+                ).content
+            }
+            #endif
+
             return try await session.respond(
                 to: Prompt(prompt),
                 options: generationOptions.foundationModelsValue
             ).content
         }
+
+        #if compiler(>=6.4)
+        if #available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *) {
+            return try await session.respond(
+                to: Prompt(prompt),
+                contextOptions: contextOptions()
+            ).content
+        }
+        #endif
 
         return try await session.respond(to: Prompt(prompt)).content
     }
@@ -295,9 +362,11 @@ private extension FoundationLabConversationEngine {
     }
 
     func generateConversationSummary() async throws -> FoundationLabConversationSummary {
-        let summarySession = LanguageModelSession(
+        let summarySession = Self.makeSession(
+            runtime: configuration.modelRuntime,
             model: model,
-            instructions: Instructions(configuration.summaryInstructions)
+            tools: [],
+            instructions: configuration.summaryInstructions
         )
 
         let conversationText = FoundationLabConversationContextBuilder.conversationText(
@@ -327,6 +396,7 @@ private extension FoundationLabConversationEngine {
         )
 
         session = Self.makeSession(
+            runtime: configuration.modelRuntime,
             model: model,
             tools: configuration.tools,
             instructions: contextInstructions
@@ -338,6 +408,7 @@ private extension FoundationLabConversationEngine {
 
     func createFreshSessionAfterOverflow() {
         session = Self.makeSession(
+            runtime: configuration.modelRuntime,
             model: model,
             tools: configuration.tools,
             instructions: configuration.baseInstructions
@@ -376,6 +447,32 @@ private extension FoundationLabConversationEngine {
         tools: [any Tool],
         instructions: String
     ) -> LanguageModelSession {
+        makeSession(
+            runtime: .onDevice,
+            model: model,
+            tools: tools,
+            instructions: instructions
+        )
+    }
+
+    static func makeSession(
+        runtime: FoundationLabModelRuntime,
+        model: SystemLanguageModel,
+        tools: [any Tool],
+        instructions: String
+    ) -> LanguageModelSession {
+        #if compiler(>=6.4)
+        if runtime == .privateCloudCompute {
+            if #available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *) {
+                return makeSession(
+                    model: PrivateCloudComputeLanguageModel(),
+                    tools: tools,
+                    instructions: instructions
+                )
+            }
+        }
+        #endif
+
         let trimmedInstructions = instructions.trimmingCharacters(in: .whitespacesAndNewlines)
         if !tools.isEmpty {
             if trimmedInstructions.isEmpty {
@@ -397,6 +494,43 @@ private extension FoundationLabConversationEngine {
             instructions: Instructions(trimmedInstructions)
         )
     }
+
+    #if compiler(>=6.4)
+    @available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *)
+    static func makeSession(
+        model: PrivateCloudComputeLanguageModel,
+        tools: [any Tool],
+        instructions: String
+    ) -> LanguageModelSession {
+        let trimmedInstructions = instructions.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !tools.isEmpty {
+            if trimmedInstructions.isEmpty {
+                return LanguageModelSession(model: model, tools: tools)
+            }
+            return LanguageModelSession(
+                model: model,
+                tools: tools,
+                instructions: Instructions(trimmedInstructions)
+            )
+        }
+
+        if trimmedInstructions.isEmpty {
+            return LanguageModelSession(model: model)
+        }
+
+        return LanguageModelSession(
+            model: model,
+            instructions: Instructions(trimmedInstructions)
+        )
+    }
+    #endif
+
+    #if compiler(>=6.4)
+    @available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *)
+    func contextOptions() -> ContextOptions {
+        ContextOptions(reasoningLevel: configuration.reasoningLevel.foundationModelsValue)
+    }
+    #endif
 
     func notifyStateChange() {
         onStateChange?()

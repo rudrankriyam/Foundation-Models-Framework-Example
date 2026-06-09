@@ -17,11 +17,10 @@ extension Transcript.Entry {
             }
         case .toolOutput(let output):
             return output.segments.reduce(0) { $0 + $1.foundationLabEstimatedTokenCount } + 3
+        #if compiler(>=6.4)
         case .reasoning(let reasoning):
-            if #available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *) {
-                return reasoning.segments.reduce(0) { $0 + $1.foundationLabEstimatedTokenCount } + 3
-            }
-            return 0
+            return reasoning.segments.reduce(0) { $0 + $1.foundationLabEstimatedTokenCount } + 3
+        #endif
         @unknown default:
             return 0
         }
@@ -48,16 +47,12 @@ extension Transcript.Segment {
             return foundationLabEstimateTokens(textSegment.content)
         case .structure(let structuredSegment):
             return foundationLabEstimateStructuredTokens(structuredSegment.content)
+        #if compiler(>=6.4)
         case .attachment(let attachmentSegment):
-            if #available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *) {
-                return foundationLabEstimateTokens(attachmentSegment.label ?? "image attachment") + 12
-            }
-            return 0
+            return foundationLabEstimateTokens(attachmentSegment.label ?? "image attachment") + 12
         case .custom(let customSegment):
-            if #available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *) {
-                return foundationLabEstimateTokens(customSegment.description)
-            }
-            return 0
+            return foundationLabEstimateTokens(customSegment.description)
+        #endif
         @unknown default:
             return 0
         }

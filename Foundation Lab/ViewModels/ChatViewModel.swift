@@ -31,6 +31,9 @@ final class ChatViewModel {
     var isApplyingWindow: Bool = false
     var sessionCount: Int = 1
     var instructions: String
+    var selectedModelRuntime: FoundationLabModelRuntime = .onDevice
+    var selectedReasoningLevel: FoundationLabReasoningLevel = .none
+    var showsReasoningTrace: Bool = true
     var samplingStrategy: SamplingStrategy = .default
     var topKSamplingValue: Int = 50
     var useFixedSeed: Bool = false
@@ -47,6 +50,29 @@ final class ChatViewModel {
     var tokenUsageFraction: Double {
         guard maxContextSize > 0 else { return 0 }
         return min(1.0, Double(currentTokenCount) / Double(maxContextSize))
+    }
+
+    var modelRuntimeStatus: String {
+        switch selectedModelRuntime {
+        case .onDevice:
+            return "Runs locally with Apple Intelligence."
+        case .privateCloudCompute:
+            return privateCloudComputeStatus
+        }
+    }
+
+    var canSelectPrivateCloudCompute: Bool {
+        #if compiler(>=6.4)
+        if #available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *) {
+            return PrivateCloudComputeLanguageModel().isAvailable
+        }
+        #endif
+
+        return false
+    }
+
+    var canUseReasoning: Bool {
+        selectedModelRuntime == .privateCloudCompute && canSelectPrivateCloudCompute
     }
 
     // MARK: - Public Properties
@@ -156,6 +182,52 @@ final class ChatViewModel {
         isLoading = false
         errorMessage = nil
         showError = false
+        syncConversationState()
+    }
+
+    func selectModelRuntime(_ runtime: FoundationLabModelRuntime) {
+        guard runtime != selectedModelRuntime else { return }
+
+        if runtime == .privateCloudCompute, !canSelectPrivateCloudCompute {
+            errorMessage = privateCloudComputeStatus
+            showError = true
+            return
+        }
+
+        selectedModelRuntime = runtime
+        if runtime == .onDevice {
+            selectedReasoningLevel = .none
+        }
+        conversationEngine.rebuild(
+            modelRuntime: runtime,
+            reasoningLevel: selectedReasoningLevel,
+            guardrails: currentGuardrails()
+        )
+        feedbackState.removeAll()
+        isLoading = false
+        syncConversationState()
+
+        Task {
+            await fetchContextSize()
+        }
+    }
+
+    func selectReasoningLevel(_ level: FoundationLabReasoningLevel) {
+        guard level != selectedReasoningLevel else { return }
+
+        if level != .none, !canUseReasoning {
+            errorMessage = "Reasoning levels require PCC on Xcode 27 and an eligible OS 27 runtime."
+            showError = true
+            return
+        }
+
+        selectedReasoningLevel = level
+        conversationEngine.rebuild(
+            reasoningLevel: level,
+            guardrails: currentGuardrails()
+        )
+        feedbackState.removeAll()
+        isLoading = false
         syncConversationState()
     }
 
@@ -289,6 +361,8 @@ private extension ChatViewModel {
 
     func syncConversationState() {
         session = conversationEngine.session
+        selectedModelRuntime = conversationEngine.modelRuntime
+        selectedReasoningLevel = conversationEngine.reasoningLevel
         currentTokenCount = conversationEngine.currentTokenCount
         maxContextSize = conversationEngine.maxContextSize
         isSummarizing = conversationEngine.isSummarizing
@@ -297,6 +371,13 @@ private extension ChatViewModel {
     }
 
     func fetchContextSize() async {
+        if selectedModelRuntime == .privateCloudCompute {
+            let contextSize = await privateCloudComputeContextSize()
+            conversationEngine.setMaxContextSize(contextSize)
+            syncConversationState()
+            return
+        }
+
         let contextSize = await AppConfiguration.TokenManagement.contextSize(
             modelUseCase: .general,
             guardrails: currentGuardrails()
@@ -386,5 +467,41 @@ private extension ChatViewModel {
         let seed = UInt64.random(in: UInt64.min...UInt64.max)
         samplingSeed = seed
         return seed
+    }
+
+    var privateCloudComputeStatus: String {
+        #if compiler(>=6.4)
+        if #available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *) {
+            let model = PrivateCloudComputeLanguageModel()
+            switch model.availability {
+            case .available:
+                if model.quotaUsage.isLimitReached {
+                    return "PCC daily usage limit reached."
+                }
+                return "Routes requests through Private Cloud Compute."
+            case .unavailable(.deviceNotEligible):
+                return "This device is not eligible for PCC."
+            case .unavailable(.systemNotReady):
+                return "PCC is not ready on this system."
+            @unknown default:
+                return "PCC is currently unavailable."
+            }
+        }
+        #endif
+
+        return "PCC requires Xcode 27 and iOS, macOS, visionOS, or watchOS 27."
+    }
+
+    func privateCloudComputeContextSize() async -> Int {
+        #if compiler(>=6.4)
+        if #available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *) {
+            let model = PrivateCloudComputeLanguageModel()
+            if let contextSize = try? await model.contextSize {
+                return contextSize
+            }
+        }
+        #endif
+
+        return 32_768
     }
 }

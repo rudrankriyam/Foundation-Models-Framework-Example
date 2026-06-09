@@ -70,6 +70,16 @@ struct TranscriptEntryView: View {
                 .id(entry.id)
             }
 
+        #if compiler(>=6.4)
+        case .reasoning(let reasoning):
+            if chatViewModel.showsReasoningTrace {
+                if #available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *) {
+                    ReasoningTraceView(reasoning: reasoning)
+                        .id(entry.id)
+                }
+            }
+        #endif
+
         case .instructions:
             EmptyView()
 
@@ -107,6 +117,61 @@ struct TranscriptEntryView: View {
         await entry.foundationLabTokenCount()
     }
 }
+
+#if compiler(>=6.4)
+@available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *)
+private struct ReasoningTraceView: View {
+    let reasoning: Transcript.Reasoning
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Spacing.small) {
+            HStack(spacing: Spacing.small) {
+                Image(systemName: "brain.head.profile")
+                    .foregroundStyle(.purple)
+
+                Text("Reasoning Trace")
+                    .font(.subheadline.weight(.semibold))
+
+                Spacer()
+
+                if reasoning.signature != nil {
+                    Text("Signed")
+                        .font(.caption2.weight(.medium))
+                        .foregroundStyle(.purple)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(.purple.opacity(0.12), in: .capsule)
+                }
+            }
+
+            Text(traceText)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .textSelection(.enabled)
+        }
+        .padding(Spacing.medium)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.purple.opacity(0.08), in: .rect(cornerRadius: CornerRadius.large))
+        .overlay {
+            RoundedRectangle(cornerRadius: CornerRadius.large)
+                .stroke(.purple.opacity(0.18), lineWidth: 1)
+        }
+        .padding(.horizontal, Spacing.medium)
+    }
+
+    private var traceText: String {
+        if let text = reasoning.segments.textContentJoined() {
+            return text
+        }
+
+        if reasoning.signature != nil {
+            return "The model provided an opaque reasoning signature, but no readable reasoning text."
+        }
+
+        return "No readable reasoning trace was included in this transcript entry."
+    }
+}
+#endif
 
 private extension Transcript.Entry {
     var isFromUser: Bool {
