@@ -141,9 +141,9 @@ struct ChatView: View {
                             .padding(.bottom, 48)
                     }
 
-                    ForEach(viewModel.session.transcript) { entry in
-                        TranscriptEntryView(entry: entry)
-                            .id(entry.id)
+                    ForEach(transcriptDisplayEntries, id: \.id) { displayEntry in
+                        TranscriptEntryView(entry: displayEntry.entry)
+                            .id(displayEntry.id)
                     }
 
                     if viewModel.isSummarizing {
@@ -185,9 +185,9 @@ struct ChatView: View {
 #endif
             .scrollPosition(id: $scrollID, anchor: .bottom)
             .onChange(of: viewModel.session.transcript.count) { _, _ in
-                if let lastEntry = viewModel.session.transcript.last {
+                if let lastEntryID = transcriptDisplayEntries.last?.id {
                     withAnimation(.easeOut(duration: 0.3)) {
-                        proxy.scrollTo(lastEntry.id, anchor: .bottom)
+                        proxy.scrollTo(lastEntryID, anchor: .bottom)
                     }
                 }
             }
@@ -228,6 +228,12 @@ struct ChatView: View {
             Label(viewModel.selectedModelRuntime.shortName, systemImage: viewModel.selectedModelRuntime.systemImage)
         }
         .help(viewModel.modelRuntimeStatus)
+    }
+
+    private var transcriptDisplayEntries: [(id: String, entry: Transcript.Entry)] {
+        viewModel.session.transcript.enumerated().map { index, entry in
+            ("\(index)-\(entry.id)", entry)
+        }
     }
 
     private var reasoningMenu: some View {
