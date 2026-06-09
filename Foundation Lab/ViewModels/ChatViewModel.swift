@@ -64,7 +64,8 @@ final class ChatViewModel {
     var canSelectPrivateCloudCompute: Bool {
         #if compiler(>=6.4)
         if #available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *) {
-            return PrivateCloudComputeLanguageModel().isAvailable
+            let model = PrivateCloudComputeLanguageModel()
+            return model.isAvailable && !model.quotaUsage.isLimitReached
         }
         #endif
 
