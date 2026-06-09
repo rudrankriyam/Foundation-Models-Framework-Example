@@ -65,18 +65,47 @@ struct FoundationModelsErrorHandler: Sendable {
         return "Tool '\(error.tool.name)' failed: \(error.underlyingError.localizedDescription)"
     }
 
+    #if compiler(>=6.4)
+    @available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *)
+    static func handlePrivateCloudComputeError(_ error: PrivateCloudComputeLanguageModel.Error) -> String {
+        switch error {
+        case .networkFailure(let context):
+            return "PCC network failure: \(context.debugDescription)"
+        case .quotaLimitReached(let context):
+            return "PCC quota limit reached: \(context.debugDescription)"
+        case .serviceUnavailable(let context):
+            return "PCC service unavailable: \(context.debugDescription)"
+        @unknown default:
+            return "PCC failed with an unknown service error."
+        }
+    }
+    #endif
+
     /// Consolidates error handling for LanguageModelSession operations
     static func handleError(_ error: Error) -> String {
         if let generationError = error as? LanguageModelSession.GenerationError {
             return handleGenerationError(generationError)
-        } else if let toolCallError = error as? LanguageModelSession.ToolCallError {
-            return handleToolCallError(toolCallError)
-        } else if let coreError = error as? FoundationLabCoreError {
-            return coreError.localizedDescription
-        } else if let customError = error as? FoundationModelsError {
-            return customError.localizedDescription
-        } else {
-            return String(localized: "Unexpected error: \(error.localizedDescription)")
         }
+
+        if let toolCallError = error as? LanguageModelSession.ToolCallError {
+            return handleToolCallError(toolCallError)
+        }
+
+        #if compiler(>=6.4)
+        if #available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *),
+           let privateCloudComputeError = error as? PrivateCloudComputeLanguageModel.Error {
+            return handlePrivateCloudComputeError(privateCloudComputeError)
+        }
+        #endif
+
+        if let coreError = error as? FoundationLabCoreError {
+            return coreError.localizedDescription
+        }
+
+        if let customError = error as? FoundationModelsError {
+            return customError.localizedDescription
+        }
+
+        return String(localized: "Unexpected error: \(error.localizedDescription)")
     }
 }

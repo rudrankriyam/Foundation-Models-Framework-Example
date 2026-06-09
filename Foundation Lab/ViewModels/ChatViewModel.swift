@@ -440,9 +440,9 @@ private extension ChatViewModel {
     func message(for error: Error) -> String {
         if selectedModelRuntime == .privateCloudCompute {
             return """
-            PCC request failed. Private Cloud Compute is available on this device, but the OS 27 beta service rejected or could not complete this request.
+            PCC request failed. Private Cloud Compute is available on this device, but the signed app still needs the PCC entitlement and a matching provisioning profile.
 
-            Try again, or switch back to On-device for this prompt. Details: \(error.localizedDescription)
+            Confirm com.apple.developer.private-cloud-compute is present, then try again. Details: \(FoundationModelsErrorHandler.handleError(error))
             """
         }
 
