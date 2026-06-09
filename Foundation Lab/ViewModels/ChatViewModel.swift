@@ -163,7 +163,7 @@ final class ChatViewModel {
         } catch is CancellationError {
             return
         } catch {
-            errorMessage = FoundationModelsErrorHandler.handleError(error)
+            errorMessage = message(for: error)
             showError = true
         }
     }
@@ -435,6 +435,18 @@ private extension ChatViewModel {
         errorMessage = message
         showError = true
         voiceState = .error(message: message)
+    }
+
+    func message(for error: Error) -> String {
+        if selectedModelRuntime == .privateCloudCompute {
+            return """
+            PCC request failed. Private Cloud Compute is available on this device, but the OS 27 beta service rejected or could not complete this request.
+
+            Try again, or switch back to On-device for this prompt. Details: \(error.localizedDescription)
+            """
+        }
+
+        return FoundationModelsErrorHandler.handleError(error)
     }
 
     func observeSpeechState() async {

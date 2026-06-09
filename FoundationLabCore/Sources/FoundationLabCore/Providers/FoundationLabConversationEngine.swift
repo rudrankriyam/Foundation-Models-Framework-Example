@@ -238,13 +238,23 @@ private extension FoundationLabConversationEngine {
             if let generationOptions {
                 #if compiler(>=6.4)
                 if #available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *) {
-                    for try await snapshot in self.session.streamResponse(
-                        to: Prompt(prompt),
-                        options: generationOptions.foundationModelsValue,
-                        contextOptions: self.contextOptions()
-                    ) {
-                        latest = snapshot.content
-                        onPartialResponse?(snapshot.content)
+                    if let contextOptions = self.contextOptions() {
+                        for try await snapshot in self.session.streamResponse(
+                            to: Prompt(prompt),
+                            options: generationOptions.foundationModelsValue,
+                            contextOptions: contextOptions
+                        ) {
+                            latest = snapshot.content
+                            onPartialResponse?(snapshot.content)
+                        }
+                    } else {
+                        for try await snapshot in self.session.streamResponse(
+                            to: Prompt(prompt),
+                            options: generationOptions.foundationModelsValue
+                        ) {
+                            latest = snapshot.content
+                            onPartialResponse?(snapshot.content)
+                        }
                     }
                     return latest.isEmpty ? self.latestResponseText() : latest
                 }
@@ -260,12 +270,19 @@ private extension FoundationLabConversationEngine {
             } else {
                 #if compiler(>=6.4)
                 if #available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *) {
-                    for try await snapshot in self.session.streamResponse(
-                        to: Prompt(prompt),
-                        contextOptions: self.contextOptions()
-                    ) {
-                        latest = snapshot.content
-                        onPartialResponse?(snapshot.content)
+                    if let contextOptions = self.contextOptions() {
+                        for try await snapshot in self.session.streamResponse(
+                            to: Prompt(prompt),
+                            contextOptions: contextOptions
+                        ) {
+                            latest = snapshot.content
+                            onPartialResponse?(snapshot.content)
+                        }
+                    } else {
+                        for try await snapshot in self.session.streamResponse(to: Prompt(prompt)) {
+                            latest = snapshot.content
+                            onPartialResponse?(snapshot.content)
+                        }
                     }
                     return latest.isEmpty ? self.latestResponseText() : latest
                 }
@@ -291,10 +308,17 @@ private extension FoundationLabConversationEngine {
         if let generationOptions {
             #if compiler(>=6.4)
             if #available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *) {
+                if let contextOptions = contextOptions() {
+                    return try await session.respond(
+                        to: Prompt(prompt),
+                        options: generationOptions.foundationModelsValue,
+                        contextOptions: contextOptions
+                    ).content
+                }
+
                 return try await session.respond(
                     to: Prompt(prompt),
-                    options: generationOptions.foundationModelsValue,
-                    contextOptions: contextOptions()
+                    options: generationOptions.foundationModelsValue
                 ).content
             }
             #endif
@@ -307,9 +331,15 @@ private extension FoundationLabConversationEngine {
 
         #if compiler(>=6.4)
         if #available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *) {
+            if let contextOptions = contextOptions() {
+                return try await session.respond(
+                    to: Prompt(prompt),
+                    contextOptions: contextOptions
+                ).content
+            }
+
             return try await session.respond(
-                to: Prompt(prompt),
-                contextOptions: contextOptions()
+                to: Prompt(prompt)
             ).content
         }
         #endif
@@ -527,8 +557,12 @@ private extension FoundationLabConversationEngine {
 
     #if compiler(>=6.4)
     @available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *)
-    func contextOptions() -> ContextOptions {
-        ContextOptions(reasoningLevel: configuration.reasoningLevel.foundationModelsValue)
+    func contextOptions() -> ContextOptions? {
+        guard configuration.reasoningLevel != .none else {
+            return nil
+        }
+
+        return ContextOptions(reasoningLevel: configuration.reasoningLevel.foundationModelsValue)
     }
     #endif
 
