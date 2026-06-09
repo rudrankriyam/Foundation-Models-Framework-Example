@@ -204,6 +204,7 @@ final class ChatViewModel {
             reasoningLevel: selectedReasoningLevel,
             guardrails: currentGuardrails()
         )
+        conversationEngine.setMaxContextSize(provisionalContextSize(for: runtime))
         feedbackState.removeAll()
         isLoading = false
         syncConversationState()
@@ -391,6 +392,15 @@ private extension ChatViewModel {
               currentGuardrails() == requestedGuardrails else { return }
         conversationEngine.setMaxContextSize(contextSize)
         syncConversationState()
+    }
+
+    func provisionalContextSize(for runtime: FoundationLabModelRuntime) -> Int {
+        switch runtime {
+        case .onDevice:
+            AppConfiguration.TokenManagement.defaultMaxTokens
+        case .privateCloudCompute:
+            32_768
+        }
     }
 
     // MARK: - Voice Helpers
