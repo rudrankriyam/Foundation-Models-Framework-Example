@@ -41,13 +41,11 @@ struct TranscriptEntryView: View {
         case .prompt(let prompt):
             if let text = prompt.segments.textContentJoined() {
                 MessageBubbleView(message: ChatMessage(content: text, isFromUser: true))
-                    .id(entry.id)
             }
 
         case .response(let response):
             if let text = response.segments.textContentJoined() {
                 MessageBubbleView(message: ChatMessage(entryID: entry.id, content: text, isFromUser: false))
-                    .id(entry.id)
             }
 
         case .toolCalls(let toolCalls):
@@ -57,7 +55,6 @@ struct TranscriptEntryView: View {
                     content: "🔧 Calling tool: \(toolCall.toolName)",
                     isFromUser: false
                 ))
-                .id("\(entry.id)-tool-\(index)")
             }
 
         case .toolOutput(let toolOutput):
@@ -67,7 +64,6 @@ struct TranscriptEntryView: View {
                     content: "🔧 Tool result: \(text)",
                     isFromUser: false
                 ))
-                .id(entry.id)
             }
 
         #if compiler(>=6.4)
@@ -75,7 +71,6 @@ struct TranscriptEntryView: View {
             if chatViewModel.showsReasoningTrace {
                 if #available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *) {
                     ReasoningTraceView(reasoning: reasoning)
-                        .id(entry.id)
                 }
             }
         #endif
