@@ -350,7 +350,7 @@ final class ChatViewModel {
 
             restartListening()
         } catch {
-            handleVoiceError(error.localizedDescription)
+            handleVoiceError(message(for: error))
         }
     }
 }
