@@ -15,7 +15,7 @@ nonisolated struct FoundationLabAppShortcuts: AppShortcutsProvider {
                 "Recommend a book in \(.applicationName)",
                 "Get a book recommendation from \(.applicationName)"
             ],
-            shortTitle: "Recommend Book",
+            shortTitle: LocalizedStringResource("Recommend Book", table: "Localizable"),
             systemImageName: "book.closed.fill"
         )
         AppShortcut(
@@ -24,7 +24,7 @@ nonisolated struct FoundationLabAppShortcuts: AppShortcutsProvider {
                 "Get the weather in \(.applicationName)",
                 "Check weather with \(.applicationName)"
             ],
-            shortTitle: "Get Weather",
+            shortTitle: LocalizedStringResource("Get Weather", table: "Localizable"),
             systemImageName: "cloud.sun.fill"
         )
         AppShortcut(
@@ -33,7 +33,7 @@ nonisolated struct FoundationLabAppShortcuts: AppShortcutsProvider {
                 "Analyze nutrition in \(.applicationName)",
                 "Check calories with \(.applicationName)"
             ],
-            shortTitle: "Analyze Nutrition",
+            shortTitle: LocalizedStringResource("Analyze Nutrition", table: "Localizable"),
             systemImageName: "fork.knife"
         )
         AppShortcut(
@@ -42,7 +42,7 @@ nonisolated struct FoundationLabAppShortcuts: AppShortcutsProvider {
                 "Search the web in \(.applicationName)",
                 "Look something up with \(.applicationName)"
             ],
-            shortTitle: "Search Web",
+            shortTitle: LocalizedStringResource("Search Web", table: "Localizable"),
             systemImageName: "magnifyingglass"
         )
         AppShortcut(
@@ -51,7 +51,7 @@ nonisolated struct FoundationLabAppShortcuts: AppShortcutsProvider {
                 "Search contacts in \(.applicationName)",
                 "Find someone with \(.applicationName)"
             ],
-            shortTitle: "Search Contacts",
+            shortTitle: LocalizedStringResource("Search Contacts", table: "Localizable"),
             systemImageName: "person.crop.circle"
         )
         AppShortcut(
@@ -60,7 +60,7 @@ nonisolated struct FoundationLabAppShortcuts: AppShortcutsProvider {
                 "Check my calendar in \(.applicationName)",
                 "Ask calendar with \(.applicationName)"
             ],
-            shortTitle: "Query Calendar",
+            shortTitle: LocalizedStringResource("Query Calendar", table: "Localizable"),
             systemImageName: "calendar"
         )
         AppShortcut(
@@ -69,7 +69,7 @@ nonisolated struct FoundationLabAppShortcuts: AppShortcutsProvider {
                 "Manage reminders in \(.applicationName)",
                 "Create a reminder with \(.applicationName)"
             ],
-            shortTitle: "Manage Reminders",
+            shortTitle: LocalizedStringResource("Manage Reminders", table: "Localizable"),
             systemImageName: "checklist"
         )
         AppShortcut(
@@ -78,7 +78,7 @@ nonisolated struct FoundationLabAppShortcuts: AppShortcutsProvider {
                 "Get my location in \(.applicationName)",
                 "Check location with \(.applicationName)"
             ],
-            shortTitle: "Get Location",
+            shortTitle: LocalizedStringResource("Get Location", table: "Localizable"),
             systemImageName: "location"
         )
         AppShortcut(
@@ -87,7 +87,7 @@ nonisolated struct FoundationLabAppShortcuts: AppShortcutsProvider {
                 "Search music in \(.applicationName)",
                 "Find music with \(.applicationName)"
             ],
-            shortTitle: "Search Music",
+            shortTitle: LocalizedStringResource("Search Music", table: "Localizable"),
             systemImageName: "music.note"
         )
         AppShortcut(
@@ -96,7 +96,7 @@ nonisolated struct FoundationLabAppShortcuts: AppShortcutsProvider {
                 "Check health data in \(.applicationName)",
                 "Ask health data with \(.applicationName)"
             ],
-            shortTitle: "Query Health",
+            shortTitle: LocalizedStringResource("Query Health", table: "Localizable"),
             systemImageName: "heart.text.square"
         )
     }

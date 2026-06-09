@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import FoundationLabCore
 import FoundationModels
 
 struct ChatView: View {
@@ -52,6 +53,14 @@ struct ChatView: View {
         .navigationBarTitleDisplayMode(.inline)
 #endif
         .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                modelRuntimeMenu
+            }
+
+            ToolbarItem(placement: .cancellationAction) {
+                reasoningMenu
+            }
+
             if showsDoneButton {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Done") {
@@ -132,9 +141,12 @@ struct ChatView: View {
                             .padding(.bottom, 48)
                     }
 
-                    ForEach(viewModel.session.transcript) { entry in
-                        TranscriptEntryView(entry: entry)
-                            .id(entry.id)
+                    ForEach(transcriptDisplayEntries, id: \.id) { displayEntry in
+                        TranscriptEntryView(
+                            entry: displayEntry.entry,
+                            transcriptIndex: displayEntry.index
+                        )
+                            .id(displayEntry.id)
                     }
 
                     if viewModel.isSummarizing {
@@ -176,9 +188,9 @@ struct ChatView: View {
 #endif
             .scrollPosition(id: $scrollID, anchor: .bottom)
             .onChange(of: viewModel.session.transcript.count) { _, _ in
-                if let lastEntry = viewModel.session.transcript.last {
+                if let lastEntryID = transcriptDisplayEntries.last?.id {
                     withAnimation(.easeOut(duration: 0.3)) {
-                        proxy.scrollTo(lastEntry.id, anchor: .bottom)
+                        proxy.scrollTo(lastEntryID, anchor: .bottom)
                     }
                 }
             }
@@ -200,6 +212,58 @@ struct ChatView: View {
         .defaultScrollAnchor(.bottom)
     }
 
+    private var modelRuntimeMenu: some View {
+        Menu {
+            ForEach(FoundationLabModelRuntime.allCases, id: \.self) { runtime in
+                Button {
+                    viewModel.selectModelRuntime(runtime)
+                    clearInputAfterRuntimeChange()
+                } label: {
+                    Label(runtime.displayName, systemImage: runtime.systemImage)
+                }
+                .disabled(runtime == .privateCloudCompute && !viewModel.canSelectPrivateCloudCompute)
+            }
+
+            Divider()
+
+            Text(viewModel.modelRuntimeStatus)
+        } label: {
+            Label(viewModel.selectedModelRuntime.shortName, systemImage: viewModel.selectedModelRuntime.systemImage)
+        }
+        .help(viewModel.modelRuntimeStatus)
+    }
+
+    private var transcriptDisplayEntries: [(id: String, index: Int, entry: Transcript.Entry)] {
+        viewModel.session.transcript.enumerated().map { index, entry in
+            ("\(index)-\(entry.id)", index, entry)
+        }
+    }
+
+    private var reasoningMenu: some View {
+        Menu {
+            ForEach(FoundationLabReasoningLevel.allCases, id: \.self) { level in
+                Button {
+                    viewModel.selectReasoningLevel(level)
+                    clearInputAfterRuntimeChange()
+                } label: {
+                    Label(level.displayName, systemImage: level.systemImage)
+                }
+                .disabled(level != .none && !viewModel.canUseReasoning)
+            }
+
+            Divider()
+
+            Toggle("Show Reasoning Trace", isOn: .init(
+                get: { viewModel.showsReasoningTrace },
+                set: { viewModel.showsReasoningTrace = $0 }
+            ))
+        } label: {
+            Label(viewModel.selectedReasoningLevel.displayName, systemImage: viewModel.selectedReasoningLevel.systemImage)
+        }
+        .disabled(viewModel.selectedModelRuntime == .onDevice)
+        .help("Reasoning levels require PCC on Xcode 27.")
+    }
+
     private var isChatEffectivelyEmpty: Bool {
         !viewModel.session.transcript.contains { entry in
             switch entry {
@@ -215,6 +279,11 @@ struct ChatView: View {
         messageText = ""
         scrollID = "bottom"
         viewModel.clearChat()
+    }
+
+    private func clearInputAfterRuntimeChange() {
+        messageText = ""
+        scrollID = "bottom"
     }
 }
 

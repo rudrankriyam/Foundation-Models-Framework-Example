@@ -90,6 +90,7 @@ struct ModelRuntimeView: View {
             ModelCapabilityRow(name: "Tool calling", isSupported: false)
         ]
 
+        #if compiler(>=6.4)
         if #available(iOS 27.0, macOS 27.0, visionOS 27.0, *) {
             let modelCapabilities = systemModel.capabilities
             capabilities = [
@@ -99,6 +100,7 @@ struct ModelRuntimeView: View {
                 ModelCapabilityRow(name: "Tool calling", isSupported: modelCapabilities.contains(.toolCalling))
             ]
         }
+        #endif
 
         report = ModelRuntimeReport(
             systemContextSize: systemModel.contextSize,
@@ -174,4 +176,3 @@ private struct ModelCapabilityRow {
         ModelRuntimeView()
     }
 }
-

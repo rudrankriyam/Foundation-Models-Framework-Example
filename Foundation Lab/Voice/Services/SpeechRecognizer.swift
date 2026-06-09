@@ -187,8 +187,8 @@ class SpeechRecognizer: NSObject, SpeechRecognitionService {
 
     func requestPermission() async -> Bool {
         return await withCheckedContinuation { continuation in
-            SFSpeechRecognizer.requestAuthorization { authStatus in
-                Task { @MainActor [weak self] in
+            SFSpeechRecognizer.requestAuthorization { [weak self] authStatus in
+                Task { @MainActor in
                     switch authStatus {
                     case .authorized:
                         self?.hasPermission = true
