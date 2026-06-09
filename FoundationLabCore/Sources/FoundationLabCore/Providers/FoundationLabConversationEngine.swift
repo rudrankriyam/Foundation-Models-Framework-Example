@@ -393,7 +393,7 @@ private extension FoundationLabConversationEngine {
 
     func generateConversationSummary() async throws -> FoundationLabConversationSummary {
         let summarySession = Self.makeSession(
-            runtime: configuration.modelRuntime,
+            runtime: .onDevice,
             model: model,
             tools: [],
             instructions: configuration.summaryInstructions
@@ -558,7 +558,8 @@ private extension FoundationLabConversationEngine {
     #if compiler(>=6.4)
     @available(iOS 27.0, macOS 27.0, visionOS 27.0, watchOS 27.0, *)
     func contextOptions() -> ContextOptions? {
-        guard configuration.reasoningLevel != .none else {
+        guard configuration.modelRuntime == .privateCloudCompute,
+              configuration.reasoningLevel != .none else {
             return nil
         }
 

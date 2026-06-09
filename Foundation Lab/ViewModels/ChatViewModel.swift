@@ -209,7 +209,7 @@ final class ChatViewModel {
         syncConversationState()
 
         Task {
-            await fetchContextSize()
+            await fetchContextSize(for: runtime)
         }
     }
 
@@ -371,9 +371,13 @@ private extension ChatViewModel {
         sessionCount = conversationEngine.sessionCount
     }
 
-    func fetchContextSize() async {
-        if selectedModelRuntime == .privateCloudCompute {
+    func fetchContextSize(for runtime: FoundationLabModelRuntime? = nil) async {
+        let requestedRuntime = runtime ?? selectedModelRuntime
+        let requestedGuardrails = currentGuardrails()
+
+        if requestedRuntime == .privateCloudCompute {
             let contextSize = await privateCloudComputeContextSize()
+            guard selectedModelRuntime == requestedRuntime else { return }
             conversationEngine.setMaxContextSize(contextSize)
             syncConversationState()
             return
@@ -381,8 +385,10 @@ private extension ChatViewModel {
 
         let contextSize = await AppConfiguration.TokenManagement.contextSize(
             modelUseCase: .general,
-            guardrails: currentGuardrails()
+            guardrails: requestedGuardrails
         )
+        guard selectedModelRuntime == requestedRuntime,
+              currentGuardrails() == requestedGuardrails else { return }
         conversationEngine.setMaxContextSize(contextSize)
         syncConversationState()
     }
