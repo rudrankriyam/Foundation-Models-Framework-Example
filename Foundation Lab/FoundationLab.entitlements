@@ -4,5 +4,7 @@
 <dict>
 	<key>com.apple.developer.healthkit</key>
 	<true/>
+	<key>com.apple.developer.private-cloud-compute</key>
+	<true/>
 </dict>
 </plist>
