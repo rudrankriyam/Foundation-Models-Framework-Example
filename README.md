@@ -25,6 +25,7 @@ A collection of tools and utilities for Apple's Foundation Models Framework that
   - [WebTool](#webtool)
 - [Utilities](#utilities)
   - [Token Counting](#token-counting)
+  - [Transcript History Transforms](#transcript-history-transforms)
 - [Usage Examples](#usage-examples)
   - [Direct Tool Usage](#direct-tool-usage)
   - [Model Integration](#model-integration)
@@ -664,6 +665,8 @@ FoundationModelsTools provides comprehensive token counting and context window m
 **Context Management:**
 - `isApproachingLimit(threshold:maxTokens:)` - Check if approaching context limits
 - `entriesWithinTokenBudget(_:)` - Sliding window implementation for long conversations
+- `rollingWindow(entries:)` - Keep the most recent transcript entries by count
+- `droppingCompletedToolCalls()` - Remove older completed tool-call exchanges
 
 #### Basic Token Counting
 
@@ -714,6 +717,18 @@ let newTranscript = Transcript(trimmedEntries)
 // - Includes as many recent entries as possible within budget
 // - Preserves conversation recency
 ```
+
+### Transcript History Transforms
+
+Use entry-level history transforms when you want lightweight transcript cleanup before building the next session or prompt history.
+
+```swift
+let compactEntries = transcript
+    .droppingCompletedToolCalls()
+    .rollingWindow(entries: 10)
+```
+
+`rollingWindow(entries:)` keeps the latest entries exactly by count. `droppingCompletedToolCalls()` removes older tool-call and tool-output entries while preserving the latest active tool exchange and all non-tool entries.
 
 #### Token Estimation Functions
 

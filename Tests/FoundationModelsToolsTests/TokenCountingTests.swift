@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import FoundationModels
 import Testing
 @testable import FoundationModelsTools
 
@@ -110,5 +111,221 @@ struct TokenEstimationAccuracyTests {
     let tokens = estimateTokens(from: text)
 
     #expect(tokens > 0)
+  }
+}
+
+@Suite("Transcript History Transform Tests")
+struct TranscriptHistoryTransformTests {
+
+  @Test("Rolling window keeps the most recent entries")
+  func rollingWindowKeepsMostRecentEntries() {
+    let entries: [Transcript.Entry] = [
+      .instructions(.foundationModelsTools("System")),
+      .prompt(.foundationModelsTools("First")),
+      .toolOutput(.foundationModelsTools(id: "first-output", text: "First answer")),
+      .prompt(.foundationModelsTools("Second")),
+      .toolOutput(.foundationModelsTools(id: "second-output", text: "Second answer")),
+    ]
+
+    let window = entries.rollingWindow(entries: 3)
+
+    #expect(window.count == 3)
+    #expect(window.map { $0.foundationModelsToolsText } == [
+      "First answer",
+      "Second",
+      "Second answer",
+    ])
+  }
+
+  @Test("Rolling window returns empty array for non-positive sizes")
+  func rollingWindowReturnsEmptyForNonPositiveSizes() {
+    let entries: [Transcript.Entry] = [
+      .prompt(.foundationModelsTools("First")),
+      .toolOutput(.foundationModelsTools(id: "first-output", text: "First answer")),
+    ]
+
+    #expect(entries.rollingWindow(entries: 0).isEmpty)
+    #expect(entries.rollingWindow(entries: -1).isEmpty)
+  }
+
+  @Test("Rolling window can split an entry pair")
+  func rollingWindowCanSplitEntryPair() {
+    let entries: [Transcript.Entry] = [
+      .prompt(.foundationModelsTools("First")),
+      .toolOutput(.foundationModelsTools(id: "first-output", text: "First answer")),
+      .prompt(.foundationModelsTools("Second")),
+    ]
+
+    let window = entries.rollingWindow(entries: 2)
+
+    #expect(window.map { $0.foundationModelsToolsText } == [
+      "First answer",
+      "Second",
+    ])
+  }
+
+  @Test("Dropping completed tool calls removes older tool exchanges")
+  func droppingCompletedToolCallsRemovesOlderToolExchanges() {
+    let oldToolCalls = Transcript.ToolCalls(id: "old-calls", [])
+    let oldToolOutput = Transcript.ToolOutput(
+      id: "old-output",
+      toolName: "search",
+      segments: [.text(Transcript.TextSegment(content: "Old search output"))]
+    )
+    let latestToolCalls = Transcript.ToolCalls(id: "latest-calls", [])
+    let latestToolOutput = Transcript.ToolOutput(
+      id: "latest-output",
+      toolName: "lookup",
+      segments: [.text(Transcript.TextSegment(content: "Latest lookup output"))]
+    )
+
+    let entries: [Transcript.Entry] = [
+      .instructions(.foundationModelsTools("System")),
+      .prompt(.foundationModelsTools("First")),
+      .toolCalls(oldToolCalls),
+      .toolOutput(oldToolOutput),
+      .prompt(.foundationModelsTools("Second")),
+      .toolCalls(latestToolCalls),
+      .toolOutput(latestToolOutput),
+      .prompt(.foundationModelsTools("Continue")),
+    ]
+
+    let transformed = entries.droppingCompletedToolCalls()
+
+    #expect(transformed.map { $0.foundationModelsToolsKind } == [
+      "instructions",
+      "prompt",
+      "prompt",
+      "toolCalls",
+      "toolOutput",
+      "prompt",
+    ])
+    #expect(transformed.contains { entry in
+      if case .toolOutput(let output) = entry {
+        return output.id == "old-output"
+      }
+      return false
+    } == false)
+    #expect(transformed.contains { entry in
+      if case .toolCalls(let calls) = entry {
+        return calls.id == "latest-calls"
+      }
+      return false
+    })
+  }
+
+  @Test("Dropping completed tool calls keeps current tool exchange")
+  func droppingCompletedToolCallsKeepsCurrentToolExchange() {
+    let toolCalls = Transcript.ToolCalls(id: "current-calls", [])
+    let toolOutput = Transcript.ToolOutput(
+      id: "current-output",
+      toolName: "search",
+      segments: [.text(Transcript.TextSegment(content: "Current search output"))]
+    )
+
+    let entries: [Transcript.Entry] = [
+      .instructions(.foundationModelsTools("System")),
+      .prompt(.foundationModelsTools("First")),
+      .toolCalls(toolCalls),
+      .toolOutput(toolOutput),
+    ]
+
+    let transformed = entries.droppingCompletedToolCalls()
+
+    #expect(transformed.map { $0.foundationModelsToolsKind } == [
+      "instructions",
+      "prompt",
+      "toolCalls",
+      "toolOutput",
+    ])
+    #expect(transformed.contains { entry in
+      if case .toolOutput(let output) = entry {
+        return output.id == "current-output"
+      }
+      return false
+    })
+  }
+
+  @Test("Dropping completed tool calls preserves transcript with no outputs")
+  func droppingCompletedToolCallsPreservesTranscriptWithNoOutputs() {
+    let entries: [Transcript.Entry] = [
+      .instructions(.foundationModelsTools("System")),
+      .prompt(.foundationModelsTools("First")),
+      .prompt(.foundationModelsTools("Second")),
+    ]
+
+    let transformed = entries.droppingCompletedToolCalls()
+
+    #expect(transformed.map { $0.foundationModelsToolsText } == [
+      "System",
+      "First",
+      "Second",
+    ])
+  }
+}
+
+private extension Transcript.Entry {
+  var foundationModelsToolsKind: String {
+    if case .instructions = self { return "instructions" }
+    if case .prompt = self { return "prompt" }
+    if case .toolCalls = self { return "toolCalls" }
+    if case .toolOutput = self { return "toolOutput" }
+    if case .response = self { return "response" }
+    return "unknown"
+  }
+
+  var foundationModelsToolsText: String {
+    if case .instructions(let instructions) = self {
+      return instructions.segments.foundationModelsToolsText
+    }
+    if case .prompt(let prompt) = self {
+      return prompt.segments.foundationModelsToolsText
+    }
+    if case .toolOutput(let output) = self {
+      return output.segments.foundationModelsToolsText
+    }
+    if case .response(let response) = self {
+      return response.segments.foundationModelsToolsText
+    }
+    if case .toolCalls(let calls) = self {
+      return calls.id
+    }
+    return ""
+  }
+}
+
+private extension [Transcript.Segment] {
+  var foundationModelsToolsText: String {
+    compactMap { segment in
+      if case .text(let text) = segment {
+        return text.content
+      }
+      return nil
+    }.joined(separator: "\n")
+  }
+}
+
+private extension Transcript.Instructions {
+  static func foundationModelsTools(_ text: String) -> Self {
+    Self(
+      segments: [.text(Transcript.TextSegment(content: text))],
+      toolDefinitions: []
+    )
+  }
+}
+
+private extension Transcript.Prompt {
+  static func foundationModelsTools(_ text: String) -> Self {
+    Self(segments: [.text(Transcript.TextSegment(content: text))])
+  }
+}
+
+private extension Transcript.ToolOutput {
+  static func foundationModelsTools(id: String, text: String) -> Self {
+    Self(
+      id: id,
+      toolName: "testTool",
+      segments: [.text(Transcript.TextSegment(content: text))]
+    )
   }
 }
