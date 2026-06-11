@@ -1,15 +1,15 @@
 #!/bin/bash
 
-# BenchmarkCLI - Automated xctrace workflow for Foundation Models benchmarking
+# AppBenchCLI - Automated xctrace workflow for Foundation Models benchmarking
 # This script records a benchmark run with xctrace and exports the data
 
 set -e
 
-TRACE_FILE="token-test.trace"
-EXPORT_FILE="token-export.xml"
-CLI_PATH="./.build/debug/BenchmarkCLI"
+TRACE_FILE="appbench-performance.trace"
+EXPORT_FILE="appbench-performance.xml"
+CLI_PATH="./.build/debug/AppBenchCLI"
 
-echo "BenchmarkCLI - xctrace Foundation Models Workflow"
+echo "AppBenchCLI - xctrace Foundation Models Workflow"
 echo "================================================================================"
 echo ""
 
@@ -21,9 +21,9 @@ if [ ! -f "$CLI_PATH" ]; then
 fi
 
 # Remove old trace files if they exist
-if [ -f "$TRACE_FILE" ]; then
+if [ -e "$TRACE_FILE" ]; then
     echo "Cleaning up old trace file: $TRACE_FILE"
-    rm -f "$TRACE_FILE"
+    rm -rf "$TRACE_FILE"
 fi
 
 if [ -f "$EXPORT_FILE" ]; then
@@ -32,11 +32,14 @@ if [ -f "$EXPORT_FILE" ]; then
 fi
 
 echo "Recording benchmark with Foundation Models instrument..."
-echo "   xctrace record --instrument 'Foundation Models' --output $TRACE_FILE --launch -- $CLI_PATH -- token-test"
+echo "   xctrace record --instrument 'Foundation Models' --output $TRACE_FILE --launch -- $CLI_PATH --suite performance --warmups 0 --repetitions 1"
 echo ""
 
 # Record with xctrace
-xctrace record --instrument 'Foundation Models' --output "$TRACE_FILE" --launch -- "$CLI_PATH" -- token-test
+APPBENCH_COMMIT="$(git -C .. rev-parse --short HEAD 2>/dev/null || true)"
+export APPBENCH_COMMIT
+xctrace record --instrument 'Foundation Models' --output "$TRACE_FILE" --launch -- \
+    "$CLI_PATH" --suite performance --warmups 0 --repetitions 1
 
 echo ""
 echo "Recording complete!"
@@ -63,9 +66,9 @@ echo ""
 echo "================================================================================"
 echo ""
 
-# Parse XML using BenchmarkCLI
+# Keep the exported XML alongside the AppBench report for analysis.
 echo "Parsing XML data..."
-echo "(XML parsing is now integrated into BenchmarkCLI - run with: swift run BenchmarkCLI parse-xml $EXPORT_FILE)"
+echo "Use Instruments to inspect the trace alongside the JSON AppBench report."
 
 echo ""
 echo "Done! Files created:"

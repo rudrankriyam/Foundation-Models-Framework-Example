@@ -1,128 +1,122 @@
-# Foundation Models Framework Benchmark
+# Foundation Models AppBench
 
+Foundation Models AppBench measures real application workloads across Apple devices,
+OS releases, the on-device system model, and Private Cloud Compute.
 
-This repo measures Foundation Models performance across macOS, iOS, iPadOS, and visionOS using unit tests.
+It reports **quality and performance separately**. A fast incorrect response remains
+incorrect; a high-quality response does not hide poor latency.
 
-## Requirements
+## Included Scenarios
 
-- Xcode 26.0 or newer (SDKs for macOS 26, iOS 26, iPadOS 26, visionOS 26).
-- Apple Intelligence enabled on the test device.
+The starter corpus uses synthetic, reproducible inputs modeled after app experiences
+Apple highlighted in its
+[Foundation Models framework app showcase](https://www.apple.com/newsroom/2025/09/apples-foundation-models-framework-unlocks-new-intelligent-app-experiences/).
 
-## Running the Benchmark
+| Scenario | App pattern | Primary quality signal |
+| --- | --- | --- |
+| Natural-language task capture | Stuff, OmniFocus | Exact structured fields |
+| Stacked notification summary | Stoic, Gratitude | Required facts and word limit |
+| Journal reflection | Stoic, Gratitude | Grounding and instruction following |
+| Habit classification | Motivation, Streaks, Vocabulary | Exact constrained category |
+| Workout plan | SmartGym, 7 Minute Workout, Train Fitness | Schema and constraint compliance |
+| Grounded document answer | Signeasy, Agenda, Essayist, CellWalk, Platzi | Exact answer and citations |
+| Synthetic sustained generation | Original repository workload | Decode throughput |
 
-### Using Xcode
+The app inputs are original synthetic fixtures. App names describe the product pattern
+that inspired each workload; AppBench does not reproduce proprietary app data.
 
-1. Open the project in Xcode
-2. Select your target device (iPhone, iPad, Mac, or simulator) from the device dropdown
-3. Press **Cmd+U** to run all tests, or place cursor in test method and press **Control+Option+Command+U** to run a specific test
+## Metrics
 
-### Using Command Line
+Every measured trial records:
 
-Run on your local Mac:
+- Prompt-level pass: every deterministic constraint passed.
+- Constraint score: fraction of individual checks passed.
+- End-to-end duration.
+- Time to first token (TTFT).
+- Decode duration.
+- Estimated output tokens per second.
+- Output characters per second.
+- Stream update count and maximum stream-update gap.
+- Device, chip, memory, OS version/build, locale, thermal state, and Low Power Mode.
+
+Token counts are calibrated estimates unless an Instruments trace is captured. Decode
+throughput uses **output tokens only** and excludes TTFT.
+
+Each scenario summary reports median, p90, mean, range, and standard deviation.
+
+## Run
+
+Requirements:
+
+- Xcode 26 or newer.
+- macOS/iOS/iPadOS/visionOS 26 or newer.
+- Apple Intelligence enabled on a supported physical device.
+- Xcode 27 and the managed PCC entitlement for Private Cloud Compute.
 
 ```bash
-xcodebuild test -project FoundationStudio.xcodeproj -scheme FoundationStudioTests -destination "platform=macOS"
+# List workloads
+./appbench list
+
+# Practical suite, one warmup and three measured repetitions
+./appbench --suite quick --model on-device
+
+# Full practical suite with export
+./appbench --suite full --repetitions 5 \
+  --json Results/macbook-m5-macos-27.json \
+  --markdown Results/macbook-m5-macos-27.md
+
+# Original sustained-generation workload
+./appbench --suite performance --repetitions 5
+
+# OS 27 PCC, when the executable has the approved entitlement
+DEVELOPER_DIR=/path/to/Xcode-beta.app/Contents/Developer \
+  ./appbench --suite quick --model pcc
 ```
 
-Run on a specific iOS device:
+The legacy `./benchmark` command remains as a compatibility wrapper.
 
-```bash
-xcodebuild test -project FoundationStudio.xcodeproj -scheme FoundationStudioTests -destination "platform=iOS,name=Rudrank 17 Pro"
-```
+## App
 
-Run on a simulator:
+Open `FoundationStudio/FoundationStudio.xcodeproj`. The app provides controls for:
 
-```bash
-xcodebuild test -project FoundationStudio.xcodeproj -scheme FoundationStudioTests -destination "platform=iOS Simulator,name=iPhone 17 Pro"
-```
+- Practical Quick, Practical Full, and Synthetic Performance suites.
+- On-device and PCC execution.
+- Warmup count and measured repetitions.
+- Per-scenario prompt pass, constraint score, median TTFT, and median output speed.
+- Markdown report copying.
 
-### What You'll See
+## OS 26 vs OS 27
 
-The test will display an ASCII "FOUNDATION STUDIO" banner followed by detailed hardware information and benchmark results in the Xcode console:
+Use the same physical device, fixtures, sampling, warmups, and repetition count.
 
-```
-╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
-║                                                                                               ║
-║    ███████╗ ██████╗ ██╗   ██╗███╗   ██╗██████╗  █████╗ ████████╗██╗ ██████╗ ███╗   ██╗        ║
-║    ██╔════╝██╔═══██╗██║   ██║████╗  ██║██╔══██╗██╔══██╗╚══██╔══╝██║██╔═══██╗████╗  ██║        ║
-║    █████╗  ██║   ██║██║   ██║██╔██╗ ██║██║  ██║███████║   ██║   ██║██║   ██║██╔██╗ ██║        ║
-║    ██╔══╝  ██║   ██║██║   ██║██║╚██╗██║██║  ██║██╔══██║   ██║   ██║██║   ██║██║╚██╗██║        ║
-║    ██║     ╚██████╔╝╚██████╔╝██║ ╚████║██████╔╝██║  ██║   ██║   ██║╚██████╔╝██║ ╚████║        ║
-║    ╚═╝      ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚═╝ ╚═════╝ ╚═╝  ╚═══╝        ║
-║                                                                                               ║
-║                    ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗                              ║
-║                    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗                             ║
-║                    ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║                             ║
-║                    ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║                             ║
-║                    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝                             ║
-║                    ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝                              ║
-║                                                                                               ║
-║                         Foundation Models Benchmarking Tool                                   ║
-║                                                                                               ║
-╚═══════════════════════════════════════════════════════════════════════════════════════════════╝
+Recommended initial matrix:
 
-Environment
-----------------------------------------
-Device: Rudrank 17 Pro
-CPU: A18 Pro 6-core
-GPU: Apple GPU
-RAM: 10 GB
-OS: iOS 18.1
-Locale: en_US
+| Device | OS | Model |
+| --- | --- | --- |
+| MacBook Pro M5 | macOS 26 | On-device |
+| MacBook Pro M5 | macOS 27 | On-device |
+| MacBook Pro M5 | macOS 27 | PCC |
+| iPhone 16 Pro Max | iOS 26 | On-device |
+| iPhone 16 Pro Max | iOS 27 | On-device |
+| iPhone 16 Pro Max | iOS 27 | PCC |
 
-========================================
-RUNNING FOUNDATION MODELS BENCHMARK
-========================================
+PCC measures end-to-end service behavior, including network and server time. It is not
+a measurement of the client device’s inference speed. PCC can change server-side
+without an OS update, so every result must retain its timestamp and OS build.
 
-Benchmark completed successfully!
+See [Methodology](docs/METHODOLOGY.md), [Device Matrix](docs/DEVICE_MATRIX.md),
+and [Migration Notes](docs/MIGRATION.md).
 
-Estimated Metrics:
-  Duration: 17.53s
-  Time to First Token: 0.45s
-  Prompt Tokens (est.): 125
-  Response Tokens (est.): 1,069
-  Total Tokens (est.): 1,194
-  Tokens/sec (est.): 68.13
+## Package
 
-Response preview (first 200 chars):
-The product design is clean and modern...
-```
+`BenchmarkCore/Package.swift` exports:
 
-## macOS Results
-
-| Device | CPU | GPU | RAM | OS | Input Tokens | Output Tokens | Total Tokens | Duration | Tokens/sec |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| MacBook Pro 14" (2025) | Apple M5 10‑core | Apple M5 10‑core | 32 GB | macOS 26.0 | 125 | 1,069 | 1,194 | 14.41s | **82.86** |
-| MacBook Pro 14" (2024) | Apple M4 10‑core | Apple M4 10‑core | 16 GB | macOS 26.1 | 125 | 1,069 | 1,194 | 15.64s | **76.33** |
-| MacBook Air 15" (2025) | Apple M4 10‑core | Apple M4 10‑core | 24 GB | macOS 26.1 | 144 | 887 | 1,031 | 15.23s | **58.24** |
-
-## iOS Results
-
-| Device | CPU | GPU | RAM | OS | Input Tokens | Output Tokens | Total Tokens | Duration | Tokens/sec |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| iPhone 17 Pro | Apple A19 Pro 6‑core | Apple GPU | 12 GB | iOS 26.1 | 125 | 1,069 | 1,194 | 11.93s | **100.08** |
-| iPhone 16 Pro Max | Apple A18 Pro 6‑core | Apple GPU | 8 GB | iOS 26.2 | 125 | 1,069 | 1,194 | 17.53s | **68.13** |
-| Rudrank 17 Pro | Apple A18 Pro 6‑core | Apple GPU | 10 GB | iOS 18.1 | 125 | 1,069 | 1,194 | 17.53s | **68.13** |
-
-## iPadOS Results
-
-| Device | CPU | GPU | RAM | OS | Input Tokens | Output Tokens | Total Tokens | Duration | Tokens/sec |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| iPad Pro 13" (M4) | Apple M4 10‑core | Apple GPU | 16 GB | iPadOS 18.1 | TBD | TBD | TBD | TBD | TBD |
-
-## visionOS Results
-
-| Device | CPU | GPU | RAM | OS | Input Tokens | Output Tokens | Total Tokens | Duration | Tokens/sec |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Apple Vision Pro (M2) | Apple M2 8‑core (4P + 4E) | Apple GPU | 16 GB | visionOS 2.0 | TBD | TBD | TBD | TBD | TBD |
-| Apple Vision Pro (M5) | Apple M5 10‑core (4P + 6E) | Apple GPU | 16 GB | visionOS 26.0 | TBD | TBD | TBD | TBD | TBD |
-
-**Note:** GPU information is displayed as "Apple GPU" on iOS/iPadOS/visionOS due to platform limitations. On macOS, the specific GPU model is shown.
+- `AppBenchCore`: scenarios, graders, runner, statistics, and reports.
+- `AppBenchCLI`: command-line experiment runner.
+- `BenchmarkCore`: compatibility product that exposes the `AppBenchCore` module.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT. See [LICENSE](LICENSE).
 
-Contributions welcome!
-
-[![Star History Chart](https://api.star-history.com/svg?repos=rudrankriyam/Foundation-Models-Framework-Benchmark&type=Date)](https://star-history.com/#rudrankriyam/Foundation-Models-Framework-Benchmark&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=rudrankriyam/Foundation-Models-AppBench&type=Date)](https://star-history.com/#rudrankriyam/Foundation-Models-AppBench&Date)

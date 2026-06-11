@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0A2230E72EACD3C900E09810 /* BenchmarkCore in Frameworks */ = {isa = PBXBuildFile; productRef = 0A2230E62EACD3C900E09810 /* BenchmarkCore */; };
+		0A2230E72EACD3C900E09810 /* AppBenchCore in Frameworks */ = {isa = PBXBuildFile; productRef = 0A2230E62EACD3C900E09810 /* AppBenchCore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -22,7 +22,7 @@
 
 /* Begin PBXFileReference section */
 		0A2230D02EACD0FC00E09810 /* FoundationStudio.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FoundationStudio.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		0A2230E42EACD14800E09810 /* BenchmarkCore */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = BenchmarkCore; path = ../BenchmarkCore; sourceTree = SOURCE_ROOT; };
+		0A2230E42EACD14800E09810 /* AppBenchCore */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = AppBenchCore; path = ../BenchmarkCore; sourceTree = SOURCE_ROOT; };
 		8F9333AD2EDC957C001D8D8F /* FoundationStudioTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FoundationStudioTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -44,7 +44,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0A2230E72EACD3C900E09810 /* BenchmarkCore in Frameworks */,
+				0A2230E72EACD3C900E09810 /* AppBenchCore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -61,7 +61,7 @@
 		0A2230C72EACD0FC00E09810 = {
 			isa = PBXGroup;
 			children = (
-				0A2230E42EACD14800E09810 /* BenchmarkCore */,
+				0A2230E42EACD14800E09810 /* AppBenchCore */,
 				0A2230D22EACD0FC00E09810 /* FoundationStudio */,
 				8F9333AE2EDC957C001D8D8F /* FoundationStudioTests */,
 				0A2230E52EACD3C900E09810 /* Frameworks */,
@@ -105,7 +105,7 @@
 			);
 			name = FoundationStudio;
 			packageProductDependencies = (
-				0A2230E62EACD3C900E09810 /* BenchmarkCore */,
+				0A2230E62EACD3C900E09810 /* AppBenchCore */,
 			);
 			productName = FoundationStudio;
 			productReference = 0A2230D02EACD0FC00E09810 /* FoundationStudio.app */;
@@ -345,7 +345,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Foundation Studio";
+				INFOPLIST_KEY_CFBundleDisplayName = "Foundation Models AppBench";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -361,7 +361,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.rudrankriyam.FoundationStudio;
+				PRODUCT_BUNDLE_IDENTIFIER = com.rudrankriyam.FoundationModelsAppBench;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
@@ -390,7 +390,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Foundation Studio";
+				INFOPLIST_KEY_CFBundleDisplayName = "Foundation Models AppBench";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -406,7 +406,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.rudrankriyam.FoundationStudio;
+				PRODUCT_BUNDLE_IDENTIFIER = com.rudrankriyam.FoundationModelsAppBench;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
@@ -522,9 +522,9 @@
 /* End XCConfigurationList section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		0A2230E62EACD3C900E09810 /* BenchmarkCore */ = {
+		0A2230E62EACD3C900E09810 /* AppBenchCore */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = BenchmarkCore;
+			productName = AppBenchCore;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

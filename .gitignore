@@ -60,3 +60,9 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
+
+# AppBench generated artifacts
+*.trace/
+Results/*.json
+Results/*.md
+!Results/README.md

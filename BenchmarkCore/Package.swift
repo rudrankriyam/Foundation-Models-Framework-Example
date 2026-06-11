@@ -4,7 +4,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "BenchmarkCore",
+    name: "AppBenchCore",
     platforms: [
         .iOS(.v26),
         .macOS(.v26),
@@ -12,21 +12,29 @@ let package = Package(
     ],
     products: [
         .library(
+            name: "AppBenchCore",
+            targets: ["AppBenchCore"]
+        ),
+        .library(
             name: "BenchmarkCore",
-            targets: ["BenchmarkCore"]
+            targets: ["AppBenchCore"]
         ),
         .executable(
-            name: "BenchmarkCLI",
-            targets: ["BenchmarkCLI"]
+            name: "AppBenchCLI",
+            targets: ["AppBenchCLI"]
         )
     ],
     targets: [
         .target(
-            name: "BenchmarkCore"
+            name: "AppBenchCore"
         ),
         .executableTarget(
-            name: "BenchmarkCLI",
-            dependencies: ["BenchmarkCore"]
+            name: "AppBenchCLI",
+            dependencies: ["AppBenchCore"]
+        ),
+        .testTarget(
+            name: "AppBenchCoreTests",
+            dependencies: ["AppBenchCore"]
         )
     ]
 )

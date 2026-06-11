@@ -1,0 +1,38 @@
+# Migration from Foundation Models Framework Benchmark
+
+The original repository measured one sustained text-generation prompt. AppBench keeps
+that workload as the `synthetic-throughput` scenario and expands the repository around
+practical app evaluation.
+
+## Names
+
+| Before | After |
+| --- | --- |
+| Foundation Models Framework Benchmark | Foundation Models AppBench |
+| `BenchmarkCore` module | `AppBenchCore` module |
+| `BenchmarkCLI` | `AppBenchCLI` |
+| `./benchmark` | `./appbench` |
+
+The `BenchmarkCore` package product and `./benchmark` wrapper remain temporarily for
+compatibility. Swift source should import `AppBenchCore`.
+
+## Metric Correction
+
+The old `tokensPerSecond` value divided prompt plus response tokens by total duration.
+That overstated generation speed.
+
+AppBench reports:
+
+- TTFT separately.
+- Output tokens only.
+- Decode duration after the first streamed output.
+- Output characters per second as a tokenizer-independent companion.
+
+Historical values from the old README should not be compared directly with new
+AppBench output throughput.
+
+## Existing Traces
+
+Existing `.trace` captures remain useful for validating estimated token counts and
+examining framework behavior across OS builds. They are ignored by Git because they
+are large generated artifacts.

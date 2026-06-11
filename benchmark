@@ -1,12 +1,11 @@
 #!/bin/sh
 
-# Wrapper to build and run the BenchmarkCLI tool.
+# Compatibility wrapper for Foundation Models AppBench.
 # Automatically builds, finds build path, and runs - all in one step.
 #
 # Usage:
-#   ./benchmark                   # Run normal benchmark
-#   ./benchmark parse-xml <file>  # Parse token export XML
-#   ./benchmark --debug           # Build and run with debug configuration
+#   ./benchmark
+#   ./benchmark --debug --suite performance
 
 CONFIGURATION=Release
 
@@ -18,6 +17,8 @@ fi
 
 PROJECT_DIR="BenchmarkCore"
 PACKAGE_FILE="$PROJECT_DIR/Package.swift"
+APPBENCH_COMMIT="$(git rev-parse --short HEAD 2>/dev/null || true)"
+export APPBENCH_COMMIT
 
 # Check if Package.swift exists
 if [ ! -f "$PACKAGE_FILE" ]; then
@@ -27,7 +28,7 @@ if [ ! -f "$PACKAGE_FILE" ]; then
 fi
 
 # Build first
-echo "Building BenchmarkCLI ($CONFIGURATION)..."
+echo "Building AppBenchCLI ($CONFIGURATION)..."
 cd "$PROJECT_DIR"
 if ! swift build -c "$CONFIGURATION"; then
 	echo "Build failed"
@@ -37,10 +38,10 @@ fi
 # Find the build directory
 BUILD_DIR=".build/$CONFIGURATION"
 
-if [ -f "$BUILD_DIR/BenchmarkCLI" ]; then
+if [ -f "$BUILD_DIR/AppBenchCLI" ]; then
 	export DYLD_FRAMEWORK_PATH="$BUILD_DIR/PackageFrameworks:$BUILD_DIR"
-	exec "$BUILD_DIR/BenchmarkCLI" "$@"
+	exec "$BUILD_DIR/AppBenchCLI" "$@"
 else
-	echo "Error: $BUILD_DIR/BenchmarkCLI does not exist"
+	echo "Error: $BUILD_DIR/AppBenchCLI does not exist"
 	exit 1
 fi

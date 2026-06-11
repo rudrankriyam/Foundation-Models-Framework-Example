@@ -1,0 +1,31 @@
+import AppBenchCore
+import SwiftUI
+
+struct AppBenchResultView: View {
+    let result: AppBenchRunResult
+    let copyAction: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Text("Results")
+                    .font(.title2.bold())
+                Spacer()
+                Button("Copy Markdown", systemImage: "doc.on.doc", action: copyAction)
+            }
+
+            ForEach(result.summaries) { summary in
+                AppBenchSummaryRow(summary: summary)
+            }
+
+            if !result.failures.isEmpty {
+                Label(
+                    "\(result.failures.count) execution failures are included in the report.",
+                    systemImage: "exclamationmark.triangle.fill"
+                )
+                .foregroundStyle(.orange)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}

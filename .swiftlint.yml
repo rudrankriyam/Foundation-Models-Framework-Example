@@ -1,5 +1,6 @@
 included:
-  - BenchmarkCore/Sources
+  - BenchmarkCore/Sources/AppBenchCore
+  - BenchmarkCore/Sources/AppBenchCLI
   - FoundationStudio/FoundationStudio
 
 excluded:
