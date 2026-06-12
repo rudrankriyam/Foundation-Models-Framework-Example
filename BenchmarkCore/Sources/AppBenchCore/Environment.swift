@@ -76,7 +76,7 @@ public struct EnvironmentSnapshot: Codable, Sendable {
         #endif
 
         return EnvironmentSnapshot(
-            deviceName: processInfo.hostName,
+            deviceName: processInfo.environment["APPBENCH_DEVICE_NAME"] ?? hardwareModel ?? systemName,
             systemName: systemName,
             systemVersion: versionString,
             systemBuild: operatingSystemBuild(),
