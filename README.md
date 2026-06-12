@@ -132,7 +132,9 @@ with Apple M5 and 32 GB of memory on macOS 27 beta build `26A5353q`.
   retained rather than omitted.
 
 See [Results](Results/README.md) for the reports and the limits on interpreting
-this single-device baseline.
+this single-device baseline. Pre-AppBench community measurements are preserved
+in [Legacy Results](docs/LEGACY_RESULTS.md), but their throughput formula is not
+comparable with current reports.
 
 ## Package
 
