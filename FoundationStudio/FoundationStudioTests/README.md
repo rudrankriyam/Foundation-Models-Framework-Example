@@ -12,11 +12,11 @@ It is intentionally a smoke test rather than the primary benchmark runner.
 The test asserts that one measured trial completed and prints the same Markdown
 report used by the CLI. Simulators may report that the system model is unavailable.
 
-For publishable measurements, use the app or CLI with at least one warmup and five
+For publishable measurements, use the app or CLI with five warmups and twenty
 measured repetitions:
 
 ```bash
-./appbench --suite quick --warmups 1 --repetitions 5
+./appbench --suite quick --warmups 5 --repetitions 20
 ```
 
 Do not add fixed performance thresholds to live tests. Throughput and latency vary

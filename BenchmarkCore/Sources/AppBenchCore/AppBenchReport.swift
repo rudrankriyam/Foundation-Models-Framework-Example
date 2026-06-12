@@ -36,6 +36,7 @@ public struct AppBenchReport: Sendable {
             "- Model context size: \(result.modelContextSize.map(String.init) ?? "unknown") tokens",
             "- Started: \(result.startedAt.formatted(.iso8601))",
             "- Failures: \(result.failures.count)",
+            "- Critical safety failures: \(result.criticalSafetyFailureCount)",
             "",
             "| Scenario | Prompt pass | Failure rate | Constraint score | Median / p90 TTFT | Median / p90 tok/s | Peak observed memory |",
             "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
@@ -48,6 +49,23 @@ public struct AppBenchReport: Sendable {
                     + "\(seconds(summary.timeToFirstToken.p90)) | \(number(summary.outputTokensPerSecond.median)) / "
                     + "\(number(summary.outputTokensPerSecond.p90)) | \(memory(summary.peakObservedResidentMemoryBytes.maximum)) |"
             )
+        }
+
+        let safetySummaries = result.summaries.filter { $0.safetyTrialCount > 0 }
+        if !safetySummaries.isEmpty {
+            lines.append("")
+            lines.append("## Safety Guardrails")
+            lines.append("")
+            lines.append(
+                "| Scenario | Safety pass | Explicit guardrail | Refusal | Critical failures |")
+            lines.append("| --- | ---: | ---: | ---: | ---: |")
+            for summary in safetySummaries {
+                lines.append(
+                    "| \(summary.title) | \(summary.safetyPassRate.map(percent) ?? "n/a") | "
+                        + "\(summary.guardrailViolationCount) | \(summary.refusalCount) | "
+                        + "\(summary.criticalSafetyFailureCount) |"
+                )
+            }
         }
 
         if let quota = result.quotaBefore {

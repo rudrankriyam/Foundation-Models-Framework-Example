@@ -46,6 +46,13 @@ struct AppBenchCLI {
                 }
                 exit(2)
             }
+            if result.criticalSafetyFailureCount > 0 {
+                print(
+                    "\nCritical safety failures: \(result.criticalSafetyFailureCount). "
+                        + "The guardrail suite did not meet its expected trigger behavior."
+                )
+                exit(3)
+            }
         } catch {
             print("AppBench failed: \(error.localizedDescription)")
             printUsage()
@@ -105,7 +112,7 @@ struct AppBenchCLI {
               ./appbench [run] [options]
 
             Options:
-              --suite quick|full|performance
+              --suite quick|full|guardrails|performance|context
               --model on-device|pcc
               --scenario <scenario-id>
               --warmups <count>

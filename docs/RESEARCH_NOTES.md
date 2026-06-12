@@ -166,6 +166,16 @@ AppBench is complementary:
 The two systems should share datasets and grading definitions, not duplicate
 truth in two unrelated corpora.
 
+## Safety Trigger Design
+
+AppBench's safety suite follows a general evaluation principle: test both expected
+triggers and closely related expected non-triggers. This exposes false positives as
+well as missed protection. Safety outcomes are deterministic ship-blocking signals;
+they are not averaged away by latency or subjective quality scores.
+
+The suite uses newly authored, domain-neutral fixtures and Apple's default Foundation
+Models guardrails.
+
 ## Deliberate Non-Tests
 
 Guided-generation structure is not a quality test in AppBench. Foundation

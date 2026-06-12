@@ -1,7 +1,8 @@
 import Foundation
 
 public enum AppBenchScenarioCatalog {
-    public static let all: [AppBenchScenario] = practical + [syntheticThroughput, contextLimit]
+    public static let all: [AppBenchScenario] =
+        practical + safety + [syntheticThroughput, contextLimit]
 
     public static let practical: [AppBenchScenario] = [
         taskCapture,
@@ -14,6 +15,11 @@ public enum AppBenchScenarioCatalog {
         citationExtraction,
         creativeWriting,
         visualRecommendation,
+    ]
+
+    public static let safety: [AppBenchScenario] = [
+        guardrailExpectedResponse,
+        guardrailExpectedProtection,
     ]
 
     public static func scenarios(for suite: AppBenchSuite) -> [AppBenchScenario] {
@@ -31,6 +37,8 @@ public enum AppBenchScenarioCatalog {
             ]
         case .full:
             practical
+        case .guardrails:
+            safety
         case .performance:
             [syntheticThroughput]
         case .context:

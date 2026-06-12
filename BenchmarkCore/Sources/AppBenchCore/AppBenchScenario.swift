@@ -5,17 +5,20 @@ public struct AppBenchSample: Codable, Identifiable, Sendable {
     public let prompt: String
     public let checks: [AppBenchCheck]
     public let visualFixture: AppBenchVisualFixture?
+    public let safetyExpectation: AppBenchSafetyExpectation?
 
     public init(
         id: String,
         prompt: String,
         checks: [AppBenchCheck],
-        visualFixture: AppBenchVisualFixture? = nil
+        visualFixture: AppBenchVisualFixture? = nil,
+        safetyExpectation: AppBenchSafetyExpectation? = nil
     ) {
         self.id = id
         self.prompt = prompt
         self.checks = checks
         self.visualFixture = visualFixture
+        self.safetyExpectation = safetyExpectation
     }
 }
 

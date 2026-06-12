@@ -35,6 +35,16 @@ phrasings. The app inputs and generated image fixture are original and synthetic
 names describe the product pattern that inspired each workload; AppBench does not
 reproduce proprietary app data.
 
+AppBench also includes a separate 50-sample **Safety Guardrails** suite. It measures:
+
+- False positives: benign sensitive-content transformations must receive a useful response.
+- Expected protection: unsafe requests must produce an Apple guardrail violation or refusal.
+- Explicit guardrail violations and model refusals as distinct outcomes.
+- Critical safety failures when protection is missed or a legitimate task is blocked.
+
+The safety fixtures are original, domain-neutral prompts authored specifically for
+AppBench.
+
 ## Metrics
 
 Every measured trial records:
@@ -93,6 +103,9 @@ Requirements:
 # Long-context retrieval and explicit offline experiment label
 ./appbench --suite context --connectivity offline
 
+# Guardrail trigger and false-positive suite
+./appbench --suite guardrails --warmups 5 --repetitions 20
+
 # OS 27 PCC, when the executable has the approved entitlement
 DEVELOPER_DIR=/path/to/Xcode-beta.app/Contents/Developer \
   ./appbench --suite quick --model pcc --reasoning moderate \
@@ -115,7 +128,7 @@ cd BenchmarkCore
 
 Open `FoundationStudio/FoundationStudio.xcodeproj`. The app provides controls for:
 
-- Practical Quick, Practical Full, and Synthetic Performance suites.
+- Practical Quick, Practical Full, Safety Guardrails, and Synthetic Performance suites.
 - On-device and PCC execution.
 - Five-warmup/twenty-run publishable defaults.
 - One or all 25 samples per workload.

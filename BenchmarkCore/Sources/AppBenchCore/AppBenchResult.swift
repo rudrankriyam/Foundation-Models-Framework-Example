@@ -13,6 +13,8 @@ public struct AppBenchTrialResult: Codable, Identifiable, Sendable {
     public let fallbackReason: String?
     public let offlineSuccess: Bool
     public let toolCalls: [AppBenchToolCall]
+    public let safetyOutcome: AppBenchSafetyOutcome
+    public let safetyDetail: String?
     public let response: String
     public let grade: AppBenchGrade
     public let metrics: AppBenchTrialMetrics
@@ -29,6 +31,8 @@ public struct AppBenchTrialResult: Codable, Identifiable, Sendable {
         fallbackReason: String? = nil,
         offlineSuccess: Bool = false,
         toolCalls: [AppBenchToolCall] = [],
+        safetyOutcome: AppBenchSafetyOutcome = .notApplicable,
+        safetyDetail: String? = nil,
         response: String,
         grade: AppBenchGrade,
         metrics: AppBenchTrialMetrics,
@@ -46,10 +50,23 @@ public struct AppBenchTrialResult: Codable, Identifiable, Sendable {
         self.fallbackReason = fallbackReason
         self.offlineSuccess = offlineSuccess
         self.toolCalls = toolCalls
+        self.safetyOutcome = safetyOutcome
+        self.safetyDetail = safetyDetail
         self.response = response
         self.grade = grade
         self.metrics = metrics
         self.environment = environment
+    }
+
+    public var safetyPassed: Bool? {
+        AppBenchSafetyClassifier.passed(
+            expectation: sample.safetyExpectation,
+            outcome: safetyOutcome
+        )
+    }
+
+    public var isCriticalSafetyFailure: Bool {
+        safetyPassed == false
     }
 }
 
@@ -106,6 +123,11 @@ public struct AppBenchScenarioSummary: Codable, Identifiable, Sendable {
     public let failureRate: Double
     public let promptPassRate: Double
     public let meanConstraintScore: Double
+    public let safetyTrialCount: Int
+    public let safetyPassRate: Double?
+    public let guardrailViolationCount: Int
+    public let refusalCount: Int
+    public let criticalSafetyFailureCount: Int
     public let duration: AppBenchDistribution
     public let timeToFirstToken: AppBenchDistribution
     public let outputTokensPerSecond: AppBenchDistribution
@@ -127,6 +149,18 @@ public struct AppBenchScenarioSummary: Codable, Identifiable, Sendable {
             trials.isEmpty
             ? 0
             : trials.map(\.grade.score).reduce(0, +) / Double(trials.count)
+        let safetyTrials = trials.filter { $0.sample.safetyExpectation != nil }
+        safetyTrialCount = safetyTrials.count
+        safetyPassRate =
+            safetyTrials.isEmpty
+            ? nil
+            : Double(safetyTrials.count(where: { $0.safetyPassed == true }))
+                / Double(safetyTrials.count)
+        guardrailViolationCount = safetyTrials.count(where: {
+            $0.safetyOutcome == .guardrailViolation
+        })
+        refusalCount = safetyTrials.count(where: { $0.safetyOutcome == .refusal })
+        criticalSafetyFailureCount = safetyTrials.count(where: \.isCriticalSafetyFailure)
         duration = AppBenchDistribution(values: trials.map(\.metrics.duration))
         timeToFirstToken = AppBenchDistribution(
             values: trials.compactMap(\.metrics.timeToFirstToken))
@@ -159,6 +193,10 @@ public struct AppBenchRunResult: Codable, Sendable {
     public let trials: [AppBenchTrialResult]
     public let failures: [AppBenchFailure]
     public let summaries: [AppBenchScenarioSummary]
+
+    public var criticalSafetyFailureCount: Int {
+        trials.count(where: \.isCriticalSafetyFailure)
+    }
 
     public init(
         suite: AppBenchSuite,

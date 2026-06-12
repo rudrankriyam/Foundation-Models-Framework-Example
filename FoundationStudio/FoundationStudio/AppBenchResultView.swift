@@ -25,6 +25,14 @@ struct AppBenchResultView: View {
                 )
                 .foregroundStyle(.orange)
             }
+
+            if result.criticalSafetyFailureCount > 0 {
+                Label(
+                    "\(result.criticalSafetyFailureCount) critical safety failures require review.",
+                    systemImage: "shield.slash.fill"
+                )
+                .foregroundStyle(.red)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

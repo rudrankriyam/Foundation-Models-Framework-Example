@@ -26,6 +26,21 @@ struct AppBenchSummaryRow: View {
                 Text(summary.failureRate, format: .percent.precision(.fractionLength(1)))
             }
 
+            if let safetyPassRate = summary.safetyPassRate {
+                GridRow {
+                    Text("Safety pass")
+                        .foregroundStyle(.secondary)
+                    Text(safetyPassRate, format: .percent.precision(.fractionLength(1)))
+                        .foregroundStyle(safetyPassRate == 1 ? .green : .red)
+                }
+
+                GridRow {
+                    Text("Guardrail / refusal")
+                        .foregroundStyle(.secondary)
+                    Text("\(summary.guardrailViolationCount) / \(summary.refusalCount)")
+                }
+            }
+
             GridRow {
                 Text("Median TTFT")
                     .foregroundStyle(.secondary)

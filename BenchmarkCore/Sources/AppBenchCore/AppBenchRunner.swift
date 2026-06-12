@@ -173,22 +173,107 @@ public actor AppBenchRunner {
     private func run(item: WorkItem, contextSize modelContextSize: Int?) async throws
         -> AppBenchTrialResult
     {
+        let primaryStartedAt = Date.now
+        let primaryResource = AppBenchResourceSnapshot.capture()
         do {
             return try await execute(
                 item: item, model: configuration.model, contextSize: modelContextSize)
         } catch {
+            if item.sample.safetyExpectation != nil,
+                let outcome = AppBenchSafetyClassifier.outcome(for: error)
+            {
+                return await safetyBlockedTrial(
+                    item: item,
+                    model: configuration.model,
+                    contextSize: modelContextSize,
+                    startedAt: primaryStartedAt,
+                    startingResource: primaryResource,
+                    outcome: outcome,
+                    error: error
+                )
+            }
             guard configuration.model == .privateCloudCompute,
                 configuration.fallbackMode == .onDevice
             else {
                 throw error
             }
-            return try await execute(
-                item: item,
-                model: .onDevice,
-                contextSize: await contextSize(for: .onDevice),
-                fallbackReason: detailedMessage(for: error)
-            )
+            let fallbackReason = detailedMessage(for: error)
+            let fallbackContextSize = await contextSize(for: .onDevice)
+            let fallbackStartedAt = Date.now
+            let fallbackResource = AppBenchResourceSnapshot.capture()
+            do {
+                return try await execute(
+                    item: item,
+                    model: .onDevice,
+                    contextSize: fallbackContextSize,
+                    fallbackReason: fallbackReason
+                )
+            } catch {
+                if item.sample.safetyExpectation != nil,
+                    let outcome = AppBenchSafetyClassifier.outcome(for: error)
+                {
+                    return await safetyBlockedTrial(
+                        item: item,
+                        model: .onDevice,
+                        contextSize: fallbackContextSize,
+                        startedAt: fallbackStartedAt,
+                        startingResource: fallbackResource,
+                        fallbackReason: fallbackReason,
+                        outcome: outcome,
+                        error: error
+                    )
+                }
+                throw error
+            }
         }
+    }
+
+    private func safetyBlockedTrial(
+        item: WorkItem,
+        model: AppBenchModel,
+        contextSize: Int?,
+        startedAt: Date,
+        startingResource: AppBenchResourceSnapshot,
+        fallbackReason: String? = nil,
+        outcome: AppBenchSafetyOutcome,
+        error: any Swift.Error
+    ) async -> AppBenchTrialResult {
+        let endedAt = Date.now
+        let counts = await tokenCounts(
+            for: item.scenario,
+            sample: item.sample,
+            response: "",
+            firstStreamUpdate: "",
+            model: model
+        )
+        let metrics = AppBenchTrialMetrics(
+            startedAt: startedAt,
+            endedAt: endedAt,
+            firstTokenAt: nil,
+            inputTokenCount: counts.input,
+            outputTokenCount: 0,
+            firstStreamUpdateTokenCount: 0,
+            tokenCountSource: counts.source,
+            responseCharacterCount: 0,
+            streamUpdateDates: [],
+            contextSize: contextSize,
+            resourceSnapshots: [startingResource, .capture()]
+        )
+        return AppBenchTrialResult(
+            scenario: item.scenario,
+            sample: item.sample,
+            requestedModel: configuration.model,
+            executedModel: model,
+            iteration: item.iteration,
+            usedFallback: fallbackReason != nil,
+            fallbackReason: fallbackReason,
+            safetyOutcome: outcome,
+            safetyDetail: detailedMessage(for: error),
+            response: "",
+            grade: AppBenchGrader.grade(response: "", checks: item.sample.checks),
+            metrics: metrics,
+            environment: EnvironmentSnapshot.capture()
+        )
     }
 
     private func execute(
@@ -252,7 +337,11 @@ public actor AppBenchRunner {
                                 usageFirstOutputTokens = usageOutputTokens
                             }
                         }
-                    } catch is LanguageModelSession.GenerationError where !response.isEmpty {
+                    } catch let error as LanguageModelSession.GenerationError
+                    where !response.isEmpty {
+                        if isGuardrailViolation(error) {
+                            throw error
+                        }
                         break
                     }
                 } else {
@@ -372,6 +461,10 @@ public actor AppBenchRunner {
             source: usageOutputTokens == nil ? estimatedCounts.source : .sessionUsage
         )
         let toolCalls = await bundle.recorder.snapshot()
+        let safetyOutcome = AppBenchSafetyClassifier.outcome(
+            for: response,
+            expectation: item.sample.safetyExpectation
+        )
         let metrics = AppBenchTrialMetrics(
             startedAt: startedAt,
             endedAt: endedAt,
@@ -397,6 +490,7 @@ public actor AppBenchRunner {
             fallbackReason: fallbackReason,
             offlineSuccess: configuration.connectivity == .offline && model == .onDevice,
             toolCalls: toolCalls,
+            safetyOutcome: safetyOutcome,
             response: response,
             grade: AppBenchGrader.grade(
                 response: response,
@@ -422,8 +516,12 @@ public actor AppBenchRunner {
         let session: LanguageModelSession
         switch model {
         case .onDevice:
+            let systemModel = SystemLanguageModel(
+                useCase: .general,
+                guardrails: .default
+            )
             session = LanguageModelSession(
-                model: SystemLanguageModel.default,
+                model: systemModel,
                 tools: tools,
                 instructions: Instructions(scenario.instructions)
             )
@@ -581,7 +679,10 @@ private func streamTextLegacy(
                 firstStreamUpdate = response
             }
         }
-    } catch is LanguageModelSession.GenerationError where !response.isEmpty {
+    } catch let error as LanguageModelSession.GenerationError where !response.isEmpty {
+        if isGuardrailViolation(error) {
+            throw error
+        }
         return
     }
 }
@@ -637,6 +738,12 @@ private func latestTranscriptResponse(from transcript: Transcript) -> String? {
 }
 
 private func failureKind(_ error: any Swift.Error) -> String {
+    if AppBenchSafetyClassifier.outcome(for: error) == .guardrailViolation {
+        return "guardrail"
+    }
+    if AppBenchSafetyClassifier.outcome(for: error) == .refusal {
+        return "refusal"
+    }
     let description = "\(String(reflecting: error)) \(error.localizedDescription)".lowercased()
     if description.contains("contextsize")
         || description.contains("context_size")
@@ -655,6 +762,10 @@ private func failureKind(_ error: any Swift.Error) -> String {
         return "availability"
     }
     return "generation"
+}
+
+private func isGuardrailViolation(_ error: any Swift.Error) -> Bool {
+    AppBenchSafetyClassifier.outcome(for: error) == .guardrailViolation
 }
 
 private func generationOptions(

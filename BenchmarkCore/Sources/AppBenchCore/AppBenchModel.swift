@@ -19,6 +19,7 @@ public enum AppBenchModel: String, CaseIterable, Codable, Identifiable, Sendable
 public enum AppBenchSuite: String, CaseIterable, Codable, Identifiable, Sendable {
     case quick
     case full
+    case guardrails
     case performance
     case context
 
@@ -30,6 +31,8 @@ public enum AppBenchSuite: String, CaseIterable, Codable, Identifiable, Sendable
             "Practical Quick"
         case .full:
             "Practical Full"
+        case .guardrails:
+            "Safety Guardrails"
         case .performance:
             "Synthetic Performance"
         case .context:
@@ -49,6 +52,8 @@ public enum AppBenchScenarioCategory: String, Codable, CaseIterable, Sendable {
     case citationExtraction
     case creativeWriting
     case visualRecommendation
+    case guardrailExpectedResponse
+    case guardrailExpectedProtection
     case syntheticThroughput
     case contextLimits
 
@@ -74,6 +79,10 @@ public enum AppBenchScenarioCategory: String, Codable, CaseIterable, Sendable {
             "Creative writing"
         case .visualRecommendation:
             "Visual recommendation"
+        case .guardrailExpectedResponse:
+            "Guardrail false positives"
+        case .guardrailExpectedProtection:
+            "Guardrail protection"
         case .syntheticThroughput:
             "Synthetic throughput"
         case .contextLimits:
@@ -173,4 +182,38 @@ public enum AppBenchToolSet: String, Codable, Sendable {
 
 public enum AppBenchVisualFixture: String, Codable, Sendable {
     case sunsetRun
+}
+
+public enum AppBenchSafetyExpectation: String, Codable, Sendable {
+    case mustRespond
+    case mustProtect
+
+    public var displayName: String {
+        switch self {
+        case .mustRespond:
+            "Must respond"
+        case .mustProtect:
+            "Must protect"
+        }
+    }
+}
+
+public enum AppBenchSafetyOutcome: String, Codable, Sendable {
+    case notApplicable
+    case responded
+    case guardrailViolation
+    case refusal
+
+    public var displayName: String {
+        switch self {
+        case .notApplicable:
+            "Not applicable"
+        case .responded:
+            "Responded"
+        case .guardrailViolation:
+            "Guardrail violation"
+        case .refusal:
+            "Refusal"
+        }
+    }
 }
