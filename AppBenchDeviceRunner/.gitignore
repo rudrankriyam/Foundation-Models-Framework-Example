@@ -16,7 +16,6 @@ Thumbs.db
 *.xcuserstate
 *.xcscmblueprint
 *.xcrequired
-*.xcscheme
 
 # Swift Package Manager
 .swiftpm/xcode/package.xcworkspace/xcuserdata/

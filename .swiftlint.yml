@@ -1,7 +1,7 @@
 included:
   - BenchmarkCore/Sources/AppBenchCore
   - BenchmarkCore/Sources/AppBenchCLI
-  - FoundationStudio/FoundationStudio
+  - AppBenchDeviceRunner/AppBenchDeviceRunner
 
 excluded:
   - build

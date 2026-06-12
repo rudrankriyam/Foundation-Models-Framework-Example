@@ -78,7 +78,8 @@ pass, constraint score, and execution failure rate.
 Requirements:
 
 - Xcode 26 or newer.
-- macOS/iOS/iPadOS/visionOS 26 or newer.
+- macOS 26 or newer for the CLI.
+- iOS/iPadOS 26 or newer for the device runner.
 - Apple Intelligence enabled on a supported physical device.
 - Xcode 27 and the managed PCC entitlement for Private Cloud Compute.
 
@@ -124,9 +125,19 @@ cd BenchmarkCore
 ./run-trace.sh --suite quick --samples 1 --repetitions 1 --no-randomize
 ```
 
-## App
+## Execution Surfaces
 
-Open `FoundationStudio/FoundationStudio.xcodeproj`. The app provides controls for:
+Official Mac results come from `AppBenchCLI` through `./appbench`. The CLI is the
+canonical macOS benchmark runner; the SwiftUI target is not used for publishable Mac
+measurements.
+
+iOS does not provide a standalone CLI environment for this framework. Official iPhone
+and iPad results therefore use the signed `AppBenchDeviceRunner` harness on a physical
+Apple Intelligence device. Open
+`AppBenchDeviceRunner/AppBenchDeviceRunner.xcodeproj`, select the physical device, and
+run the `AppBenchDeviceRunner` scheme.
+
+The device runner provides controls for:
 
 - Practical Quick, Practical Full, Safety Guardrails, and Synthetic Performance suites.
 - On-device and PCC execution.
@@ -137,6 +148,9 @@ Open `FoundationStudio/FoundationStudio.xcodeproj`. The app provides controls fo
 - Normal or user-induced offline experiment labels.
 - Per-scenario prompt pass, constraint score, median TTFT, and median output speed.
 - Markdown report copying.
+
+Simulator runs are only for build and interface validation. They are not valid
+benchmark results, even if a model happens to report availability.
 
 ## OS 26 vs OS 27
 

@@ -22,7 +22,7 @@ struct ContentView: View {
                 .frame(maxWidth: 920)
                 .frame(maxWidth: .infinity)
             }
-            .navigationTitle("Foundation Models AppBench")
+            .navigationTitle("AppBench Device Runner")
             .alert("AppBench Failed", isPresented: $viewModel.showError) {
                 Button("OK", role: .cancel) {}
             } message: {

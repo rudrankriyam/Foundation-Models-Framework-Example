@@ -20,23 +20,21 @@ always remain separate metrics.
 ./appbench --suite quick --model on-device --repetitions 3
 cd BenchmarkCore && swift test
 
-DEVELOPER_DIR=/Applications/Xcode-26.5.0-Beta.app/Contents/Developer \
-  xcodebuild -project FoundationStudio/FoundationStudio.xcodeproj \
-  -scheme FoundationStudio -destination 'platform=macOS,arch=arm64' build
-
 DEVELOPER_DIR=/Users/rudrank/Downloads/Xcode-beta.app/Contents/Developer \
-  xcodebuild -project FoundationStudio/FoundationStudio.xcodeproj \
-  -scheme FoundationStudio -destination 'platform=macOS,arch=arm64' build
+  xcodebuild -project AppBenchDeviceRunner/AppBenchDeviceRunner.xcodeproj \
+  -scheme AppBenchDeviceRunner \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
 ```
 
 ## Architecture
 
 - `BenchmarkCore/Sources/AppBenchCore`: scenarios, deterministic graders, model runner,
   metrics, statistics, environment capture, and reports.
-- `BenchmarkCore/Sources/AppBenchCLI`: CLI.
-- `FoundationStudio/FoundationStudio`: SwiftUI experiment console.
+- `BenchmarkCore/Sources/AppBenchCLI`: canonical runner for official Mac results.
+- `AppBenchDeviceRunner/AppBenchDeviceRunner`: signed iOS harness for physical-device
+  iPhone and iPad results.
 - `BenchmarkCore/Tests/AppBenchCoreTests`: offline grading/statistics tests.
-- `FoundationStudio/FoundationStudioTests`: live model smoke test.
+- `AppBenchDeviceRunner/AppBenchDeviceRunnerTests`: live model smoke test.
 
 ## Rules
 
@@ -49,6 +47,8 @@ DEVELOPER_DIR=/Users/rudrank/Downloads/Xcode-beta.app/Contents/Developer \
 - Include OS build, thermal state, Low Power Mode, and timestamp.
 - PCC results are service measurements, not device inference measurements.
 - Add new scenarios using synthetic fixtures, clear provenance, and inspectable checks.
+- Never publish simulator results. Use the CLI on Mac and the device runner on a
+  physical iPhone or iPad.
 - Do not commit raw `.trace` bundles.
 
 Read `docs/METHODOLOGY.md` before changing metrics or evaluation behavior.

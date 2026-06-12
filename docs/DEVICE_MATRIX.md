@@ -7,15 +7,21 @@
 - OS 26 on-device baseline.
 - OS 27 on-device comparison.
 - OS 27 PCC service comparison.
+- Run every published Mac measurement with `AppBenchCLI`.
 
 ### iPhone 16 Pro Max
 
 - OS 26 on-device baseline.
 - OS 27 on-device comparison.
 - OS 27 PCC service comparison.
+- Run every published iPhone measurement with `AppBenchDeviceRunner` on the
+  physical phone.
 
 Capture OS 26 results before upgrading. Apple may stop signing an older OS, making a
 downgrade unavailable.
+
+Simulator runs are excluded from the device matrix. They may verify that the runner
+builds and launches, but they do not measure an iPhone model or its performance.
 
 ## Result Naming
 

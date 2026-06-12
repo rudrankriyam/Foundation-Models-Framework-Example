@@ -110,6 +110,19 @@ already present in that snapshot rather than assuming it contains one token.
 
 ## Experiment Protocol
 
+### Authoritative Runners
+
+- **Mac:** run `AppBenchCLI` through `./appbench`. This is the only authoritative
+  surface for publishable macOS results.
+- **iPhone and iPad:** run `AppBenchDeviceRunner` on a physical Apple Intelligence
+  device. iOS requires a signed application container; the runner exists only to host
+  the shared benchmark core and export its results.
+- **Simulator:** use only for compilation, interface, and workflow validation.
+  Simulator output must never be reported as device benchmark evidence.
+
+The runners share `AppBenchCore`, fixtures, grading, metrics, and report generation.
+The device runner is not a separate benchmark methodology.
+
 For publishable comparisons:
 
 1. Reboot or otherwise establish the same starting state.
