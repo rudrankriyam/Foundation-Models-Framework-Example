@@ -26,19 +26,38 @@ public struct AppBenchReport: Sendable {
             "- Model: \(result.model.displayName)",
             "- Warmups: \(result.warmupCount)",
             "- Repetitions: \(result.repetitions)",
+            "- Samples per scenario: \(result.sampleLimit.map(String.init) ?? "all")",
+            "- Session mode: \(result.sessionMode.displayName)",
+            "- Reasoning: \(result.reasoningLevel.displayName)",
+            "- Fallback: \(result.fallbackMode.displayName)",
+            "- Connectivity label: \(result.connectivity.displayName)",
+            "- Randomized order: \(result.randomizedOrder ? "yes" : "no") (seed \(result.randomSeed))",
+            "- Model context size: \(result.modelContextSize.map(String.init) ?? "unknown") tokens",
             "- Started: \(result.startedAt.formatted(.iso8601))",
             "- Failures: \(result.failures.count)",
             "",
-            "| Scenario | Prompt pass | Constraint score | Median TTFT | Median output tok/s |",
-            "| --- | ---: | ---: | ---: | ---: |"
+            "| Scenario | Prompt pass | Failure rate | Constraint score | Median / p90 TTFT | Median / p90 tok/s | Peak observed memory |",
+            "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
         ]
 
         for summary in result.summaries {
             lines.append(
-                "| \(summary.title) | \(percent(summary.promptPassRate)) | " +
-                "\(percent(summary.meanConstraintScore)) | \(seconds(summary.timeToFirstToken.median)) | " +
-                "\(number(summary.outputTokensPerSecond.median)) |"
+                "| \(summary.title) | \(percent(summary.promptPassRate)) | \(percent(summary.failureRate)) | "
+                    + "\(percent(summary.meanConstraintScore)) | \(seconds(summary.timeToFirstToken.median)) / "
+                    + "\(seconds(summary.timeToFirstToken.p90)) | \(number(summary.outputTokensPerSecond.median)) / "
+                    + "\(number(summary.outputTokensPerSecond.p90)) | \(memory(summary.peakObservedResidentMemoryBytes.maximum)) |"
             )
+        }
+
+        if let quota = result.quotaBefore {
+            lines.append("")
+            lines.append("## PCC Quota")
+            lines.append(
+                "- Before: \(quota.status)\(quota.isApproachingLimit == true ? " (approaching limit)" : "")"
+            )
+            lines.append("- After: \(result.quotaAfter?.status ?? "unknown")")
+            lines.append(
+                "- Reset: \(result.quotaAfter?.resetDate?.formatted(.iso8601) ?? "not reported")")
         }
 
         lines.append("")
@@ -47,7 +66,9 @@ public struct AppBenchReport: Sendable {
         lines.append("- Device: \(environment.deviceName)")
         lines.append("- Hardware: \(environment.hardwareModel ?? "unknown")")
         lines.append("- Chip: \(environment.cpuModel ?? "unknown")")
-        lines.append("- OS: \(environment.systemName) \(environment.systemVersion) (\(environment.systemBuild ?? "unknown"))")
+        lines.append(
+            "- OS: \(environment.systemName) \(environment.systemVersion) (\(environment.systemBuild ?? "unknown"))"
+        )
         lines.append("- Memory: \(memory(environment.totalMemory))")
         lines.append("- Thermal state: \(environment.thermalState)")
         lines.append("- Low Power Mode: \(environment.lowPowerModeEnabled ? "on" : "off")")
@@ -71,6 +92,11 @@ public struct AppBenchReport: Sendable {
     }
 
     private func memory(_ bytes: UInt64?) -> String {
+        guard let bytes else { return "unknown" }
+        return ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .memory)
+    }
+
+    private func memory(_ bytes: Double?) -> String {
         guard let bytes else { return "unknown" }
         return ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .memory)
     }

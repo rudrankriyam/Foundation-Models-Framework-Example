@@ -21,16 +21,18 @@ func estimateOutputTokens(_ text: String) -> Int {
 
 func tokenCounts(
     for scenario: AppBenchScenario,
+    sample: AppBenchSample,
     response: String,
     firstStreamUpdate: String,
     model: AppBenchModel
 ) async -> AppBenchTokenCounts {
     if model == .onDevice,
-       #available(macOS 26.4, iOS 26.4, visionOS 26.4, *) {
+        #available(macOS 26.4, iOS 26.4, visionOS 26.4, *)
+    {
         do {
             let systemModel = SystemLanguageModel.default
             var input = try await systemModel.tokenCount(for: Instructions(scenario.instructions))
-            input += try await systemModel.tokenCount(for: Prompt(scenario.prompt))
+            input += try await systemModel.tokenCount(for: Prompt(sample.prompt))
 
             if case .guided(let appBenchSchema) = scenario.outputMode {
                 let schema = try AppBenchSchemaFactory.make(appBenchSchema)
@@ -51,7 +53,7 @@ func tokenCounts(
     }
 
     return AppBenchTokenCounts(
-        input: estimateInputTokens(scenario.instructions + "\n" + scenario.prompt),
+        input: estimateInputTokens(scenario.instructions + "\n" + sample.prompt),
         output: estimateOutputTokens(response),
         firstStreamUpdate: estimateOutputTokens(firstStreamUpdate),
         source: .characterEstimate

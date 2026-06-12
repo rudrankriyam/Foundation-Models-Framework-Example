@@ -55,4 +55,34 @@ struct AppBenchMetricsTests {
 
         #expect(metrics.outputTokensPerSecond == 22.5)
     }
+
+    @Test
+    func recordsContextMemoryAndWorstThermalState() {
+        let start = Date(timeIntervalSince1970: 100)
+        let first = Date(timeIntervalSince1970: 101)
+        let end = Date(timeIntervalSince1970: 102)
+        let metrics = AppBenchTrialMetrics(
+            startedAt: start,
+            endedAt: end,
+            firstTokenAt: first,
+            inputTokenCount: 500,
+            outputTokenCount: 20,
+            firstStreamUpdateTokenCount: 2,
+            tokenCountSource: .sessionUsage,
+            responseCharacterCount: 80,
+            streamUpdateDates: [first, end],
+            reasoningTokenCount: 12,
+            contextSize: 4_000,
+            resourceSnapshots: [
+                .init(residentMemoryBytes: 100, thermalState: "nominal"),
+                .init(residentMemoryBytes: 180, thermalState: "serious"),
+                .init(residentMemoryBytes: 150, thermalState: "fair"),
+            ]
+        )
+
+        #expect(metrics.contextUtilization == 0.125)
+        #expect(metrics.peakObservedResidentMemoryBytes == 180)
+        #expect(metrics.worstObservedThermalState == "serious")
+        #expect(metrics.reasoningTokenCount == 12)
+    }
 }

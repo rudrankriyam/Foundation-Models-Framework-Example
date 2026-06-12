@@ -14,6 +14,8 @@ public enum AppBenchCheck: Codable, Sendable {
     case maximumWords(Int)
     case jsonEquals(path: String, value: AppBenchJSONValue)
     case jsonContains(path: String, values: [String])
+    case toolCalled(String)
+    case toolArgumentEquals(tool: String, argument: String, value: AppBenchJSONValue)
 
     public var label: String {
         switch self {
@@ -29,12 +31,25 @@ public enum AppBenchCheck: Codable, Sendable {
             "\(path) equals \(value.description)"
         case .jsonContains(let path, let values):
             "\(path) contains \(values.joined(separator: ", "))"
+        case .toolCalled(let name):
+            "Calls \(name)"
+        case .toolArgumentEquals(let tool, let argument, let value):
+            "\(tool).\(argument) equals \(value.description)"
+        }
+    }
+
+    public var isToolCheck: Bool {
+        switch self {
+        case .toolCalled, .toolArgumentEquals:
+            true
+        default:
+            false
         }
     }
 }
 
-private extension AppBenchJSONValue {
-    var description: String {
+extension AppBenchJSONValue {
+    fileprivate var description: String {
         switch self {
         case .string(let value):
             value

@@ -1,6 +1,7 @@
 import Foundation
 
 public enum AppBenchTokenCountSource: String, Codable, Sendable {
+    case sessionUsage
     case systemTokenizer
     case characterEstimate
 }
@@ -19,6 +20,15 @@ public struct AppBenchTrialMetrics: Codable, Sendable {
     public let outputCharactersPerSecond: Double?
     public let streamUpdateCount: Int
     public let maximumStreamUpdateGap: TimeInterval?
+    public let reasoningTokenCount: Int?
+    public let contextSize: Int?
+    public let contextUtilization: Double?
+    public let startingResidentMemoryBytes: UInt64?
+    public let peakObservedResidentMemoryBytes: UInt64?
+    public let endingResidentMemoryBytes: UInt64?
+    public let startingThermalState: String
+    public let endingThermalState: String
+    public let worstObservedThermalState: String
 
     public init(
         startedAt: Date,
@@ -29,7 +39,10 @@ public struct AppBenchTrialMetrics: Codable, Sendable {
         firstStreamUpdateTokenCount: Int,
         tokenCountSource: AppBenchTokenCountSource,
         responseCharacterCount: Int,
-        streamUpdateDates: [Date]
+        streamUpdateDates: [Date],
+        reasoningTokenCount: Int? = nil,
+        contextSize: Int? = nil,
+        resourceSnapshots: [AppBenchResourceSnapshot] = []
     ) {
         self.startedAt = startedAt
         self.endedAt = endedAt
@@ -56,6 +69,18 @@ public struct AppBenchTrialMetrics: Codable, Sendable {
         self.maximumStreamUpdateGap = zip(streamUpdateDates, streamUpdateDates.dropFirst())
             .map { $1.timeIntervalSince($0) }
             .max()
+        self.reasoningTokenCount = reasoningTokenCount
+        self.contextSize = contextSize
+        self.contextUtilization = contextSize.flatMap { size in
+            size > 0 ? Double(inputTokenCount) / Double(size) : nil
+        }
+        self.startingResidentMemoryBytes = resourceSnapshots.first?.residentMemoryBytes
+        self.peakObservedResidentMemoryBytes = resourceSnapshots.compactMap(\.residentMemoryBytes)
+            .max()
+        self.endingResidentMemoryBytes = resourceSnapshots.last?.residentMemoryBytes
+        self.startingThermalState = resourceSnapshots.first?.thermalState ?? "unknown"
+        self.endingThermalState = resourceSnapshots.last?.thermalState ?? "unknown"
+        self.worstObservedThermalState = worstThermalState(resourceSnapshots.map(\.thermalState))
     }
 }
 

@@ -21,7 +21,14 @@ struct AppBenchCLI {
                 },
                 model: options.model,
                 warmupCount: options.warmups,
-                repetitions: options.repetitions
+                repetitions: options.repetitions,
+                sampleLimit: options.sampleLimit,
+                sessionMode: options.sessionMode,
+                reasoningLevel: options.reasoningLevel,
+                fallbackMode: options.fallbackMode,
+                connectivity: options.connectivity,
+                randomizeOrder: options.randomizeOrder,
+                randomSeed: options.randomSeed
             )
             let result = try await AppBenchRunner(configuration: configuration).run()
             let report = AppBenchReport(result: result)
@@ -50,6 +57,12 @@ struct AppBenchCLI {
         print("Model: \(options.model.displayName)")
         print("Warmups: \(options.warmups)")
         print("Repetitions: \(options.repetitions)")
+        print("Samples: \(options.sampleLimit.map(String.init) ?? "suite default")")
+        print("Session: \(options.sessionMode.displayName)")
+        print("Reasoning: \(options.reasoningLevel.displayName)")
+        print("Fallback: \(options.fallbackMode.displayName)")
+        print("Connectivity: \(options.connectivity.displayName)")
+        print("Randomized: \(options.randomizeOrder ? "yes" : "no") (seed \(options.randomSeed))")
         if let scenarioID = options.scenarioID {
             print("Scenario: \(scenarioID)")
         }
@@ -61,7 +74,10 @@ struct AppBenchCLI {
         for scenario in AppBenchScenarioCatalog.all {
             print("\(scenario.id)")
             print("  \(scenario.title)")
-            print("  \(scenario.category.displayName) • inspired by \(scenario.inspiredBy.joined(separator: ", "))")
+            print(
+                "  \(scenario.category.displayName) • inspired by \(scenario.inspiredBy.joined(separator: ", "))"
+            )
+            print("  \(scenario.samples.count) samples\(scenario.requiresOS27 ? " • OS 27+" : "")")
             print()
         }
     }
@@ -78,21 +94,29 @@ struct AppBenchCLI {
     }
 
     private static func printUsage() {
-        print("""
+        print(
+            """
 
-        Usage:
-          ./appbench list
-          ./appbench [run] [options]
+            Usage:
+              ./appbench list
+              ./appbench [run] [options]
 
-        Options:
-          --suite quick|full|performance
-          --model on-device|pcc
-          --scenario <scenario-id>
-          --warmups <count>
-          --repetitions <count>
-          --json <path>
-          --markdown <path>
-        """)
+            Options:
+              --suite quick|full|performance
+              --model on-device|pcc
+              --scenario <scenario-id>
+              --warmups <count>
+              --repetitions <count>
+              --samples <count>
+              --session cold|warm
+              --reasoning none|light|moderate|deep
+              --fallback disabled|on-device
+              --connectivity normal|offline
+              --seed <unsigned-integer>
+              --no-randomize
+              --json <path>
+              --markdown <path>
+            """)
     }
 }
 
@@ -120,8 +144,15 @@ private struct CLIOptions {
     var suite: AppBenchSuite = .quick
     var model: AppBenchModel = .onDevice
     var scenarioID: String?
-    var warmups = 1
-    var repetitions = 3
+    var warmups = 5
+    var repetitions = 20
+    var sampleLimit: Int?
+    var sessionMode: AppBenchSessionMode = .cold
+    var reasoningLevel: AppBenchReasoningLevel = .none
+    var fallbackMode: AppBenchFallbackMode = .disabled
+    var connectivity: AppBenchConnectivity = .normal
+    var randomizeOrder = true
+    var randomSeed: UInt64 = 20_260_929
     var jsonPath: String?
     var markdownPath: String?
 
@@ -164,6 +195,48 @@ private struct CLIOptions {
                     throw Error.invalidValue(flag: argument, value: value)
                 }
                 repetitions = count
+            case "--samples":
+                let value = try Self.value(after: argument, at: &index, in: arguments)
+                guard let count = Int(value), count > 0 else {
+                    throw Error.invalidValue(flag: argument, value: value)
+                }
+                sampleLimit = count
+            case "--session":
+                let value = try Self.value(after: argument, at: &index, in: arguments)
+                guard let mode = AppBenchSessionMode(rawValue: value) else {
+                    throw Error.invalidValue(flag: argument, value: value)
+                }
+                sessionMode = mode
+            case "--reasoning":
+                let value = try Self.value(after: argument, at: &index, in: arguments)
+                guard let level = AppBenchReasoningLevel(rawValue: value) else {
+                    throw Error.invalidValue(flag: argument, value: value)
+                }
+                reasoningLevel = level
+            case "--fallback":
+                let value = try Self.value(after: argument, at: &index, in: arguments)
+                switch value {
+                case "disabled":
+                    fallbackMode = .disabled
+                case "on-device":
+                    fallbackMode = .onDevice
+                default:
+                    throw Error.invalidValue(flag: argument, value: value)
+                }
+            case "--connectivity":
+                let value = try Self.value(after: argument, at: &index, in: arguments)
+                guard let connectivity = AppBenchConnectivity(rawValue: value) else {
+                    throw Error.invalidValue(flag: argument, value: value)
+                }
+                self.connectivity = connectivity
+            case "--seed":
+                let value = try Self.value(after: argument, at: &index, in: arguments)
+                guard let seed = UInt64(value) else {
+                    throw Error.invalidValue(flag: argument, value: value)
+                }
+                randomSeed = seed
+            case "--no-randomize":
+                randomizeOrder = false
             case "--json":
                 jsonPath = try Self.value(after: argument, at: &index, in: arguments)
             case "--markdown":

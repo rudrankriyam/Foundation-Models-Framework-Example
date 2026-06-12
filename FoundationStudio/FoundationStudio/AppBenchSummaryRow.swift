@@ -21,6 +21,12 @@ struct AppBenchSummaryRow: View {
             }
 
             GridRow {
+                Text("Failure rate")
+                    .foregroundStyle(.secondary)
+                Text(summary.failureRate, format: .percent.precision(.fractionLength(1)))
+            }
+
+            GridRow {
                 Text("Median TTFT")
                     .foregroundStyle(.secondary)
                 metric(summary.timeToFirstToken.median, suffix: "s", precision: 3)

@@ -22,6 +22,12 @@ struct AppBenchScenarioRow: View {
             Text("Inspired by \(scenario.inspiredBy.joined(separator: ", "))")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
+
+            Text(
+                "\(scenario.samples.count) fixed samples\(scenario.requiresOS27 ? " • OS 27 or later" : "")"
+            )
+            .font(.caption)
+            .foregroundStyle(.tertiary)
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)

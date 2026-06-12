@@ -27,11 +27,25 @@ public struct AppBenchGrade: Codable, Sendable {
     }
 }
 
+public struct AppBenchToolCall: Codable, Sendable {
+    public let name: String
+    public let arguments: [String: AppBenchJSONValue]
+
+    public init(name: String, arguments: [String: AppBenchJSONValue]) {
+        self.name = name
+        self.arguments = arguments
+    }
+}
+
 public enum AppBenchGrader {
-    public static func grade(response: String, checks: [AppBenchCheck]) -> AppBenchGrade {
+    public static func grade(
+        response: String,
+        checks: [AppBenchCheck],
+        toolCalls: [AppBenchToolCall] = []
+    ) -> AppBenchGrade {
         let json = parseJSONObject(from: response)
         let results = checks.map { check in
-            evaluate(check, response: response, json: json)
+            evaluate(check, response: response, json: json, toolCalls: toolCalls)
         }
         return AppBenchGrade(checks: results)
     }
@@ -39,7 +53,8 @@ public enum AppBenchGrader {
     private static func evaluate(
         _ check: AppBenchCheck,
         response: String,
-        json: Any?
+        json: Any?,
+        toolCalls: [AppBenchToolCall]
     ) -> AppBenchCheckResult {
         let passed: Bool
         let detail: String?
@@ -70,6 +85,14 @@ public enum AppBenchGrader {
                 flattened.contains { $0.localizedCaseInsensitiveContains(expected) }
             }
             detail = passed ? nil : "Actual values: \(flattened.joined(separator: ", "))."
+        case .toolCalled(let name):
+            passed = toolCalls.contains { $0.name == name }
+            detail =
+                passed ? nil : "Observed tools: \(toolCalls.map(\.name).joined(separator: ", "))."
+        case .toolArgumentEquals(let tool, let argument, let expected):
+            let actual = toolCalls.first(where: { $0.name == tool })?.arguments[argument]
+            passed = actual == expected
+            detail = passed ? nil : "Actual value: \(String(describing: actual))."
         }
 
         return AppBenchCheckResult(label: check.label, passed: passed, detail: detail)
@@ -80,7 +103,8 @@ public enum AppBenchGrader {
         let candidate: String
         if trimmed.hasPrefix("```"), let firstLineEnd = trimmed.firstIndex(of: "\n") {
             let body = trimmed[trimmed.index(after: firstLineEnd)...]
-            candidate = body.replacing("```", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+            candidate = body.replacing("```", with: "").trimmingCharacters(
+                in: .whitespacesAndNewlines)
         } else {
             candidate = trimmed
         }
@@ -99,7 +123,8 @@ public enum AppBenchGrader {
         switch expected {
         case .string(let value):
             guard let actual = actual as? String else { return false }
-            return actual.compare(value, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame
+            return actual.compare(value, options: [.caseInsensitive, .diacriticInsensitive])
+                == .orderedSame
         case .integer(let value):
             return (actual as? NSNumber)?.intValue == value
         case .number(let value):
