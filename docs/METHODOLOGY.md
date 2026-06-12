@@ -2,13 +2,14 @@
 
 ## Design Principles
 
-AppBench follows five rules:
+AppBench follows six rules:
 
 1. Evaluate deployment-shaped scenarios rather than a single generic prompt.
 2. Keep quality, latency, and resource context as separate measurements.
 3. Prefer deterministic, inspectable graders whenever an answer can be verified.
 4. Report distributions and failures, not only successful averages.
 5. Preserve the complete fixture, response, environment, OS build, and timestamp.
+6. Separate common OS 26/27 workloads from OS 27-only capability tests.
 
 These rules draw from:
 
@@ -34,6 +35,7 @@ Each fixture has deterministic checks such as:
 - Semantically required array members.
 - Maximum or minimum word count.
 - Exact source citations.
+- Expected tool selection and typed arguments.
 
 Guided generation schema conformance is not scored as quality. The framework enforces
 the JSON shape, property types, enum choices, and schema-level array bounds during
@@ -50,7 +52,9 @@ This mirrors IFEval’s distinction between instruction-level and prompt-level a
 The prompt pass rate is intentionally strict because a production action can fail when
 only one required field is wrong.
 
-Subjective model judging is intentionally absent from the starter suite. Future rubrics
+Subjective model judging is intentionally absent from the portable runner. OS 27's
+`AppBenchEvaluationsAdapter` converts the same samples and deterministic metrics into
+Apple Evaluations `ModelSample`, `Evaluator`, and `ToolCallEvaluator` values. Future rubrics
 for tone, fluency, or usefulness should:
 
 - Use a frozen judge and rubric version.
@@ -70,7 +74,8 @@ For each request:
 
 Prompt tokens are never included in output throughput.
 
-On OS 26.4 and later, on-device runs use
+On OS 27, AppBench prefers the per-response `LanguageModelSession.Usage` values for
+input, output, and reasoning tokens. On OS 26.4 and later, on-device runs use
 `SystemLanguageModel.tokenCount(for:)` for instructions, prompts, schemas, and
 responses. Each trial records `tokenCountSource: systemTokenizer`.
 
@@ -92,19 +97,23 @@ For publishable comparisons:
 1. Reboot or otherwise establish the same starting state.
 2. Disconnect external displays and power-hungry peripherals when possible.
 3. Record charging state, Low Power Mode, thermal state, and network.
-4. Run at least one warmup.
-5. Run at least five measured repetitions per scenario.
-6. Randomize scenario order between larger experimental rounds.
+4. Run five warmups.
+5. Run at least twenty measured repetitions per sample.
+6. Randomize workload/sample order with a recorded seed.
 7. Stop and cool the device if the thermal state reaches serious or critical.
 8. Keep input fixtures, generation options, and AppBench commit identical.
 9. Report all execution failures.
-10. Compare median and p90, not the single fastest run.
+10. Keep cold-session and warm-session results separate.
+11. Compare median and p90, not the single fastest run.
+12. Run the full 25-sample corpus for a publishable quality comparison.
 
 For public reports, set `APPBENCH_DEVICE_NAME` to a generic label such as
 `MacBook Pro M5`. AppBench never needs the machine hostname.
 
-For exploratory development, one repetition is acceptable but must not be presented as
-a stable device ranking.
+The quick suite defaults to one sample per workload so iteration remains practical.
+The full suite runs all 25 samples per workload unless `--samples` limits it. One
+repetition is acceptable for exploratory development but must not be presented as a
+stable device ranking.
 
 ## OS Comparisons
 
@@ -123,6 +132,9 @@ OS 26 and OS 27 results can differ because of:
 
 The report therefore records the OS build, not only the major version.
 
+The visual workload is OS 27-only and is not part of the common OS comparison. A
+strict OS 26 versus OS 27 comparison must select only workloads available on both.
+
 ## PCC Comparisons
 
 PCC is a service benchmark:
@@ -133,16 +145,29 @@ PCC is a service benchmark:
 - Timestamp results because the server model can change independently.
 - Never combine PCC throughput with on-device throughput in a single device ranking.
 - Record quota and availability failures instead of dropping them.
+- Run fallback enabled and disabled as separate configurations.
+
+Apple's PCC quota API exposes below-limit, approaching-limit, limit-reached, and reset
+state. It does not expose a numeric quota-consumption counter, so AppBench records the
+state before and after rather than inventing a consumption value.
+
+`--connectivity offline` is an experiment label, not a network-control API. The
+operator must actually disable connectivity. AppBench marks offline success only when
+the executed model is on-device.
 
 PCC requires OS 27, an Apple Intelligence-capable device with Apple Intelligence
 enabled, service availability, and Apple’s managed entitlement.
 
 ## Known Limitations
 
-- The starter corpus is deliberately small and is not statistically representative of every app.
+- Each workload has five semantic cases expressed through five prompt phrasings; this
+  is useful for regression testing but not statistically representative of every app.
 - PCC and pre-26.4 token counts are estimated without Instruments.
 - Energy use is not yet sampled directly.
+- Peak memory is the highest process resident-memory sample observed at request start,
+  stream updates, and request end, not a continuous system-wide peak.
 - Snapshot timing cannot provide true token-level jitter.
 - The practical scenarios are English-only.
 - Deterministic checks measure specified requirements, not every aspect of usefulness.
 - PCC cannot be reproduced without entitlement and stable network conditions.
+- The synthetic visual fixture tests image grounding, not broad real-world vision.

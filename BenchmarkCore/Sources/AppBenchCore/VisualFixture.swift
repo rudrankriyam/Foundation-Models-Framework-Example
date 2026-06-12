@@ -4,7 +4,7 @@
     import FoundationModels
 
     @available(macOS 27.0, iOS 27.0, visionOS 27.0, *)
-    func appBenchPrompt(for sample: AppBenchSample) throws -> Prompt {
+    public func appBenchPrompt(for sample: AppBenchSample) throws -> Prompt {
         guard sample.visualFixture != nil else {
             return Prompt(sample.prompt)
         }

@@ -341,6 +341,17 @@ public actor AppBenchRunner {
             #endif
         }
 
+        if response.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+            let transcriptResponse = latestTranscriptResponse(from: bundle.session.transcript)
+        {
+            let recoveredAt = Date.now
+            response = transcriptResponse
+            firstStreamUpdate = transcriptResponse
+            firstTokenAt = recoveredAt
+            streamUpdateDates.append(recoveredAt)
+            resources.append(.capture())
+        }
+
         guard !response.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw Error.emptyResponse
         }
@@ -378,7 +389,7 @@ public actor AppBenchRunner {
 
         return AppBenchTrialResult(
             scenario: item.scenario,
-            sampleID: item.sample.id,
+            sample: item.sample,
             requestedModel: configuration.model,
             executedModel: model,
             iteration: item.iteration,
@@ -611,18 +622,36 @@ private func detailedMessage(for error: any Swift.Error) -> String {
         "\(error.localizedDescription) [\(reflected); domain=\(nsError.domain) code=\(nsError.code)\(userInfo)]"
 }
 
+private func latestTranscriptResponse(from transcript: Transcript) -> String? {
+    for entry in transcript.reversed() {
+        guard case .response(let response) = entry else { continue }
+        let text = response.segments.compactMap { segment -> String? in
+            guard case .text(let textSegment) = segment else { return nil }
+            return textSegment.content
+        }.joined()
+        if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return text
+        }
+    }
+    return nil
+}
+
 private func failureKind(_ error: any Swift.Error) -> String {
-    let reflected = String(reflecting: error).lowercased()
-    if reflected.contains("contextsize") || reflected.contains("context_size") {
+    let description = "\(String(reflecting: error)) \(error.localizedDescription)".lowercased()
+    if description.contains("contextsize")
+        || description.contains("context_size")
+        || description.contains("context window")
+        || description.contains("contextwindow")
+    {
         return "contextLimit"
     }
-    if reflected.contains("quota") {
+    if description.contains("quota") {
         return "quota"
     }
-    if reflected.contains("network") {
+    if description.contains("network") {
         return "network"
     }
-    if reflected.contains("unavailable") || reflected.contains("notavailable") {
+    if description.contains("unavailable") || description.contains("notavailable") {
         return "availability"
     }
     return "generation"
@@ -638,7 +667,7 @@ private func generationOptions(
                 samplingMode: .greedy,
                 temperature: 0,
                 maximumResponseTokens: maximumResponseTokens,
-                toolCallingMode: requiresTool ? .required : .disallowed
+                toolCallingMode: requiresTool ? .allowed : .disallowed
             )
         }
         return GenerationOptions(

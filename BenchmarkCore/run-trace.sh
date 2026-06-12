@@ -9,6 +9,10 @@ TRACE_FILE="appbench-performance.trace"
 EXPORT_FILE="appbench-performance.xml"
 CLI_PATH="./.build/debug/AppBenchCLI"
 
+if [ "$#" -eq 0 ]; then
+    set -- --suite performance --warmups 0 --repetitions 1 --no-randomize
+fi
+
 echo "AppBenchCLI - xctrace Foundation Models Workflow"
 echo "================================================================================"
 echo ""
@@ -32,14 +36,14 @@ if [ -f "$EXPORT_FILE" ]; then
 fi
 
 echo "Recording benchmark with Foundation Models instrument..."
-echo "   xctrace record --instrument 'Foundation Models' --output $TRACE_FILE --launch -- $CLI_PATH --suite performance --warmups 0 --repetitions 1"
+echo "   xctrace record --instrument 'Foundation Models' --output $TRACE_FILE --launch -- $CLI_PATH $*"
 echo ""
 
 # Record with xctrace
 APPBENCH_COMMIT="$(git -C .. rev-parse --short HEAD 2>/dev/null || true)"
 export APPBENCH_COMMIT
 xctrace record --instrument 'Foundation Models' --output "$TRACE_FILE" --launch -- \
-    "$CLI_PATH" --suite performance --warmups 0 --repetitions 1
+    "$CLI_PATH" "$@"
 
 echo ""
 echo "Recording complete!"

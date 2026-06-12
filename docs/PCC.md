@@ -18,9 +18,11 @@ Intelligence-capable device with Apple Intelligence enabled. The device is part
 of the trust, identity, policy, and privacy boundary rather than a generic thin
 client.
 
-Apple currently describes the on-device model as offline and unlimited, with a
-4K context. PCC requires a network connection, has a daily per-user limit,
-offers a 32K context, and supports light, moderate, and deep reasoning.
+Apple describes the on-device model as offline and unlimited. The runtime
+`contextSize` API reports the actual limit; Apple's WWDC26 example shows 4K on
+OS 26 and 8K on OS 27 on newer devices. PCC requires a network connection, has
+a daily per-user limit, offers a 32K context, and supports light, moderate, and
+deep reasoning.
 
 Apps also need Apple's managed PCC entitlement and must meet the program's
 eligibility requirements. Availability can still fail after those static
@@ -64,3 +66,9 @@ retains the failed attempt with its environment and timestamp.
 - Do not compare PCC token rate directly with on-device hardware inference.
 - Use end-to-end latency for user experience and retain server timestamps.
 - Repeat on different days before drawing conclusions about service stability.
+- Record quota status before and after; Apple's API does not expose numeric
+  consumption.
+- Run each reasoning level as a separate configuration.
+- Treat fallback-enabled runs separately from direct PCC runs.
+- When using `--connectivity offline`, disable connectivity outside AppBench;
+  the flag records the experimental condition but cannot enforce it.

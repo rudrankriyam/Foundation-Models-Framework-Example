@@ -85,4 +85,74 @@ struct AppBenchMetricsTests {
         #expect(metrics.worstObservedThermalState == "serious")
         #expect(metrics.reasoningTokenCount == 12)
     }
+
+    @Test
+    func scenarioSummaryConvertsMemoryBytesNumerically() {
+        let start = Date(timeIntervalSince1970: 100)
+        let metrics = AppBenchTrialMetrics(
+            startedAt: start,
+            endedAt: start.addingTimeInterval(1),
+            firstTokenAt: start.addingTimeInterval(0.2),
+            inputTokenCount: 10,
+            outputTokenCount: 10,
+            firstStreamUpdateTokenCount: 1,
+            tokenCountSource: .sessionUsage,
+            responseCharacterCount: 20,
+            streamUpdateDates: [start.addingTimeInterval(0.2), start.addingTimeInterval(1)],
+            resourceSnapshots: [
+                .init(residentMemoryBytes: 24_477_696, thermalState: "nominal")
+            ]
+        )
+        let environment = EnvironmentSnapshot(
+            deviceName: "Test",
+            systemName: "macOS",
+            systemVersion: "27.0",
+            systemBuild: "test",
+            localeIdentifier: "en_US",
+            hardwareModel: "Test",
+            cpuModel: "Test",
+            cpuCores: 1,
+            gpuModel: "Test",
+            totalMemory: 1,
+            thermalState: "nominal",
+            lowPowerModeEnabled: false,
+            appBenchCommit: nil
+        )
+        let scenario = AppBenchScenarioCatalog.taskCapture
+        let trial = AppBenchTrialResult(
+            scenario: scenario,
+            sample: scenario.samples[0],
+            requestedModel: .onDevice,
+            executedModel: .onDevice,
+            iteration: 1,
+            response: "{}",
+            grade: AppBenchGrader.grade(response: "{}", checks: []),
+            metrics: metrics,
+            environment: environment
+        )
+        let result = AppBenchRunResult(
+            suite: .quick,
+            model: .onDevice,
+            warmupCount: 0,
+            repetitions: 1,
+            sampleLimit: 1,
+            sessionMode: .cold,
+            reasoningLevel: .none,
+            fallbackMode: .disabled,
+            connectivity: .normal,
+            randomizedOrder: false,
+            randomSeed: 1,
+            modelContextSize: 4_096,
+            quotaBefore: nil,
+            quotaAfter: nil,
+            startedAt: start,
+            endedAt: start.addingTimeInterval(1),
+            environment: environment,
+            trials: [trial],
+            failures: [],
+            scenarios: [scenario]
+        )
+
+        #expect(result.summaries[0].peakObservedResidentMemoryBytes.maximum == 24_477_696)
+    }
 }

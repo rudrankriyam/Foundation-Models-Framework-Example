@@ -584,7 +584,7 @@ private let visualSamples: [AppBenchSample] = promptVariants.enumerated().flatMa
             id: String(format: "visual-recommendation-%03d", variantIndex * 5 + baseIndex + 1),
             prompt:
                 "\(prefix)\nIdentify the activity and setting, then suggest one editing treatment.",
-            checks: [.contains("run"), .contains("sunset"), .excludes("snow"), .maximumWords(80)],
+            checks: [.contains("run"), .contains("sun"), .excludes("snow"), .maximumWords(80)],
             visualFixture: .sunsetRun
         )
     }

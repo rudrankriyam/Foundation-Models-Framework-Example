@@ -30,6 +30,7 @@ public struct AppBenchReport: Sendable {
             "- Session mode: \(result.sessionMode.displayName)",
             "- Reasoning: \(result.reasoningLevel.displayName)",
             "- Fallback: \(result.fallbackMode.displayName)",
+            "- Fallback trials: \(result.trials.count(where: \.usedFallback))",
             "- Connectivity label: \(result.connectivity.displayName)",
             "- Randomized order: \(result.randomizedOrder ? "yes" : "no") (seed \(result.randomSeed))",
             "- Model context size: \(result.modelContextSize.map(String.init) ?? "unknown") tokens",

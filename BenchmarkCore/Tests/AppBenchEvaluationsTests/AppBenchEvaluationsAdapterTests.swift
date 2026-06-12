@@ -1,5 +1,6 @@
 #if canImport(Evaluations) && compiler(>=6.4)
     import AppBenchCore
+    import AppBenchEvaluations
     import XCTest
 
     final class AppBenchEvaluationsAdapterTests: XCTestCase {

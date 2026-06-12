@@ -36,3 +36,7 @@ Files:
 All successful on-device trials use Apple's system tokenizer. Decode throughput
 excludes every token already present in the first cumulative stream snapshot.
 This is a single-device baseline, not an OS 26 versus OS 27 conclusion.
+
+This baseline was captured before commit `72b930a`, which expanded AppBench to ten
+practical workloads and 25 samples per workload. Preserve these files as historical
+evidence; do not compare their pass count directly with the expanded corpus.

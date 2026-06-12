@@ -2,8 +2,10 @@ import Foundation
 
 public struct AppBenchTrialResult: Codable, Identifiable, Sendable {
     public let id: UUID
-    public let scenario: AppBenchScenario
-    public let sampleID: String
+    public let scenarioID: String
+    public let scenarioTitle: String
+    public let category: AppBenchScenarioCategory
+    public let sample: AppBenchSample
     public let requestedModel: AppBenchModel
     public let executedModel: AppBenchModel
     public let iteration: Int
@@ -19,7 +21,7 @@ public struct AppBenchTrialResult: Codable, Identifiable, Sendable {
     public init(
         id: UUID = UUID(),
         scenario: AppBenchScenario,
-        sampleID: String,
+        sample: AppBenchSample,
         requestedModel: AppBenchModel,
         executedModel: AppBenchModel,
         iteration: Int,
@@ -33,8 +35,10 @@ public struct AppBenchTrialResult: Codable, Identifiable, Sendable {
         environment: EnvironmentSnapshot
     ) {
         self.id = id
-        self.scenario = scenario
-        self.sampleID = sampleID
+        self.scenarioID = scenario.id
+        self.scenarioTitle = scenario.title
+        self.category = scenario.category
+        self.sample = sample
         self.requestedModel = requestedModel
         self.executedModel = executedModel
         self.iteration = iteration
@@ -129,7 +133,7 @@ public struct AppBenchScenarioSummary: Codable, Identifiable, Sendable {
         outputTokensPerSecond = AppBenchDistribution(
             values: trials.compactMap(\.metrics.outputTokensPerSecond))
         peakObservedResidentMemoryBytes = AppBenchDistribution(
-            values: trials.compactMap(\.metrics.peakObservedResidentMemoryBytes).map(Double.init)
+            values: trials.compactMap(\.metrics.peakObservedResidentMemoryBytes).map { Double($0) }
         )
     }
 }
@@ -200,7 +204,7 @@ public struct AppBenchRunResult: Codable, Sendable {
         self.summaries = scenarios.map { scenario in
             AppBenchScenarioSummary(
                 scenario: scenario,
-                trials: trials.filter { $0.scenario.id == scenario.id },
+                trials: trials.filter { $0.scenarioID == scenario.id },
                 failureCount: failures.count(where: { $0.scenarioID == scenario.id })
             )
         }

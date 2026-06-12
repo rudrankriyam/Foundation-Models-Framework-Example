@@ -39,7 +39,10 @@ struct AppBenchCLI {
             if !result.failures.isEmpty {
                 print("\nFailures:")
                 for failure in result.failures {
-                    print("- \(failure.scenarioID) run \(failure.iteration): \(failure.message)")
+                    print(
+                        "- \(failure.scenarioID)/\(failure.sampleID) run \(failure.iteration) "
+                            + "[\(failure.kind)]: \(failure.message)"
+                    )
                 }
                 exit(2)
             }

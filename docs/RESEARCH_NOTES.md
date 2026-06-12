@@ -84,18 +84,19 @@ an otherwise fluent response.
 [BFCL](https://proceedings.mlr.press/v267/patil25a.html)
 
 BFCL treats tool choice and arguments as executable behavior rather than prose.
-AppBench does not yet include tool-call scenarios, but the planned extension
-should grade selected tool, arguments, call order, state changes, and recovery
-from tool errors separately.
+AppBench's grounded explanation and exercise substitution workloads execute
+real deterministic tools and grade the selected tool plus typed arguments.
+Call-order, state-change, and recovery datasets remain future extensions.
 
 ### RULER
 
 [RULER](https://arxiv.org/abs/2404.06654)
 
 RULER shows that long-context evaluation should vary task complexity and
-context length instead of relying on a single retrieval pattern. AppBench's
-grounded QA fixture is intentionally small; future context suites should sweep
-document count, distractors, answer position, and context utilization.
+context length instead of relying on a single retrieval pattern. AppBench now
+includes a deterministic key-retrieval context suite and records context
+utilization. A publishable long-context study should still sweep document
+count, distractors, answer position, and utilization.
 
 ### G-Eval
 
@@ -123,8 +124,8 @@ better, and report agreement with human raters.
 
 Mobile inference quality is inseparable from latency, battery, resource use,
 and dynamic hardware behavior. AppBench records hardware, OS build, thermal
-state, memory, and Low Power Mode. Direct energy and utilization sampling remain
-future work.
+state, total memory, observed resident memory, and Low Power Mode. Direct energy
+and utilization sampling remain future work.
 
 ### Metron
 
@@ -159,8 +160,8 @@ AppBench is complementary:
   OS build, and raw portable JSON.
 - It compares physical devices and PCC service behavior outside an Xcode test
   report.
-- Its deterministic checks can later be adapted into Evaluations `Evaluator`
-  implementations without changing the fixture semantics.
+- Its OS 27 adapter produces Evaluations `ModelSample`, deterministic
+  `Evaluator`, and `ToolCallEvaluator` values from the same fixture semantics.
 
 The two systems should share datasets and grading definitions, not duplicate
 truth in two unrelated corpora.

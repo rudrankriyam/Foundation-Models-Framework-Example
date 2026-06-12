@@ -16,18 +16,24 @@ The starter corpus uses synthetic, reproducible inputs modeled after app experie
 Apple highlighted in its
 [Foundation Models framework app showcase](https://www.apple.com/newsroom/2025/09/apples-foundation-models-framework-unlocks-new-intelligent-app-experiences/).
 
-| Scenario | App pattern | Primary quality signal |
+| Workload | App pattern | Primary quality signal |
 | --- | --- | --- |
-| Natural-language task capture | Stuff, OmniFocus | Exact structured fields |
-| Stacked notification summary | Stoic, Gratitude | Required facts and word limit |
-| Journal reflection | Stoic, Gratitude | Grounding and instruction following |
-| Habit classification | Motivation, Streaks, Vocabulary | Exact constrained category |
-| Workout plan | SmartGym, 7 Minute Workout, Train Fitness | Semantic constraint compliance |
-| Grounded document answer | Signeasy, Agenda, Essayist, CellWalk, Platzi | Exact answer and citations |
+| Natural-language task parsing | Stuff, OmniFocus | Exact date, list, title, and tags |
+| Workout generation | SmartGym, 7 Minute Workout | Constraint compliance |
+| Journal summarization | Stoic, Gratitude | Grounding, completeness, and length |
+| Classification | Motivation, Streaks, Vocabulary | Exact category |
+| Grounded explanation | CellWalk, Platzi | Tool selection, arguments, and grounding |
+| Exercise substitution | Train Fitness | Tool arguments and recommendation validity |
+| Document question answering | Signeasy, Agenda | Answer and citation accuracy |
+| Citation extraction | Essayist | Exact bibliographic fields |
+| Creative writing | Detail | Instruction and length compliance |
+| Visual recommendation | VLLO, SwingVision | Image-grounded recommendation |
 | Synthetic sustained generation | Original repository workload | Decode throughput |
 
-The app inputs are original synthetic fixtures. App names describe the product pattern
-that inspired each workload; AppBench does not reproduce proprietary app data.
+Each practical workload has 25 fixed samples: five semantic cases across five prompt
+phrasings. The app inputs and generated image fixture are original and synthetic. App
+names describe the product pattern that inspired each workload; AppBench does not
+reproduce proprietary app data.
 
 ## Metrics
 
@@ -41,13 +47,21 @@ Every measured trial records:
 - Output tokens per second, using Apple's tokenizer for on-device OS 26.4+ runs.
 - Output characters per second.
 - Stream update count and maximum stream-update gap.
-- Device, chip, memory, OS version/build, locale, thermal state, and Low Power Mode.
+- Input, output, and reasoning token usage where OS 27 exposes it.
+- Runtime model context size and per-trial context utilization.
+- Starting, ending, and peak observed process memory.
+- Starting, ending, and worst observed thermal state.
+- Tool names and typed arguments.
+- Requested model, executed model, and fallback reason.
+- PCC quota state before and after the run.
+- Device, chip, total memory, OS version/build, locale, and Low Power Mode.
 
 Decode throughput uses **output tokens only** and excludes TTFT. On older on-device
 systems and PCC runs, AppBench records a calibrated character estimate and marks
 the source in each trial.
 
-Each scenario summary reports median, p90, mean, range, and standard deviation.
+Each scenario summary reports median, p90, mean, range, standard deviation, prompt
+pass, constraint score, and execution failure rate.
 
 ## Run
 
@@ -62,20 +76,27 @@ Requirements:
 # List workloads
 ./appbench list
 
-# Practical suite, one warmup and three measured repetitions
+# Practical quick suite, five warmups and twenty measured repetitions
 ./appbench --suite quick --model on-device
 
-# Full practical suite with export
-./appbench --suite full --repetitions 5 \
+# Full 250-sample practical corpus with export
+./appbench --suite full --warmups 5 --repetitions 20 \
   --json Results/macbook-m5-macos-27.json \
   --markdown Results/macbook-m5-macos-27.md
 
+# Compare cold sessions with reused conversational sessions
+./appbench --suite quick --session warm --seed 20260929
+
 # Original sustained-generation workload
-./appbench --suite performance --repetitions 5
+./appbench --suite performance --repetitions 20
+
+# Long-context retrieval and explicit offline experiment label
+./appbench --suite context --connectivity offline
 
 # OS 27 PCC, when the executable has the approved entitlement
 DEVELOPER_DIR=/path/to/Xcode-beta.app/Contents/Developer \
-  ./appbench --suite quick --model pcc
+  ./appbench --suite quick --model pcc --reasoning moderate \
+  --fallback on-device
 ```
 
 The legacy `./benchmark` command remains as a compatibility wrapper.
@@ -83,13 +104,24 @@ Set `APPBENCH_DEVICE_NAME` when you want a friendly public label; otherwise
 AppBench uses the non-personal hardware identifier rather than the machine
 hostname.
 
+To pair a run with Apple's Foundation Models Instrument:
+
+```bash
+cd BenchmarkCore
+./run-trace.sh --suite quick --samples 1 --repetitions 1 --no-randomize
+```
+
 ## App
 
 Open `FoundationStudio/FoundationStudio.xcodeproj`. The app provides controls for:
 
 - Practical Quick, Practical Full, and Synthetic Performance suites.
 - On-device and PCC execution.
-- Warmup count and measured repetitions.
+- Five-warmup/twenty-run publishable defaults.
+- One or all 25 samples per workload.
+- Cold or reused sessions and randomized order.
+- PCC reasoning level and on-device fallback.
+- Normal or user-induced offline experiment labels.
 - Per-scenario prompt pass, constraint score, median TTFT, and median output speed.
 - Markdown report copying.
 
@@ -110,7 +142,9 @@ Recommended initial matrix:
 
 PCC measures end-to-end service behavior, including network and server time. It is not
 a measurement of the client device’s inference speed. PCC can change server-side
-without an OS update, so every result must retain its timestamp and OS build.
+without an OS update, so every result retains its timestamp and OS build. AppBench
+records Apple's qualitative quota state; the API does not expose numeric request or
+token consumption.
 
 See [Methodology](docs/METHODOLOGY.md),
 [Research Notes](docs/RESEARCH_NOTES.md),
@@ -131,6 +165,9 @@ with Apple M5 and 32 GB of memory on macOS 27 beta build `26A5353q`.
 - PCC was unavailable in the current system context and the failed attempt is
   retained rather than omitted.
 
+That baseline predates the 250-sample practical corpus and is retained as historical
+performance data. It must not be compared as if it were a run of the expanded suite.
+
 See [Results](Results/README.md) for the reports and the limits on interpreting
 this single-device baseline. Pre-AppBench community measurements are preserved
 in [Legacy Results](docs/LEGACY_RESULTS.md), but their throughput formula is not
@@ -141,6 +178,7 @@ comparable with current reports.
 `BenchmarkCore/Package.swift` exports:
 
 - `AppBenchCore`: scenarios, graders, runner, statistics, and reports.
+- `AppBenchEvaluations`: OS 27 adapter for Evaluations samples and evaluators.
 - `AppBenchCLI`: command-line experiment runner.
 - `BenchmarkCore`: compatibility product that exposes the `AppBenchCore` module.
 

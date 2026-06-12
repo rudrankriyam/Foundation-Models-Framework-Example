@@ -35,12 +35,20 @@ Results/iphone-16-pro-max-ios26-on-device-full-2026-06-12.json
 
 ## Minimum Published Run
 
-- One warmup.
-- Five measured repetitions.
+- Five warmups.
+- Twenty measured repetitions per sample.
+- All 25 fixed samples for each reported practical workload.
+- Seeded randomized workload order.
+- Cold and warm sessions reported separately.
 - Nominal or fair thermal state.
 - Low Power Mode recorded.
 - No omitted failures.
 - AppBench commit SHA recorded alongside the result.
+
+For the cleanest OS comparison, use two identical devices, one held on OS 26 and one
+on OS 27. If one physical device is upgraded in place, capture the complete OS 26
+result before upgrading and keep power, ambient temperature, network, and peripherals
+as consistent as possible.
 
 ## Comparability Labels
 

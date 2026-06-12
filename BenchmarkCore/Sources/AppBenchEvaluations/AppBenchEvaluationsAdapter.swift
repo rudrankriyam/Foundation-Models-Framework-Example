@@ -1,4 +1,5 @@
 #if canImport(Evaluations) && compiler(>=6.4)
+    import AppBenchCore
     import Evaluations
     import FoundationModels
 
