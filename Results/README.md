@@ -12,3 +12,27 @@ Each published result should include:
 - Model selection.
 - Network notes for PCC.
 - Any Instruments trace reference stored outside Git.
+
+## June 12, 2026 M5 Baseline
+
+Environment: MacBook Pro `Mac17,2`, Apple M5, 32 GB, macOS 27.0 beta build
+`26A5353q`, nominal thermal state, Low Power Mode off.
+
+| Run | Measured trials | Result |
+| --- | ---: | --- |
+| Practical Quick, on-device | 25 | 25 prompt passes, 0 failures |
+| Synthetic Performance, on-device | 5 | Median TTFT 0.413s, median decode 55.35 tok/s |
+| Notification summary, PCC attempt | 1 | Unavailable before first output |
+
+Files:
+
+- `macbook-pro-m5-macos27-26A5353q-on-device-quick-2026-06-12.json`
+- `macbook-pro-m5-macos27-26A5353q-on-device-quick-2026-06-12.md`
+- `macbook-pro-m5-macos27-26A5353q-on-device-performance-2026-06-12.json`
+- `macbook-pro-m5-macos27-26A5353q-on-device-performance-2026-06-12.md`
+- `macbook-pro-m5-macos27-26A5353q-pcc-attempt-2026-06-12.json`
+- `macbook-pro-m5-macos27-26A5353q-pcc-attempt-2026-06-12.md`
+
+All successful on-device trials use Apple's system tokenizer. Decode throughput
+excludes every token already present in the first cumulative stream snapshot.
+This is a single-device baseline, not an OS 26 versus OS 27 conclusion.

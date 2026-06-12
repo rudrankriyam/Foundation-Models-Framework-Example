@@ -22,7 +22,7 @@ Apple highlighted in its
 | Stacked notification summary | Stoic, Gratitude | Required facts and word limit |
 | Journal reflection | Stoic, Gratitude | Grounding and instruction following |
 | Habit classification | Motivation, Streaks, Vocabulary | Exact constrained category |
-| Workout plan | SmartGym, 7 Minute Workout, Train Fitness | Schema and constraint compliance |
+| Workout plan | SmartGym, 7 Minute Workout, Train Fitness | Semantic constraint compliance |
 | Grounded document answer | Signeasy, Agenda, Essayist, CellWalk, Platzi | Exact answer and citations |
 | Synthetic sustained generation | Original repository workload | Decode throughput |
 
@@ -79,6 +79,9 @@ DEVELOPER_DIR=/path/to/Xcode-beta.app/Contents/Developer \
 ```
 
 The legacy `./benchmark` command remains as a compatibility wrapper.
+Set `APPBENCH_DEVICE_NAME` when you want a friendly public label; otherwise
+AppBench uses the non-personal hardware identifier rather than the machine
+hostname.
 
 ## App
 
@@ -109,8 +112,27 @@ PCC measures end-to-end service behavior, including network and server time. It 
 a measurement of the client device’s inference speed. PCC can change server-side
 without an OS update, so every result must retain its timestamp and OS build.
 
-See [Methodology](docs/METHODOLOGY.md), [Device Matrix](docs/DEVICE_MATRIX.md),
-and [Migration Notes](docs/MIGRATION.md).
+See [Methodology](docs/METHODOLOGY.md),
+[Research Notes](docs/RESEARCH_NOTES.md),
+[OS 26 vs OS 27](docs/OS_26_VS_27.md),
+[PCC Notes](docs/PCC.md),
+[Device Matrix](docs/DEVICE_MATRIX.md), and
+[Migration Notes](docs/MIGRATION.md).
+
+## Current Baseline
+
+The first curated baseline was captured on June 12, 2026, using a MacBook Pro
+with Apple M5 and 32 GB of memory on macOS 27 beta build `26A5353q`.
+
+- Practical suite: 25/25 measured trials passed every semantic check.
+- Synthetic sustained generation: median TTFT `0.413s`, median decode rate
+  `55.35 tok/s`.
+- Thermal state remained nominal and Low Power Mode was off.
+- PCC was unavailable in the current system context and the failed attempt is
+  retained rather than omitted.
+
+See [Results](Results/README.md) for the reports and the limits on interpreting
+this single-device baseline.
 
 ## Package
 

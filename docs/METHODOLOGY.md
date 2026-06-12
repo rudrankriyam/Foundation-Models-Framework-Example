@@ -100,6 +100,9 @@ For publishable comparisons:
 9. Report all execution failures.
 10. Compare median and p90, not the single fastest run.
 
+For public reports, set `APPBENCH_DEVICE_NAME` to a generic label such as
+`MacBook Pro M5`. AppBench never needs the machine hostname.
+
 For exploratory development, one repetition is acceptable but must not be presented as
 a stable device ranking.
 
