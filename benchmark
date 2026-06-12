@@ -7,11 +7,11 @@
 #   ./benchmark
 #   ./benchmark --debug --suite performance
 
-CONFIGURATION=Release
+CONFIGURATION=release
 
 # Parse flags
 if [ "$1" = "--debug" ]; then
-	CONFIGURATION=Debug
+	CONFIGURATION=debug
 	shift
 fi
 
@@ -29,14 +29,13 @@ fi
 
 # Build first
 echo "Building AppBenchCLI ($CONFIGURATION)..."
-cd "$PROJECT_DIR"
-if ! swift build -c "$CONFIGURATION"; then
+if ! swift build --package-path "$PROJECT_DIR" -c "$CONFIGURATION"; then
 	echo "Build failed"
 	exit 1
 fi
 
 # Find the build directory
-BUILD_DIR=".build/$CONFIGURATION"
+BUILD_DIR="$PROJECT_DIR/.build/$CONFIGURATION"
 
 if [ -f "$BUILD_DIR/AppBenchCLI" ]; then
 	export DYLD_FRAMEWORK_PATH="$BUILD_DIR/PackageFrameworks:$BUILD_DIR"

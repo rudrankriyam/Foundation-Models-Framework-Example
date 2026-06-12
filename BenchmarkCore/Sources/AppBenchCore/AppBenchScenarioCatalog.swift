@@ -41,7 +41,6 @@ public enum AppBenchScenarioCatalog {
         outputMode: .guided(.task),
         maximumResponseTokens: 120,
         checks: [
-            .validJSON,
             .jsonEquals(path: "title", value: .string("Call Dr. Lee")),
             .jsonEquals(path: "list", value: .string("Personal")),
             .jsonEquals(path: "dueDate", value: .string("2026-06-16 09:00")),
@@ -116,7 +115,6 @@ public enum AppBenchScenarioCatalog {
         outputMode: .guided(.classification),
         maximumResponseTokens: 32,
         checks: [
-            .validJSON,
             .jsonEquals(path: "category", value: .string("health"))
         ]
     )
@@ -137,10 +135,8 @@ public enum AppBenchScenarioCatalog {
         outputMode: .guided(.workout),
         maximumResponseTokens: 220,
         checks: [
-            .validJSON,
             .jsonContains(path: "focus", values: ["lower-body"]),
             .jsonEquals(path: "durationMinutes", value: .integer(20)),
-            .jsonArrayCount(path: "exercises", minimum: 4, maximum: 4),
             .jsonContains(
                 path: "exercises",
                 values: ["bodyweight squat", "reverse lunge", "glute bridge", "calf raise"]
@@ -168,10 +164,8 @@ public enum AppBenchScenarioCatalog {
         outputMode: .guided(.groundedAnswer),
         maximumResponseTokens: 140,
         checks: [
-            .validJSON,
             .jsonContains(path: "answer", values: ["October 18", "Priya", "release communications"]),
-            .jsonContains(path: "citations", values: ["note-2"]),
-            .jsonArrayCount(path: "citations", minimum: 1, maximum: 1)
+            .jsonContains(path: "citations", values: ["note-2"])
         ]
     )
 

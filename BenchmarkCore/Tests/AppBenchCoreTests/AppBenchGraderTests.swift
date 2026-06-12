@@ -35,7 +35,7 @@ struct AppBenchGraderTests {
     }
 
     @Test
-    func validatesArrayContentsAndCount() {
+    func gradesGuidedOutputBySemanticContent() {
         let response = """
         {
           "focus": "Lower-body strength",

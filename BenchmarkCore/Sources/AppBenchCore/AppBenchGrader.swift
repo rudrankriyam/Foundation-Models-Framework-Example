@@ -59,9 +59,6 @@ public enum AppBenchGrader {
             let count = wordCount(response)
             passed = count <= maximum
             detail = passed ? nil : "Found \(count) words."
-        case .validJSON:
-            passed = json != nil
-            detail = passed ? nil : "Response was not a JSON object."
         case .jsonEquals(let path, let expected):
             let actual = value(at: path, in: json)
             passed = matches(actual, expected: expected)
@@ -73,11 +70,6 @@ public enum AppBenchGrader {
                 flattened.contains { $0.localizedCaseInsensitiveContains(expected) }
             }
             detail = passed ? nil : "Actual values: \(flattened.joined(separator: ", "))."
-        case .jsonArrayCount(let path, let minimum, let maximum):
-            let actual = value(at: path, in: json)
-            let count = (actual as? [Any])?.count
-            passed = count.map { minimum ... maximum ~= $0 } ?? false
-            detail = passed ? nil : "Actual count: \(count.map(String.init) ?? "not an array")."
         }
 
         return AppBenchCheckResult(label: check.label, passed: passed, detail: detail)

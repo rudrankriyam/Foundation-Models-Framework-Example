@@ -31,10 +31,15 @@ Each fixture has deterministic checks such as:
 
 - Exact generated fields.
 - Required and forbidden text.
-- Valid guided-generation JSON.
-- Array membership and count.
+- Semantically required array members.
 - Maximum or minimum word count.
 - Exact source citations.
+
+Guided generation schema conformance is not scored as quality. The framework enforces
+the JSON shape, property types, enum choices, and schema-level array bounds during
+decoding. AppBench records guided generation as the execution mode, then grades only
+whether the generated values solve the task. For example, an allowed category can
+still be the wrong category, and a well-formed citation array can cite the wrong note.
 
 AppBench reports two quality values:
 

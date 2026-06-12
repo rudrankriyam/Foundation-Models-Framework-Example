@@ -6,6 +6,10 @@ OS releases, the on-device system model, and Private Cloud Compute.
 It reports **quality and performance separately**. A fast incorrect response remains
 incorrect; a high-quality response does not hide poor latency.
 
+Guided generation structure is not counted as quality. AppBench grades the semantic
+values inside a framework-constrained response, not JSON validity that decoding already
+guarantees.
+
 ## Included Scenarios
 
 The starter corpus uses synthetic, reproducible inputs modeled after app experiences
