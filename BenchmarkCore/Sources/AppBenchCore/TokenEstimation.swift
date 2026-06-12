@@ -27,8 +27,7 @@ func tokenCounts(
     model: AppBenchModel
 ) async -> AppBenchTokenCounts {
     if model == .onDevice,
-        #available(macOS 26.4, iOS 26.4, visionOS 26.4, *)
-    {
+        #available(macOS 26.4, iOS 26.4, visionOS 26.4, *) {
         do {
             let systemModel = SystemLanguageModel.default
             var input = try await systemModel.tokenCount(for: Instructions(scenario.instructions))

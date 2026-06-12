@@ -1,5 +1,8 @@
 import Foundation
 
+// This file is a static, reviewable benchmark corpus. Keeping fixtures together makes
+// provenance and cross-scenario sample counts easier to audit.
+// swiftlint:disable closure_parameter_position file_length line_length type_body_length
 public enum AppBenchScenarioCatalog {
     public static let all: [AppBenchScenario] =
         practical + safety + [syntheticThroughput, contextLimit]
@@ -14,12 +17,12 @@ public enum AppBenchScenarioCatalog {
         documentQuestionAnswering,
         citationExtraction,
         creativeWriting,
-        visualRecommendation,
+        visualRecommendation
     ]
 
     public static let safety: [AppBenchScenario] = [
         guardrailExpectedResponse,
-        guardrailExpectedProtection,
+        guardrailExpectedProtection
     ]
 
     public static func scenarios(for suite: AppBenchSuite) -> [AppBenchScenario] {
@@ -33,7 +36,7 @@ public enum AppBenchScenarioCatalog {
                 groundedExplanation,
                 documentQuestionAnswering,
                 citationExtraction,
-                creativeWriting,
+                creativeWriting
             ]
         case .full:
             practical
@@ -71,7 +74,7 @@ public enum AppBenchScenarioCatalog {
                         .jsonEquals(path: "title", value: .string("Call Dr. Lee")),
                         .jsonEquals(path: "list", value: .string("Personal")),
                         .jsonEquals(path: "dueDate", value: .string("2026-06-16 09:00")),
-                        .jsonContains(path: "tags", values: ["health", "calls"]),
+                        .jsonContains(path: "tags", values: ["health", "calls"])
                     ]
                 ),
                 (
@@ -84,7 +87,7 @@ public enum AppBenchScenarioCatalog {
                         .jsonEquals(path: "title", value: .string("Submit travel receipt")),
                         .jsonEquals(path: "list", value: .string("Work")),
                         .jsonEquals(path: "dueDate", value: .string("2026-06-19 16:30")),
-                        .jsonContains(path: "tags", values: ["finance", "travel"]),
+                        .jsonContains(path: "tags", values: ["finance", "travel"])
                     ]
                 ),
                 (
@@ -97,7 +100,7 @@ public enum AppBenchScenarioCatalog {
                         .jsonEquals(path: "title", value: .string("Book campsite")),
                         .jsonEquals(path: "list", value: .string("Family")),
                         .jsonEquals(path: "dueDate", value: .string("2026-07-02 19:15")),
-                        .jsonContains(path: "tags", values: ["outdoors", "planning"]),
+                        .jsonContains(path: "tags", values: ["outdoors", "planning"])
                     ]
                 ),
                 (
@@ -110,7 +113,7 @@ public enum AppBenchScenarioCatalog {
                         .jsonEquals(path: "title", value: .string("Renew library card")),
                         .jsonEquals(path: "list", value: .string("Errands")),
                         .jsonEquals(path: "dueDate", value: .string("2026-06-27 11:00")),
-                        .jsonContains(path: "tags", values: ["admin", "reading"]),
+                        .jsonContains(path: "tags", values: ["admin", "reading"])
                     ]
                 ),
                 (
@@ -123,9 +126,9 @@ public enum AppBenchScenarioCatalog {
                         .jsonEquals(path: "title", value: .string("Review chapter seven")),
                         .jsonEquals(path: "list", value: .string("Book")),
                         .jsonEquals(path: "dueDate", value: .string("2026-06-14 08:45")),
-                        .jsonContains(path: "tags", values: ["editing", "focus"]),
+                        .jsonContains(path: "tags", values: ["editing", "focus"])
                     ]
-                ),
+                )
             ]
         )
     )
@@ -302,7 +305,7 @@ private let promptVariants = [
     "User dictated this request:",
     "Process the following saved app input:",
     "Handle this input without adding details:",
-    "App workflow payload:",
+    "App workflow payload:"
 ]
 
 private func expandedSamples(id: String, bases: [SampleBase]) -> [AppBenchSample] {
@@ -325,7 +328,7 @@ private let workoutBases: [SampleBase] = [
             .jsonEquals(path: "durationMinutes", value: .integer(20)),
             .jsonContains(
                 path: "exercises",
-                values: ["bodyweight squat", "reverse lunge", "glute bridge", "calf raise"]),
+                values: ["bodyweight squat", "reverse lunge", "glute bridge", "calf raise"])
         ]
     ),
     (
@@ -335,7 +338,7 @@ private let workoutBases: [SampleBase] = [
             .jsonEquals(path: "durationMinutes", value: .integer(15)),
             .jsonContains(
                 path: "exercises",
-                values: ["shoulder press", "bent-over row", "chest press", "biceps curl"]),
+                values: ["shoulder press", "bent-over row", "chest press", "biceps curl"])
         ]
     ),
     (
@@ -345,7 +348,7 @@ private let workoutBases: [SampleBase] = [
             .jsonEquals(path: "durationMinutes", value: .integer(12)),
             .jsonContains(
                 path: "exercises",
-                values: ["cat-cow", "hip flexor stretch", "thoracic rotation", "ankle circles"]),
+                values: ["cat-cow", "hip flexor stretch", "thoracic rotation", "ankle circles"])
         ]
     ),
     (
@@ -354,7 +357,7 @@ private let workoutBases: [SampleBase] = [
             .jsonContains(path: "focus", values: ["core"]),
             .jsonEquals(path: "durationMinutes", value: .integer(25)),
             .jsonContains(
-                path: "exercises", values: ["dead bug", "bird dog", "side plank", "hollow hold"]),
+                path: "exercises", values: ["dead bug", "bird dog", "side plank", "hollow hold"])
         ]
     ),
     (
@@ -364,9 +367,9 @@ private let workoutBases: [SampleBase] = [
             .jsonEquals(path: "durationMinutes", value: .integer(18)),
             .jsonContains(
                 path: "exercises",
-                values: ["jumping jack", "high knees", "skater hop", "mountain climber"]),
+                values: ["jumping jack", "high knees", "skater hop", "mountain climber"])
         ]
-    ),
+    )
 ]
 
 private let journalBases: [SampleBase] = [
@@ -382,23 +385,23 @@ private let journalBases: [SampleBase] = [
         "I was nervous before the presentation, and the supportive questions afterward were encouraging. I sent the follow-up email. Tomorrow I will rehearse the opening once.",
         [
             .contains("supportive questions"), .contains("rehearse"), .excludes("diagnos"),
-            .maximumWords(70),
+            .maximumWords(70)
         ]
     ),
     (
         "The train delay was frustrating, but I read two chapters and arrived in time for dinner. I packed my bag tonight. Tomorrow I plan to leave ten minutes earlier.",
         [
             .contains("two chapters"), .contains("ten minutes earlier"), .excludes("diagnos"),
-            .maximumWords(70),
+            .maximumWords(70)
         ]
     ),
     (
         "I struggled to focus after lunch, though finishing the prototype felt satisfying. A quiet music break helped. Tomorrow I will block notifications for the first hour.",
         [
             .contains("prototype"), .contains("block notifications"), .excludes("diagnos"),
-            .maximumWords(70),
+            .maximumWords(70)
         ]
-    ),
+    )
 ]
 
 private let classificationBases: [SampleBase] = [
@@ -421,7 +424,7 @@ private let classificationBases: [SampleBase] = [
     (
         "Activity: Stretch after every run. Categories: health, learning, productivity, relationships.",
         [.jsonEquals(path: "category", value: .string("health"))]
-    ),
+    )
 ]
 
 private let groundedExplanationBases: [SampleBase] = [
@@ -434,12 +437,11 @@ private let groundedExplanationBases: [SampleBase] = [
     groundedExplanationBase(
         topic: "photosynthesis", sourceID: "bio-22", required: ["light", "bio-22"]),
     groundedExplanationBase(
-        topic: "binary search", sourceID: "cs-11", required: ["sorted", "cs-11"]),
+        topic: "binary search", sourceID: "cs-11", required: ["sorted", "cs-11"])
 ]
 
 private func groundedExplanationBase(topic: String, sourceID: String, required: [String])
-    -> SampleBase
-{
+    -> SampleBase {
     (
         "Explain \(topic) for a beginner using source \(sourceID).",
         [
@@ -448,7 +450,7 @@ private func groundedExplanationBase(topic: String, sourceID: String, required: 
             .toolArgumentEquals(
                 tool: "lookupKnowledge", argument: "sourceID", value: .string(sourceID)),
             .contains(required[0]),
-            .contains(required[1]),
+            .contains(required[1])
         ]
     )
 }
@@ -469,12 +471,11 @@ private let exerciseSubstitutionBases: [SampleBase] = [
         answer: "dumbbell floor press"),
     exerciseBase(
         exercise: "box jump", limitation: "quiet apartment", equipment: "none",
-        answer: "reverse lunge"),
+        answer: "reverse lunge")
 ]
 
 private func exerciseBase(exercise: String, limitation: String, equipment: String, answer: String)
-    -> SampleBase
-{
+    -> SampleBase {
     (
         "Replace \(exercise). Limitation: \(limitation). Available equipment: \(equipment).",
         [
@@ -486,7 +487,7 @@ private func exerciseBase(exercise: String, limitation: String, equipment: Strin
                 tool: "findExerciseSubstitute", argument: "limitation", value: .string(limitation)),
             .toolArgumentEquals(
                 tool: "findExerciseSubstitute", argument: "equipment", value: .string(equipment)),
-            .contains(answer),
+            .contains(answer)
         ]
     )
 }
@@ -496,37 +497,37 @@ private let documentQABases: [SampleBase] = [
         "[note-1] Beta begins October 4. [note-2] Public launch is October 18. Priya owns release communications. [note-3] Support starts October 21.\nQuestion: When is public launch, and who owns release communications?",
         [
             .jsonContains(path: "answer", values: ["October 18", "Priya"]),
-            .jsonContains(path: "citations", values: ["note-2"]),
+            .jsonContains(path: "citations", values: ["note-2"])
         ]
     ),
     (
         "[doc-a] Rent is due on the first. [doc-b] The lease ends March 31, 2027 and renewal notice is due January 31. [doc-c] Parking costs $80.\nQuestion: When does the lease end and when is renewal notice due?",
         [
             .jsonContains(path: "answer", values: ["March 31, 2027", "January 31"]),
-            .jsonContains(path: "citations", values: ["doc-b"]),
+            .jsonContains(path: "citations", values: ["doc-b"])
         ]
     ),
     (
         "[memo-1] Northwind owns design. [memo-2] The accessibility audit is scheduled July 8 and Lee is the contact. [memo-3] Translation starts July 10.\nQuestion: When is the audit and who is the contact?",
         [
             .jsonContains(path: "answer", values: ["July 8", "Lee"]),
-            .jsonContains(path: "citations", values: ["memo-2"]),
+            .jsonContains(path: "citations", values: ["memo-2"])
         ]
     ),
     (
         "[agenda-1] Breakfast is at 8. [agenda-2] Keynote starts at 10 AM in Hall C. [agenda-3] Workshops begin at noon.\nQuestion: When and where is the keynote?",
         [
             .jsonContains(path: "answer", values: ["10 AM", "Hall C"]),
-            .jsonContains(path: "citations", values: ["agenda-2"]),
+            .jsonContains(path: "citations", values: ["agenda-2"])
         ]
     ),
     (
         "[contract-1] Payment is net 30. [contract-2] Governing law is California and disputes use arbitration. [contract-3] The term is twelve months.\nQuestion: What law governs and how are disputes handled?",
         [
             .jsonContains(path: "answer", values: ["California", "arbitration"]),
-            .jsonContains(path: "citations", values: ["contract-2"]),
+            .jsonContains(path: "citations", values: ["contract-2"])
         ]
-    ),
+    )
 ]
 
 private let citationBases: [SampleBase] = [
@@ -544,7 +545,7 @@ private let citationBases: [SampleBase] = [
         venue: "Agent Benchmarks"),
     citationBase(
         author: "Hana Sato", title: "Private Inference at the Edge", year: 2026,
-        venue: "Device Intelligence"),
+        venue: "Device Intelligence")
 ]
 
 private func citationBase(author: String, title: String, year: Int, venue: String) -> SampleBase {
@@ -554,7 +555,7 @@ private func citationBase(author: String, title: String, year: Int, venue: Strin
             .jsonEquals(path: "author", value: .string(author)),
             .jsonEquals(path: "title", value: .string(title)),
             .jsonEquals(path: "year", value: .integer(year)),
-            .jsonEquals(path: "venue", value: .string(venue)),
+            .jsonEquals(path: "venue", value: .string(venue))
         ]
     )
 }
@@ -564,7 +565,7 @@ private let creativeBases: [SampleBase] = [
         "Write a hopeful micro-story of at most 70 words about a lighthouse and a lost key. Include the exact phrase “first light.”",
         [
             .contains("lighthouse"), .contains("lost key"), .contains("first light"),
-            .maximumWords(70),
+            .maximumWords(70)
         ]
     ),
     (
@@ -582,7 +583,7 @@ private let creativeBases: [SampleBase] = [
     (
         "Write a warm caption of at most 45 words about cooking with a friend. Include rosemary and Sunday.",
         [.contains("rosemary"), .contains("Sunday"), .maximumWords(45)]
-    ),
+    )
 ]
 
 private let visualSamples: [AppBenchSample] = promptVariants.enumerated().flatMap {
@@ -604,3 +605,4 @@ private let longContextPrompt: String = {
     }.joined(separator: "\n")
     return "\(filler)\nTARGET_KEY = violet-cedar-4821"
 }()
+// swiftlint:enable closure_parameter_position file_length line_length type_body_length

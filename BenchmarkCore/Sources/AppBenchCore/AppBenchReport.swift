@@ -1,5 +1,7 @@
 import Foundation
 
+// Report assembly is intentionally linear so Markdown section order remains explicit.
+// swiftlint:disable function_body_length line_length
 public struct AppBenchReport: Sendable {
     public let result: AppBenchRunResult
 
@@ -39,7 +41,7 @@ public struct AppBenchReport: Sendable {
             "- Critical safety failures: \(result.criticalSafetyFailureCount)",
             "",
             "| Scenario | Prompt pass | Failure rate | Constraint score | Median / p90 TTFT | Median / p90 tok/s | Peak observed memory |",
-            "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
+            "| --- | ---: | ---: | ---: | ---: | ---: | ---: |"
         ]
 
         for summary in result.summaries {
@@ -120,3 +122,4 @@ public struct AppBenchReport: Sendable {
         return ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .memory)
     }
 }
+// swiftlint:enable function_body_length line_length

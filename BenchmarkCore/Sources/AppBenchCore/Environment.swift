@@ -98,7 +98,7 @@ public struct EnvironmentSnapshot: Codable, Sendable {
         var value = [CChar](repeating: 0, count: size)
         guard sysctlbyname(name, &value, &size, nil, 0) == 0 else { return nil }
         let bytes = value.prefix { $0 != 0 }.map(UInt8.init(bitPattern:))
-        return String(decoding: bytes, as: UTF8.self)
+        return String(bytes: bytes, encoding: .utf8)
     }
 
     private static func operatingSystemBuild() -> String? {

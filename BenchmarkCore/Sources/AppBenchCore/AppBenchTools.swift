@@ -37,7 +37,7 @@ struct KnowledgeLookupTool: Tool {
                 name: name,
                 arguments: [
                     "topic": .string(arguments.topic),
-                    "sourceID": .string(arguments.sourceID),
+                    "sourceID": .string(arguments.sourceID)
                 ]
             )
         )
@@ -87,7 +87,7 @@ struct ExerciseCatalogTool: Tool {
                 arguments: [
                     "unavailableExercise": .string(arguments.unavailableExercise),
                     "limitation": .string(arguments.limitation),
-                    "equipment": .string(arguments.equipment),
+                    "equipment": .string(arguments.equipment)
                 ]
             )
         )

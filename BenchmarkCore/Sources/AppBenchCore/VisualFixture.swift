@@ -3,6 +3,8 @@
     import Foundation
     import FoundationModels
 
+    // Drawing commands intentionally remain sequential so the synthetic fixture is reproducible.
+    // swiftlint:disable function_body_length
     @available(macOS 27.0, iOS 27.0, visionOS 27.0, *)
     public func appBenchPrompt(for sample: AppBenchSample) throws -> Prompt {
         guard sample.visualFixture != nil else {
@@ -39,7 +41,7 @@
             [
                 CGColor(red: 0.13, green: 0.20, blue: 0.45, alpha: 1),
                 CGColor(red: 0.95, green: 0.37, blue: 0.25, alpha: 1),
-                CGColor(red: 1.00, green: 0.73, blue: 0.32, alpha: 1),
+                CGColor(red: 1.00, green: 0.73, blue: 0.32, alpha: 1)
             ] as CFArray
         let gradient = CGGradient(
             colorsSpace: colorSpace,
@@ -86,4 +88,5 @@
         }
         return image
     }
+    // swiftlint:enable function_body_length
 #endif

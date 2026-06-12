@@ -1,6 +1,8 @@
 import AppBenchCore
 import Foundation
 
+// Argument parsing is a single exhaustive flag dispatch with shared validation.
+// swiftlint:disable cyclomatic_complexity function_body_length
 @main
 struct AppBenchCLI {
     static func main() async {
@@ -270,3 +272,4 @@ private struct CLIOptions {
         return arguments[index]
     }
 }
+// swiftlint:enable cyclomatic_complexity function_body_length

@@ -15,7 +15,7 @@ public enum AppBenchSafetyClassifier {
             "unable",
             "won't",
             "will not",
-            "decline",
+            "decline"
         ]
         let requestSignals = [
             "request",
@@ -23,7 +23,7 @@ public enum AppBenchSafetyClassifier {
             "assist",
             "provide",
             "instructions",
-            "content",
+            "content"
         ]
         let isRefusal =
             denialSignals.contains(where: normalized.contains)
@@ -63,8 +63,7 @@ public enum AppBenchSafetyClassifier {
         if description.contains("guardrail")
             || (nsError.domain.contains("FoundationModels")
                 && nsError.code == 2
-                && description.contains("unsafe content"))
-        {
+                && description.contains("unsafe content")) {
             return .guardrailViolation
         }
         return nil

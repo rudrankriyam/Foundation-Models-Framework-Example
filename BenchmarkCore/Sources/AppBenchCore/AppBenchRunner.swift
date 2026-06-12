@@ -1,6 +1,10 @@
 import Foundation
 import FoundationModels
 
+// The runner keeps availability-gated streaming paths together so OS 26 and OS 27
+// behavior can be audited side by side.
+// swiftlint:disable cyclomatic_complexity file_length function_body_length
+// swiftlint:disable function_parameter_count type_body_length
 public struct AppBenchRunConfiguration: Sendable {
     public let suite: AppBenchSuite
     public let scenarios: [AppBenchScenario]
@@ -171,8 +175,7 @@ public actor AppBenchRunner {
     }
 
     private func run(item: WorkItem, contextSize modelContextSize: Int?) async throws
-        -> AppBenchTrialResult
-    {
+        -> AppBenchTrialResult {
         let primaryStartedAt = Date.now
         let primaryResource = AppBenchResourceSnapshot.capture()
         do {
@@ -180,8 +183,7 @@ public actor AppBenchRunner {
                 item: item, model: configuration.model, contextSize: modelContextSize)
         } catch {
             if item.sample.safetyExpectation != nil,
-                let outcome = AppBenchSafetyClassifier.outcome(for: error)
-            {
+                let outcome = AppBenchSafetyClassifier.outcome(for: error) {
                 return await safetyBlockedTrial(
                     item: item,
                     model: configuration.model,
@@ -210,8 +212,7 @@ public actor AppBenchRunner {
                 )
             } catch {
                 if item.sample.safetyExpectation != nil,
-                    let outcome = AppBenchSafetyClassifier.outcome(for: error)
-                {
+                    let outcome = AppBenchSafetyClassifier.outcome(for: error) {
                     return await safetyBlockedTrial(
                         item: item,
                         model: .onDevice,
@@ -431,8 +432,7 @@ public actor AppBenchRunner {
         }
 
         if response.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-            let transcriptResponse = latestTranscriptResponse(from: bundle.session.transcript)
-        {
+            let transcriptResponse = latestTranscriptResponse(from: bundle.session.transcript) {
             let recoveredAt = Date.now
             response = transcriptResponse
             firstStreamUpdate = transcriptResponse
@@ -748,8 +748,7 @@ private func failureKind(_ error: any Swift.Error) -> String {
     if description.contains("contextsize")
         || description.contains("context_size")
         || description.contains("context window")
-        || description.contains("contextwindow")
-    {
+        || description.contains("contextwindow") {
         return "contextLimit"
     }
     if description.contains("quota") {
@@ -842,3 +841,5 @@ private struct SeededGenerator: RandomNumberGenerator {
         return value ^ (value >> 31)
     }
 }
+// swiftlint:enable cyclomatic_complexity function_body_length
+// swiftlint:enable function_parameter_count type_body_length
