@@ -43,16 +43,15 @@ public struct AppBenchReport: Sendable {
 
         lines.append("")
         lines.append("## Environment")
-        if let environment = result.trials.first?.environment {
-            lines.append("- Device: \(environment.deviceName)")
-            lines.append("- Hardware: \(environment.hardwareModel ?? "unknown")")
-            lines.append("- Chip: \(environment.cpuModel ?? "unknown")")
-            lines.append("- OS: \(environment.systemName) \(environment.systemVersion) (\(environment.systemBuild ?? "unknown"))")
-            lines.append("- Memory: \(memory(environment.totalMemory))")
-            lines.append("- Thermal state: \(environment.thermalState)")
-            lines.append("- Low Power Mode: \(environment.lowPowerModeEnabled ? "on" : "off")")
-            lines.append("- AppBench commit: \(environment.appBenchCommit ?? "unknown")")
-        }
+        let environment = result.environment
+        lines.append("- Device: \(environment.deviceName)")
+        lines.append("- Hardware: \(environment.hardwareModel ?? "unknown")")
+        lines.append("- Chip: \(environment.cpuModel ?? "unknown")")
+        lines.append("- OS: \(environment.systemName) \(environment.systemVersion) (\(environment.systemBuild ?? "unknown"))")
+        lines.append("- Memory: \(memory(environment.totalMemory))")
+        lines.append("- Thermal state: \(environment.thermalState)")
+        lines.append("- Low Power Mode: \(environment.lowPowerModeEnabled ? "on" : "off")")
+        lines.append("- AppBench commit: \(environment.appBenchCommit ?? "unknown")")
 
         return lines.joined(separator: "\n")
     }

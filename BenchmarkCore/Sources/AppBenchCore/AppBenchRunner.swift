@@ -53,6 +53,7 @@ public actor AppBenchRunner {
     public func run() async throws -> AppBenchRunResult {
         try ensureAvailability()
         let startedAt = Date.now
+        let environment = EnvironmentSnapshot.capture()
 
         for _ in 0 ..< configuration.warmupCount {
             try await warmUp()
@@ -64,13 +65,19 @@ public actor AppBenchRunner {
         for scenario in configuration.scenarios {
             for iteration in 1 ... configuration.repetitions {
                 do {
-                    trials.append(try await run(scenario: scenario, iteration: iteration))
+                    trials.append(
+                        try await run(
+                            scenario: scenario,
+                            iteration: iteration,
+                            environment: environment
+                        )
+                    )
                 } catch {
                     failures.append(
                         AppBenchFailure(
                             scenarioID: scenario.id,
                             iteration: iteration,
-                            message: error.localizedDescription
+                            message: detailedMessage(for: error)
                         )
                     )
                 }
@@ -84,13 +91,18 @@ public actor AppBenchRunner {
             repetitions: configuration.repetitions,
             startedAt: startedAt,
             endedAt: .now,
+            environment: environment,
             trials: trials,
             failures: failures,
             scenarios: configuration.scenarios
         )
     }
 
-    private func run(scenario: AppBenchScenario, iteration: Int) async throws -> AppBenchTrialResult {
+    private func run(
+        scenario: AppBenchScenario,
+        iteration: Int,
+        environment: EnvironmentSnapshot
+    ) async throws -> AppBenchTrialResult {
         let session = try makeSession(instructions: scenario.instructions)
         let options = generationOptions(maximumResponseTokens: scenario.maximumResponseTokens)
         let startedAt = Date.now
@@ -149,7 +161,7 @@ public actor AppBenchRunner {
             response: response,
             grade: AppBenchGrader.grade(response: response, checks: scenario.checks),
             metrics: metrics,
-            environment: .capture()
+            environment: environment
         )
     }
 
@@ -204,6 +216,13 @@ public actor AppBenchRunner {
             #endif
         }
     }
+}
+
+private func detailedMessage(for error: any Swift.Error) -> String {
+    let nsError = error as NSError
+    let reflected = String(reflecting: error)
+    let userInfo = nsError.userInfo.isEmpty ? "" : " userInfo=\(nsError.userInfo)"
+    return "\(error.localizedDescription) [\(reflected); domain=\(nsError.domain) code=\(nsError.code)\(userInfo)]"
 }
 
 private func generationOptions(maximumResponseTokens: Int) -> GenerationOptions {

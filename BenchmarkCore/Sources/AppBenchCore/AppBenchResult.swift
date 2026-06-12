@@ -82,6 +82,7 @@ public struct AppBenchRunResult: Codable, Sendable {
     public let repetitions: Int
     public let startedAt: Date
     public let endedAt: Date
+    public let environment: EnvironmentSnapshot
     public let trials: [AppBenchTrialResult]
     public let failures: [AppBenchFailure]
     public let summaries: [AppBenchScenarioSummary]
@@ -93,6 +94,7 @@ public struct AppBenchRunResult: Codable, Sendable {
         repetitions: Int,
         startedAt: Date,
         endedAt: Date,
+        environment: EnvironmentSnapshot,
         trials: [AppBenchTrialResult],
         failures: [AppBenchFailure],
         scenarios: [AppBenchScenario]
@@ -103,6 +105,7 @@ public struct AppBenchRunResult: Codable, Sendable {
         self.repetitions = repetitions
         self.startedAt = startedAt
         self.endedAt = endedAt
+        self.environment = environment
         self.trials = trials
         self.failures = failures
         self.summaries = scenarios.map { scenario in
