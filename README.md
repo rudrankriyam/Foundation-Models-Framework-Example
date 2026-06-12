@@ -38,13 +38,14 @@ Every measured trial records:
 - End-to-end duration.
 - Time to first token (TTFT).
 - Decode duration.
-- Estimated output tokens per second.
+- Output tokens per second, using Apple's tokenizer for on-device OS 26.4+ runs.
 - Output characters per second.
 - Stream update count and maximum stream-update gap.
 - Device, chip, memory, OS version/build, locale, thermal state, and Low Power Mode.
 
-Token counts are calibrated estimates unless an Instruments trace is captured. Decode
-throughput uses **output tokens only** and excludes TTFT.
+Decode throughput uses **output tokens only** and excludes TTFT. On older on-device
+systems and PCC runs, AppBench records a calibrated character estimate and marks
+the source in each trial.
 
 Each scenario summary reports median, p90, mean, range, and standard deviation.
 

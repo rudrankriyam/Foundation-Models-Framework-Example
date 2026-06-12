@@ -70,10 +70,15 @@ For each request:
 
 Prompt tokens are never included in output throughput.
 
-Foundation Models does not expose public tokenizer counts to applications. AppBench
-therefore labels token counts as estimates calibrated from prior Foundation Models
-Instruments traces. Characters per second is retained as a tokenizer-independent
-secondary measurement.
+On OS 26.4 and later, on-device runs use
+`SystemLanguageModel.tokenCount(for:)` for instructions, prompts, schemas, and
+responses. Each trial records `tokenCountSource: systemTokenizer`.
+
+Earlier on-device systems and PCC runs use estimates calibrated from prior
+Foundation Models Instruments traces because the public tokenizer API belongs to
+`SystemLanguageModel`. Those trials record
+`tokenCountSource: characterEstimate`. Characters per second remains a
+tokenizer-independent secondary measurement.
 
 Stream snapshots are not guaranteed to map one-to-one to tokens. Consequently,
 AppBench calls their timing **stream update gaps**, not inter-token latency.
@@ -130,7 +135,7 @@ enabled, service availability, and Apple’s managed entitlement.
 ## Known Limitations
 
 - The starter corpus is deliberately small and is not statistically representative of every app.
-- Token counts are estimated without Instruments.
+- PCC and pre-26.4 token counts are estimated without Instruments.
 - Energy use is not yet sampled directly.
 - Snapshot timing cannot provide true token-level jitter.
 - The practical scenarios are English-only.

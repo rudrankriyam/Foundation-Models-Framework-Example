@@ -4,12 +4,49 @@ import FoundationModels
 private let inputCharactersPerToken = 1057.0 / 235.0
 private let outputCharactersPerToken = 13680.0 / 2276.0
 
+struct AppBenchTokenCounts: Sendable {
+    let input: Int
+    let output: Int
+    let source: AppBenchTokenCountSource
+}
+
 func estimateInputTokens(_ text: String) -> Int {
     estimateTokens(text, charactersPerToken: inputCharactersPerToken)
 }
 
 func estimateOutputTokens(_ text: String) -> Int {
     estimateTokens(text, charactersPerToken: outputCharactersPerToken)
+}
+
+func tokenCounts(
+    for scenario: AppBenchScenario,
+    response: String,
+    model: AppBenchModel
+) async -> AppBenchTokenCounts {
+    if model == .onDevice,
+       #available(macOS 26.4, iOS 26.4, visionOS 26.4, *) {
+        do {
+            let systemModel = SystemLanguageModel.default
+            var input = try await systemModel.tokenCount(for: Instructions(scenario.instructions))
+            input += try await systemModel.tokenCount(for: Prompt(scenario.prompt))
+
+            if case .guided(let appBenchSchema) = scenario.outputMode {
+                let schema = try AppBenchSchemaFactory.make(appBenchSchema)
+                input += try await systemModel.tokenCount(for: schema)
+            }
+
+            let output = try await systemModel.tokenCount(for: Prompt(response))
+            return AppBenchTokenCounts(input: input, output: output, source: .systemTokenizer)
+        } catch {
+            // Counting should not turn a completed inference into a failed trial.
+        }
+    }
+
+    return AppBenchTokenCounts(
+        input: estimateInputTokens(scenario.instructions + "\n" + scenario.prompt),
+        output: estimateOutputTokens(response),
+        source: .characterEstimate
+    )
 }
 
 func renderText(from snapshot: LanguageModelSession.ResponseStream<String>.Snapshot) -> String {

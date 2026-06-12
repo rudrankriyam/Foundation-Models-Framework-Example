@@ -27,12 +27,14 @@ AppBench reports:
 - Output tokens only.
 - Decode duration after the first streamed output.
 - Output characters per second as a tokenizer-independent companion.
+- Exact system tokenizer counts on on-device OS 26.4+ runs, with explicit
+  `tokenCountSource` provenance for every trial.
 
 Historical values from the old README should not be compared directly with new
 AppBench output throughput.
 
 ## Existing Traces
 
-Existing `.trace` captures remain useful for validating estimated token counts and
+Existing `.trace` captures remain useful for validating fallback token estimates and
 examining framework behavior across OS builds. They are ignored by Git because they
 are large generated artifacts.

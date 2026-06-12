@@ -143,13 +143,18 @@ public actor AppBenchRunner {
         }
 
         let endedAt = Date.now
-        let promptText = scenario.instructions + "\n" + scenario.prompt
+        let counts = await tokenCounts(
+            for: scenario,
+            response: response,
+            model: configuration.model
+        )
         let metrics = AppBenchTrialMetrics(
             startedAt: startedAt,
             endedAt: endedAt,
             firstTokenAt: firstTokenAt,
-            promptTokenEstimate: estimateInputTokens(promptText),
-            responseTokenEstimate: estimateOutputTokens(response),
+            inputTokenCount: counts.input,
+            outputTokenCount: counts.output,
+            tokenCountSource: counts.source,
             responseCharacterCount: response.count,
             streamUpdateDates: streamUpdateDates
         )

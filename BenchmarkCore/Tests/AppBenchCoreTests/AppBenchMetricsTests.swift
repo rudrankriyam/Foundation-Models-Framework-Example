@@ -23,13 +23,15 @@ struct AppBenchMetricsTests {
             startedAt: start,
             endedAt: end,
             firstTokenAt: first,
-            promptTokenEstimate: 500,
-            responseTokenEstimate: 101,
+            inputTokenCount: 500,
+            outputTokenCount: 101,
+            tokenCountSource: .systemTokenizer,
             responseCharacterCount: 600,
             streamUpdateDates: [first, end]
         )
 
         #expect(metrics.decodeDuration == 4)
         #expect(metrics.outputTokensPerSecond == 25)
+        #expect(metrics.tokenCountSource == .systemTokenizer)
     }
 }
