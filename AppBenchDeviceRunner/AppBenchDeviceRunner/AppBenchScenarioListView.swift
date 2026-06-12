@@ -5,14 +5,10 @@ struct AppBenchScenarioListView: View {
     let scenarios: [AppBenchScenario]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Scenarios")
-                .font(.title2.bold())
-
+        DisclosureGroup("Workloads (\(scenarios.count))") {
             ForEach(scenarios) { scenario in
                 AppBenchScenarioRow(scenario: scenario)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

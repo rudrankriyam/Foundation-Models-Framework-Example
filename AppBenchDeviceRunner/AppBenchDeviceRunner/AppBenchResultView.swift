@@ -6,12 +6,14 @@ struct AppBenchResultView: View {
     let copyAction: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading) {
             HStack {
                 Text("Results")
-                    .font(.title2.bold())
+                    .font(.headline)
                 Spacer()
                 Button("Copy Markdown", systemImage: "doc.on.doc", action: copyAction)
+                    .labelStyle(.iconOnly)
+                    .accessibilityLabel("Copy Markdown report")
             }
 
             ForEach(result.summaries) { summary in

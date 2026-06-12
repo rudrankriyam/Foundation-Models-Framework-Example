@@ -8,21 +8,23 @@ struct ContentView: View {
         @Bindable var viewModel = viewModel
 
         NavigationStack {
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 24) {
-                    AppBenchHeaderView()
+            List {
+                Section("Benchmark") {
                     AppBenchConfigurationView(viewModel: viewModel)
-                    AppBenchScenarioListView(scenarios: viewModel.selectedScenarios)
+                }
 
-                    if let result = viewModel.result {
+                Section {
+                    AppBenchScenarioListView(scenarios: viewModel.selectedScenarios)
+                }
+
+                if let result = viewModel.result {
+                    Section {
                         AppBenchResultView(result: result, copyAction: viewModel.copyMarkdown)
                     }
                 }
-                .padding()
-                .frame(maxWidth: 920)
-                .frame(maxWidth: .infinity)
             }
-            .navigationTitle("AppBench Device Runner")
+            .navigationTitle("AppBench")
+            .navigationBarTitleDisplayMode(.inline)
             .alert("AppBench Failed", isPresented: $viewModel.showError) {
                 Button("OK", role: .cancel) {}
             } message: {
