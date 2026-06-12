@@ -13,6 +13,7 @@ public struct AppBenchTrialMetrics: Codable, Sendable {
     public let decodeDuration: TimeInterval?
     public let inputTokenCount: Int
     public let outputTokenCount: Int
+    public let firstStreamUpdateTokenCount: Int
     public let tokenCountSource: AppBenchTokenCountSource
     public let outputTokensPerSecond: Double?
     public let outputCharactersPerSecond: Double?
@@ -25,6 +26,7 @@ public struct AppBenchTrialMetrics: Codable, Sendable {
         firstTokenAt: Date?,
         inputTokenCount: Int,
         outputTokenCount: Int,
+        firstStreamUpdateTokenCount: Int,
         tokenCountSource: AppBenchTokenCountSource,
         responseCharacterCount: Int,
         streamUpdateDates: [Date]
@@ -37,7 +39,8 @@ public struct AppBenchTrialMetrics: Codable, Sendable {
         if let timeToFirstToken, duration > timeToFirstToken {
             let decodeDuration = duration - timeToFirstToken
             self.decodeDuration = decodeDuration
-            self.outputTokensPerSecond = Double(max(0, outputTokenCount - 1)) / decodeDuration
+            let decodedTokenCount = max(0, outputTokenCount - firstStreamUpdateTokenCount)
+            self.outputTokensPerSecond = Double(decodedTokenCount) / decodeDuration
             self.outputCharactersPerSecond = Double(responseCharacterCount) / decodeDuration
         } else {
             self.decodeDuration = nil
@@ -47,6 +50,7 @@ public struct AppBenchTrialMetrics: Codable, Sendable {
 
         self.inputTokenCount = inputTokenCount
         self.outputTokenCount = outputTokenCount
+        self.firstStreamUpdateTokenCount = firstStreamUpdateTokenCount
         self.tokenCountSource = tokenCountSource
         self.streamUpdateCount = streamUpdateDates.count
         self.maximumStreamUpdateGap = zip(streamUpdateDates, streamUpdateDates.dropFirst())

@@ -65,7 +65,7 @@ For each request:
 
 - `TTFT = first stream update - request start`
 - `decode duration = final update - first stream update`
-- `output tokens/sec = max(output tokens - 1, 0) / decode duration`
+- `output tokens/sec = (final output tokens - first snapshot tokens) / decode duration`
 - `end-to-end duration = final update - request start`
 
 Prompt tokens are never included in output throughput.
@@ -82,6 +82,8 @@ tokenizer-independent secondary measurement.
 
 Stream snapshots are not guaranteed to map one-to-one to tokens. Consequently,
 AppBench calls their timing **stream update gaps**, not inter-token latency.
+The first snapshot can contain multiple tokens, so AppBench excludes every token
+already present in that snapshot rather than assuming it contains one token.
 
 ## Experiment Protocol
 

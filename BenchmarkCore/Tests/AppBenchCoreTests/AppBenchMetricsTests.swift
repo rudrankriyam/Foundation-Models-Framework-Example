@@ -25,6 +25,7 @@ struct AppBenchMetricsTests {
             firstTokenAt: first,
             inputTokenCount: 500,
             outputTokenCount: 101,
+            firstStreamUpdateTokenCount: 1,
             tokenCountSource: .systemTokenizer,
             responseCharacterCount: 600,
             streamUpdateDates: [first, end]
@@ -33,5 +34,25 @@ struct AppBenchMetricsTests {
         #expect(metrics.decodeDuration == 4)
         #expect(metrics.outputTokensPerSecond == 25)
         #expect(metrics.tokenCountSource == .systemTokenizer)
+    }
+
+    @Test
+    func throughputExcludesTheEntireFirstStreamUpdate() {
+        let start = Date(timeIntervalSince1970: 100)
+        let first = Date(timeIntervalSince1970: 101)
+        let end = Date(timeIntervalSince1970: 105)
+        let metrics = AppBenchTrialMetrics(
+            startedAt: start,
+            endedAt: end,
+            firstTokenAt: first,
+            inputTokenCount: 500,
+            outputTokenCount: 101,
+            firstStreamUpdateTokenCount: 11,
+            tokenCountSource: .systemTokenizer,
+            responseCharacterCount: 600,
+            streamUpdateDates: [first, end]
+        )
+
+        #expect(metrics.outputTokensPerSecond == 22.5)
     }
 }

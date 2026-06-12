@@ -26,6 +26,7 @@ AppBench reports:
 - TTFT separately.
 - Output tokens only.
 - Decode duration after the first streamed output.
+- The complete first cumulative stream snapshot excluded from decode throughput.
 - Output characters per second as a tokenizer-independent companion.
 - Exact system tokenizer counts on on-device OS 26.4+ runs, with explicit
   `tokenCountSource` provenance for every trial.

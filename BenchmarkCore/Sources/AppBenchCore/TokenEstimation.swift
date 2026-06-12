@@ -7,6 +7,7 @@ private let outputCharactersPerToken = 13680.0 / 2276.0
 struct AppBenchTokenCounts: Sendable {
     let input: Int
     let output: Int
+    let firstStreamUpdate: Int
     let source: AppBenchTokenCountSource
 }
 
@@ -21,6 +22,7 @@ func estimateOutputTokens(_ text: String) -> Int {
 func tokenCounts(
     for scenario: AppBenchScenario,
     response: String,
+    firstStreamUpdate: String,
     model: AppBenchModel
 ) async -> AppBenchTokenCounts {
     if model == .onDevice,
@@ -36,7 +38,13 @@ func tokenCounts(
             }
 
             let output = try await systemModel.tokenCount(for: Prompt(response))
-            return AppBenchTokenCounts(input: input, output: output, source: .systemTokenizer)
+            let firstUpdate = try await systemModel.tokenCount(for: Prompt(firstStreamUpdate))
+            return AppBenchTokenCounts(
+                input: input,
+                output: output,
+                firstStreamUpdate: firstUpdate,
+                source: .systemTokenizer
+            )
         } catch {
             // Counting should not turn a completed inference into a failed trial.
         }
@@ -45,6 +53,7 @@ func tokenCounts(
     return AppBenchTokenCounts(
         input: estimateInputTokens(scenario.instructions + "\n" + scenario.prompt),
         output: estimateOutputTokens(response),
+        firstStreamUpdate: estimateOutputTokens(firstStreamUpdate),
         source: .characterEstimate
     )
 }

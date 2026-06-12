@@ -108,6 +108,7 @@ public actor AppBenchRunner {
         let startedAt = Date.now
         var firstTokenAt: Date?
         var response = ""
+        var firstStreamUpdate = ""
         var streamUpdateDates: [Date] = []
 
         switch scenario.outputMode {
@@ -116,9 +117,16 @@ public actor AppBenchRunner {
             do {
                 for try await snapshot in stream {
                     let updateDate = Date.now
+                    let updatedResponse = renderText(from: snapshot)
+                    guard !updatedResponse.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                        continue
+                    }
                     firstTokenAt = firstTokenAt ?? updateDate
                     streamUpdateDates.append(updateDate)
-                    response = renderText(from: snapshot)
+                    response = updatedResponse
+                    if firstStreamUpdate.isEmpty {
+                        firstStreamUpdate = response
+                    }
                 }
             } catch is LanguageModelSession.GenerationError where !response.isEmpty {
                 break
@@ -132,9 +140,16 @@ public actor AppBenchRunner {
             )
             for try await snapshot in stream {
                 let updateDate = Date.now
+                let updatedResponse = renderStructured(from: snapshot)
+                guard !updatedResponse.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                    continue
+                }
                 firstTokenAt = firstTokenAt ?? updateDate
                 streamUpdateDates.append(updateDate)
-                response = renderStructured(from: snapshot)
+                response = updatedResponse
+                if firstStreamUpdate.isEmpty {
+                    firstStreamUpdate = response
+                }
             }
         }
 
@@ -146,6 +161,7 @@ public actor AppBenchRunner {
         let counts = await tokenCounts(
             for: scenario,
             response: response,
+            firstStreamUpdate: firstStreamUpdate,
             model: configuration.model
         )
         let metrics = AppBenchTrialMetrics(
@@ -154,6 +170,7 @@ public actor AppBenchRunner {
             firstTokenAt: firstTokenAt,
             inputTokenCount: counts.input,
             outputTokenCount: counts.output,
+            firstStreamUpdateTokenCount: counts.firstStreamUpdate,
             tokenCountSource: counts.source,
             responseCharacterCount: response.count,
             streamUpdateDates: streamUpdateDates
