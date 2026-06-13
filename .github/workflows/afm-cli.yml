@@ -48,6 +48,10 @@ jobs:
       - name: Lint Core and CLI
         run: swiftlint lint --strict --config .swiftlint-core-cli.yml
 
+      - name: Lint FoundationModelsKit
+        working-directory: Packages/FoundationModelsKit
+        run: swiftlint lint --strict
+
       - name: Resolve package dependencies
         run: swift package resolve
 
@@ -58,6 +62,9 @@ jobs:
         run: |
           swift test \
             --skip 'AFMCLITests\.(feedbackExportCreatesNestedDirectories|streamingJSONEmitsEvents|modelCommandsReturnStructuredJSON)'
+
+      - name: Test standalone FoundationModelsKit package
+        run: swift test --package-path Packages/FoundationModelsKit
 
       - name: Build universal release binary
         run: |
