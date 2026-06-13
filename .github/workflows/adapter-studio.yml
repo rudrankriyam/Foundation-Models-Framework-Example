@@ -1,0 +1,73 @@
+name: Adapter Studio
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'Foundation Lab/AdapterStudio/**'
+      - 'Foundation Lab/Models/StudioWorkspace.swift'
+      - 'Foundation Lab/Views/StudioView.swift'
+      - 'Tools/AdapterStudio/**'
+      - 'FoundationLab.xcodeproj/**'
+      - '.swiftlint-adapter-studio.yml'
+      - '.github/workflows/adapter-studio.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'Foundation Lab/AdapterStudio/**'
+      - 'Foundation Lab/Models/StudioWorkspace.swift'
+      - 'Foundation Lab/Views/StudioView.swift'
+      - 'Tools/AdapterStudio/**'
+      - 'FoundationLab.xcodeproj/**'
+      - '.swiftlint-adapter-studio.yml'
+      - '.github/workflows/adapter-studio.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: adapter-studio-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: macos-26
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Install SwiftLint
+        run: brew install swiftlint
+
+      - name: Test fmas
+        run: |
+          python -m pip install --disable-pip-version-check -e Tools/AdapterStudio
+          python -m unittest discover -s Tools/AdapterStudio/tests -v
+          fmas --version
+
+      - name: Lint Foundation Lab
+        run: swiftlint lint --strict --config .swiftlint-adapter-studio.yml
+
+      - name: Build Foundation Lab for macOS
+        run: |
+          xcodebuild \
+            -project FoundationLab.xcodeproj \
+            -scheme 'Foundation Lab' \
+            -destination 'generic/platform=macOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Build Foundation Lab for iOS Simulator
+        run: |
+          xcodebuild \
+            -project FoundationLab.xcodeproj \
+            -scheme 'Foundation Lab' \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            build
