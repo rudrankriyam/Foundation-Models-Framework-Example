@@ -8,6 +8,7 @@
 #   ./benchmark --debug --suite performance
 
 CONFIGURATION=release
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 
 # Parse flags
 if [ "$1" = "--debug" ]; then
@@ -15,15 +16,14 @@ if [ "$1" = "--debug" ]; then
 	shift
 fi
 
-PROJECT_DIR="BenchmarkCore"
+PROJECT_DIR="$SCRIPT_DIR/BenchmarkCore"
 PACKAGE_FILE="$PROJECT_DIR/Package.swift"
-APPBENCH_COMMIT="$(git rev-parse --short HEAD 2>/dev/null || true)"
+APPBENCH_COMMIT="$(git -C "$SCRIPT_DIR" rev-parse --short HEAD 2>/dev/null || true)"
 export APPBENCH_COMMIT
 
 # Check if Package.swift exists
 if [ ! -f "$PACKAGE_FILE" ]; then
 	echo "Error: $PACKAGE_FILE not found."
-	echo "Run this script from the project root directory."
 	exit 1
 fi
 
@@ -35,7 +35,7 @@ if ! swift build --package-path "$PROJECT_DIR" -c "$CONFIGURATION"; then
 fi
 
 # Find the build directory
-BUILD_DIR="$PROJECT_DIR/.build/$CONFIGURATION"
+BUILD_DIR="$(swift build --package-path "$PROJECT_DIR" -c "$CONFIGURATION" --show-bin-path)"
 
 if [ -f "$BUILD_DIR/AppBenchCLI" ]; then
 	export DYLD_FRAMEWORK_PATH="$BUILD_DIR/PackageFrameworks:$BUILD_DIR"

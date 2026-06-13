@@ -112,8 +112,9 @@ already present in that snapshot rather than assuming it contains one token.
 
 ### Authoritative Runners
 
-- **Mac:** run `AppBenchCLI` through `./appbench`. This is the only authoritative
-  surface for publishable macOS results.
+- **Mac:** run `AppBenchCLI` through `swift run appbench` or
+  `./Tools/AppBench/appbench`. This is the only authoritative surface for publishable
+  macOS results.
 - **iPhone and iPad:** run `AppBenchDeviceRunner` on a physical Apple Intelligence
   device. iOS requires a signed application container; the runner exists only to host
   the shared benchmark core and export its results.

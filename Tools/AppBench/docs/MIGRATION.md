@@ -39,3 +39,21 @@ AppBench output throughput.
 Existing `.trace` captures remain useful for validating fallback token estimates and
 examining framework behavior across OS builds. They are ignored by Git because they
 are large generated artifacts.
+
+## Foundation Lab Consolidation
+
+AppBench now lives at `Tools/AppBench` in Foundation Models Framework Lab. The Lab's
+root package exports `AppBenchCore`, `AppBenchEvaluations`, `BenchmarkCore`, and the
+`appbench` executable, while `BenchmarkCore/Package.swift` remains available for
+focused package development and the device runner keeps its existing local package
+reference.
+
+The canonical commands from the Lab repository root are:
+
+```bash
+swift run appbench list
+swift test --filter AppBench
+```
+
+Official Mac results still come from the CLI. Official iPhone and iPad results still
+require `AppBenchDeviceRunner` on a physical Apple Intelligence device.

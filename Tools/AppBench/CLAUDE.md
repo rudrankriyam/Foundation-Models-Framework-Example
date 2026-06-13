@@ -16,25 +16,28 @@ always remain separate metrics.
 ## Commands
 
 ```bash
-./appbench list
-./appbench --suite quick --model on-device --repetitions 3
-cd BenchmarkCore && swift test
+swift run appbench list
+swift run appbench --suite quick --model on-device --repetitions 3
+swift test --filter AppBench
 
 DEVELOPER_DIR=/Users/rudrank/Downloads/Xcode-beta.app/Contents/Developer \
-  xcodebuild -project AppBenchDeviceRunner/AppBenchDeviceRunner.xcodeproj \
+  xcodebuild -project Tools/AppBench/AppBenchDeviceRunner/AppBenchDeviceRunner.xcodeproj \
   -scheme AppBenchDeviceRunner \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
 ```
 
 ## Architecture
 
-- `BenchmarkCore/Sources/AppBenchCore`: scenarios, deterministic graders, model runner,
-  metrics, statistics, environment capture, and reports.
-- `BenchmarkCore/Sources/AppBenchCLI`: canonical runner for official Mac results.
-- `AppBenchDeviceRunner/AppBenchDeviceRunner`: signed iOS harness for physical-device
-  iPhone and iPad results.
-- `BenchmarkCore/Tests/AppBenchCoreTests`: offline grading/statistics tests.
-- `AppBenchDeviceRunner/AppBenchDeviceRunnerTests`: live model smoke test.
+- `Tools/AppBench/BenchmarkCore/Sources/AppBenchCore`: scenarios, deterministic
+  graders, model runner, metrics, statistics, environment capture, and reports.
+- `Tools/AppBench/BenchmarkCore/Sources/AppBenchCLI`: canonical runner for official
+  Mac results.
+- `Tools/AppBench/AppBenchDeviceRunner/AppBenchDeviceRunner`: signed iOS harness for
+  physical-device iPhone and iPad results.
+- `Tools/AppBench/BenchmarkCore/Tests/AppBenchCoreTests`: offline grading/statistics
+  tests.
+- `Tools/AppBench/AppBenchDeviceRunner/AppBenchDeviceRunnerTests`: live model smoke
+  test.
 
 ## Rules
 

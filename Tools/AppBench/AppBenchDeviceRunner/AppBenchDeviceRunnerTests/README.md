@@ -16,7 +16,7 @@ For publishable Mac measurements, use the CLI with five warmups and twenty measu
 repetitions:
 
 ```bash
-./appbench --suite quick --warmups 5 --repetitions 20
+swift run appbench --suite quick --warmups 5 --repetitions 20
 ```
 
 For publishable iPhone or iPad measurements, use `AppBenchDeviceRunner` on the

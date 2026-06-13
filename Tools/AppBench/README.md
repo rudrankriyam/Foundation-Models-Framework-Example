@@ -3,6 +3,10 @@
 Foundation Models AppBench measures real application workloads across Apple devices,
 OS releases, the on-device system model, and Private Cloud Compute.
 
+AppBench is maintained in
+[`Tools/AppBench`](https://github.com/rudrankriyam/Foundation-Models-Framework-Lab/tree/main/Tools/AppBench)
+inside Foundation Models Framework Lab. Its original Git history is preserved here.
+
 It reports **quality and performance separately**. A fast incorrect response remains
 incorrect; a high-quality response does not hide poor latency.
 
@@ -85,35 +89,36 @@ Requirements:
 
 ```bash
 # List workloads
-./appbench list
+swift run appbench list
 
 # Practical quick suite, five warmups and twenty measured repetitions
-./appbench --suite quick --model on-device
+swift run appbench --suite quick --model on-device
 
 # Full 250-sample practical corpus with export
-./appbench --suite full --warmups 5 --repetitions 20 \
-  --json Results/macbook-m5-macos-27.json \
-  --markdown Results/macbook-m5-macos-27.md
+swift run appbench --suite full --warmups 5 --repetitions 20 \
+  --json Tools/AppBench/Results/macbook-m5-macos-27.json \
+  --markdown Tools/AppBench/Results/macbook-m5-macos-27.md
 
 # Compare cold sessions with reused conversational sessions
-./appbench --suite quick --session warm --seed 20260929
+swift run appbench --suite quick --session warm --seed 20260929
 
 # Original sustained-generation workload
-./appbench --suite performance --repetitions 20
+swift run appbench --suite performance --repetitions 20
 
 # Long-context retrieval and explicit offline experiment label
-./appbench --suite context --connectivity offline
+swift run appbench --suite context --connectivity offline
 
 # Guardrail trigger and false-positive suite
-./appbench --suite guardrails --warmups 5 --repetitions 20
+swift run appbench --suite guardrails --warmups 5 --repetitions 20
 
 # OS 27 PCC, when the executable has the approved entitlement
 DEVELOPER_DIR=/path/to/Xcode-beta.app/Contents/Developer \
-  ./appbench --suite quick --model pcc --reasoning moderate \
+  swift run appbench --suite quick --model pcc --reasoning moderate \
   --fallback on-device
 ```
 
-The legacy `./benchmark` command remains as a compatibility wrapper.
+`./Tools/AppBench/appbench` and `./Tools/AppBench/benchmark` remain available as
+path-independent compatibility wrappers.
 Set `APPBENCH_DEVICE_NAME` when you want a friendly public label; otherwise
 AppBench uses the non-personal hardware identifier rather than the machine
 hostname.
@@ -121,21 +126,21 @@ hostname.
 To pair a run with Apple's Foundation Models Instrument:
 
 ```bash
-cd BenchmarkCore
-./run-trace.sh --suite quick --samples 1 --repetitions 1 --no-randomize
+Tools/AppBench/BenchmarkCore/run-trace.sh \
+  --suite quick --samples 1 --repetitions 1 --no-randomize
 ```
 
 ## Execution Surfaces
 
-Official Mac results come from `AppBenchCLI` through `./appbench`. The CLI is the
-canonical macOS benchmark runner; the SwiftUI target is not used for publishable Mac
-measurements.
+Official Mac results come from `AppBenchCLI` through `swift run appbench` or the
+compatibility wrapper. The CLI is the canonical macOS benchmark runner; the SwiftUI
+target is not used for publishable Mac measurements.
 
 iOS does not provide a standalone CLI environment for this framework. Official iPhone
 and iPad results therefore use the signed `AppBenchDeviceRunner` harness on a physical
 Apple Intelligence device. Open
-`AppBenchDeviceRunner/AppBenchDeviceRunner.xcodeproj`, select the physical device, and
-run the `AppBenchDeviceRunner` scheme.
+`Tools/AppBench/AppBenchDeviceRunner/AppBenchDeviceRunner.xcodeproj`, select the
+physical device, and run the `AppBenchDeviceRunner` scheme.
 
 The device runner provides controls for:
 
@@ -202,15 +207,16 @@ comparable with current reports.
 
 ## Package
 
-`BenchmarkCore/Package.swift` exports:
+The Lab's root `Package.swift` exports:
 
 - `AppBenchCore`: scenarios, graders, runner, statistics, and reports.
 - `AppBenchEvaluations`: OS 27 adapter for Evaluations samples and evaluators.
-- `AppBenchCLI`: command-line experiment runner.
 - `BenchmarkCore`: compatibility product that exposes the `AppBenchCore` module.
+- `appbench`: command-line experiment runner backed by the `AppBenchCLI` target.
+
+The nested `BenchmarkCore/Package.swift` exports the same libraries and keeps the
+original `AppBenchCLI` executable product for focused package development.
 
 ## License
 
 MIT. See [LICENSE](LICENSE).
-
-[![Star History Chart](https://api.star-history.com/svg?repos=rudrankriyam/Foundation-Models-AppBench&type=Date)](https://star-history.com/#rudrankriyam/Foundation-Models-AppBench&Date)
