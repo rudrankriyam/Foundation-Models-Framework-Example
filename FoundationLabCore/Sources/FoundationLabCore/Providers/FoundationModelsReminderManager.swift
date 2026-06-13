@@ -87,10 +87,14 @@ public struct FoundationModelsReminderManager: ReminderManaging {
         timeZone: TimeZone,
         localeIdentifier: String
     ) -> String {
-        """
+        let timeZoneName = timeZone.localizedName(
+            for: .standard,
+            locale: Locale(identifier: localeIdentifier)
+        ) ?? "Unknown"
+        return """
         You are a helpful assistant that can create reminders for users.
         Current date and time: \(formattedDate)
-        Time zone: \(timeZone.identifier) (\(timeZone.localizedName(for: .standard, locale: Locale(identifier: localeIdentifier)) ?? "Unknown"))
+        Time zone: \(timeZone.identifier) (\(timeZoneName))
         When creating reminders, consider the current date and time zone context.
         Always execute tool calls directly without asking for confirmation or permission from the user.
         If you need to create a reminder, call the RemindersTool immediately with the appropriate parameters.
@@ -105,10 +109,14 @@ public struct FoundationModelsReminderManager: ReminderManaging {
         timeZone: TimeZone,
         localeIdentifier: String
     ) -> String {
-        """
+        let timeZoneName = timeZone.localizedName(
+            for: .standard,
+            locale: Locale(identifier: localeIdentifier)
+        ) ?? "Unknown"
+        return """
         You are a helpful assistant that creates reminders based on structured input.
         Current date and time: \(formattedDate)
-        Time zone: \(timeZone.identifier) (\(timeZone.localizedName(for: .standard, locale: Locale(identifier: localeIdentifier)) ?? "Unknown"))
+        Time zone: \(timeZone.identifier) (\(timeZoneName))
         Always execute the RemindersTool directly with the provided information.
         Format due dates as 'yyyy-MM-dd HH:mm:ss' (24-hour format).
         """

@@ -48,7 +48,8 @@ public enum FoundationLabExampleDemo: String, CaseIterable, Sendable, Codable, I
             Mood: A bit anxious and overwhelmed by deadlines.
             Sleep: Restless, woke up twice.
             Quote: "Enjoy when you can, and endure when you must."
-            Entry: I tried to focus today but kept jumping between tasks and felt guilty about not finishing. I want a calmer rhythm tomorrow.
+            Entry: I tried to focus today but kept jumping between tasks and felt guilty about not finishing. \
+            I want a calmer rhythm tomorrow.
             """
         case .creativeWriting:
             return "Write a story outline about time travel."

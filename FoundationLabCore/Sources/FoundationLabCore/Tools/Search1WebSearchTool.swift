@@ -65,7 +65,7 @@ extension Search1WebSearchTool {
         }
 
         guard (200...299).contains(httpResponse.statusCode) else {
-            let body = String(decoding: data, as: UTF8.self)
+            let body = String(data: data, encoding: .utf8) ?? ""
             throw Search1WebSearchError.httpStatus(code: httpResponse.statusCode, body: body)
         }
 
