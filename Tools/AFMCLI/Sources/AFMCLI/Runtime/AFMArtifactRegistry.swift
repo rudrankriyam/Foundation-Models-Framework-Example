@@ -202,7 +202,7 @@ struct AFMManifestTool: Tool {
         case .static:
             return try staticOutput()
         case .shell:
-            return try shellOutput(arguments: arguments)
+            return try await shellOutput(arguments: arguments)
         }
     }
 
@@ -221,7 +221,7 @@ struct AFMManifestTool: Tool {
         }
     }
 
-    private func shellOutput(arguments: GeneratedContent) throws -> GeneratedContent {
+    private func shellOutput(arguments: GeneratedContent) async throws -> GeneratedContent {
         guard let command = manifest.runner.command, !command.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw AFMRuntimeError.invalidRequest("Shell tool '\(name)' is missing runner.command")
         }
@@ -242,13 +242,22 @@ struct AFMManifestTool: Tool {
         process.standardError = errorPipe
 
         try process.run()
+        let outputHandle = outputPipe.fileHandleForReading
+        let errorHandle = errorPipe.fileHandleForReading
+        let outputTask = Task.detached {
+            try outputHandle.readToEnd() ?? Data()
+        }
+        let errorTask = Task.detached {
+            try errorHandle.readToEnd() ?? Data()
+        }
+
         let inputData = Data(arguments.jsonString.utf8)
         inputPipe.fileHandleForWriting.write(inputData)
         try? inputPipe.fileHandleForWriting.close()
         process.waitUntilExit()
 
-        let stdout = String(data: outputPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-        let stderr = String(data: errorPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+        let stdout = String(data: try await outputTask.value, encoding: .utf8) ?? ""
+        let stderr = String(data: try await errorTask.value, encoding: .utf8) ?? ""
 
         guard process.terminationStatus == 0 else {
             let trimmedError = stderr.trimmingCharacters(in: .whitespacesAndNewlines)

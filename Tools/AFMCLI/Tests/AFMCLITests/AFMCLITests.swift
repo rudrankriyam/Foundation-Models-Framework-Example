@@ -546,6 +546,53 @@ func toolManifestCommands() throws {
     #expect(echoedJSON["city"] as? String == "Berlin")
 }
 
+@Test("Shell tools drain large stdout and stderr concurrently")
+func shellToolDrainsLargeOutput() throws {
+    let directory = URL(fileURLWithPath: NSTemporaryDirectory())
+        .appending(path: "afm-large-output-\(UUID().uuidString)")
+    let toolDirectory = directory.appending(path: ".afm/tools")
+    let argsFile = directory.appending(path: "args.json")
+
+    try FileManager.default.createDirectory(at: toolDirectory, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: directory) }
+
+    let toolManifest = """
+    name: large_output
+    description: Emits more data than a process pipe can buffer.
+    parameters:
+      title: EmptyPayload
+      type: object
+      properties: {}
+    runner:
+      kind: shell
+      outputFormat: text
+      command: /bin/sh
+      args:
+        - -lc
+        - >-
+          /usr/bin/yes output | /usr/bin/head -c 131072;
+          /usr/bin/yes error | /usr/bin/head -c 131072 >&2
+    """
+    try toolManifest.write(
+        to: toolDirectory.appending(path: "large-output.yaml"),
+        atomically: true,
+        encoding: .utf8
+    )
+    try "{}".write(to: argsFile, atomically: true, encoding: .utf8)
+
+    let result = try runAFM(
+        "tool", "call", "--output", "json",
+        "--tool", "large-output",
+        "--tool-dir", toolDirectory.path(),
+        "--args-file", argsFile.path()
+    )
+
+    #expect(result.status == 0)
+    let json = try parseJSONObject(result.stdout)
+    let output = try #require(json["output"] as? String)
+    #expect(output.count >= 131_072)
+}
+
 @Test("Transcript and feedback export validate file paths up front")
 func exportCommandsValidateFilePaths() throws {
     let transcript = try runAFM(
@@ -702,29 +749,62 @@ private func runAFM(
 
     let stdoutPipe = Pipe()
     let stderrPipe = Pipe()
+    let stdinPipe = stdin.map { _ in Pipe() }
     process.standardOutput = stdoutPipe
     process.standardError = stderrPipe
-    if let stdin {
-        let stdinPipe = Pipe()
+    if let stdinPipe {
         process.standardInput = stdinPipe
-        stdinPipe.fileHandleForWriting.write(Data(stdin.utf8))
-        try? stdinPipe.fileHandleForWriting.close()
     } else {
         process.standardInput = FileHandle.nullDevice
     }
     process.arguments = arguments
 
     try process.run()
-    process.waitUntilExit()
+    let readGroup = DispatchGroup()
+    let stdoutBuffer = CommandDataBuffer()
+    let stderrBuffer = CommandDataBuffer()
+    captureProcessOutput(
+        from: stdoutPipe.fileHandleForReading,
+        into: stdoutBuffer,
+        group: readGroup
+    )
+    captureProcessOutput(
+        from: stderrPipe.fileHandleForReading,
+        into: stderrBuffer,
+        group: readGroup
+    )
 
-    let stdout = String(data: stdoutPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-    let stderr = String(data: stderrPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+    if let stdin, let stdinPipe {
+        stdinPipe.fileHandleForWriting.write(Data(stdin.utf8))
+        try? stdinPipe.fileHandleForWriting.close()
+    }
+    process.waitUntilExit()
+    readGroup.wait()
+
+    let stdout = String(data: stdoutBuffer.data, encoding: .utf8) ?? ""
+    let stderr = String(data: stderrBuffer.data, encoding: .utf8) ?? ""
 
     return CommandResult(
         status: process.terminationStatus,
         stdout: stdout.trimmingCharacters(in: .whitespacesAndNewlines),
         stderr: stderr.trimmingCharacters(in: .whitespacesAndNewlines)
     )
+}
+
+private final class CommandDataBuffer: @unchecked Sendable {
+    var data = Data()
+}
+
+private func captureProcessOutput(
+    from handle: FileHandle,
+    into buffer: CommandDataBuffer,
+    group: DispatchGroup
+) {
+    group.enter()
+    DispatchQueue.global(qos: .userInitiated).async {
+        buffer.data = handle.readDataToEndOfFile()
+        group.leave()
+    }
 }
 
 private func parseJSONObject(_ text: String) throws -> [String: Any] {
