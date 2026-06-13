@@ -21,6 +21,10 @@ struct StudioView: View {
     @State private var promptTestError: String?
     @State private var studioCreatedAt = Date.now
 
+#if os(macOS)
+    @State private var adapterStudioViewModel = AdapterStudioViewModel()
+#endif
+
     private let generateTextUseCase = GenerateTextUseCase()
 
     var body: some View {
@@ -365,7 +369,7 @@ struct StudioView: View {
     @ViewBuilder
     private var stageContent: some View {
         if selectedWorkspace == .adapterComparison {
-            AdapterStudioContent(stage: selectedStage)
+            adapterStudioContent
         } else if selectedWorkspace == .benchmarkRuns {
             AppBenchStudioContent(stage: selectedStage)
         } else {
@@ -387,7 +391,7 @@ struct StudioView: View {
     @ViewBuilder
     private var compactStageContent: some View {
         if selectedWorkspace == .adapterComparison {
-            AdapterStudioContent(stage: selectedStage)
+            adapterStudioContent
         } else if selectedWorkspace == .benchmarkRuns {
             AppBenchStudioContent(stage: selectedStage)
         } else {
@@ -404,6 +408,18 @@ struct StudioView: View {
                 outputContent
             }
         }
+    }
+
+    @ViewBuilder
+    private var adapterStudioContent: some View {
+#if os(macOS)
+        AdapterStudioContent(
+            stage: selectedStage,
+            viewModel: adapterStudioViewModel
+        )
+#else
+        AdapterStudioContent(stage: selectedStage)
+#endif
     }
 
     private var promptSettingsContent: some View {

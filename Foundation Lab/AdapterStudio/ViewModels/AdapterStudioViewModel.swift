@@ -134,7 +134,7 @@ final class AdapterStudioViewModel {
         )
         guard canRun else { return }
 
-        cancel()
+        discardCurrentRun()
         baseColumn.reset()
         adapterColumn.reset()
         lastResult = nil
@@ -154,6 +154,13 @@ final class AdapterStudioViewModel {
     }
 
     func cancel() {
+        guard isRunning else { return }
+        engine.cancelCurrentRun()
+    }
+}
+
+private extension AdapterStudioViewModel {
+    func discardCurrentRun() {
         streamTask?.cancel()
         streamTask = nil
         engine.cancelCurrentRun()
@@ -162,11 +169,9 @@ final class AdapterStudioViewModel {
             state = .idle
         }
     }
-}
 
-private extension AdapterStudioViewModel {
     func applyAdapter(_ context: AdapterContext) {
-        cancel()
+        discardCurrentRun()
         adapterContext = context
         engine.configureAdapter(context)
         refreshAvailableAdapters()

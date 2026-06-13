@@ -4,7 +4,7 @@ struct AdapterStudioContent: View {
     let stage: StudioPipelineStage
 
 #if os(macOS)
-    @State private var viewModel = AdapterStudioViewModel()
+    let viewModel: AdapterStudioViewModel
 #endif
 
     var body: some View {
@@ -48,6 +48,14 @@ struct AdapterStudioContent: View {
 }
 
 #Preview {
+#if os(macOS)
+    AdapterStudioContent(
+        stage: .settings,
+        viewModel: AdapterStudioViewModel()
+    )
+    .padding()
+#else
     AdapterStudioContent(stage: .settings)
         .padding()
+#endif
 }

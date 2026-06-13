@@ -27,6 +27,9 @@ def run_train_adapter(args: Namespace) -> int:
     if args.warmup_epochs < 0 or args.warmup_epochs > args.epochs:
         print("Error: --warmup-epochs must be between 0 and number of epochs\n")
         return EXIT_USAGE
+    if args.pack_sequences and args.max_sequence_length is None:
+        print("Error: --max-sequence-length is required with --pack-sequences\n")
+        return EXIT_USAGE
 
     toolkit_path = get_toolkit_path()
     if not toolkit_path:

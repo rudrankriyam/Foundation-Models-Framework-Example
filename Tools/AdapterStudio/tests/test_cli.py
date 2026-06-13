@@ -210,6 +210,34 @@ class CLITests(unittest.TestCase):
         with patch("sys.stdout", new_callable=io.StringIO):
             self.assertEqual(run_train_adapter(arguments), EXIT_USAGE)
 
+    def test_packed_training_requires_max_sequence_length(self):
+        cases = [
+            (
+                run_train_adapter,
+                self.parser.parse_args(["train-adapter", "--pack-sequences"]),
+            ),
+            (
+                run_train_draft,
+                self.parser.parse_args(
+                    [
+                        "train-draft",
+                        "--train-data",
+                        "/tmp/train.jsonl",
+                        "--checkpoint-dir",
+                        "/tmp/checkpoints",
+                        "--pack-sequences",
+                    ]
+                ),
+            ),
+        ]
+
+        for command, arguments in cases:
+            with self.subTest(command=arguments.command), patch(
+                "sys.stdout",
+                new_callable=io.StringIO,
+            ):
+                self.assertEqual(command(arguments), EXIT_USAGE)
+
 
 if __name__ == "__main__":
     unittest.main()
