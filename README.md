@@ -1,4 +1,4 @@
-# Foundation Models Framework Example
+# Foundation Models Framework Lab
 
 <div align="center">
   <table>
@@ -107,16 +107,16 @@ skills/
 Install it with the open skills CLI:
 
 ```bash
-npx skills add rudrankriyam/Foundation-Models-Framework-Example --skill foundation-models-app-builder
-npx skills add rudrankriyam/Foundation-Models-Framework-Example --skill foundation-models-os27-updater
+npx skills add rudrankriyam/Foundation-Models-Framework-Lab --skill foundation-models-app-builder
+npx skills add rudrankriyam/Foundation-Models-Framework-Lab --skill foundation-models-os27-updater
 ```
 
 To target a specific agent explicitly:
 
 ```bash
-npx skills add rudrankriyam/Foundation-Models-Framework-Example --skill foundation-models-app-builder --agent codex
-npx skills add rudrankriyam/Foundation-Models-Framework-Example --skill foundation-models-app-builder --agent claude-code
-npx skills add rudrankriyam/Foundation-Models-Framework-Example --skill foundation-models-os27-updater --agent codex
+npx skills add rudrankriyam/Foundation-Models-Framework-Lab --skill foundation-models-app-builder --agent codex
+npx skills add rudrankriyam/Foundation-Models-Framework-Lab --skill foundation-models-app-builder --agent claude-code
+npx skills add rudrankriyam/Foundation-Models-Framework-Lab --skill foundation-models-os27-updater --agent codex
 ```
 
 ## What's Inside
@@ -460,4 +460,4 @@ Contributions are welcome! Please feel free to submit a pull request.
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-[![Star History Chart](https://api.star-history.com/svg?repos=rudrankriyam/Foundation-Models-Framework-Example&type=Date)](https://star-history.com/#rudrankriyam/Foundation-Models-Framework-Example&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=rudrankriyam/Foundation-Models-Framework-Lab&type=Date)](https://star-history.com/#rudrankriyam/Foundation-Models-Framework-Lab&Date)

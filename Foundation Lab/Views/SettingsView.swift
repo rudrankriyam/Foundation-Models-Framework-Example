@@ -11,7 +11,7 @@ struct SettingsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Link(destination: URL(string: "https://github.com/rudrankriyam/Foundation-Models-Framework-Example/issues")!) {
+                Link(destination: URL(string: "https://github.com/rudrankriyam/Foundation-Models-Framework-Lab/issues")!) {
                     HStack {
                         Text("Bug/Feature Request")
                         Spacer()
