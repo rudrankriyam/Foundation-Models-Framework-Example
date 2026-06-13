@@ -663,6 +663,9 @@ final class PermissionRequester: NSObject, CLLocationManagerDelegate {
       self.continuation = continuation
       manager.delegate = self
       manager.requestWhenInUseAuthorization()
+      #if os(macOS)
+        manager.startUpdatingLocation()
+      #endif
 
       timeoutTask = Task { @MainActor [weak self] in
         do {
@@ -686,6 +689,9 @@ final class PermissionRequester: NSObject, CLLocationManagerDelegate {
     guard let continuation else { return }
     timeoutTask?.cancel()
     timeoutTask = nil
+    #if os(macOS)
+      manager.stopUpdatingLocation()
+    #endif
     manager.delegate = nil
     self.continuation = nil
     continuation.resume(returning: receivedResponse)
