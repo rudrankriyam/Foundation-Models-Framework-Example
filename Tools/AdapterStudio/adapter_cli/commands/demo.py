@@ -46,7 +46,7 @@ def run_demo(args: Namespace) -> int:
         cmd.append("--compile-model")
     if args.num_draft_tokens is not None:
         cmd.extend(["--num_draft_tokens", str(args.num_draft_tokens)])
-    
+
     print("Generating text with base model...\n")
 
     try:

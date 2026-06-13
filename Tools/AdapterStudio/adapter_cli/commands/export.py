@@ -71,21 +71,21 @@ def run_export(args: Namespace) -> int:
     if draft_checkpoint:
         print(f"Draft checkpoint: {draft_checkpoint}")
     print(f"Output directory: {output_dir}\n")
-    
+
     cmd = [str(venv_python), "-m", "export.export_fmadapter"]
 
     cmd.extend(["--adapter-name", args.adapter_name])
     cmd.extend(["--checkpoint", str(checkpoint)])
     cmd.extend(["--output-dir", str(output_dir)])
-    
+
     if draft_checkpoint:
         cmd.extend(["--draft-checkpoint", str(draft_checkpoint)])
-    
+
     if args.author:
         cmd.extend(["--author", args.author])
     if args.description:
         cmd.extend(["--description", args.description])
-    
+
     print("Starting export...\n")
 
     try:

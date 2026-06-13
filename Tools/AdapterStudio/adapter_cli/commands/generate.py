@@ -52,19 +52,19 @@ def run_generate(args: Namespace) -> int:
     else:
         print(f"Generating text with base model...\n")
         print(f"Prompt: {args.prompt}")
-    
+
     print()
-    
+
     cmd = [str(venv_python), "-m", "examples.generate"]
 
     cmd.extend(["--prompt", args.prompt])
-    
+
     if checkpoint:
         cmd.extend(["--checkpoint", str(checkpoint)])
-    
+
     if draft_checkpoint:
         cmd.extend(["--draft-checkpoint", str(draft_checkpoint)])
-    
+
     if args.precision:
         cmd.extend(["--precision", args.precision])
     if args.temperature is not None:
@@ -79,7 +79,7 @@ def run_generate(args: Namespace) -> int:
         cmd.append("--compile-model")
     if args.num_draft_tokens is not None:
         cmd.extend(["--num_draft_tokens", str(args.num_draft_tokens)])
-    
+
     print("Generating...\n")
 
     try:

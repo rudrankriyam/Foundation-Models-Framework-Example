@@ -41,7 +41,7 @@ def run_init() -> int:
     else:
         print("No toolkit found in common locations.")
         print("(Searched: ~/Downloads/, ~/adapter-toolkit, /opt/adapter-toolkit)\n")
-    
+
     print("This tool requires the Apple Foundation Models Adapter Training Toolkit.")
     print("Download it from: https://developer.apple.com/download/foundation-models-adapter/\n")
 

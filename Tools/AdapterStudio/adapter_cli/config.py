@@ -33,7 +33,7 @@ def load_config() -> dict:
 def save_config(config: dict) -> None:
     """Atomically save config to file to prevent corruption on crash/power loss"""
     config_dir = get_config_dir()
-    
+
     # Write to temporary file first
     with tempfile.NamedTemporaryFile(
         mode='w',
@@ -43,7 +43,7 @@ def save_config(config: dict) -> None:
     ) as tmp_file:
         json.dump(config, tmp_file, indent=2)
         temp_path = tmp_file.name
-    
+
     try:
         # Atomic move (on POSIX systems this is atomic)
         os.replace(temp_path, CONFIG_FILE)

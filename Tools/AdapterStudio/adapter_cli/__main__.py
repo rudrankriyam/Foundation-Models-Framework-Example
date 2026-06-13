@@ -277,13 +277,13 @@ def create_parser():
         "init",
         help="Setup toolkit path (run this first!)"
     )
-    
+
     # Setup command
     subparsers.add_parser(
         "setup",
         help="Create Python venv and install dependencies"
     )
-    
+
     # Demo command
     demo_parser = subparsers.add_parser(
         "demo",
@@ -296,7 +296,7 @@ def create_parser():
         help="Text prompt to generate from"
     )
     add_generation_args(demo_parser)
-    
+
     # Generate command
     generate_parser = subparsers.add_parser(
         "generate",
@@ -319,7 +319,7 @@ def create_parser():
         help="Path to trained draft model checkpoint (optional)"
     )
     add_generation_args(generate_parser)
-    
+
     # Train adapter command
     train_adapter_parser = subparsers.add_parser(
         "train-adapter",
@@ -346,7 +346,7 @@ def create_parser():
         help="Directory to save checkpoints"
     )
     add_adapter_training_args(train_adapter_parser)
-    
+
     # Train draft command
     train_draft_parser = subparsers.add_parser(
         "train-draft",
@@ -375,7 +375,7 @@ def create_parser():
         help="Directory to save draft model checkpoints"
     )
     add_draft_training_args(train_draft_parser)
-    
+
     # Export command
     export_parser = subparsers.add_parser(
         "export",
@@ -416,7 +416,7 @@ def create_parser():
         default="",
         help="Adapter description"
     )
-    
+
     return parser
 
 

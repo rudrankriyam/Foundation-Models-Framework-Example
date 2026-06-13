@@ -86,7 +86,7 @@ def run_train_draft(args: Namespace) -> int:
     if eval_data:
         print(f"Eval data: {eval_data}")
     print(f"Draft checkpoints: {checkpoint_dir}\n")
-    
+
     cmd = [str(venv_python), "-m", "examples.train_draft_model"]
 
     if checkpoint:
@@ -95,13 +95,13 @@ def run_train_draft(args: Namespace) -> int:
     if eval_data:
         cmd.extend(["--eval-data", str(eval_data)])
     cmd.extend(["--checkpoint-dir", str(checkpoint_dir)])
-    
+
     cmd.extend(["--epochs", str(args.epochs)])
     cmd.extend(["--learning-rate", str(args.learning_rate)])
     cmd.extend(["--batch-size", str(args.batch_size)])
     cmd.extend(["--target-precision", args.target_precision])
     cmd.extend(["--draft-precision", args.draft_precision])
-    
+
     if args.warmup_epochs is not None:
         cmd.extend(["--warmup-epochs", str(args.warmup_epochs)])
     if args.gradient_accumulation_steps is not None:
@@ -116,7 +116,7 @@ def run_train_draft(args: Namespace) -> int:
         cmd.extend(["--loss-update-frequency", str(args.loss_update_frequency)])
     if args.checkpoint_frequency is not None:
         cmd.extend(["--checkpoint-frequency", str(args.checkpoint_frequency)])
-    
+
     if args.activation_checkpointing:
         cmd.append("--activation-checkpointing")
     if args.compile_target_model:
@@ -127,7 +127,7 @@ def run_train_draft(args: Namespace) -> int:
         cmd.append("--fixed-sized-sequences")
     if args.pack_sequences:
         cmd.append("--pack-sequences")
-    
+
     print("Starting draft model training...\n")
 
     try:
