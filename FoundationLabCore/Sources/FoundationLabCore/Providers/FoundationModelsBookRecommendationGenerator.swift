@@ -1,5 +1,6 @@
 import Foundation
 import FoundationModels
+import FoundationModelsKit
 
 public struct FoundationModelsBookRecommendationGenerator: BookRecommendationGenerating {
     public init() {}
@@ -20,7 +21,7 @@ public struct FoundationModelsBookRecommendationGenerator: BookRecommendationGen
             generating: BookRecommendation.self
         )
 
-        let tokenCount = await session.transcript.foundationLabTokenCount()
+        let tokenCount = await session.transcript.tokenCount()
 
         return GenerateBookRecommendationResult(
             recommendation: response.content,

@@ -16,13 +16,14 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(url: "https://github.com/rudrankriyam/FoundationModelsTools.git", branch: "main")
+        .package(path: "../Packages/FoundationModelsKit")
     ],
     targets: [
         .target(
             name: "FoundationLabCore",
             dependencies: [
-                .product(name: "FoundationModelsTools", package: "FoundationModelsTools")
+                .product(name: "FoundationModelsKit", package: "FoundationModelsKit"),
+                .product(name: "FoundationModelsTools", package: "FoundationModelsKit")
             ]
         ),
         .testTarget(

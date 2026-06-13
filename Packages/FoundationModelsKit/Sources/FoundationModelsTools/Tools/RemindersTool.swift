@@ -112,7 +112,7 @@ public struct RemindersTool: Tool {
     case "create":
       return try createReminder(arguments: arguments)
     case "query":
-      return try queryReminders(arguments: arguments)
+      return await queryReminders(arguments: arguments)
     case "complete":
       return try completeReminder(reminderId: arguments.reminderId)
     case "update":
@@ -199,7 +199,7 @@ public struct RemindersTool: Tool {
     }
   }
 
-  private func queryReminders(arguments: Arguments) throws -> GeneratedContent {
+  private func queryReminders(arguments: Arguments) async -> GeneratedContent {
     let calendars = eventStore.calendars(for: .reminder)
     var predicate: NSPredicate
 
@@ -224,15 +224,7 @@ public struct RemindersTool: Tool {
         withDueDateStarting: nil, ending: nil, calendars: calendars)
     }
 
-    let semaphore = DispatchSemaphore(value: 0)
-    var reminders: [EKReminder] = []
-
-    eventStore.fetchReminders(matching: predicate) { fetchedReminders in
-      reminders = fetchedReminders ?? []
-      semaphore.signal()
-    }
-
-    semaphore.wait()
+    var reminders = await fetchReminders(matching: predicate)
 
     // Sort reminders
     reminders.sort { reminder1, reminder2 in
@@ -242,13 +234,13 @@ public struct RemindersTool: Tool {
       }
 
       // Then by due date
-      if let date1 = reminder1.dueDateComponents?.date,
-        let date2 = reminder2.dueDateComponents?.date {
+      if let date1 = reminder1.dueDate,
+        let date2 = reminder2.dueDate {
         return date1 < date2
       }
 
       // Reminders with due dates come before those without
-      if reminder1.dueDateComponents != nil && reminder2.dueDateComponents == nil {
+      if reminder1.dueDate != nil && reminder2.dueDate == nil {
         return true
       }
 
@@ -260,11 +252,10 @@ public struct RemindersTool: Tool {
     for (index, reminder) in reminders.enumerated() {
       let completed = reminder.isCompleted ? "[x]" : "[ ]"
       let priority = getPriorityString(reminder.priority)
-      let dueDate = formatDateComponents(reminder.dueDateComponents)
-      let list = reminder.calendar?.title ?? "Unknown List"
+      let dueDate = formatReminderDueDate(reminder.dueDate)
 
-      remindersDescription += "\(index + 1). \(completed) \(reminder.title ?? "Untitled")\n"
-      remindersDescription += "   List: \(list)\n"
+      remindersDescription += "\(index + 1). \(completed) \(reminder.title)\n"
+      remindersDescription += "   List: \(reminder.listName)\n"
       if !dueDate.isEmpty {
         remindersDescription += "   Due: \(dueDate)\n"
       }
@@ -288,6 +279,15 @@ public struct RemindersTool: Tool {
       "reminders": remindersDescription.trimmingCharacters(in: .whitespacesAndNewlines),
       "message": "Found \(reminders.count) reminder(s)"
     ])
+  }
+
+  private func fetchReminders(matching predicate: NSPredicate) async -> [ReminderSnapshot] {
+    await withCheckedContinuation { continuation in
+      eventStore.fetchReminders(matching: predicate) { fetchedReminders in
+        let snapshots = fetchedReminders?.map(ReminderSnapshot.init) ?? []
+        continuation.resume(returning: snapshots)
+      }
+    }
   }
 
   private func completeReminder(reminderId: String?) throws -> GeneratedContent {
@@ -447,6 +447,15 @@ public struct RemindersTool: Tool {
     return formatter.string(from: date)
   }
 
+  private func formatReminderDueDate(_ date: Date?) -> String {
+    guard let date else { return "" }
+
+    let formatter = DateFormatter()
+    formatter.dateStyle = .medium
+    formatter.timeStyle = .short
+    return formatter.string(from: date)
+  }
+
   private func getPriorityString(_ priority: Int) -> String {
     switch priority {
     case 1...3:
@@ -466,6 +475,24 @@ public struct RemindersTool: Tool {
       "error": error.localizedDescription,
       "message": "Failed to perform reminder operation"
     ])
+  }
+}
+
+private struct ReminderSnapshot: Sendable {
+  let title: String
+  let listName: String
+  let dueDate: Date?
+  let priority: Int
+  let notes: String?
+  let isCompleted: Bool
+
+  init(reminder: EKReminder) {
+    self.title = reminder.title ?? "Untitled"
+    self.listName = reminder.calendar?.title ?? "Unknown List"
+    self.dueDate = reminder.dueDateComponents?.date
+    self.priority = reminder.priority
+    self.notes = reminder.notes
+    self.isCompleted = reminder.isCompleted
   }
 }
 

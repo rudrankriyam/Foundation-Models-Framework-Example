@@ -8,6 +8,7 @@
 import SwiftUI
 import FoundationLabCore
 import FoundationModels
+import FoundationModelsKit
 
 struct TranscriptEntryView: View {
     let entry: Transcript.Entry
@@ -50,7 +51,7 @@ struct TranscriptEntryView: View {
             }
 
         case .toolCalls(let toolCalls):
-            ForEach(Array(toolCalls.enumerated()), id: \.offset) { index, toolCall in
+            ForEach(Array(toolCalls.enumerated()), id: \.offset) { _, toolCall in
                 MessageBubbleView(message: ChatMessage(
                     entryID: entry.id,
                     content: "🔧 Calling tool: \(toolCall.toolName)",
@@ -112,7 +113,7 @@ struct TranscriptEntryView: View {
     }
 
     private func tokenCount(for entry: Transcript.Entry) async -> Int? {
-        await entry.foundationLabTokenCount()
+        await entry.tokenCount()
     }
 }
 

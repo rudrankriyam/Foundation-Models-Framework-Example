@@ -1,5 +1,6 @@
 import Foundation
 import FoundationModels
+import FoundationModelsKit
 
 public struct FoundationModelsConversationRunner: ConversationRunning {
     public init() {}
@@ -61,7 +62,7 @@ public struct FoundationModelsConversationRunner: ConversationRunning {
             }
         }
 
-        let tokenCount = await session.transcript.foundationLabTokenCount(using: model)
+        let tokenCount = await session.transcript.tokenCount(using: model)
 
         return RunConversationResult(
             exchanges: exchanges,

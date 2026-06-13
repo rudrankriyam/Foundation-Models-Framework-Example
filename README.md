@@ -82,6 +82,7 @@ The repository also distributes reusable Swift package products for applications
 
 - `FoundationModelsKit` provides transcript history transforms, token estimation, and context-budget utilities.
 - `FoundationModelsTools` provides calendar, contacts, health, location, music, reminders, weather, and web tools. It re-exports `FoundationModelsKit` for compatibility with existing users.
+- `FoundationLabCore` provides the UI-independent capability requests, results, use cases, and Foundation Models providers used by the Lab app.
 
 Add the repository to your package dependencies:
 
@@ -106,6 +107,10 @@ Then select the products needed by your target:
         ),
         .product(
             name: "FoundationModelsTools",
+            package: "foundation-models-framework-lab"
+        ),
+        .product(
+            name: "FoundationLabCore",
             package: "foundation-models-framework-lab"
         )
     ]

@@ -1,5 +1,6 @@
 import Foundation
 import FoundationModels
+import FoundationModelsKit
 
 public struct FoundationModelsStructuredGenerator: StructuredGenerationProviding {
     public init() {}
@@ -34,7 +35,7 @@ public struct FoundationModelsStructuredGenerator: StructuredGenerationProviding
             generating: type
         )
 
-        let tokenCount = await session.transcript.foundationLabTokenCount(using: model)
+        let tokenCount = await session.transcript.tokenCount(using: model)
 
         return StructuredGenerationResult(
             output: response.content,

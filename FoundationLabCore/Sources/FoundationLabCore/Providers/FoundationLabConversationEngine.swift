@@ -1,5 +1,6 @@
 import Foundation
 import FoundationModels
+import FoundationModelsKit
 
 @MainActor
 public final class FoundationLabConversationEngine {
@@ -190,7 +191,7 @@ private extension FoundationLabConversationEngine {
             return false
         }
 
-        return await session.transcript.foundationLabIsApproachingLimit(
+        return await session.transcript.isApproachingLimit(
             threshold: configuration.windowThreshold,
             maxTokens: maxContextSize,
             using: model
@@ -205,7 +206,7 @@ private extension FoundationLabConversationEngine {
         isApplyingWindow = true
         notifyStateChange()
 
-        let windowEntries = await session.transcript.foundationLabEntriesWithinTokenBudget(
+        let windowEntries = await session.transcript.entriesWithinTokenBudget(
             configuration.targetWindowSize,
             using: model
         )
@@ -222,9 +223,9 @@ private extension FoundationLabConversationEngine {
     func updateTokenCount() async {
         switch configuration.modelRuntime {
         case .onDevice:
-            currentTokenCount = await session.transcript.foundationLabTokenCount(using: model)
+            currentTokenCount = await session.transcript.tokenCount(using: model)
         case .privateCloudCompute:
-            currentTokenCount = session.transcript.foundationLabEstimatedTokenCount
+            currentTokenCount = session.transcript.estimatedTokenCount
         }
         notifyStateChange()
     }

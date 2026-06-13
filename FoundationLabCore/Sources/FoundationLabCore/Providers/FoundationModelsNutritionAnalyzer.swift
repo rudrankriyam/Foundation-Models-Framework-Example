@@ -1,5 +1,6 @@
 import Foundation
 import FoundationModels
+import FoundationModelsKit
 
 public struct FoundationModelsNutritionAnalyzer: NutritionAnalyzing {
     public init() {}
@@ -38,7 +39,7 @@ public struct FoundationModelsNutritionAnalyzer: NutritionAnalyzing {
                 )
             )
 
-            let tokenCount = await session.transcript.foundationLabTokenCount()
+            let tokenCount = await session.transcript.tokenCount()
 
             return AnalyzeNutritionResult(
                 analysis: NutritionAnalysis(

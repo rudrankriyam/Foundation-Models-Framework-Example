@@ -1,5 +1,6 @@
 import Foundation
 import FoundationModels
+import FoundationModelsKit
 
 public struct FoundationModelsTextGenerator: TextGenerationProviding {
     public init() {}
@@ -36,7 +37,7 @@ public struct FoundationModelsTextGenerator: TextGenerationProviding {
             responseContent = try await session.respond(to: Prompt(prompt)).content
         }
 
-        let tokenCount = await session.transcript.foundationLabTokenCount(using: model)
+        let tokenCount = await session.transcript.tokenCount(using: model)
 
         return TextGenerationResult(
             content: responseContent,

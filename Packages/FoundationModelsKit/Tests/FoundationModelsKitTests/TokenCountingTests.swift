@@ -62,6 +62,35 @@ struct TokenCountingTests {
     let tokens = estimateTokensConservative(from: "")
     #expect(tokens == 0)
   }
+
+  @Test("Estimated token window stays within the safe budget")
+  func estimatedTokenWindowStaysWithinSafeBudget() {
+    let entries: [Transcript.Entry] = (1...4).map { index in
+      .prompt(.foundationModelsTools("\(index) " + String(repeating: "a", count: 188)))
+    }
+    let transcript = Transcript(entries: entries)
+
+    let trimmed = transcript.entriesWithinTokenBudget(220)
+    let trimmedTranscript = Transcript(entries: trimmed)
+
+    #expect(trimmed.count < entries.count)
+    #expect(trimmedTranscript.safeEstimatedTokenCount <= 220)
+  }
+
+  @Test("Token window preserves oversized instructions")
+  func tokenWindowPreservesOversizedInstructions() {
+    let instruction: Transcript.Entry = .instructions(
+      .foundationModelsTools(String(repeating: "system ", count: 200))
+    )
+    let transcript = Transcript(entries: [
+      instruction,
+      .prompt(.foundationModelsTools("Latest user prompt"))
+    ])
+
+    let trimmed = transcript.entriesWithinTokenBudget(120)
+
+    #expect(trimmed == [instruction])
+  }
 }
 
 @Suite("Token Estimation Accuracy Tests")
@@ -164,8 +193,8 @@ struct TranscriptHistoryTransformTests {
     ])
   }
 
-  @Test("Dropping completed tool calls removes older tool exchanges")
-  func droppingCompletedToolCallsRemovesOlderToolExchanges() {
+  @Test("Dropping completed tool calls removes exchanges before the latest prompt")
+  func droppingCompletedToolCallsRemovesExchangesBeforeLatestPrompt() {
     let oldToolCalls = Transcript.ToolCalls(id: "old-calls", [])
     let oldToolOutput = Transcript.ToolOutput(
       id: "old-output",
@@ -196,8 +225,6 @@ struct TranscriptHistoryTransformTests {
       "instructions",
       "prompt",
       "prompt",
-      "toolCalls",
-      "toolOutput",
       "prompt"
     ])
     #expect(transformed.contains { entry in
@@ -211,7 +238,7 @@ struct TranscriptHistoryTransformTests {
         return calls.id == "latest-calls"
       }
       return false
-    })
+    } == false)
   }
 
   @Test("Dropping completed tool calls keeps current tool exchange")

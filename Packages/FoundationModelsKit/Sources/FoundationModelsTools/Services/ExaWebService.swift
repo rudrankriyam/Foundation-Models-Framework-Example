@@ -16,17 +16,29 @@ final class ExaWebService: Sendable {
   /// - Parameters:
   ///   - query: The search query
   ///   - apiKey: The Exa API key
+  ///   - numResults: Number of results to request, clamped to the tool's 1...10 range
+  ///   - type: Exa search strategy, defaulting to `auto`
+  ///   - includeContents: Whether Exa should fetch page text
+  ///   - category: Optional Exa category filter
   /// - Returns: ExaSearchResponse containing search results
-  func search(query: String, apiKey: String) async throws -> ExaSearchResponse {
+  func search(
+    query: String,
+    apiKey: String,
+    numResults: Int? = nil,
+    type: String? = nil,
+    includeContents: Bool? = nil,
+    category: String? = nil
+  ) async throws -> ExaSearchResponse {
     guard let url = URL(string: baseURL) else {
       throw ExaWebServiceError.invalidURL
     }
 
-    let requestBody = ExaSearchRequest(
+    let requestBody = makeSearchRequest(
       query: query,
-      type: "auto",
-      numResults: 5,
-      contents: ExaContents(text: true)
+      numResults: numResults,
+      type: type,
+      includeContents: includeContents,
+      category: category
     )
 
     var request = URLRequest(url: url)
@@ -58,6 +70,25 @@ final class ExaWebService: Sendable {
       throw ExaWebServiceError.decodingError(underlyingError)
     }
   }
+
+  func makeSearchRequest(
+    query: String,
+    numResults: Int? = nil,
+    type: String? = nil,
+    includeContents: Bool? = nil,
+    category: String? = nil
+  ) -> ExaSearchRequest {
+    let trimmedType = type?.trimmingCharacters(in: .whitespacesAndNewlines)
+    let trimmedCategory = category?.trimmingCharacters(in: .whitespacesAndNewlines)
+
+    return ExaSearchRequest(
+      query: query,
+      type: trimmedType.flatMap(\.nilIfEmpty) ?? "auto",
+      numResults: min(max(numResults ?? 5, 1), 10),
+      contents: includeContents == false ? nil : ExaContents(text: true),
+      category: trimmedCategory.flatMap(\.nilIfEmpty)
+    )
+  }
 }
 
 // MARK: - Request/Response Models
@@ -67,12 +98,19 @@ struct ExaSearchRequest: Codable {
   let query: String
   let type: String
   let numResults: Int
-  let contents: ExaContents
+  let contents: ExaContents?
+  let category: String?
 }
 
 /// Contents configuration for Exa search
 struct ExaContents: Codable {
   let text: Bool
+}
+
+private extension String {
+  var nilIfEmpty: String? {
+    isEmpty ? nil : self
+  }
 }
 
 /// Response from Exa search API
