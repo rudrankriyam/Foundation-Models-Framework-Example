@@ -183,9 +183,11 @@ Apple's PCC quota API exposes below-limit, approaching-limit, limit-reached, and
 state. It does not expose a numeric quota-consumption counter, so AppBench records the
 state before and after rather than inventing a consumption value.
 
-`--connectivity offline` is an experiment label, not a network-control API. The
-operator must actually disable connectivity. AppBench marks offline success only when
-the executed model is on-device.
+AppBench does not change device radios. Before a `--connectivity offline` run, the
+operator must disable Wi-Fi and cellular connectivity. AppBench observes the system
+network path at run start and refuses the experiment unless no active path is
+available. It marks offline success only after that check and only when the executed
+model is on-device.
 
 PCC requires OS 27, an Apple Intelligence-capable device with Apple Intelligence
 enabled, service availability, and Apple’s managed entitlement.

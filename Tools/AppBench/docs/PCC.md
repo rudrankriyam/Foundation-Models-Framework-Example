@@ -70,5 +70,6 @@ retains the failed attempt with its environment and timestamp.
   consumption.
 - Run each reasoning level as a separate configuration.
 - Treat fallback-enabled runs separately from direct PCC runs.
-- When using `--connectivity offline`, disable connectivity outside AppBench;
-  the flag records the experimental condition but cannot enforce it.
+- When using `--connectivity offline`, disable connectivity outside AppBench.
+  AppBench verifies that no active network path is available before the run, but it
+  does not change Wi-Fi or cellular settings.

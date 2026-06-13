@@ -58,6 +58,7 @@ public actor AppBenchRunner {
         case scenarioRequiresOS27(String)
         case imageFixtureUnavailable
         case emptyResponse
+        case offlineConnectivityNotObserved(String)
 
         public var errorDescription: String? {
             switch self {
@@ -73,6 +74,11 @@ public actor AppBenchRunner {
                 "The visual fixture could not be created."
             case .emptyResponse:
                 "The model returned an empty response."
+            case .offlineConnectivityNotObserved(let observation):
+                """
+                Offline mode requires no active network path, but AppBench observed \(observation). \
+                Disable Wi-Fi and cellular connectivity, then rerun the experiment.
+                """
             }
         }
     }
@@ -85,12 +91,15 @@ public actor AppBenchRunner {
 
     private let configuration: AppBenchRunConfiguration
     private var warmSessions: [String: AppBenchSessionBundle] = [:]
+    private var offlineConnectivityVerified = false
 
     public init(configuration: AppBenchRunConfiguration = .init()) {
         self.configuration = configuration
     }
 
     public func run() async throws -> AppBenchRunResult {
+        offlineConnectivityVerified = try await verifyConnectivity()
+
         if configuration.model == .onDevice || configuration.fallbackMode == .onDevice {
             try ensureOnDeviceAvailability()
         }
@@ -341,10 +350,7 @@ public actor AppBenchRunner {
                             }
                         }
                     } catch let error as LanguageModelSession.GenerationError
-                    where !response.isEmpty {
-                        if isGuardrailViolation(error) {
-                            throw error
-                        }
+                    where AppBenchPartialResponsePolicy.shouldPreserve(response, after: error) {
                         break
                     }
                 } else {
@@ -385,25 +391,31 @@ public actor AppBenchRunner {
                             includeSchemaInPrompt: true
                         )
                     )
-                    for try await snapshot in stream {
-                        let updateDate = Date.now
-                        let updatedResponse = renderStructured(from: snapshot)
-                        guard
-                            !updatedResponse.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                        else {
-                            continue
+                    do {
+                        for try await snapshot in stream {
+                            let updateDate = Date.now
+                            let updatedResponse = renderStructured(from: snapshot)
+                            guard
+                                !updatedResponse.trimmingCharacters(in: .whitespacesAndNewlines)
+                                    .isEmpty
+                            else {
+                                continue
+                            }
+                            firstTokenAt = firstTokenAt ?? updateDate
+                            streamUpdateDates.append(updateDate)
+                            response = updatedResponse
+                            resources.append(.capture())
+                            usageInputTokens = snapshot.usage.input.totalTokenCount
+                            usageOutputTokens = snapshot.usage.output.totalTokenCount
+                            reasoningTokens = snapshot.usage.output.reasoningTokenCount
+                            if firstStreamUpdate.isEmpty {
+                                firstStreamUpdate = response
+                                usageFirstOutputTokens = usageOutputTokens
+                            }
                         }
-                        firstTokenAt = firstTokenAt ?? updateDate
-                        streamUpdateDates.append(updateDate)
-                        response = updatedResponse
-                        resources.append(.capture())
-                        usageInputTokens = snapshot.usage.input.totalTokenCount
-                        usageOutputTokens = snapshot.usage.output.totalTokenCount
-                        reasoningTokens = snapshot.usage.output.reasoningTokenCount
-                        if firstStreamUpdate.isEmpty {
-                            firstStreamUpdate = response
-                            usageFirstOutputTokens = usageOutputTokens
-                        }
+                    } catch let error as LanguageModelSession.GenerationError
+                    where AppBenchPartialResponsePolicy.shouldPreserve(response, after: error) {
+                        break
                     }
                 } else {
                     try await streamStructuredLegacy(
@@ -490,7 +502,7 @@ public actor AppBenchRunner {
             iteration: item.iteration,
             usedFallback: fallbackReason != nil,
             fallbackReason: fallbackReason,
-            offlineSuccess: configuration.connectivity == .offline && model == .onDevice,
+            offlineSuccess: offlineConnectivityVerified && model == .onDevice,
             toolCalls: toolCalls,
             safetyOutcome: safetyOutcome,
             response: response,
@@ -578,6 +590,15 @@ public actor AppBenchRunner {
         if case .unavailable(let reason) = SystemLanguageModel.default.availability {
             throw Error.onDeviceModelUnavailable(String(describing: reason))
         }
+    }
+
+    private func verifyConnectivity() async throws -> Bool {
+        guard configuration.connectivity == .offline else { return false }
+        let observation = await AppBenchConnectivityObserver.observe()
+        guard observation.verifiesOfflineExperiment else {
+            throw Error.offlineConnectivityNotObserved(observation.displayName)
+        }
+        return true
     }
 
     private func ensureScenarioAvailability(_ scenario: AppBenchScenario) throws {
@@ -681,10 +702,8 @@ private func streamTextLegacy(
                 firstStreamUpdate = response
             }
         }
-    } catch let error as LanguageModelSession.GenerationError where !response.isEmpty {
-        if isGuardrailViolation(error) {
-            throw error
-        }
+    } catch let error as LanguageModelSession.GenerationError
+    where AppBenchPartialResponsePolicy.shouldPreserve(response, after: error) {
         return
     }
 }
@@ -701,19 +720,24 @@ private func streamStructuredLegacy(
     resources: inout [AppBenchResourceSnapshot]
 ) async throws {
     let stream = session.streamResponse(to: prompt, schema: schema, options: options)
-    for try await snapshot in stream {
-        let updateDate = Date.now
-        let updatedResponse = renderStructured(from: snapshot)
-        guard !updatedResponse.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            continue
+    do {
+        for try await snapshot in stream {
+            let updateDate = Date.now
+            let updatedResponse = renderStructured(from: snapshot)
+            guard !updatedResponse.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                continue
+            }
+            firstTokenAt = firstTokenAt ?? updateDate
+            streamUpdateDates.append(updateDate)
+            response = updatedResponse
+            resources.append(.capture())
+            if firstStreamUpdate.isEmpty {
+                firstStreamUpdate = response
+            }
         }
-        firstTokenAt = firstTokenAt ?? updateDate
-        streamUpdateDates.append(updateDate)
-        response = updatedResponse
-        resources.append(.capture())
-        if firstStreamUpdate.isEmpty {
-            firstStreamUpdate = response
-        }
+    } catch let error as LanguageModelSession.GenerationError
+    where AppBenchPartialResponsePolicy.shouldPreserve(response, after: error) {
+        return
     }
 }
 
@@ -763,10 +787,6 @@ private func failureKind(_ error: any Swift.Error) -> String {
         return "availability"
     }
     return "generation"
-}
-
-private func isGuardrailViolation(_ error: any Swift.Error) -> Bool {
-    AppBenchSafetyClassifier.outcome(for: error) == .guardrailViolation
 }
 
 private func generationOptions(

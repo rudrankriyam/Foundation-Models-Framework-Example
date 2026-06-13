@@ -1,4 +1,4 @@
-import AppBenchCore
+@testable import AppBenchCore
 import FoundationModels
 import Testing
 
@@ -170,5 +170,27 @@ struct AppBenchGraderTests {
         )
 
         #expect(configuration.sampleLimit == nil)
+    }
+
+    @Test
+    func partialResponsePolicyPreservesOnlyRecoverableOutput() {
+        let decodingFailure = LanguageModelSession.GenerationError.decodingFailure(
+            .init(debugDescription: "Late decoding failure")
+        )
+        let guardrailViolation = LanguageModelSession.GenerationError.guardrailViolation(
+            .init(debugDescription: "Safety block")
+        )
+
+        #expect(AppBenchPartialResponsePolicy.shouldPreserve("{}", after: decodingFailure))
+        #expect(!AppBenchPartialResponsePolicy.shouldPreserve("   ", after: decodingFailure))
+        #expect(!AppBenchPartialResponsePolicy.shouldPreserve("{}", after: guardrailViolation))
+    }
+
+    @Test
+    func offlineExperimentRequiresDisconnectedPath() {
+        #expect(AppBenchConnectivityObservation.disconnected.verifiesOfflineExperiment)
+        #expect(!AppBenchConnectivityObservation.connected.verifiesOfflineExperiment)
+        #expect(!AppBenchConnectivityObservation.connectionRequired.verifiesOfflineExperiment)
+        #expect(!AppBenchConnectivityObservation.unknown.verifiesOfflineExperiment)
     }
 }
