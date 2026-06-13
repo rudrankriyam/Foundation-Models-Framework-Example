@@ -76,6 +76,30 @@ It also expects these repository variables:
 - Build and run the project
 - Explore the different capabilities through the examples!
 
+## Repository Map
+
+Foundation Models Framework Lab is the canonical home for the app, reusable
+runtime, developer tools, and practical evaluations:
+
+| Surface | Location | Purpose |
+| --- | --- | --- |
+| Foundation Lab | [`Foundation Lab`](Foundation%20Lab) | iOS and macOS examples, tools, Studio workspaces, and interactive model exploration |
+| FoundationLabCore | [`FoundationLabCore`](FoundationLabCore) | UI-independent capabilities and the shared production runtime used by the app and CLI |
+| FoundationModelsKit | [`Packages/FoundationModelsKit`](Packages/FoundationModelsKit) | Public transcript, token-budget, history, system-tool, and web-tool products |
+| `afm` | [`Tools/AFMCLI`](Tools/AFMCLI) | Native Foundation Models command-line workflows |
+| AppBench | [`Tools/AppBench`](Tools/AppBench) | Publishable app-shaped quality, safety, and performance evaluation |
+| Adapter Studio | [`Foundation Lab/AdapterStudio`](Foundation%20Lab/AdapterStudio) and [`Tools/AdapterStudio`](Tools/AdapterStudio) | macOS adapter comparison and the `fmas` training/export workflow |
+
+The former standalone
+[CLI](https://github.com/rudrankriyam/Foundation-Models-Framework-CLI),
+[AppBench](https://github.com/rudrankriyam/Foundation-Models-AppBench), and
+[Adapter Studio](https://github.com/rudrankriyam/Foundation-Models-Adapter-Studio)
+repositories are archived and redirect here. The public
+[`rryam/FoundationModelsKit`](https://github.com/rryam/FoundationModelsKit)
+repository continues to serve versioned 2.x consumers; active package development
+lives in this repository. Agent orchestration remains intentionally separate in
+[`CoreAgent`](https://github.com/rudrankriyam/CoreAgent).
+
 ## Command-Line Interface
 
 The `afm` CLI now ships from this repository and uses the same `FoundationLabCore` and
