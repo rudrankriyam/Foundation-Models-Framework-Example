@@ -153,7 +153,10 @@ struct ModelUseCasesCommand: AsyncParsableCommand {
         let payload = ModelUseCasesPayload(
             useCases: [
                 .init(id: FoundationLabModelUseCase.general.rawValue, summary: "General-purpose prompting and text generation."),
-                .init(id: FoundationLabModelUseCase.contentTagging.rawValue, summary: "Specialized tagging use case that returns categorizing tags.")
+                .init(
+                    id: FoundationLabModelUseCase.contentTagging.rawValue,
+                    summary: "Specialized tagging use case that returns categorizing tags."
+                )
             ]
         )
         let human = """
@@ -197,8 +200,14 @@ struct ModelGuardrailsCommand: AsyncParsableCommand {
 
         let payload = ModelGuardrailsPayload(
             guardrails: [
-                .init(id: FoundationLabGuardrails.default.afmArgumentValue, summary: "Default guardrails that block unsafe content in prompts and responses."),
-                .init(id: FoundationLabGuardrails.permissiveContentTransformations.afmArgumentValue, summary: "Permissive transformations for String generation while keeping structured generation strict.")
+                .init(
+                    id: FoundationLabGuardrails.default.afmArgumentValue,
+                    summary: "Default guardrails that block unsafe content in prompts and responses."
+                ),
+                .init(
+                    id: FoundationLabGuardrails.permissiveContentTransformations.afmArgumentValue,
+                    summary: "Permissive transformations for String generation while keeping structured generation strict."
+                )
             ]
         )
         let human = """

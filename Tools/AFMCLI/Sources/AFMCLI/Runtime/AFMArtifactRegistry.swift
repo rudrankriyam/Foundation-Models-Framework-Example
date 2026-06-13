@@ -261,7 +261,10 @@ struct AFMManifestTool: Tool {
 
         guard process.terminationStatus == 0 else {
             let trimmedError = stderr.trimmingCharacters(in: .whitespacesAndNewlines)
-            throw AFMRuntimeError.providerFailure(trimmedError.isEmpty ? "Tool '\(name)' exited with status \(process.terminationStatus)" : trimmedError)
+            let message = trimmedError.isEmpty
+                ? "Tool '\(name)' exited with status \(process.terminationStatus)"
+                : trimmedError
+            throw AFMRuntimeError.providerFailure(message)
         }
 
         switch manifest.runner.outputFormat ?? .json {

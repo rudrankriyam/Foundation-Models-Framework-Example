@@ -141,6 +141,21 @@ struct GenerationFlags: ParsableArguments {
     var guardrails: FoundationLabGuardrails = .default
 
     func validatedOptions() throws -> FoundationLabGenerationOptions? {
+        try validateOptionCombinations()
+        let resolvedSampling = resolvedSamplingMode()
+
+        guard resolvedSampling != nil || temperature != nil || maxTokens != nil else {
+            return nil
+        }
+
+        return FoundationLabGenerationOptions(
+            sampling: resolvedSampling,
+            temperature: temperature,
+            maximumResponseTokens: maxTokens
+        )
+    }
+
+    private func validateOptionCombinations() throws {
         if seed != nil && sampling != .topK && sampling != .nucleus {
             throw ValidationError("--seed is only valid with non-greedy sampling")
         }
@@ -162,27 +177,19 @@ struct GenerationFlags: ParsableArguments {
         if sampling != .nucleus, topP != nil {
             throw ValidationError("--top-p is only valid with --sampling nucleus")
         }
-        let resolvedSampling: FoundationLabGenerationOptions.SamplingMode?
+    }
+
+    private func resolvedSamplingMode() -> FoundationLabGenerationOptions.SamplingMode? {
         switch sampling {
         case .greedy:
-            resolvedSampling = .greedy
+            return .greedy
         case .topK:
-            resolvedSampling = .randomTop(topK ?? 50, seed: seed)
+            return .randomTop(topK ?? 50, seed: seed)
         case .nucleus:
-            resolvedSampling = .randomProbabilityThreshold(topP ?? 0.9, seed: seed)
+            return .randomProbabilityThreshold(topP ?? 0.9, seed: seed)
         case .none:
-            resolvedSampling = nil
-        }
-
-        guard resolvedSampling != nil || temperature != nil || maxTokens != nil else {
             return nil
         }
-
-        return FoundationLabGenerationOptions(
-            sampling: resolvedSampling,
-            temperature: temperature,
-            maximumResponseTokens: maxTokens
-        )
     }
 }
 

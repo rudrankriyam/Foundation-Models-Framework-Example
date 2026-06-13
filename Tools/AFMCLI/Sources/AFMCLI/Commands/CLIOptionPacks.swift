@@ -26,12 +26,14 @@ struct PromptInputOptions: ParsableArguments {
 
     func resolve(required: Bool = true) throws -> ResolvedTextInput? {
         try resolveSingleInput(
-            inlineValue: prompt,
-            fileValue: promptFile,
-            stdin: stdin,
-            inlineOptionName: "--prompt",
-            fileOptionName: "--prompt-file",
-            requiredMessage: "Please provide --prompt, --prompt-file, or stdin."
+            SingleInputRequest(
+                inlineValue: prompt,
+                fileValue: promptFile,
+                stdin: stdin,
+                inlineOptionName: "--prompt",
+                fileOptionName: "--prompt-file",
+                requiredMessage: "Please provide --prompt, --prompt-file, or stdin."
+            )
         )
     }
 }
@@ -49,13 +51,15 @@ struct InputSourceOptions: ParsableArguments {
     func resolve(defaultValue: String? = nil) throws -> ResolvedTextInput {
         if input != nil || inputFile != nil || stdin {
             if let resolved = try resolveSingleInput(
-                inlineValue: input,
-                fileValue: inputFile,
-                stdin: stdin,
-                inlineOptionName: "--input",
-                fileOptionName: "--input-file",
-                requiredMessage: "Please provide --input, --input-file, or stdin.",
-                allowAutomaticStdin: false
+                SingleInputRequest(
+                    inlineValue: input,
+                    fileValue: inputFile,
+                    stdin: stdin,
+                    inlineOptionName: "--input",
+                    fileOptionName: "--input-file",
+                    requiredMessage: "Please provide --input, --input-file, or stdin.",
+                    allowAutomaticStdin: false
+                )
             ) {
                 return resolved
             }
@@ -76,7 +80,11 @@ struct InputSourceOptions: ParsableArguments {
 }
 
 struct SessionOptions: ParsableArguments {
-    @Option(name: .long, parsing: .upToNextOption, help: "Message(s) to send through one shared session. Repeat for multi-turn chat. Prefix values with @ to read from files.")
+    @Option(
+        name: .long,
+        parsing: .upToNextOption,
+        help: "Message(s) to send through one shared session. Repeat for multi-turn chat. Prefix values with @ to read from files."
+    )
     var message: [String] = []
 
     @Option(name: .customLong("message-file"), parsing: .upToNextOption, help: "Read one or more chat messages from files.")
@@ -145,7 +153,11 @@ struct SchemaSourceOptions: ParsableArguments {
 }
 
 struct ToolSourceOptions: ParsableArguments {
-    @Option(name: .long, parsing: .upToNextOption, help: "Tool identifier or file path. Searches --tool-dir for bare identifiers. Repeat to load multiple tools.")
+    @Option(
+        name: .long,
+        parsing: .upToNextOption,
+        help: "Tool identifier or file path. Searches --tool-dir for bare identifiers. Repeat to load multiple tools."
+    )
     var tool: [String] = []
 
     @Option(name: .customLong("tool-dir"), help: "Directory used to resolve bare tool identifiers.")
@@ -187,33 +199,40 @@ struct ResolvedArtifactReference: Sendable, Encodable {
     let directory: String
 }
 
-func resolveSingleInput(
-    inlineValue: String?,
-    fileValue: String?,
-    stdin: Bool,
-    inlineOptionName: String,
-    fileOptionName: String,
-    requiredMessage: String,
-    allowAutomaticStdin: Bool = true
-) throws -> ResolvedTextInput? {
+struct SingleInputRequest {
+    let inlineValue: String?
+    let fileValue: String?
+    let stdin: Bool
+    let inlineOptionName: String
+    let fileOptionName: String
+    let requiredMessage: String
+    var allowAutomaticStdin = true
+}
+
+func resolveSingleInput(_ request: SingleInputRequest) throws -> ResolvedTextInput? {
     var explicitSourceCount = 0
-    if inlineValue != nil { explicitSourceCount += 1 }
-    if fileValue != nil { explicitSourceCount += 1 }
-    if stdin { explicitSourceCount += 1 }
+    if request.inlineValue != nil { explicitSourceCount += 1 }
+    if request.fileValue != nil { explicitSourceCount += 1 }
+    if request.stdin { explicitSourceCount += 1 }
     if explicitSourceCount > 1 {
-        throw ValidationError("Use only one of \(inlineOptionName), \(fileOptionName), or --stdin.")
+        throw ValidationError(
+            "Use only one of \(request.inlineOptionName), \(request.fileOptionName), or --stdin."
+        )
     }
 
-    if let inlineValue {
-        return try resolveInlineValue(inlineValue, optionName: inlineOptionName)
+    if let inlineValue = request.inlineValue {
+        return try resolveInlineValue(inlineValue, optionName: request.inlineOptionName)
     }
 
-    if let fileValue {
-        return try readFileInput(path: fileValue, optionName: fileOptionName)
+    if let fileValue = request.fileValue {
+        return try readFileInput(path: fileValue, optionName: request.fileOptionName)
     }
 
-    if stdin || (allowAutomaticStdin && shouldAutomaticallyReadFromStdin()) {
-        return try readStandardInput(optionName: "--stdin", requiredMessage: requiredMessage)
+    if request.stdin || (request.allowAutomaticStdin && shouldAutomaticallyReadFromStdin()) {
+        return try readStandardInput(
+            optionName: "--stdin",
+            requiredMessage: request.requiredMessage
+        )
     }
 
     return nil

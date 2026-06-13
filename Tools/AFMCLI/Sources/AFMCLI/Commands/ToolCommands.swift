@@ -55,12 +55,14 @@ struct ToolArgumentsOptions: ParsableArguments {
 
     func resolve() throws -> ResolvedTextInput {
         guard let resolved = try resolveSingleInput(
-            inlineValue: args,
-            fileValue: argsFile,
-            stdin: stdin,
-            inlineOptionName: "--args",
-            fileOptionName: "--args-file",
-            requiredMessage: "Please provide --args, --args-file, or stdin."
+            SingleInputRequest(
+                inlineValue: args,
+                fileValue: argsFile,
+                stdin: stdin,
+                inlineOptionName: "--args",
+                fileOptionName: "--args-file",
+                requiredMessage: "Please provide --args, --args-file, or stdin."
+            )
         ) else {
             throw ValidationError("Please provide --args, --args-file, or stdin.")
         }
