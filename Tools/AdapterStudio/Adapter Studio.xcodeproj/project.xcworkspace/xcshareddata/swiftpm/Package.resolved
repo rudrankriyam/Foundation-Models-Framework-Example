@@ -1,0 +1,15 @@
+{
+  "originHash" : "717296227e66fa752aaed06a7c5c1e5c19add1e82853dfdf1af8499d8816efde",
+  "pins" : [
+    {
+      "identity" : "liquidglaskit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/rryam/LiquidGlasKit.git",
+      "state" : {
+        "revision" : "46220b1bc0384178870125e16c9fa11e8f8d8875",
+        "version" : "1.0.0"
+      }
+    }
+  ],
+  "version" : 3
+}
