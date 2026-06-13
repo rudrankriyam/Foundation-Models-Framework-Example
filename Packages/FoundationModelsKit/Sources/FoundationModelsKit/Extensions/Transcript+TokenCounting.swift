@@ -190,6 +190,8 @@ extension Transcript {
   ///
   /// - Parameter budget: The maximum number of tokens allowed
   /// - Returns: An array of entries that fit within the budget
+  /// - Important: The first instructions entry is always preserved. When it
+  ///   alone exceeds the budget, the result contains only that entry.
   ///
   /// Example:
   /// ```swift
@@ -205,21 +207,17 @@ extension Transcript {
     _ budget: Int
   ) -> [Transcript.Entry] {
     let contentBudget = estimatedContentBudget(forSafeBudget: budget)
-    var tokenCount = 0
-    var recentEntriesToKeep: [Transcript.Entry] = []
-
-    // 1. Find the first instruction
     let firstInstruction = self.first(where: \.isInstruction)
+    let instructionTokens = firstInstruction?.estimatedTokenCount ?? 0
 
-    if let instruction = firstInstruction {
-      let instructionTokens = instruction.estimatedTokenCount
-      // Only account for the instruction if it fits the conservative content budget.
-      if instructionTokens <= contentBudget {
-        tokenCount = instructionTokens
-      }
+    if let firstInstruction, instructionTokens > contentBudget {
+      return [firstInstruction]
     }
 
-    // 2. Iterate backwards through non-instructions and collect what fits in the remaining budget
+    var tokenCount = instructionTokens
+    var recentEntriesToKeep: [Transcript.Entry] = []
+
+    // Iterate backwards through non-instructions and collect what fits in the remaining budget.
     for entry in self.reversed() {
       if entry.isInstruction { continue }
 
@@ -229,11 +227,8 @@ extension Transcript {
       recentEntriesToKeep.append(entry)
     }
 
-    // 3. Assemble the final list in chronological order
-    var result: [Transcript.Entry] = []
-    if let instruction = firstInstruction, instruction.estimatedTokenCount <= contentBudget {
-      result.append(instruction)
-    }
+    // Preserve instructions even when they alone exceed the requested budget.
+    var result = firstInstruction.map { [$0] } ?? []
     result.append(contentsOf: recentEntriesToKeep.reversed())
     return result
   }

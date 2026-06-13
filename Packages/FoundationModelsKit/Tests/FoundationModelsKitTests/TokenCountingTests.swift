@@ -76,6 +76,21 @@ struct TokenCountingTests {
     #expect(trimmed.count < entries.count)
     #expect(trimmedTranscript.safeEstimatedTokenCount <= 220)
   }
+
+  @Test("Token window preserves oversized instructions")
+  func tokenWindowPreservesOversizedInstructions() {
+    let instruction: Transcript.Entry = .instructions(
+      .foundationModelsTools(String(repeating: "system ", count: 200))
+    )
+    let transcript = Transcript(entries: [
+      instruction,
+      .prompt(.foundationModelsTools("Latest user prompt"))
+    ])
+
+    let trimmed = transcript.entriesWithinTokenBudget(120)
+
+    #expect(trimmed == [instruction])
+  }
 }
 
 @Suite("Token Estimation Accuracy Tests")

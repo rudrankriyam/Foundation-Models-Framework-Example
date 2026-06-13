@@ -53,6 +53,9 @@ public extension Transcript {
   }
 
   /// Keeps the newest transcript entries within a conservative token budget.
+  ///
+  /// The first instructions entry is always preserved, even when it alone
+  /// exceeds the requested budget.
   func entriesWithinTokenBudget(
     _ budget: Int,
     using model: SystemLanguageModel = .default
@@ -107,7 +110,7 @@ private extension Transcript {
     }
 
     if baseTokens > contentBudget {
-      return []
+      return base
     }
 
     var low = 0
