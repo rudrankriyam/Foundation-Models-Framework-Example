@@ -146,6 +146,29 @@ class CLITests(unittest.TestCase):
             ), patch("sys.stdout", new_callable=io.StringIO):
                 self.assertEqual(run_setup(), EXIT_FAILURE)
 
+    def test_setup_reuses_existing_virtual_environment(self):
+        with tempfile.TemporaryDirectory() as directory:
+            toolkit = Path(directory)
+            (toolkit / "requirements.txt").touch()
+            python = toolkit / "venv" / "bin" / "python"
+            python.parent.mkdir(parents=True)
+            python.touch()
+            successful_run = CompletedProcess(args=[], returncode=0)
+
+            with patch(
+                "adapter_cli.commands.setup.get_toolkit_path",
+                return_value=toolkit,
+            ), patch(
+                "adapter_cli.commands.setup.subprocess.run",
+                side_effect=[successful_run, successful_run],
+            ) as run, patch("sys.stdout", new_callable=io.StringIO):
+                self.assertEqual(run_setup(), EXIT_SUCCESS)
+                self.assertEqual(run.call_count, 2)
+                self.assertEqual(
+                    run.call_args_list[0].args[0][:3],
+                    [str(python), "-m", "pip"],
+                )
+
     def test_init_keeps_existing_configuration_successfully(self):
         with patch(
             "adapter_cli.commands.init.get_toolkit_path",

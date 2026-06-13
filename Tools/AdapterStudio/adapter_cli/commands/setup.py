@@ -26,30 +26,32 @@ def run_setup() -> int:
         return EXIT_FAILURE
 
     venv_path = toolkit_path / "venv"
-
-    print(f"Toolkit: {toolkit_path}")
-    print(f"Virtual environment: {venv_path}\n")
-
-    print("Creating Python virtual environment...")
-    try:
-        subprocess.run(
-            [sys.executable, "-m", "venv", str(venv_path)],
-            check=True,
-        )
-        print("  Virtual environment created.\n")
-    except subprocess.CalledProcessError as e:
-        print(f"  Error: Failed to create venv\n  {e}\n")
-        return EXIT_FAILURE
-    except OSError as error:
-        print(f"  Error: Failed to launch Python\n  {error}\n")
-        return EXIT_FAILURE
-
-    print("Installing dependencies...")
-
     if platform.system() == "Windows":
         python_path = venv_path / "Scripts" / "python.exe"
     else:
         python_path = venv_path / "bin" / "python"
+
+    print(f"Toolkit: {toolkit_path}")
+    print(f"Virtual environment: {venv_path}\n")
+
+    if python_path.exists():
+        print("Using existing Python virtual environment.\n")
+    else:
+        print("Creating Python virtual environment...")
+        try:
+            subprocess.run(
+                [sys.executable, "-m", "venv", str(venv_path)],
+                check=True,
+            )
+            print("  Virtual environment created.\n")
+        except subprocess.CalledProcessError as e:
+            print(f"  Error: Failed to create venv\n  {e}\n")
+            return EXIT_FAILURE
+        except OSError as error:
+            print(f"  Error: Failed to launch Python\n  {error}\n")
+            return EXIT_FAILURE
+
+    print("Installing dependencies...")
 
     try:
         subprocess.run(

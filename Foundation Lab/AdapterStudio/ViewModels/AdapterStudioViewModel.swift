@@ -49,6 +49,9 @@ final class AdapterStudioViewModel {
 
     deinit {
         streamTask?.cancel()
+        Task { @MainActor [engine] in
+            engine.cancelCurrentRun()
+        }
     }
 
     var isRunning: Bool {

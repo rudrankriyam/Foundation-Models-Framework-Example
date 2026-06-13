@@ -33,6 +33,7 @@ struct AdapterStudioContent: View {
         } message: {
             Text(viewModel.presentedError)
         }
+        .onDisappear(perform: viewModel.cancel)
 #else
         ContentUnavailableView(
             "Adapter Comparison Requires macOS",

@@ -5,7 +5,7 @@ import OSLog
 
 @MainActor
 final class ModelCompareEngine {
-    private enum RunOutcome {
+    private enum RunOutcome: Sendable {
         case success(ModelCompareResponseSummary)
         case failure(ModelCompareError)
         case availability(SystemLanguageModel.Availability)
@@ -19,6 +19,23 @@ final class ModelCompareEngine {
         let continuation: AsyncStream<ModelCompareEvent>.Continuation
     }
 
+    private struct ComparisonSummaries {
+        var base: ModelCompareResponseSummary?
+        var adapter: ModelCompareResponseSummary?
+
+        mutating func set(
+            _ summary: ModelCompareResponseSummary?,
+            for source: ModelCompareSource
+        ) {
+            switch source {
+            case .base:
+                base = summary
+            case .adapter:
+                adapter = summary
+            }
+        }
+    }
+
     private let logger = Logger(
         subsystem: "com.rudrankriyam.foundationlab",
         category: "AdapterComparison"
@@ -26,7 +43,6 @@ final class ModelCompareEngine {
     private let baseModel: SystemLanguageModel
     private var adapterModel: SystemLanguageModel?
     private var currentRunTask: Task<Void, Never>?
-    private var activeStreamTasks: [Task<RunOutcome, Never>] = []
 
     init(model: SystemLanguageModel = .default) {
         baseModel = model
@@ -35,8 +51,6 @@ final class ModelCompareEngine {
     func cancelCurrentRun() {
         currentRunTask?.cancel()
         currentRunTask = nil
-        activeStreamTasks.forEach { $0.cancel() }
-        activeStreamTasks.removeAll()
     }
 
     func configureAdapter(_ context: AdapterContext?) {
@@ -79,52 +93,24 @@ private extension ModelCompareEngine {
         options: GenerationOptions,
         continuation: AsyncStream<ModelCompareEvent>.Continuation
     ) async {
-        activeStreamTasks.forEach { $0.cancel() }
-        activeStreamTasks.removeAll()
-
-        let baseTask = makeStreamTask(
-            source: .base,
-            model: baseModel,
+        let summaries = await collectSummaries(
             prompt: prompt,
             options: options,
             continuation: continuation
         )
-        activeStreamTasks.append(baseTask)
-
-        let adapterTask: Task<RunOutcome, Never>?
-        if let adapterModel {
-            let task = makeStreamTask(
-                source: .adapter,
-                model: adapterModel,
-                prompt: prompt,
-                options: options,
-                continuation: continuation
-            )
-            activeStreamTasks.append(task)
-            adapterTask = task
-        } else {
-            adapterTask = nil
-        }
-
-        let baseOutcome = await baseTask.value
-        let adapterOutcome = await adapterTask?.value ?? .skipped
-        activeStreamTasks.removeAll()
 
         guard !Task.isCancelled else {
             continuation.finish()
             return
         }
 
-        let baseSummary = processOutcome(baseOutcome, for: .base, continuation: continuation)
-        let adapterSummary = processOutcome(adapterOutcome, for: .adapter, continuation: continuation)
-
-        if baseSummary != nil || adapterSummary != nil {
+        if summaries.base != nil || summaries.adapter != nil {
             continuation.yield(
                 .finished(
                     ModelCompareResult(
                         prompt: prompt,
-                        base: baseSummary,
-                        adapter: adapterSummary
+                        base: summaries.base,
+                        adapter: summaries.adapter
                     )
                 )
             )
@@ -134,24 +120,67 @@ private extension ModelCompareEngine {
         currentRunTask = nil
     }
 
-    private func makeStreamTask(
-        source: ModelCompareSource,
-        model: SystemLanguageModel,
+    private func collectSummaries(
         prompt: String,
         options: GenerationOptions,
         continuation: AsyncStream<ModelCompareEvent>.Continuation
-    ) -> Task<RunOutcome, Never> {
-        Task { [weak self] in
-            guard let self else { return .cancelled }
-            return await self.streamModel(
-                source: source,
-                model: model,
-                request: StreamRequest(
-                    prompt: prompt,
-                    options: options,
-                    continuation: continuation
+    ) async -> ComparisonSummaries {
+        let request = StreamRequest(
+            prompt: prompt,
+            options: options,
+            continuation: continuation
+        )
+        var summaries = ComparisonSummaries()
+
+        await withTaskGroup(
+            of: (ModelCompareSource, RunOutcome).self
+        ) { group in
+            addComparisonTasks(to: &group, request: request)
+
+            for await (source, outcome) in group {
+                guard !Task.isCancelled else {
+                    group.cancelAll()
+                    break
+                }
+
+                summaries.set(
+                    processOutcome(
+                        outcome,
+                        for: source,
+                        continuation: continuation
+                    ),
+                    for: source
                 )
+            }
+        }
+
+        return summaries
+    }
+
+    private func addComparisonTasks(
+        to group: inout TaskGroup<(ModelCompareSource, RunOutcome)>,
+        request: StreamRequest
+    ) {
+        group.addTask { @MainActor [weak self] in
+            guard let self else { return (.base, .cancelled) }
+            let outcome = await self.streamModel(
+                source: .base,
+                model: self.baseModel,
+                request: request
             )
+            return (.base, outcome)
+        }
+
+        guard let adapterModel else { return }
+
+        group.addTask { @MainActor [weak self] in
+            guard let self else { return (.adapter, .cancelled) }
+            let outcome = await self.streamModel(
+                source: .adapter,
+                model: adapterModel,
+                request: request
+            )
+            return (.adapter, outcome)
         }
     }
 
