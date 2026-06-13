@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-"""Adapter Studio CLI - Main entry point"""
+"""Entry point for the Foundation Models Adapter Studio CLI."""
 
 import argparse
-import sys
 
+from . import EXIT_USAGE, __version__
 from .banner import print_banner
+from .commands.demo import run_demo
+from .commands.export import run_export
+from .commands.generate import run_generate
 from .commands.init import run_init
 from .commands.setup import run_setup
-from .commands.demo import run_demo
-from .commands.generate import run_generate
 from .commands.train_adapter import run_train_adapter
 from .commands.train_draft import run_train_draft
-from .commands.export import run_export
 
 
 def add_generation_args(parser):
@@ -250,34 +250,28 @@ def add_draft_training_args(parser):
 
 def create_parser():
     """Create and configure argument parser"""
-    # Custom formatter to replace "positional arguments" with "Available commands"
     class CustomFormatter(argparse.RawDescriptionHelpFormatter):
         def start_section(self, heading):
             if heading == "positional arguments":
                 heading = "Available commands"
             elif heading == "options":
                 heading = "Options"
-            elif heading == "usage":
-                heading = "Usage"
             super().start_section(heading)
-        
-        def _format_usage(self, usage, actions, groups, prefix):
-            return ""
-    
+
     parser = argparse.ArgumentParser(
-        prog="adapter-studio",
+        prog="fmas",
         description="Command-line toolkit for Apple Foundation Models adapter training",
         formatter_class=CustomFormatter,
     )
-    
+
     parser.add_argument(
         "--version",
         action="version",
-        version="%(prog)s 0.1.0"
+        version=f"%(prog)s {__version__}"
     )
-    
+
     subparsers = parser.add_subparsers(dest="command", metavar="")
-    
+
     # Init command
     subparsers.add_parser(
         "init",
@@ -426,38 +420,31 @@ def create_parser():
     return parser
 
 
-def main():
+def main(argv: list[str] | None = None) -> int:
     """Main CLI entry point"""
-    # Show banner first (before parsing, so it shows even on --help)
     print_banner()
-    
+
     parser = create_parser()
-    args = parser.parse_args()
-    
-    exit_code = 0
-    
-    # Route to commands
+    args = parser.parse_args(argv)
+
     if args.command == "init":
-        run_init()
-    elif args.command == "setup":
-        run_setup()
-    elif args.command == "demo":
-        exit_code = run_demo(args)
-    elif args.command == "generate":
-        exit_code = run_generate(args)
-    elif args.command == "train-adapter":
-        exit_code = run_train_adapter(args)
-    elif args.command == "train-draft":
-        exit_code = run_train_draft(args)
-    elif args.command == "export":
-        exit_code = run_export(args)
-    else:
-        # No command specified, show help
-        parser.print_help()
-    
-    if exit_code != 0:
-        sys.exit(exit_code)
+        return run_init()
+    if args.command == "setup":
+        return run_setup()
+    if args.command == "demo":
+        return run_demo(args)
+    if args.command == "generate":
+        return run_generate(args)
+    if args.command == "train-adapter":
+        return run_train_adapter(args)
+    if args.command == "train-draft":
+        return run_train_draft(args)
+    if args.command == "export":
+        return run_export(args)
+
+    parser.print_help()
+    return EXIT_USAGE
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

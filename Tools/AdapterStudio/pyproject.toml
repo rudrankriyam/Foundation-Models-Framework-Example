@@ -3,11 +3,11 @@ requires = ["setuptools>=45", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "adapter-studio-cli"
-version = "0.1.0"
+name = "foundation-models-adapter-studio"
+version = "0.2.0"
 description = "Command-line interface for Apple Foundation Models adapter training toolkit"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 authors = [
     { name = "Rudrank Riyam" }
 ]
@@ -15,7 +15,7 @@ authors = [
 dependencies = []
 
 [project.scripts]
-adapter-studio = "adapter_cli.__main__:main"
+fmas = "adapter_cli.__main__:main"
 
 [tool.setuptools]
 packages = ["adapter_cli", "adapter_cli.commands"]

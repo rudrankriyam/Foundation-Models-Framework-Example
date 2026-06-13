@@ -1,4 +1,4 @@
-"""ASCII art banner for Adapter Studio CLI"""
+"""ASCII art banner for the Foundation Models Adapter Studio CLI."""
 
 BANNER = r"""
  █████╗ ██████╗  █████╗ ██████╗ ████████╗███████╗██████╗

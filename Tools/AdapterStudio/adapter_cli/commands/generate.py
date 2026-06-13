@@ -1,50 +1,48 @@
 """Generate command - Generate text with base model or trained adapter"""
 
 import subprocess
+from argparse import Namespace
 from pathlib import Path
 
+from .. import EXIT_FAILURE, EXIT_USAGE
 from ..config import get_toolkit_path
 
 
-def run_generate(args):
+def run_generate(args: Namespace) -> int:
     """Run text generation using toolkit's examples.generate module"""
     print()
-    
-    # Get toolkit path
+
     toolkit_path = get_toolkit_path()
     if not toolkit_path:
-        print("Error: Toolkit not configured. Run 'adapter-studio init' first.\n")
-        return
-    
+        print("Error: Toolkit not configured. Run 'fmas init' first.\n")
+        return EXIT_FAILURE
+
     toolkit_path = Path(toolkit_path)
     venv_python = toolkit_path / "venv" / "bin" / "python"
-    
+
     if not venv_python.exists():
-        print("Error: Virtual environment not set up. Run 'adapter-studio setup' first.\n")
-        return
-    
-    # Validate required arguments
+        print("Error: Virtual environment not set up. Run 'fmas setup' first.\n")
+        return EXIT_FAILURE
+
     if not args.prompt:
         print("Error: --prompt is required\n")
-        return
-    
-    # Validate checkpoints if provided
+        return EXIT_USAGE
+
     checkpoint = None
     draft_checkpoint = None
-    
+
     if args.checkpoint:
-        checkpoint = Path(args.checkpoint)
+        checkpoint = Path(args.checkpoint).expanduser().resolve()
         if not checkpoint.exists():
             print(f"Error: Checkpoint not found at {checkpoint}\n")
-            return
-    
+            return EXIT_USAGE
+
     if args.draft_checkpoint:
-        draft_checkpoint = Path(args.draft_checkpoint)
+        draft_checkpoint = Path(args.draft_checkpoint).expanduser().resolve()
         if not draft_checkpoint.exists():
             print(f"Error: Draft checkpoint not found at {draft_checkpoint}\n")
-            return
-    
-    # Determine what we're generating with
+            return EXIT_USAGE
+
     if checkpoint:
         print(f"Generating text with trained adapter...\n")
         print(f"Prompt: {args.prompt}")
@@ -57,9 +55,8 @@ def run_generate(args):
     
     print()
     
-    # Build command to run examples.generate
     cmd = [str(venv_python), "-m", "examples.generate"]
-    
+
     cmd.extend(["--prompt", args.prompt])
     
     if checkpoint:
@@ -68,7 +65,6 @@ def run_generate(args):
     if draft_checkpoint:
         cmd.extend(["--draft-checkpoint", str(draft_checkpoint)])
     
-    # Add optional arguments if provided
     if args.precision:
         cmd.extend(["--precision", args.precision])
     if args.temperature is not None:
@@ -84,31 +80,30 @@ def run_generate(args):
     if args.num_draft_tokens is not None:
         cmd.extend(["--num_draft_tokens", str(args.num_draft_tokens)])
     
-    # Run the command (let subprocess inherit stdout/stderr for live output)
     print("Generating...\n")
-    
+
     try:
         result = subprocess.run(
             cmd,
             cwd=str(toolkit_path),
-            timeout=300,  # 5 minutes for generation
+            timeout=300,
         )
         return result.returncode
     except subprocess.TimeoutExpired:
         print("\n\nGeneration timed out (exceeded 5 minutes). Check model size or system resources.\n")
-        return 1
+        return EXIT_FAILURE
     except KeyboardInterrupt:
         print("\n\nGeneration cancelled.\n")
-        return 1
+        return EXIT_FAILURE
     except FileNotFoundError as e:
         print(f"Error: File not found: {e}\n")
-        return 1
+        return EXIT_FAILURE
     except PermissionError as e:
         print(f"Error: Permission denied: {e}\n")
-        return 1
+        return EXIT_FAILURE
     except OSError as e:
         print(f"OS error: {e}\n")
-        return 1
+        return EXIT_FAILURE
     except Exception as e:
         print(f"Unexpected error: {type(e).__name__}: {e}\n")
-        return 1
+        return EXIT_FAILURE

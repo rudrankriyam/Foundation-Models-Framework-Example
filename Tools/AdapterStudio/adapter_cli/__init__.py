@@ -1,6 +1,10 @@
-"""Adapter Studio CLI - Python package for adapter training workflows"""
+"""Foundation Models adapter training workflows."""
 
-__version__ = "0.1.0"
+EXIT_SUCCESS = 0
+EXIT_FAILURE = 1
+EXIT_USAGE = 2
+
+__version__ = "0.2.0"
 __author__ = "Rudrank Riyam"
 
 from .banner import print_banner, BANNER

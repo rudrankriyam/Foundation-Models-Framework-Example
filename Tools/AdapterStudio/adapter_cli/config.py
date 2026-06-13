@@ -1,4 +1,4 @@
-"""Configuration management for Adapter Studio CLI"""
+"""Configuration management for the Foundation Models Adapter Studio CLI."""
 
 import json
 import os

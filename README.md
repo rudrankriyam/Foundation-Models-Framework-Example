@@ -132,6 +132,29 @@ simulator output is only valid for build and interface checks.
 The complete corpus, methodology, research notes, historical baseline, nested package,
 and device runner live in [`Tools/AppBench`](Tools/AppBench).
 
+## Foundation Models Adapter Studio
+
+Adapter Studio is now built into Foundation Lab as a macOS **Adapter Comparison**
+workspace. Import a `.fmadapter` package, submit one prompt to fresh base and adapter
+sessions, inspect both streams independently, and compare time-to-first-token and total
+duration. Those concurrent timings are interactive diagnostics; AppBench remains the
+surface for publishable benchmark results.
+
+The companion `fmas` Python CLI keeps Apple's adapter-training workflow available:
+
+```bash
+python3.11 -m venv .venv-fmas
+source .venv-fmas/bin/activate
+python -m pip install -e Tools/AdapterStudio
+fmas init
+fmas setup
+fmas train-adapter --help
+fmas export --help
+```
+
+The Swift workspace, CLI reference, exit-code contract, and tests are documented in
+[`Tools/AdapterStudio`](Tools/AdapterStudio).
+
 ## Swift Packages
 
 The repository also distributes reusable Swift package products for applications that do not need the Foundation Lab UI:
