@@ -13,6 +13,10 @@ let package = Package(
             name: "afm",
             targets: ["AFMCLI"]
         ),
+        .executable(
+            name: "appbench",
+            targets: ["AppBenchCLI"]
+        ),
         .library(
             name: "FoundationModelsKit",
             targets: ["FoundationModelsKit"]
@@ -24,6 +28,18 @@ let package = Package(
         .library(
             name: "FoundationLabCore",
             targets: ["FoundationLabCore"]
+        ),
+        .library(
+            name: "AppBenchCore",
+            targets: ["AppBenchCore"]
+        ),
+        .library(
+            name: "BenchmarkCore",
+            targets: ["AppBenchCore"]
+        ),
+        .library(
+            name: "AppBenchEvaluations",
+            targets: ["AppBenchEvaluations"]
         )
     ],
     dependencies: [
@@ -58,6 +74,20 @@ let package = Package(
             ],
             path: "Tools/AFMCLI/Sources/AFMCLI"
         ),
+        .target(
+            name: "AppBenchCore",
+            path: "Tools/AppBench/BenchmarkCore/Sources/AppBenchCore"
+        ),
+        .target(
+            name: "AppBenchEvaluations",
+            dependencies: ["AppBenchCore"],
+            path: "Tools/AppBench/BenchmarkCore/Sources/AppBenchEvaluations"
+        ),
+        .executableTarget(
+            name: "AppBenchCLI",
+            dependencies: ["AppBenchCore"],
+            path: "Tools/AppBench/BenchmarkCore/Sources/AppBenchCLI"
+        ),
         .testTarget(
             name: "FoundationModelsKitTests",
             dependencies: ["FoundationModelsKit"],
@@ -77,6 +107,16 @@ let package = Package(
             name: "AFMCLITests",
             dependencies: ["AFMCLI"],
             path: "Tools/AFMCLI/Tests/AFMCLITests"
+        ),
+        .testTarget(
+            name: "AppBenchCoreTests",
+            dependencies: ["AppBenchCore"],
+            path: "Tools/AppBench/BenchmarkCore/Tests/AppBenchCoreTests"
+        ),
+        .testTarget(
+            name: "AppBenchEvaluationsTests",
+            dependencies: ["AppBenchCore", "AppBenchEvaluations"],
+            path: "Tools/AppBench/BenchmarkCore/Tests/AppBenchEvaluationsTests"
         )
     ]
 )

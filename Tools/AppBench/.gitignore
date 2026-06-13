@@ -13,10 +13,6 @@ xcuserdata/
 *.dSYM.zip
 *.dSYM
 
-.asc/artifacts/
-.asc/ExportOptions/TestFlight.generated.plist
-.asc/runs/
-
 ## Playgrounds
 timeline.xctimeline
 playground.xcworkspace
@@ -31,13 +27,9 @@ playground.xcworkspace
 #
 # Xcode automatically generates this directory with a .xcworkspacedata file and xcuserdata
 # hence it is not needed unless you have added a package configuration file to your project
-.swiftpm/
+# .swiftpm
 
 .build/
-.build-sim/
-
-# macOS
-.DS_Store
 
 # CocoaPods
 #
@@ -69,15 +61,8 @@ fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
 
-# Xcode build artifacts
-build/
-DerivedData/
-.derivedData/
-
-# Python packaging
-*.egg-info/
-dist/
-*.egg
-__pycache__/
-*.pyc
-.Python
+# AppBench generated artifacts
+*.trace/
+Results/*.json
+Results/*.md
+!Results/README.md

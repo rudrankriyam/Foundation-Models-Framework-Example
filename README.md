@@ -107,6 +107,31 @@ for the full command reference.
 AFM releases use `afm-vx.y.z` tags so CLI binaries and Homebrew updates remain separate
 from Foundation Lab app releases.
 
+## Foundation Models AppBench
+
+AppBench now ships from this repository as the practical evaluation suite for Apple
+Foundation Models. It contains ten app-shaped workloads with fixed synthetic fixtures,
+a separate safety guardrail suite, sustained-generation and context-limit scenarios,
+deterministic graders, and separate quality and performance reporting.
+
+Run the canonical Mac benchmark from the repository root:
+
+```bash
+swift run appbench list
+swift run appbench --suite quick --model on-device
+swift run appbench --suite quick --all-samples --model on-device
+swift run appbench --suite full --warmups 5 --repetitions 20 \
+  --json Tools/AppBench/Results/run.json \
+  --markdown Tools/AppBench/Results/run.md
+```
+
+Official macOS results come from the CLI. Official iPhone and iPad results require the
+small signed `AppBenchDeviceRunner` harness on a physical Apple Intelligence device;
+simulator output is only valid for build and interface checks.
+
+The complete corpus, methodology, research notes, historical baseline, nested package,
+and device runner live in [`Tools/AppBench`](Tools/AppBench).
+
 ## Swift Packages
 
 The repository also distributes reusable Swift package products for applications that do not need the Foundation Lab UI:
@@ -114,6 +139,10 @@ The repository also distributes reusable Swift package products for applications
 - `FoundationModelsKit` provides transcript history transforms, token estimation, and context-budget utilities.
 - `FoundationModelsTools` provides calendar, contacts, health, location, music, reminders, weather, and web tools. It re-exports `FoundationModelsKit` for compatibility with existing users.
 - `FoundationLabCore` provides the UI-independent capability requests, results, use cases, and Foundation Models providers used by the Lab app.
+- `AppBenchCore` provides the benchmark corpus, deterministic graders, runner, metrics, and reports.
+- `AppBenchEvaluations` adapts AppBench fixtures and graders to the OS 27 Evaluations framework.
+- `BenchmarkCore` preserves the original AppBench package product name as a compatibility alias.
+- `appbench` is the canonical macOS benchmark executable.
 
 Add the repository to your package dependencies:
 
@@ -142,6 +171,10 @@ Then select the products needed by your target:
         ),
         .product(
             name: "FoundationLabCore",
+            package: "foundation-models-framework-lab"
+        ),
+        .product(
+            name: "AppBenchCore",
             package: "foundation-models-framework-lab"
         )
     ]
