@@ -1,0 +1,46 @@
+#!/bin/sh
+
+# Compatibility wrapper for Foundation Models AppBench.
+# Automatically builds, finds build path, and runs - all in one step.
+#
+# Usage:
+#   ./benchmark
+#   ./benchmark --debug --suite performance
+
+CONFIGURATION=release
+
+# Parse flags
+if [ "$1" = "--debug" ]; then
+	CONFIGURATION=debug
+	shift
+fi
+
+PROJECT_DIR="BenchmarkCore"
+PACKAGE_FILE="$PROJECT_DIR/Package.swift"
+APPBENCH_COMMIT="$(git rev-parse --short HEAD 2>/dev/null || true)"
+export APPBENCH_COMMIT
+
+# Check if Package.swift exists
+if [ ! -f "$PACKAGE_FILE" ]; then
+	echo "Error: $PACKAGE_FILE not found."
+	echo "Run this script from the project root directory."
+	exit 1
+fi
+
+# Build first
+echo "Building AppBenchCLI ($CONFIGURATION)..."
+if ! swift build --package-path "$PROJECT_DIR" -c "$CONFIGURATION"; then
+	echo "Build failed"
+	exit 1
+fi
+
+# Find the build directory
+BUILD_DIR="$PROJECT_DIR/.build/$CONFIGURATION"
+
+if [ -f "$BUILD_DIR/AppBenchCLI" ]; then
+	export DYLD_FRAMEWORK_PATH="$BUILD_DIR/PackageFrameworks:$BUILD_DIR"
+	exec "$BUILD_DIR/AppBenchCLI" "$@"
+else
+	echo "Error: $BUILD_DIR/AppBenchCLI does not exist"
+	exit 1
+fi
