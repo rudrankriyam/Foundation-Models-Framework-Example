@@ -41,7 +41,10 @@ public final class FoundationLabConversationEngine {
     ) throws {
         self.init(
             configuration: configuration,
-            model: try FoundationModelsModelFactory.makeModel(adapterURL: adapterURL),
+            model: try FoundationModelsModelFactory.makeModel(
+                guardrails: configuration.guardrails,
+                adapterURL: adapterURL
+            ),
             adapterURL: adapterURL
         )
     }

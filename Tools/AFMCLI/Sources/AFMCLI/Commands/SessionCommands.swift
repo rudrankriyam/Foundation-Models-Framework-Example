@@ -64,7 +64,7 @@ struct SessionRespondCommand: AsyncParsableCommand {
         let resolvedPrompt = try requiredResolvedInput(promptInput.resolve())
         let resolvedOutput = try options.resolvedOutput()
         let generationOptions = try generation.validatedOptions()
-        let adapterPath = try adapterOptions.resolveAdapterPath()
+        let adapterPath = try adapterOptions.resolveAdapterPath(guardrails: generation.guardrails)
         let toolResolution = try resolveToolManifests(toolSource)
 
         if options.dryRun {
@@ -146,7 +146,7 @@ struct SessionStreamCommand: AsyncParsableCommand {
         let resolvedPrompt = try requiredResolvedInput(promptInput.resolve())
         let resolvedOutput = try options.resolvedOutput()
         let generationOptions = try generation.validatedOptions()
-        let adapterPath = try adapterOptions.resolveAdapterPath()
+        let adapterPath = try adapterOptions.resolveAdapterPath(guardrails: generation.guardrails)
         let toolResolution = try resolveToolManifests(toolSource)
 
         if options.dryRun {
@@ -327,7 +327,7 @@ struct SessionChatCommand: AsyncParsableCommand {
         let validatedMessages = resolvedMessages.map(\.value)
         let resolvedOutput = try options.resolvedOutput()
         let generationOptions = try generation.validatedOptions()
-        let adapterPath = try adapterOptions.resolveAdapterPath()
+        let adapterPath = try adapterOptions.resolveAdapterPath(guardrails: generation.guardrails)
         let toolResolution = try resolveToolManifests(toolSource)
 
         if options.dryRun {

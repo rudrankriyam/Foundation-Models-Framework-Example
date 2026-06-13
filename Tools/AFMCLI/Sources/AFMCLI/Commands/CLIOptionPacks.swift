@@ -1,5 +1,6 @@
 import ArgumentParser
 import Foundation
+import FoundationLabCore
 
 struct ResolvedTextInput: Sendable, Encodable {
     enum SourceKind: String, Sendable, Encodable {
@@ -165,9 +166,14 @@ struct AdapterOptions: ParsableArguments {
     @Option(name: .long, help: "Path to a Foundation Models adapter package (.fmadapter).")
     var adapter: String?
 
-    func resolveAdapterPath() throws -> String? {
+    func resolveAdapterPath(guardrails: FoundationLabGuardrails) throws -> String? {
         guard let adapter else {
             return nil
+        }
+        guard guardrails == .default else {
+            throw ValidationError(
+                "--adapter only supports the framework's default guardrails."
+            )
         }
         return try validatedAdapterPath(adapter, optionName: "--adapter")
     }

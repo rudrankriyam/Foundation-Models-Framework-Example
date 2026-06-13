@@ -23,10 +23,16 @@ struct ToolInspectPayload: Encodable {
 }
 
 struct ToolValidatePayload: Encodable {
+    struct ValidatedTool: Encodable {
+        let name: String
+        let file: String
+    }
+
     let command: String
     let status: String
     let name: String
     let file: String
+    let tools: [ValidatedTool]
 }
 
 struct ToolCallPayload: Encodable {
@@ -137,15 +143,24 @@ struct ToolValidateCommand: AsyncParsableCommand {
             return
         }
 
-        guard let first = toolSet.references.first,
-              let firstTool = toolSet.tools.first as? AFMManifestTool else {
+        let validatedTools = try zip(toolSet.references, toolSet.tools).map { reference, tool in
+            guard let manifestTool = tool as? AFMManifestTool else {
+                throw AFMRuntimeError.invalidRequest("Missing validated tool metadata")
+            }
+            return ToolValidatePayload.ValidatedTool(
+                name: manifestTool.name,
+                file: reference.filePath
+            )
+        }
+        guard let first = validatedTools.first else {
             throw AFMRuntimeError.invalidRequest("Missing validated tool metadata")
         }
         let payload = ToolValidatePayload(
             command: "tool validate",
             status: "valid",
-            name: firstTool.name,
-            file: first.filePath
+            name: first.name,
+            file: first.file,
+            tools: validatedTools
         )
         let human = toolSet.references
             .map { "Validated: \($0.filePath)" }

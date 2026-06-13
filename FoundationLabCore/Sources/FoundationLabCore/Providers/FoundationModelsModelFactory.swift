@@ -8,6 +8,11 @@ public enum FoundationModelsModelFactory {
         adapterURL: URL? = nil
     ) throws -> SystemLanguageModel {
         if let adapterURL {
+            guard guardrails == .default else {
+                throw FoundationLabCoreError.invalidRequest(
+                    "Foundation Models adapters only support the framework's default guardrails."
+                )
+            }
             let adapter = try SystemLanguageModel.Adapter(fileURL: adapterURL)
             return SystemLanguageModel(adapter: adapter)
         }

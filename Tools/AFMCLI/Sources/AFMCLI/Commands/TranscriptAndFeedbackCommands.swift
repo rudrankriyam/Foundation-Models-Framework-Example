@@ -49,7 +49,7 @@ struct TranscriptExportCommand: AsyncParsableCommand {
         let exportPath = try validatedExportPath(outputFile.file)
         let resolvedOutput = try options.resolvedOutput()
         let generationOptions = try generation.validatedOptions()
-        let adapterPath = try adapterOptions.resolveAdapterPath()
+        let adapterPath = try adapterOptions.resolveAdapterPath(guardrails: generation.guardrails)
         let toolResolution = try resolveToolManifests(toolSource)
 
         if options.dryRun {
@@ -171,7 +171,7 @@ struct FeedbackExportCommand: AsyncParsableCommand {
         let exportPath = try validatedExportPath(outputFile.file)
         let resolvedOutput = try options.resolvedOutput()
         let generationOptions = try generation.validatedOptions()
-        let adapterPath = try adapterOptions.resolveAdapterPath()
+        let adapterPath = try adapterOptions.resolveAdapterPath(guardrails: generation.guardrails)
         let issues = try issueFlags.resolvedIssues()
 
         if options.dryRun {

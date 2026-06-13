@@ -36,4 +36,20 @@ final class FoundationLabModelConfigurationTests: XCTestCase {
         XCTAssertEqual(request.generationOptions, options)
         XCTAssertFalse(request.includeSchemaInPrompt)
     }
+
+    func testModelFactoryRejectsCustomGuardrailsForAdapters() {
+        XCTAssertThrowsError(
+            try FoundationModelsModelFactory.makeModel(
+                guardrails: .permissiveContentTransformations,
+                adapterURL: URL(fileURLWithPath: "/tmp/Test.fmadapter")
+            )
+        ) { error in
+            XCTAssertEqual(
+                error as? FoundationLabCoreError,
+                .invalidRequest(
+                    "Foundation Models adapters only support the framework's default guardrails."
+                )
+            )
+        }
+    }
 }

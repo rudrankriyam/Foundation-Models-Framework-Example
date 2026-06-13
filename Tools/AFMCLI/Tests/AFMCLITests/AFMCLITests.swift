@@ -263,13 +263,27 @@ func adapterDryRunAndValidation() throws {
     let invalid = try runAFM(
         ["session", "respond", "--dry-run", "--adapter", invalidPath.path(), "--prompt", "hello"]
     )
+    let unsupportedGuardrails = try runAFM(
+        [
+            "session", "respond", "--dry-run",
+            "--adapter", adapterPath.path(),
+            "--guardrails", "permissive-content-transformations",
+            "--prompt", "hello"
+        ]
+    )
 
     #expect(valid.status == 0)
     #expect(invalid.status == 64)
+    #expect(unsupportedGuardrails.status == 64)
 
     let validJSON = try parseJSONObject(valid.stdout)
     #expect(validJSON["adapter"] as? String == adapterPath.path())
     #expect(invalid.stderr.contains("--adapter must point to a .fmadapter package"))
+    #expect(
+        unsupportedGuardrails.stderr.contains(
+            "--adapter only supports the framework's default guardrails"
+        )
+    )
 }
 
 @Test("Schema commands expose list and run flows")
@@ -460,7 +474,16 @@ func toolManifestCommands() throws {
         - -lc
         - cat
     """
+    let secondToolManifest = toolManifest.replacingOccurrences(
+        of: "name: echo_json",
+        with: "name: echo_json_two"
+    )
     try toolManifest.write(to: toolDirectory.appending(path: "echo-json.yaml"), atomically: true, encoding: .utf8)
+    try secondToolManifest.write(
+        to: toolDirectory.appending(path: "echo-json-two.yaml"),
+        atomically: true,
+        encoding: .utf8
+    )
     try #"{"city":"Berlin"}"#.write(to: argsFile, atomically: true, encoding: .utf8)
 
     let inspect = try runAFM(
@@ -471,6 +494,7 @@ func toolManifestCommands() throws {
     let validate = try runAFM(
         "tool", "validate", "--output", "json",
         "--tool", "echo-json",
+        "--tool", "echo-json-two",
         "--tool-dir", toolDirectory.path()
     )
     let call = try runAFM(
@@ -487,11 +511,20 @@ func toolManifestCommands() throws {
     let inspectJSON = try parseJSONObject(inspect.stdout)
     let validateJSON = try parseJSONObject(validate.stdout)
     let callJSON = try parseJSONObject(call.stdout)
+    let validatedTools = try #require(validateJSON["tools"] as? [[String: Any]])
     let echoedOutput = try #require(callJSON["output"] as? String)
     let echoedJSON = try parseJSONObject(echoedOutput)
 
     #expect(inspectJSON["name"] as? String == "echo_json")
     #expect(validateJSON["status"] as? String == "valid")
+    #expect(validatedTools.count == 2)
+    #expect(validatedTools.compactMap { $0["name"] as? String } == ["echo_json", "echo_json_two"])
+    #expect(
+        validatedTools.compactMap { $0["file"] as? String } == [
+            toolDirectory.appending(path: "echo-json.yaml").path(),
+            toolDirectory.appending(path: "echo-json-two.yaml").path()
+        ]
+    )
     #expect(callJSON["name"] as? String == "echo_json")
     #expect(echoedJSON["city"] as? String == "Berlin")
 }

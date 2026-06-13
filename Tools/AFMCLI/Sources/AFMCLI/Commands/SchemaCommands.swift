@@ -107,7 +107,7 @@ struct SchemaCustomCommand: AsyncParsableCommand {
     mutating func run() async throws {
         let resolvedOutput = try options.resolvedOutput()
         let generationOptions = try generation.validatedOptions()
-        let adapterPath = try adapterOptions.resolveAdapterPath()
+        let adapterPath = try adapterOptions.resolveAdapterPath(guardrails: generation.guardrails)
         let schemaReference = try schemaSource.resolve()
         let schemaDocument = try AFMArtifactRegistry.loadSchemaDocument(from: schemaReference)
         let resolvedInput = try inputSource.resolve()
@@ -192,7 +192,7 @@ struct TypedPersonSchemaCommand: AsyncParsableCommand {
     mutating func run() async throws {
         let resolvedOutput = try options.resolvedOutput()
         let generationOptions = try generation.validatedOptions()
-        let adapterPath = try adapterOptions.resolveAdapterPath()
+        let adapterPath = try adapterOptions.resolveAdapterPath(guardrails: generation.guardrails)
         guard let example = AFMSchemaCatalog.example(id: "typed-person"),
               let preset = example.presets.first else {
             throw AFMRuntimeError.invalidRequest("Missing typed-person schema preset")
@@ -282,7 +282,7 @@ struct BasicObjectSchemaCommand: AsyncParsableCommand {
             schemaBuilder: makeBasicObjectSchema,
             options: options,
             generation: generation,
-            adapterPath: try adapterOptions.resolveAdapterPath(),
+            adapterPath: try adapterOptions.resolveAdapterPath(guardrails: generation.guardrails),
             useCase: useCaseFlags.useCase,
             includeSchemaInPrompt: schemaPromptFlags.includeSchemaInPrompt
         )
@@ -322,7 +322,7 @@ struct ArraySchemaCommand: AsyncParsableCommand {
             },
             options: options,
             generation: generation,
-            adapterPath: try adapterOptions.resolveAdapterPath(),
+            adapterPath: try adapterOptions.resolveAdapterPath(guardrails: generation.guardrails),
             useCase: useCaseFlags.useCase,
             includeSchemaInPrompt: schemaPromptFlags.includeSchemaInPrompt
         )
@@ -362,7 +362,7 @@ struct EnumSchemaCommand: AsyncParsableCommand {
             },
             options: options,
             generation: generation,
-            adapterPath: try adapterOptions.resolveAdapterPath(),
+            adapterPath: try adapterOptions.resolveAdapterPath(guardrails: generation.guardrails),
             useCase: useCaseFlags.useCase,
             includeSchemaInPrompt: schemaPromptFlags.includeSchemaInPrompt
         )

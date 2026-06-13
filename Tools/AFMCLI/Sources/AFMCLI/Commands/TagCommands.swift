@@ -38,7 +38,7 @@ struct TagRunCommand: AsyncParsableCommand {
         let resolvedPrompt = try requiredResolvedInput(promptInput.resolve())
         let resolvedOutput = try options.resolvedOutput()
         let generationOptions = try generation.validatedOptions()
-        let adapterPath = try adapterOptions.resolveAdapterPath()
+        let adapterPath = try adapterOptions.resolveAdapterPath(guardrails: generation.guardrails)
 
         if options.dryRun {
             try CLIOutput.emit(
