@@ -143,9 +143,10 @@ For public reports, set `APPBENCH_DEVICE_NAME` to a generic label such as
 `MacBook Pro M5`. AppBench never needs the machine hostname.
 
 The quick suite defaults to one sample per workload so iteration remains practical.
-The full suite runs all 25 samples per workload unless `--samples` limits it. One
-repetition is acceptable for exploratory development but must not be presented as a
-stable device ranking.
+Use `--all-samples` to run its complete per-workload corpus without assuming a fixed
+sample count. The full suite runs all 25 samples per workload unless `--samples`
+limits it. One repetition is acceptable for exploratory development but must not be
+presented as a stable device ranking.
 
 ## OS Comparisons
 

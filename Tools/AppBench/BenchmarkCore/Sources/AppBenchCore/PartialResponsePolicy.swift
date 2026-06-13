@@ -7,6 +7,6 @@ enum AppBenchPartialResponsePolicy {
         after error: LanguageModelSession.GenerationError
     ) -> Bool {
         !response.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            && AppBenchSafetyClassifier.outcome(for: error) != .guardrailViolation
+            && AppBenchSafetyClassifier.outcome(for: error) == nil
     }
 }

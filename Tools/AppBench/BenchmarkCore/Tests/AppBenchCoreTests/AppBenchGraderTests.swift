@@ -187,10 +187,15 @@ struct AppBenchGraderTests {
         let guardrailViolation = LanguageModelSession.GenerationError.guardrailViolation(
             .init(debugDescription: "Safety block")
         )
+        let refusal = LanguageModelSession.GenerationError.refusal(
+            .init(transcriptEntries: []),
+            .init(debugDescription: "Model refused")
+        )
 
         #expect(AppBenchPartialResponsePolicy.shouldPreserve("{}", after: decodingFailure))
         #expect(!AppBenchPartialResponsePolicy.shouldPreserve("   ", after: decodingFailure))
         #expect(!AppBenchPartialResponsePolicy.shouldPreserve("{}", after: guardrailViolation))
+        #expect(!AppBenchPartialResponsePolicy.shouldPreserve("{}", after: refusal))
     }
 
     @Test

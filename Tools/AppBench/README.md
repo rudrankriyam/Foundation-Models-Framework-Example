@@ -94,6 +94,9 @@ swift run appbench list
 # Practical quick suite, five warmups and twenty measured repetitions
 swift run appbench --suite quick --model on-device
 
+# Every sample in the Practical Quick suite
+swift run appbench --suite quick --all-samples --model on-device
+
 # Full 250-sample practical corpus with export
 swift run appbench --suite full --warmups 5 --repetitions 20 \
   --json Tools/AppBench/Results/macbook-m5-macos-27.json \

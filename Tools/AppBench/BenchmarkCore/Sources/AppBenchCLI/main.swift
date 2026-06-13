@@ -25,6 +25,7 @@ struct AppBenchCLI {
                 warmupCount: options.warmups,
                 repetitions: options.repetitions,
                 sampleLimit: options.sampleLimit,
+                useAllSamples: options.useAllSamples,
                 sessionMode: options.sessionMode,
                 reasoningLevel: options.reasoningLevel,
                 fallbackMode: options.fallbackMode,
@@ -69,7 +70,9 @@ struct AppBenchCLI {
         print("Model: \(options.model.displayName)")
         print("Warmups: \(options.warmups)")
         print("Repetitions: \(options.repetitions)")
-        print("Samples: \(options.sampleLimit.map(String.init) ?? "suite default")")
+        let samples =
+            options.useAllSamples ? "all" : options.sampleLimit.map(String.init) ?? "suite default"
+        print("Samples: \(samples)")
         print("Session: \(options.sessionMode.displayName)")
         print("Reasoning: \(options.reasoningLevel.displayName)")
         print("Fallback: \(options.fallbackMode.displayName)")
@@ -120,6 +123,7 @@ struct AppBenchCLI {
               --warmups <count>
               --repetitions <count>
               --samples <count>
+              --all-samples
               --session cold|warm
               --reasoning none|light|moderate|deep
               --fallback disabled|on-device
@@ -136,6 +140,7 @@ private struct CLIOptions {
     enum Error: Swift.Error, LocalizedError {
         case missingValue(String)
         case invalidValue(flag: String, value: String)
+        case conflictingArguments(String, String)
         case unknownArgument(String)
         case unknownScenario(String)
 
@@ -145,6 +150,8 @@ private struct CLIOptions {
                 "Missing value for \(flag)."
             case .invalidValue(let flag, let value):
                 "Invalid value “\(value)” for \(flag)."
+            case .conflictingArguments(let first, let second):
+                "\(first) and \(second) cannot be used together."
             case .unknownArgument(let value):
                 "Unknown argument “\(value)”."
             case .unknownScenario(let value):
@@ -159,6 +166,7 @@ private struct CLIOptions {
     var warmups = 5
     var repetitions = 20
     var sampleLimit: Int?
+    var useAllSamples = false
     var sessionMode: AppBenchSessionMode = .cold
     var reasoningLevel: AppBenchReasoningLevel = .none
     var fallbackMode: AppBenchFallbackMode = .disabled
@@ -213,6 +221,8 @@ private struct CLIOptions {
                     throw Error.invalidValue(flag: argument, value: value)
                 }
                 sampleLimit = count
+            case "--all-samples":
+                useAllSamples = true
             case "--session":
                 let value = try Self.value(after: argument, at: &index, in: arguments)
                 guard let mode = AppBenchSessionMode(rawValue: value) else {
@@ -257,6 +267,10 @@ private struct CLIOptions {
                 throw Error.unknownArgument(argument)
             }
             index += 1
+        }
+
+        if sampleLimit != nil, useAllSamples {
+            throw Error.conflictingArguments("--samples", "--all-samples")
         }
     }
 

@@ -119,6 +119,7 @@ Run the canonical Mac benchmark from the repository root:
 ```bash
 swift run appbench list
 swift run appbench --suite quick --model on-device
+swift run appbench --suite quick --all-samples --model on-device
 swift run appbench --suite full --warmups 5 --repetitions 20 \
   --json Tools/AppBench/Results/run.json \
   --markdown Tools/AppBench/Results/run.md
