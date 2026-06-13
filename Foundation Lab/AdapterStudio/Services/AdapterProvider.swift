@@ -9,6 +9,10 @@ final class AdapterProvider {
     static let adapterExtension = "fmadapter"
 
     private static let maximumFileSize: UInt64 = 1024 * 1024 * 1024
+    private static let sizeResourceKeys: Set<URLResourceKey> = [
+        .isDirectoryKey,
+        .fileSizeKey
+    ]
 
     private let fileManager: FileManager
     private let adaptersDirectory: URL
@@ -36,7 +40,8 @@ final class AdapterProvider {
     }
 
     func loadExistingAdapter(at url: URL) throws -> AdapterContext {
-        try loadAdapter(from: url)
+        try validateAdapter(at: url)
+        return try loadAdapter(from: url)
     }
 
     func availableAdapterURLs() -> [URL] {
@@ -136,7 +141,7 @@ private extension AdapterProvider {
             throw AdapterProviderError.invalidFileExtension(url)
         }
 
-        let fileSize = calculateSize(of: url)
+        let fileSize = try calculateSize(of: url)
         guard fileSize <= Self.maximumFileSize else {
             throw AdapterProviderError.fileTooLarge(fileSize)
         }
@@ -150,6 +155,8 @@ private extension AdapterProvider {
             return AdapterContext(adapter: adapter, metadata: metadata)
         } catch let assetError as SystemLanguageModel.Adapter.AssetError {
             throw AdapterProviderError.loadFailed(assetError.localizedDescription)
+        } catch let providerError as AdapterProviderError {
+            throw providerError
         } catch {
             throw AdapterProviderError.loadFailed(error.localizedDescription)
         }
@@ -198,40 +205,87 @@ private extension AdapterProvider {
         return AdapterMetadata(
             location: url,
             fileName: url.lastPathComponent,
-            fileSize: calculateSize(of: url),
+            fileSize: try calculateSize(of: url),
             createdAt: resourceValues.creationDate,
             modifiedAt: resourceValues.contentModificationDate,
             creatorDefinedMetadata: creatorMetadata
         )
     }
 
-    func calculateSize(of url: URL) -> UInt64 {
-        if let values = try? url.resourceValues(
-            forKeys: [.isRegularFileKey, .fileSizeKey]
-        ),
-           values.isRegularFile == true,
-           let fileSize = values.fileSize {
-            return UInt64(fileSize)
+    func calculateSize(of url: URL) throws -> UInt64 {
+        let values = try sizeResourceValues(for: url)
+        guard values.isDirectory == true else {
+            return try requiredFileSize(from: values, at: url)
         }
 
+        return try directorySize(of: url)
+    }
+
+    func directorySize(of url: URL) throws -> UInt64 {
+        var enumerationError: Error?
         guard let enumerator = fileManager.enumerator(
             at: url,
-            includingPropertiesForKeys: [.isRegularFileKey, .fileSizeKey]
+            includingPropertiesForKeys: Array(Self.sizeResourceKeys),
+            errorHandler: { _, error in
+                enumerationError = error
+                return false
+            }
         ) else {
-            return 0
+            throw AdapterProviderError.sizeCalculationFailed(
+                url,
+                "The package could not be enumerated."
+            )
         }
 
-        return enumerator.reduce(into: UInt64(0)) { total, element in
-            guard let fileURL = element as? URL,
-                  let values = try? fileURL.resourceValues(
-                    forKeys: [.isRegularFileKey, .fileSizeKey]
-                  ),
-                  values.isRegularFile == true,
-                  let fileSize = values.fileSize else {
-                return
+        var total: UInt64 = 0
+        for case let fileURL as URL in enumerator {
+            let values = try sizeResourceValues(for: fileURL)
+            guard values.isDirectory != true else { continue }
+
+            let fileSize = try requiredFileSize(from: values, at: fileURL)
+            let (newTotal, overflowed) = total.addingReportingOverflow(fileSize)
+            guard !overflowed else {
+                throw AdapterProviderError.sizeCalculationFailed(
+                    url,
+                    "The package size exceeds the supported range."
+                )
             }
-            total += UInt64(fileSize)
+            total = newTotal
         }
+
+        if let enumerationError {
+            throw AdapterProviderError.sizeCalculationFailed(
+                url,
+                enumerationError.localizedDescription
+            )
+        }
+
+        return total
+    }
+
+    func sizeResourceValues(for url: URL) throws -> URLResourceValues {
+        do {
+            return try url.resourceValues(forKeys: Self.sizeResourceKeys)
+        } catch {
+            throw AdapterProviderError.sizeCalculationFailed(
+                url,
+                error.localizedDescription
+            )
+        }
+    }
+
+    func requiredFileSize(
+        from values: URLResourceValues,
+        at url: URL
+    ) throws -> UInt64 {
+        guard let fileSize = values.fileSize, fileSize >= 0 else {
+            throw AdapterProviderError.sizeCalculationFailed(
+                url,
+                "The filesystem did not report a valid size."
+            )
+        }
+
+        return UInt64(fileSize)
     }
 }
 #endif

@@ -8,6 +8,7 @@ enum AdapterProviderError: LocalizedError {
     case copyFailed(String)
     case loadFailed(String)
     case fileTooLarge(UInt64)
+    case sizeCalculationFailed(URL, String)
 
     var errorDescription: String? {
         switch self {
@@ -24,6 +25,8 @@ enum AdapterProviderError: LocalizedError {
         case .fileTooLarge(let size):
             "The adapter is too large "
                 + "(\(ByteCountFormatter.string(fromByteCount: Int64(size), countStyle: .file)))."
+        case .sizeCalculationFailed(let url, let message):
+            "Could not measure \"\(url.lastPathComponent)\": \(message)"
         }
     }
 }
