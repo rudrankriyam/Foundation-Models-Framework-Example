@@ -36,7 +36,7 @@ enum StudioWorkspace: String, CaseIterable, Identifiable {
         case .structuredOutput:
             return "Validate generated values against dynamic schemas."
         case .benchmarkRuns:
-            return "Run repeatable suites with latency and quality signals."
+            return "Compare app-shaped workloads with separate quality and performance metrics."
         case .capabilityMatrix:
             return "Map model behavior across tasks, tools, and languages."
         }
@@ -62,7 +62,7 @@ enum StudioWorkspace: String, CaseIterable, Identifiable {
         case .structuredOutput:
             return "Next"
         case .benchmarkRuns:
-            return "Planned"
+            return "Available"
         case .capabilityMatrix:
             return "Planned"
         }
@@ -88,7 +88,7 @@ enum StudioWorkspace: String, CaseIterable, Identifiable {
         case .structuredOutput:
             return "8"
         case .benchmarkRuns:
-            return "3"
+            return "5"
         case .capabilityMatrix:
             return "6"
         }
@@ -110,9 +110,9 @@ enum StudioWorkspace: String, CaseIterable, Identifiable {
             ]
         case .benchmarkRuns:
             return [
-                "Dataset import",
-                "Repeatable run config",
-                "Latency and token timeline"
+                "Canonical Mac CLI",
+                "Physical-device iPhone and iPad runner",
+                "Deterministic quality and runtime reports"
             ]
         case .capabilityMatrix:
             return [

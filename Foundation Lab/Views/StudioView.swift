@@ -37,11 +37,13 @@ struct StudioView: View {
 #endif
         .toolbar {
 #if os(iOS)
-            ToolbarItem(placement: .primaryAction) {
-                Button(action: runPromptTests) {
-                    Label("Run", systemImage: isRunningPromptTests ? "hourglass" : "play.fill")
+            if selectedWorkspace == .promptTesting {
+                ToolbarItem(placement: .primaryAction) {
+                    Button(action: runPromptTests) {
+                        Label("Run", systemImage: isRunningPromptTests ? "hourglass" : "play.fill")
+                    }
+                    .disabled(isRunningPromptTests || !canRunPromptTests)
                 }
-                .disabled(isRunningPromptTests || !canRunPromptTests)
             }
 #endif
         }
@@ -156,6 +158,18 @@ struct StudioView: View {
                 }
             }
 
+            workspaceSources
+
+            Spacer(minLength: 0)
+        }
+        .padding(Spacing.large)
+        .background(.regularMaterial)
+    }
+
+    @ViewBuilder
+    private var workspaceSources: some View {
+        switch selectedWorkspace {
+        case .promptTesting:
             sourceSection("Prompt Sources") {
                 ForEach(StudioPromptVariant.allCases) { variant in
                     sourceRow(
@@ -168,11 +182,15 @@ struct StudioView: View {
                     }
                 }
             }
-
-            Spacer(minLength: 0)
+        case .benchmarkRuns:
+            sourceSection("Runners") {
+                sourceInfoRow(title: "Mac CLI", subtitle: "Publishable", systemImage: "terminal")
+                sourceInfoRow(title: "Device Runner", subtitle: "iPhone and iPad", systemImage: "iphone")
+                sourceInfoRow(title: "Simulator", subtitle: "Validation only", systemImage: "hammer")
+            }
+        case .structuredOutput, .capabilityMatrix:
+            EmptyView()
         }
-        .padding(Spacing.large)
-        .background(.regularMaterial)
     }
 
     private func sourceSection<Content: View>(
@@ -188,6 +206,27 @@ struct StudioView: View {
                 content()
             }
         }
+    }
+
+    private func sourceInfoRow(title: String, subtitle: String, systemImage: String) -> some View {
+        HStack(spacing: Spacing.small) {
+            Image(systemName: systemImage)
+                .font(.body)
+                .frame(width: 20)
+
+            Text(title)
+                .lineLimit(1)
+
+            Spacer(minLength: 0)
+
+            Text(subtitle)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+        }
+        .font(.callout)
+        .padding(.horizontal, Spacing.medium)
+        .padding(.vertical, Spacing.small)
     }
 
     private func sourceRow(
@@ -226,14 +265,16 @@ struct StudioView: View {
     private var stageBar: some View {
         HStack(spacing: Spacing.large) {
 #if os(macOS)
-            Button(action: runPromptTests) {
-                Image(systemName: isRunningPromptTests ? "hourglass" : "play.fill")
-                    .font(.title3)
-                    .frame(width: 34, height: 34)
+            if selectedWorkspace == .promptTesting {
+                Button(action: runPromptTests) {
+                    Image(systemName: isRunningPromptTests ? "hourglass" : "play.fill")
+                        .font(.title3)
+                        .frame(width: 34, height: 34)
+                }
+                .buttonStyle(.borderless)
+                .disabled(isRunningPromptTests || !canRunPromptTests)
+                .help("Run selected prompt variants")
             }
-            .buttonStyle(.borderless)
-            .disabled(isRunningPromptTests || !canRunPromptTests)
-            .help("Run selected prompt variants")
 #endif
 
             Picker("Stage", selection: $selectedStage) {
@@ -303,33 +344,41 @@ struct StudioView: View {
 
     @ViewBuilder
     private var stageContent: some View {
-        switch selectedStage {
-        case .settings:
-            promptSettingsContent
-        case .runs:
-            runsContent
-        case .evaluation:
-            evaluationContent
-        case .preview:
-            previewContent
-        case .output:
-            outputContent
+        if selectedWorkspace == .benchmarkRuns {
+            AppBenchStudioContent(stage: selectedStage)
+        } else {
+            switch selectedStage {
+            case .settings:
+                promptSettingsContent
+            case .runs:
+                runsContent
+            case .evaluation:
+                evaluationContent
+            case .preview:
+                previewContent
+            case .output:
+                outputContent
+            }
         }
     }
 
     @ViewBuilder
     private var compactStageContent: some View {
-        switch selectedStage {
-        case .settings:
-            compactPromptSettingsContent
-        case .runs:
-            runsContent
-        case .evaluation:
-            evaluationContent
-        case .preview:
-            previewContent
-        case .output:
-            outputContent
+        if selectedWorkspace == .benchmarkRuns {
+            AppBenchStudioContent(stage: selectedStage)
+        } else {
+            switch selectedStage {
+            case .settings:
+                compactPromptSettingsContent
+            case .runs:
+                runsContent
+            case .evaluation:
+                evaluationContent
+            case .preview:
+                previewContent
+            case .output:
+                outputContent
+            }
         }
     }
 
@@ -760,41 +809,46 @@ struct StudioView: View {
         .background(Color.secondaryBackgroundColor.opacity(0.45))
     }
 
+    @ViewBuilder
     private var activityInspectorContent: some View {
-        VStack(alignment: .leading, spacing: Spacing.large) {
-            inspectorMetrics
+        if selectedWorkspace == .benchmarkRuns {
+            AppBenchStudioInspector()
+        } else {
+            VStack(alignment: .leading, spacing: Spacing.large) {
+                inspectorMetrics
 
-            VStack(alignment: .leading, spacing: Spacing.small) {
-                HStack {
-                    Text("Activity")
-                        .font(.headline)
-                    Spacer()
-                    Text(Date.now, style: .date)
-                        .font(.callout.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                }
-
-                ForEach(activityEvents) { event in
-                    VStack(alignment: .leading, spacing: 2) {
-                        HStack(alignment: .firstTextBaseline) {
-                            Text(event.title)
-                                .font(.callout)
-                            Spacer()
-                            Text(event.date, style: .time)
-                                .font(.callout)
-                                .foregroundStyle(.secondary)
-                        }
-
-                        Text(event.detail)
+                VStack(alignment: .leading, spacing: Spacing.small) {
+                    HStack {
+                        Text("Activity")
+                            .font(.headline)
+                        Spacer()
+                        Text(Date.now, style: .date)
                             .font(.callout.weight(.semibold))
+                            .foregroundStyle(.secondary)
                     }
-                    .padding(.vertical, Spacing.small)
 
-                    Divider()
+                    ForEach(activityEvents) { event in
+                        VStack(alignment: .leading, spacing: 2) {
+                            HStack(alignment: .firstTextBaseline) {
+                                Text(event.title)
+                                    .font(.callout)
+                                Spacer()
+                                Text(event.date, style: .time)
+                                    .font(.callout)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Text(event.detail)
+                                .font(.callout.weight(.semibold))
+                        }
+                        .padding(.vertical, Spacing.small)
+
+                        Divider()
+                    }
                 }
             }
+            .padding(Spacing.large)
         }
-        .padding(Spacing.large)
     }
 
     private var inspectorMetrics: some View {
@@ -909,18 +963,23 @@ struct StudioView: View {
     }
 
     private var statusIcon: String {
+        if selectedWorkspace == .benchmarkRuns { return "checkmark.circle.fill" }
         if isRunningPromptTests { return "hourglass" }
         if promptRuns.isEmpty { return "info.circle.fill" }
         return "checkmark.circle.fill"
     }
 
     private var statusColor: Color {
+        if selectedWorkspace == .benchmarkRuns { return .green }
         if isRunningPromptTests { return .orange }
         if promptRuns.isEmpty { return .secondary }
         return .green
     }
 
     private var statusText: String {
+        if selectedWorkspace == .benchmarkRuns {
+            return "AppBench is available through the Mac CLI and physical-device runner"
+        }
         if isRunningPromptTests { return "Running selected prompt variants" }
         if promptRuns.isEmpty { return "Prompt run required" }
         return "\(promptRuns.count) prompt runs completed"
