@@ -6,6 +6,7 @@ public struct StreamingTextGenerationRequest: CapabilityRequest, Sendable {
     public let systemPrompt: String?
     public let modelUseCase: FoundationLabModelUseCase
     public let guardrails: FoundationLabGuardrails?
+    public let adapterURL: URL?
     public let generationOptions: FoundationLabGenerationOptions?
     public let context: CapabilityInvocationContext
 
@@ -14,6 +15,7 @@ public struct StreamingTextGenerationRequest: CapabilityRequest, Sendable {
         systemPrompt: String? = nil,
         modelUseCase: FoundationLabModelUseCase = .general,
         guardrails: FoundationLabGuardrails? = nil,
+        adapterURL: URL? = nil,
         generationOptions: FoundationLabGenerationOptions? = nil,
         context: CapabilityInvocationContext
     ) {
@@ -21,6 +23,7 @@ public struct StreamingTextGenerationRequest: CapabilityRequest, Sendable {
         self.systemPrompt = systemPrompt
         self.modelUseCase = modelUseCase
         self.guardrails = guardrails
+        self.adapterURL = adapterURL
         self.generationOptions = generationOptions
         self.context = context
     }

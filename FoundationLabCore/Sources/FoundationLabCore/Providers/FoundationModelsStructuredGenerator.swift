@@ -14,9 +14,10 @@ public struct FoundationModelsStructuredGenerator: StructuredGenerationProviding
             throw FoundationLabCoreError.invalidRequest("Missing prompt")
         }
 
-        let model = SystemLanguageModel(
-            useCase: request.modelUseCase.foundationModelsValue,
-            guardrails: (request.guardrails ?? FoundationLabGuardrails.default).foundationModelsValue
+        let model = try FoundationModelsModelFactory.makeModel(
+            useCase: request.modelUseCase,
+            guardrails: request.guardrails ?? .default,
+            adapterURL: request.adapterURL
         )
         let session: LanguageModelSession
 
@@ -30,10 +31,21 @@ public struct FoundationModelsStructuredGenerator: StructuredGenerationProviding
             session = LanguageModelSession(model: model)
         }
 
-        let response = try await session.respond(
-            to: Prompt(prompt),
-            generating: type
-        )
+        let response: LanguageModelSession.Response<Output>
+        if let generationOptions = request.generationOptions {
+            response = try await session.respond(
+                to: Prompt(prompt),
+                generating: type,
+                includeSchemaInPrompt: request.includeSchemaInPrompt,
+                options: generationOptions.foundationModelsValue
+            )
+        } else {
+            response = try await session.respond(
+                to: Prompt(prompt),
+                generating: type,
+                includeSchemaInPrompt: request.includeSchemaInPrompt
+            )
+        }
 
         let tokenCount = await session.transcript.tokenCount(using: model)
 
@@ -41,6 +53,7 @@ public struct FoundationModelsStructuredGenerator: StructuredGenerationProviding
             output: response.content,
             metadata: CapabilityExecutionMetadata(
                 provider: "Foundation Models",
+                modelIdentifier: request.adapterURL?.lastPathComponent ?? request.modelUseCase.rawValue,
                 tokenCount: tokenCount
             )
         )

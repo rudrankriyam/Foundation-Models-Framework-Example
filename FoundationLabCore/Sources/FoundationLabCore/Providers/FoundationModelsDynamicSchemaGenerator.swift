@@ -11,9 +11,10 @@ public struct FoundationModelsDynamicSchemaGenerator: DynamicSchemaGenerationPro
             throw FoundationLabCoreError.invalidRequest("Missing prompt")
         }
 
-        let model = SystemLanguageModel(
-            useCase: request.modelUseCase.foundationModelsValue,
-            guardrails: (request.guardrails ?? FoundationLabGuardrails.default).foundationModelsValue
+        let model = try FoundationModelsModelFactory.makeModel(
+            useCase: request.modelUseCase,
+            guardrails: request.guardrails ?? .default,
+            adapterURL: request.adapterURL
         )
         let session: LanguageModelSession
 
@@ -32,12 +33,14 @@ public struct FoundationModelsDynamicSchemaGenerator: DynamicSchemaGenerationPro
             output = try await session.respond(
                 to: Prompt(prompt),
                 schema: request.schema,
+                includeSchemaInPrompt: request.includeSchemaInPrompt,
                 options: generationOptions.foundationModelsValue
             ).content
         } else {
             output = try await session.respond(
                 to: Prompt(prompt),
-                schema: request.schema
+                schema: request.schema,
+                includeSchemaInPrompt: request.includeSchemaInPrompt
             ).content
         }
 
@@ -47,6 +50,7 @@ public struct FoundationModelsDynamicSchemaGenerator: DynamicSchemaGenerationPro
             output: output,
             metadata: CapabilityExecutionMetadata(
                 provider: "Foundation Models",
+                modelIdentifier: request.adapterURL?.lastPathComponent ?? request.modelUseCase.rawValue,
                 tokenCount: tokenCount
             )
         )

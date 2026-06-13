@@ -14,9 +14,10 @@ public struct FoundationModelsConversationRunner: ConversationRunning {
             throw FoundationLabCoreError.invalidRequest("Missing prompts")
         }
 
-        let model = SystemLanguageModel(
-            useCase: request.modelUseCase.foundationModelsValue,
-            guardrails: (request.guardrails ?? FoundationLabGuardrails.default).foundationModelsValue
+        let model = try FoundationModelsModelFactory.makeModel(
+            useCase: request.modelUseCase,
+            guardrails: request.guardrails ?? .default,
+            adapterURL: request.adapterURL
         )
         let session: LanguageModelSession
 
@@ -68,6 +69,7 @@ public struct FoundationModelsConversationRunner: ConversationRunning {
             exchanges: exchanges,
             metadata: CapabilityExecutionMetadata(
                 provider: "Foundation Models",
+                modelIdentifier: request.adapterURL?.lastPathComponent ?? request.modelUseCase.rawValue,
                 tokenCount: tokenCount
             )
         )

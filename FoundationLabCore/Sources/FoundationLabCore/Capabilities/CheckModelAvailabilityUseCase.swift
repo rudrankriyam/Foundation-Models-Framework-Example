@@ -13,7 +13,9 @@ public struct CheckModelAvailabilityUseCase: Sendable {
         self.checker = checker
     }
 
-    public func execute() -> ModelAvailabilityResult {
-        checker.currentAvailability()
+    public func execute(
+        useCase: FoundationLabModelUseCase = .general
+    ) -> ModelAvailabilityResult {
+        checker.currentAvailability(useCase: useCase)
     }
 }

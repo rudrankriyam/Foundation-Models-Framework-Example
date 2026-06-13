@@ -18,17 +18,58 @@ public final class FoundationLabConversationEngine {
     public var reasoningLevel: FoundationLabReasoningLevel {
         configuration.reasoningLevel
     }
+    public var guardrails: FoundationLabGuardrails {
+        configuration.guardrails
+    }
 
     private var configuration: FoundationLabConversationConfiguration
     private var model: SystemLanguageModel
+    private let adapterURL: URL?
     private var activeStreamingTask: Task<String, Error>?
 
-    public init(configuration: FoundationLabConversationConfiguration) {
-        self.configuration = configuration
-        self.model = SystemLanguageModel(
-            useCase: configuration.modelUseCase.foundationModelsValue,
-            guardrails: configuration.guardrails.foundationModelsValue
+    public convenience init(configuration: FoundationLabConversationConfiguration) {
+        self.init(
+            configuration: configuration,
+            model: SystemLanguageModel(
+                useCase: configuration.modelUseCase.foundationModelsValue,
+                guardrails: configuration.guardrails.foundationModelsValue
+            ),
+            adapterURL: nil
         )
+    }
+
+    public convenience init(
+        configuration: FoundationLabConversationConfiguration,
+        adapterURL: URL
+    ) throws {
+        guard configuration.modelRuntime == .onDevice else {
+            throw FoundationLabCoreError.invalidRequest(
+                "Foundation Models adapters only support the on-device runtime."
+            )
+        }
+        guard configuration.reasoningLevel == .none else {
+            throw FoundationLabCoreError.invalidRequest(
+                "Foundation Models adapters do not support Private Cloud Compute reasoning levels."
+            )
+        }
+        self.init(
+            configuration: configuration,
+            model: try FoundationModelsModelFactory.makeModel(
+                guardrails: configuration.guardrails,
+                adapterURL: adapterURL
+            ),
+            adapterURL: adapterURL
+        )
+    }
+
+    init(
+        configuration: FoundationLabConversationConfiguration,
+        model: SystemLanguageModel,
+        adapterURL: URL?
+    ) {
+        self.configuration = configuration
+        self.model = model
+        self.adapterURL = adapterURL
         self.maxContextSize = configuration.defaultMaxContextSize
         self.session = Self.makeSession(
             runtime: configuration.modelRuntime,
@@ -59,20 +100,27 @@ public final class FoundationLabConversationEngine {
         if let baseInstructions {
             configuration.baseInstructions = baseInstructions
         }
-        if let modelRuntime {
+        if let modelRuntime, adapterURL == nil {
             configuration.modelRuntime = modelRuntime
         }
-        if let reasoningLevel {
+        if let reasoningLevel, adapterURL == nil {
             configuration.reasoningLevel = reasoningLevel
         }
-        if let guardrails {
+        if let guardrails, adapterURL == nil {
             configuration.guardrails = guardrails
         }
+        if adapterURL != nil {
+            configuration.modelRuntime = .onDevice
+            configuration.reasoningLevel = .none
+            configuration.guardrails = .default
+        }
 
-        model = SystemLanguageModel(
-            useCase: configuration.modelUseCase.foundationModelsValue,
-            guardrails: configuration.guardrails.foundationModelsValue
-        )
+        if adapterURL == nil {
+            model = SystemLanguageModel(
+                useCase: configuration.modelUseCase.foundationModelsValue,
+                guardrails: configuration.guardrails.foundationModelsValue
+            )
+        }
         resetSession()
     }
 

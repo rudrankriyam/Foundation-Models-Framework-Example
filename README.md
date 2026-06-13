@@ -76,6 +76,37 @@ It also expects these repository variables:
 - Build and run the project
 - Explore the different capabilities through the examples!
 
+## Command-Line Interface
+
+The `afm` CLI now ships from this repository and uses the same `FoundationLabCore` and
+`FoundationModelsKit` implementation as the app. Its command layer stays focused on
+argument parsing, terminal output, file-backed schemas, and dynamic tool manifests
+instead of maintaining a second Foundation Models runtime.
+
+Install the current release with Homebrew:
+
+```bash
+brew tap rudrankriyam/tap
+brew install afm
+```
+
+Or build and run it from this checkout:
+
+```bash
+swift build --product afm
+swift run afm --help
+swift run afm model status
+swift run afm session respond --prompt "Summarize Foundation Models."
+```
+
+The CLI supports streaming, multi-turn sessions, content tagging, typed and dynamic
+schemas, `.fmadapter` packages, tool manifests, transcript export, JSON automation,
+and Feedback Assistant attachments. See [`Tools/AFMCLI/README.md`](Tools/AFMCLI/README.md)
+for the full command reference.
+
+AFM releases use `afm-vx.y.z` tags so CLI binaries and Homebrew updates remain separate
+from Foundation Lab app releases.
+
 ## Swift Packages
 
 The repository also distributes reusable Swift package products for applications that do not need the Foundation Lab UI:
