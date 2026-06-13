@@ -1,8 +1,12 @@
-# Foundation Models Framework CLI
+# AFM CLI
 
 `afm` is a native command-line interface for Foundation Models on Apple platforms.
 
 It is built for day-to-day work with Foundation Models: checking model readiness, trying prompts, streaming responses, extracting structured data, validating tool manifests, and exporting artifacts you can keep or automate around.
+
+The CLI is maintained inside
+[`Foundation-Models-Framework-Lab`](https://github.com/rudrankriyam/Foundation-Models-Framework-Lab)
+and consumes the same `FoundationLabCore` and `FoundationModelsKit` modules as the app.
 
 ## Install
 
@@ -18,9 +22,9 @@ Tagged releases update the tap automatically.
 If you want to build it yourself:
 
 ```bash
-git clone https://github.com/rudrankriyam/Foundation-Models-Framework-CLI.git
-cd Foundation-Models-Framework-CLI
-swift build -c release
+git clone https://github.com/rudrankriyam/Foundation-Models-Framework-Lab.git
+cd Foundation-Models-Framework-Lab
+swift build -c release --product afm
 .build/release/afm --help
 ```
 
@@ -201,7 +205,9 @@ Supported guardrails:
 ## Local Development
 
 ```bash
-swift build
+swift build --product afm
 swift test
 swift run afm --help
 ```
+
+Release tags use the `afm-vx.y.z` format.

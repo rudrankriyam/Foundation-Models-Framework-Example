@@ -1,5 +1,6 @@
 import ArgumentParser
 import Foundation
+import FoundationLabCore
 
 struct TagCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
@@ -46,8 +47,8 @@ struct TagRunCommand: AsyncParsableCommand {
                     adapter: adapterPath,
                     prompt: resolvedPrompt.value,
                     promptFile: resolvedPrompt.file,
-                    useCase: AFMModelUseCase.contentTagging.rawValue,
-                    guardrails: generation.guardrails.rawValue
+                    useCase: FoundationLabModelUseCase.contentTagging.rawValue,
+                    guardrails: generation.guardrails.afmArgumentValue
                 ),
                 human: "[dry-run] afm tag run\nPrompt: \(resolvedPrompt.value)",
                 options: resolvedOutput
@@ -57,12 +58,12 @@ struct TagRunCommand: AsyncParsableCommand {
 
         _ = try requireFoundationModelsAvailability(useCase: .contentTagging)
         let result = try await GenerateTextUseCase().execute(
-            AFMTextGenerationRequest(
+            TextGenerationRequest(
                 prompt: resolvedPrompt.value,
                 systemPrompt: generation.systemPrompt,
                 modelUseCase: .contentTagging,
                 guardrails: generation.guardrails,
-                adapterPath: adapterPath,
+                adapterURL: adapterURL(from: adapterPath),
                 generationOptions: generationOptions,
                 context: afmContext()
             )
@@ -73,8 +74,8 @@ struct TagRunCommand: AsyncParsableCommand {
             command: "tag run",
             adapter: adapterPath,
             prompt: resolvedPrompt.value,
-            useCase: AFMModelUseCase.contentTagging.rawValue,
-            guardrails: generation.guardrails.rawValue,
+            useCase: FoundationLabModelUseCase.contentTagging.rawValue,
+            guardrails: generation.guardrails.afmArgumentValue,
             response: result.content,
             tags: tags,
             tokenCount: result.metadata.tokenCount

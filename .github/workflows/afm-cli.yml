@@ -1,0 +1,71 @@
+name: AFM CLI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'Tools/AFMCLI/**'
+      - 'FoundationLabCore/**'
+      - 'Packages/FoundationModelsKit/**'
+      - 'Package.swift'
+      - 'Package.resolved'
+      - '.github/workflows/afm-cli.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'Tools/AFMCLI/**'
+      - 'FoundationLabCore/**'
+      - 'Packages/FoundationModelsKit/**'
+      - 'Package.swift'
+      - 'Package.resolved'
+      - '.github/workflows/afm-cli.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: afm-cli-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: macos-26
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Show toolchain versions
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Resolve package dependencies
+        run: swift package resolve
+
+      - name: Build CLI
+        run: swift build --product afm
+
+      - name: Run deterministic package tests
+        run: |
+          swift test \
+            --skip 'AFMCLITests\.(feedbackExportCreatesNestedDirectories|streamingJSONEmitsEvents|modelCommandsReturnStructuredJSON)'
+
+      - name: Build universal release binary
+        run: |
+          rm -rf .build-release build
+          swift build \
+            -c release \
+            --arch arm64 \
+            --arch x86_64 \
+            --product afm \
+            --scratch-path .build-release
+          mkdir -p build
+          cp .build-release/apple/Products/Release/afm build/afm_dev_macOS_universal
+          shasum -a 256 build/afm_dev_macOS_universal > build/afm_dev_checksums.txt
+
+      - name: Upload CLI artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: afm-cli
+          path: build/

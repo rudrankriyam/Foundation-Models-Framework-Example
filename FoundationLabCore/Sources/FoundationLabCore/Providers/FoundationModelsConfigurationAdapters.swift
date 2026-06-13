@@ -6,6 +6,8 @@ extension FoundationLabModelUseCase {
         switch self {
         case .general:
             return .general
+        case .contentTagging:
+            return .contentTagging
         }
     }
 }
@@ -22,7 +24,7 @@ extension FoundationLabGuardrails {
 }
 
 extension FoundationLabGenerationOptions.SamplingMode {
-    var foundationModelsValue: GenerationOptions.SamplingMode {
+    public var foundationModelsValue: GenerationOptions.SamplingMode {
         switch self {
         case .greedy:
             return .greedy
@@ -35,7 +37,7 @@ extension FoundationLabGenerationOptions.SamplingMode {
 }
 
 extension FoundationLabGenerationOptions {
-    var foundationModelsValue: GenerationOptions {
+    public var foundationModelsValue: GenerationOptions {
         #if compiler(>=6.4)
         GenerationOptions(
             samplingMode: sampling?.foundationModelsValue,

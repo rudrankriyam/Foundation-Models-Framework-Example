@@ -21,14 +21,39 @@ public final class FoundationLabConversationEngine {
 
     private var configuration: FoundationLabConversationConfiguration
     private var model: SystemLanguageModel
+    private let adapterURL: URL?
     private var activeStreamingTask: Task<String, Error>?
 
-    public init(configuration: FoundationLabConversationConfiguration) {
-        self.configuration = configuration
-        self.model = SystemLanguageModel(
-            useCase: configuration.modelUseCase.foundationModelsValue,
-            guardrails: configuration.guardrails.foundationModelsValue
+    public convenience init(configuration: FoundationLabConversationConfiguration) {
+        self.init(
+            configuration: configuration,
+            model: SystemLanguageModel(
+                useCase: configuration.modelUseCase.foundationModelsValue,
+                guardrails: configuration.guardrails.foundationModelsValue
+            ),
+            adapterURL: nil
         )
+    }
+
+    public convenience init(
+        configuration: FoundationLabConversationConfiguration,
+        adapterURL: URL
+    ) throws {
+        self.init(
+            configuration: configuration,
+            model: try FoundationModelsModelFactory.makeModel(adapterURL: adapterURL),
+            adapterURL: adapterURL
+        )
+    }
+
+    private init(
+        configuration: FoundationLabConversationConfiguration,
+        model: SystemLanguageModel,
+        adapterURL: URL?
+    ) {
+        self.configuration = configuration
+        self.model = model
+        self.adapterURL = adapterURL
         self.maxContextSize = configuration.defaultMaxContextSize
         self.session = Self.makeSession(
             runtime: configuration.modelRuntime,
@@ -69,10 +94,12 @@ public final class FoundationLabConversationEngine {
             configuration.guardrails = guardrails
         }
 
-        model = SystemLanguageModel(
-            useCase: configuration.modelUseCase.foundationModelsValue,
-            guardrails: configuration.guardrails.foundationModelsValue
-        )
+        if adapterURL == nil {
+            model = SystemLanguageModel(
+                useCase: configuration.modelUseCase.foundationModelsValue,
+                guardrails: configuration.guardrails.foundationModelsValue
+            )
+        }
         resetSession()
     }
 

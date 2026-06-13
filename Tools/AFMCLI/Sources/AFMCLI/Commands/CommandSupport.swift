@@ -1,6 +1,8 @@
 import ArgumentParser
 import Foundation
+import FoundationLabCore
 import FoundationModels
+import FoundationModelsKit
 
 struct DryRunPayload: Encodable {
     let status: String = "dry_run"
@@ -136,9 +138,9 @@ struct GenerationFlags: ParsableArguments {
     var maxTokens: Int?
 
     @Option(name: .long, help: "Guardrails mode.")
-    var guardrails: AFMGuardrails = .default
+    var guardrails: FoundationLabGuardrails = .default
 
-    func validatedOptions() throws -> AFMGenerationOptions? {
+    func validatedOptions() throws -> FoundationLabGenerationOptions? {
         if seed != nil && sampling != .topK && sampling != .nucleus {
             throw ValidationError("--seed is only valid with non-greedy sampling")
         }
@@ -160,7 +162,7 @@ struct GenerationFlags: ParsableArguments {
         if sampling != .nucleus, topP != nil {
             throw ValidationError("--top-p is only valid with --sampling nucleus")
         }
-        let resolvedSampling: AFMGenerationOptions.SamplingMode?
+        let resolvedSampling: FoundationLabGenerationOptions.SamplingMode?
         switch sampling {
         case .greedy:
             resolvedSampling = .greedy
@@ -176,7 +178,7 @@ struct GenerationFlags: ParsableArguments {
             return nil
         }
 
-        return AFMGenerationOptions(
+        return FoundationLabGenerationOptions(
             sampling: resolvedSampling,
             temperature: temperature,
             maximumResponseTokens: maxTokens
@@ -186,7 +188,7 @@ struct GenerationFlags: ParsableArguments {
 
 struct ModelUseCaseFlags: ParsableArguments {
     @Option(name: .customLong("use-case"), help: "Specialized system model use case.")
-    var useCase: AFMModelUseCase = .general
+    var useCase: FoundationLabModelUseCase = .general
 }
 
 struct SchemaPromptFlags: ParsableArguments {
@@ -263,17 +265,16 @@ func validatedExportPath(_ path: String, optionName: String = "--file") throws -
     return trimmedPath
 }
 
-func afmContext() -> AFMInvocationContext {
-    AFMInvocationContext(source: .cli, localeIdentifier: Locale.current.identifier)
+func afmContext() -> CapabilityInvocationContext {
+    CapabilityInvocationContext(source: .cli, localeIdentifier: Locale.current.identifier)
 }
 
 func defaultConversationConfiguration(
     systemPrompt: String?,
-    useCase: AFMModelUseCase = .general,
-    guardrails: AFMGuardrails = .default,
-    adapterPath: String? = nil,
+    useCase: FoundationLabModelUseCase = .general,
+    guardrails: FoundationLabGuardrails = .default,
     tools: [any Tool] = []
-) -> AFMConversationConfiguration {
+) -> FoundationLabConversationConfiguration {
     let trimmedSystemPrompt = systemPrompt?.trimmingCharacters(in: .whitespacesAndNewlines)
     let baseInstructions: String
 
@@ -283,7 +284,7 @@ func defaultConversationConfiguration(
         baseInstructions = "You are a helpful, concise AI assistant."
     }
 
-    return AFMConversationConfiguration(
+    return FoundationLabConversationConfiguration(
         baseInstructions: baseInstructions,
         summaryInstructions: "You summarize conversations so the assistant can continue naturally.",
         summaryPromptPreamble: "Summarize this conversation so it can continue naturally:",
@@ -292,14 +293,32 @@ func defaultConversationConfiguration(
         continuationNote: "Continue the conversation naturally while preserving prior context.",
         modelUseCase: useCase,
         guardrails: guardrails,
-        adapterPath: adapterPath,
         tools: tools,
         enableSlidingWindow: true,
         defaultMaxContextSize: 4_096
     )
 }
 
-func requireFoundationModelsAvailability(useCase: AFMModelUseCase = .general) throws -> AFMAvailabilityResult {
+@MainActor
+func makeConversationEngine(
+    configuration: FoundationLabConversationConfiguration,
+    adapterPath: String?
+) throws -> FoundationLabConversationEngine {
+    if let adapterURL = adapterURL(from: adapterPath) {
+        return try FoundationLabConversationEngine(
+            configuration: configuration,
+            adapterURL: adapterURL
+        )
+    }
+
+    return FoundationLabConversationEngine(configuration: configuration)
+}
+
+func adapterURL(from path: String?) -> URL? {
+    path.map { URL(fileURLWithPath: $0) }
+}
+
+func requireFoundationModelsAvailability(useCase: FoundationLabModelUseCase = .general) throws -> ModelAvailabilityResult {
     let availability = CheckModelAvailabilityUseCase().execute(useCase: useCase)
     guard availability.isAvailable else {
         throw AFMRuntimeError.unavailableCapability(availabilityReasonDescription(availability))
@@ -307,7 +326,7 @@ func requireFoundationModelsAvailability(useCase: AFMModelUseCase = .general) th
     return availability
 }
 
-func availabilityReasonDescription(_ availability: AFMAvailabilityResult) -> String {
+func availabilityReasonDescription(_ availability: ModelAvailabilityResult) -> String {
     if availability.isAvailable {
         return "Apple Intelligence is available and ready to use."
     }
@@ -324,7 +343,7 @@ func availabilityReasonDescription(_ availability: AFMAvailabilityResult) -> Str
     }
 }
 
-func currentSupportedLanguageDisplayName(from languages: [AFMSupportedLanguageDescriptor]) -> String {
+func currentSupportedLanguageDisplayName(from languages: [SupportedLanguageDescriptor]) -> String {
     let currentLocale = Locale.autoupdatingCurrent
     let currentLanguageCode = currentLocale.language.languageCode?.identifier
     let currentRegionCode = currentLocale.region?.identifier
@@ -417,13 +436,13 @@ func transcriptPayload(_ transcript: Transcript) -> [CLITranscriptEntry] {
     transcript.compactMap { entry in
         switch entry {
         case .prompt(let prompt):
-            guard let content = prompt.segments.afmJoinedText() else { return nil }
+            guard let content = prompt.segments.joinedTextContent() else { return nil }
             return .init(role: "user", content: content)
         case .response(let response):
-            guard let content = response.segments.afmJoinedText() else { return nil }
+            guard let content = response.segments.joinedTextContent() else { return nil }
             return .init(role: "assistant", content: content)
         case .toolOutput(let toolOutput):
-            guard let content = toolOutput.segments.afmJoinedText() else { return nil }
+            guard let content = toolOutput.segments.joinedTextContent() else { return nil }
             return .init(role: "tool", content: content)
         default:
             return nil

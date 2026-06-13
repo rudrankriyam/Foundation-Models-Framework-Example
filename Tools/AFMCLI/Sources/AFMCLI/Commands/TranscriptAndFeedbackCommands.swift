@@ -1,5 +1,6 @@
 import ArgumentParser
 import Foundation
+import FoundationLabCore
 import FoundationModels
 
 struct TranscriptCommand: AsyncParsableCommand {
@@ -60,7 +61,7 @@ struct TranscriptExportCommand: AsyncParsableCommand {
                     messageFiles: resolvedMessages.compactMap { $0.file },
                     file: exportPath,
                     useCase: useCaseFlags.useCase.rawValue,
-                    guardrails: generation.guardrails.rawValue,
+                    guardrails: generation.guardrails.afmArgumentValue,
                     toolFiles: toolResolution.references.map { $0.filePath },
                     toolDirectory: toolSource.tool.isEmpty ? nil : expandedPathString(toolSource.toolDir)
                 ),
@@ -72,14 +73,14 @@ struct TranscriptExportCommand: AsyncParsableCommand {
 
         _ = try requireFoundationModelsAvailability(useCase: useCaseFlags.useCase)
         let engine = try await MainActor.run {
-            try AFMConversationEngine(
+            try makeConversationEngine(
                 configuration: defaultConversationConfiguration(
                     systemPrompt: generation.systemPrompt,
                     useCase: useCaseFlags.useCase,
                     guardrails: generation.guardrails,
-                    adapterPath: adapterPath,
                     tools: toolResolution.tools
-                )
+                ),
+                adapterPath: adapterPath
             )
         }
 
@@ -94,7 +95,7 @@ struct TranscriptExportCommand: AsyncParsableCommand {
             command: "transcript export",
             adapter: adapterPath,
             useCase: useCaseFlags.useCase.rawValue,
-            guardrails: generation.guardrails.rawValue,
+            guardrails: generation.guardrails.afmArgumentValue,
             messages: messages,
             entries: entries.map { entry in
                 ExportedTranscriptPayload.Entry(role: entry.role, content: entry.content)
@@ -182,7 +183,7 @@ struct FeedbackExportCommand: AsyncParsableCommand {
                     promptFile: resolvedPrompt.file,
                     file: exportPath,
                     useCase: useCaseFlags.useCase.rawValue,
-                    guardrails: generation.guardrails.rawValue,
+                    guardrails: generation.guardrails.afmArgumentValue,
                     feedbackIssues: issueFlags.issue.map(\.rawValue)
                 ),
                 human: "[dry-run] afm feedback export\nFile: \(exportPath)",
@@ -192,10 +193,10 @@ struct FeedbackExportCommand: AsyncParsableCommand {
         }
 
         _ = try requireFoundationModelsAvailability(useCase: useCaseFlags.useCase)
-        let model = try makeModel(
-            useCase: useCaseFlags.useCase.foundationModelsValue,
-            guardrails: generation.guardrails.foundationModelsValue,
-            adapterPath: adapterPath
+        let model = try FoundationModelsModelFactory.makeModel(
+            useCase: useCaseFlags.useCase,
+            guardrails: generation.guardrails,
+            adapterURL: adapterURL(from: adapterPath)
         )
         let session = makeFeedbackSession(model: model, systemPrompt: generation.systemPrompt)
         if let generationOptions {
@@ -224,7 +225,7 @@ struct FeedbackExportCommand: AsyncParsableCommand {
             command: "feedback export",
             adapter: adapterPath,
             useCase: useCaseFlags.useCase.rawValue,
-            guardrails: generation.guardrails.rawValue,
+            guardrails: generation.guardrails.afmArgumentValue,
             prompt: resolvedPrompt.value,
             sentiment: sentiment?.rawValue,
             issues: issueFlags.issue.map(\.rawValue),

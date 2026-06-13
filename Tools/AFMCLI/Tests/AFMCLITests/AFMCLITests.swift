@@ -715,10 +715,17 @@ private func findAFMBinary() throws -> URL {
 }
 
 private func packageRoot() -> URL {
-    URL(fileURLWithPath: #filePath)
-        .deletingLastPathComponent()
-        .deletingLastPathComponent()
-        .deletingLastPathComponent()
+    var directory = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+
+    while directory.path != "/" {
+        let manifest = directory.appending(path: "Package.swift")
+        if FileManager.default.fileExists(atPath: manifest.path()) {
+            return directory
+        }
+        directory.deleteLastPathComponent()
+    }
+
+    preconditionFailure("Could not find the package root above \(#filePath)")
 }
 
 private struct TestFailure: Error, CustomStringConvertible {

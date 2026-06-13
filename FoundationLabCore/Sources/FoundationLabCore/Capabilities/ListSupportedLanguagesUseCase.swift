@@ -13,7 +13,10 @@ public struct ListSupportedLanguagesUseCase: Sendable {
         self.lister = lister
     }
 
-    public func execute(locale: Locale = .current) -> SupportedLanguagesResult {
-        lister.supportedLanguages(locale: locale)
+    public func execute(
+        useCase: FoundationLabModelUseCase = .general,
+        locale: Locale = .current
+    ) -> SupportedLanguagesResult {
+        lister.supportedLanguages(useCase: useCase, locale: locale)
     }
 }

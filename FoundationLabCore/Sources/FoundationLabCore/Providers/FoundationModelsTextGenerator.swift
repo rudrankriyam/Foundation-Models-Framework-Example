@@ -11,9 +11,10 @@ public struct FoundationModelsTextGenerator: TextGenerationProviding {
             throw FoundationLabCoreError.invalidRequest("Missing prompt")
         }
 
-        let model = SystemLanguageModel(
-            useCase: request.modelUseCase.foundationModelsValue,
-            guardrails: (request.guardrails ?? FoundationLabGuardrails.default).foundationModelsValue
+        let model = try FoundationModelsModelFactory.makeModel(
+            useCase: request.modelUseCase,
+            guardrails: request.guardrails ?? .default,
+            adapterURL: request.adapterURL
         )
         let session: LanguageModelSession
 
@@ -43,6 +44,7 @@ public struct FoundationModelsTextGenerator: TextGenerationProviding {
             content: responseContent,
             metadata: CapabilityExecutionMetadata(
                 provider: "Foundation Models",
+                modelIdentifier: request.adapterURL?.lastPathComponent ?? request.modelUseCase.rawValue,
                 tokenCount: tokenCount
             )
         )

@@ -1,5 +1,6 @@
 import ArgumentParser
 import Foundation
+import FoundationLabCore
 import FoundationModels
 
 struct SchemaCommand: AsyncParsableCommand {
@@ -122,7 +123,7 @@ struct SchemaCustomCommand: AsyncParsableCommand {
                     schemaFile: schemaReference.filePath,
                     schemaDirectory: schemaReference.directory,
                     useCase: useCaseFlags.useCase.rawValue,
-                    guardrails: generation.guardrails.rawValue,
+                    guardrails: generation.guardrails.afmArgumentValue,
                     includeSchemaInPrompt: schemaPromptFlags.includeSchemaInPrompt
                 ),
                 human: "[dry-run] afm schema run custom\nSchema: \(schemaReference.filePath)\nInput: \(resolvedInput.value)",
@@ -133,13 +134,13 @@ struct SchemaCustomCommand: AsyncParsableCommand {
 
         _ = try requireFoundationModelsAvailability(useCase: useCaseFlags.useCase)
         let result = try await GenerateDynamicSchemaContentUseCase().execute(
-            AFMDynamicSchemaGenerationRequest(
+            DynamicSchemaGenerationRequest(
                 prompt: resolvedInput.value,
                 schema: try schemaDocument.generationSchema(fallbackName: schemaReference.identifier.camelizedSchemaName()),
                 systemPrompt: generation.systemPrompt,
                 modelUseCase: useCaseFlags.useCase,
                 guardrails: generation.guardrails,
-                adapterPath: adapterPath,
+                adapterURL: adapterURL(from: adapterPath),
                 generationOptions: generationOptions,
                 includeSchemaInPrompt: schemaPromptFlags.includeSchemaInPrompt,
                 context: afmContext()
@@ -152,7 +153,7 @@ struct SchemaCustomCommand: AsyncParsableCommand {
             adapter: adapterPath,
             preset: schemaReference.identifier,
             useCase: useCaseFlags.useCase.rawValue,
-            guardrails: generation.guardrails.rawValue,
+            guardrails: generation.guardrails.afmArgumentValue,
             includeSchemaInPrompt: schemaPromptFlags.includeSchemaInPrompt,
             input: resolvedInput.value,
             json: json,
@@ -206,7 +207,7 @@ struct TypedPersonSchemaCommand: AsyncParsableCommand {
                     input: resolvedInput.value,
                     inputFile: resolvedInput.file,
                     useCase: useCaseFlags.useCase.rawValue,
-                    guardrails: generation.guardrails.rawValue,
+                    guardrails: generation.guardrails.afmArgumentValue,
                     includeSchemaInPrompt: schemaPromptFlags.includeSchemaInPrompt
                 ),
                 human: "[dry-run] afm schema run typed-person\nInput: \(resolvedInput.value)",
@@ -217,12 +218,12 @@ struct TypedPersonSchemaCommand: AsyncParsableCommand {
 
         _ = try requireFoundationModelsAvailability(useCase: useCaseFlags.useCase)
         let result = try await GenerateStructuredDataUseCase<AFMGeneratedPerson>().execute(
-            AFMStructuredGenerationRequest(
+            StructuredGenerationRequest(
                 prompt: resolvedInput.value,
                 systemPrompt: generation.systemPrompt,
                 modelUseCase: useCaseFlags.useCase,
                 guardrails: generation.guardrails,
-                adapterPath: adapterPath,
+                adapterURL: adapterURL(from: adapterPath),
                 generationOptions: generationOptions,
                 includeSchemaInPrompt: schemaPromptFlags.includeSchemaInPrompt,
                 context: afmContext()
@@ -233,7 +234,7 @@ struct TypedPersonSchemaCommand: AsyncParsableCommand {
             adapter: adapterPath,
             preset: preset.id,
             useCase: useCaseFlags.useCase.rawValue,
-            guardrails: generation.guardrails.rawValue,
+            guardrails: generation.guardrails.afmArgumentValue,
             includeSchemaInPrompt: schemaPromptFlags.includeSchemaInPrompt,
             input: resolvedInput.value,
             output: result.output,
@@ -377,7 +378,7 @@ private func runDynamicSchemaCommand(
     options: GlobalCommandOptions,
     generation: GenerationFlags,
     adapterPath: String?,
-    useCase: AFMModelUseCase,
+    useCase: FoundationLabModelUseCase,
     includeSchemaInPrompt: Bool
 ) async throws {
     let resolvedOutput = try options.resolvedOutput()
@@ -399,7 +400,7 @@ private func runDynamicSchemaCommand(
                 input: resolvedInput.value,
                 inputFile: resolvedInput.file,
                 useCase: useCase.rawValue,
-                guardrails: generation.guardrails.rawValue,
+                guardrails: generation.guardrails.afmArgumentValue,
                 includeSchemaInPrompt: includeSchemaInPrompt
             ),
             human: "[dry-run] afm \(command)\nPreset: \(presetID)\nInput: \(resolvedInput.value)",
@@ -410,13 +411,13 @@ private func runDynamicSchemaCommand(
 
     _ = try requireFoundationModelsAvailability(useCase: useCase)
     let result = try await GenerateDynamicSchemaContentUseCase().execute(
-        AFMDynamicSchemaGenerationRequest(
+        DynamicSchemaGenerationRequest(
             prompt: resolvedInput.value,
             schema: try schemaBuilder(presetID),
             systemPrompt: generation.systemPrompt,
             modelUseCase: useCase,
             guardrails: generation.guardrails,
-            adapterPath: adapterPath,
+            adapterURL: adapterURL(from: adapterPath),
             generationOptions: generationOptions,
             includeSchemaInPrompt: includeSchemaInPrompt,
             context: afmContext()
@@ -427,7 +428,7 @@ private func runDynamicSchemaCommand(
         adapter: adapterPath,
         preset: presetID,
         useCase: useCase.rawValue,
-        guardrails: generation.guardrails.rawValue,
+        guardrails: generation.guardrails.afmArgumentValue,
         includeSchemaInPrompt: includeSchemaInPrompt,
         input: resolvedInput.value,
         json: result.output.jsonString,

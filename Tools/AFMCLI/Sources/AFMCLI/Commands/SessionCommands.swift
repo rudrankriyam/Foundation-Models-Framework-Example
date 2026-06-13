@@ -1,5 +1,6 @@
 import ArgumentParser
 import Foundation
+import FoundationLabCore
 import FoundationModels
 
 struct SessionCommand: AsyncParsableCommand {
@@ -74,7 +75,7 @@ struct SessionRespondCommand: AsyncParsableCommand {
                     prompt: resolvedPrompt.value,
                     promptFile: resolvedPrompt.file,
                     useCase: useCaseFlags.useCase.rawValue,
-                    guardrails: generation.guardrails.rawValue,
+                    guardrails: generation.guardrails.afmArgumentValue,
                     toolFiles: toolResolution.references.map { $0.filePath },
                     toolDirectory: toolSource.tool.isEmpty ? nil : expandedPathString(toolSource.toolDir)
                 ),
@@ -86,14 +87,14 @@ struct SessionRespondCommand: AsyncParsableCommand {
 
         _ = try requireFoundationModelsAvailability(useCase: useCaseFlags.useCase)
         let engine = try await MainActor.run {
-            try AFMConversationEngine(
+            try makeConversationEngine(
                 configuration: defaultConversationConfiguration(
                     systemPrompt: generation.systemPrompt,
                     useCase: useCaseFlags.useCase,
                     guardrails: generation.guardrails,
-                    adapterPath: adapterPath,
                     tools: toolResolution.tools
-                )
+                ),
+                adapterPath: adapterPath
             )
         }
         let response = try await engine.sendMessage(resolvedPrompt.value, generationOptions: generationOptions)
@@ -107,7 +108,7 @@ struct SessionRespondCommand: AsyncParsableCommand {
             command: "session respond",
             adapter: adapterPath,
             useCase: useCaseFlags.useCase.rawValue,
-            guardrails: generation.guardrails.rawValue,
+            guardrails: generation.guardrails.afmArgumentValue,
             prompt: resolvedPrompt.value,
             messages: nil,
             response: response,
@@ -156,7 +157,7 @@ struct SessionStreamCommand: AsyncParsableCommand {
                     prompt: resolvedPrompt.value,
                     promptFile: resolvedPrompt.file,
                     useCase: useCaseFlags.useCase.rawValue,
-                    guardrails: generation.guardrails.rawValue,
+                    guardrails: generation.guardrails.afmArgumentValue,
                     toolFiles: toolResolution.references.map { $0.filePath },
                     toolDirectory: toolSource.tool.isEmpty ? nil : expandedPathString(toolSource.toolDir)
                 ),
@@ -168,21 +169,21 @@ struct SessionStreamCommand: AsyncParsableCommand {
 
         _ = try requireFoundationModelsAvailability(useCase: useCaseFlags.useCase)
         let engine = try await MainActor.run {
-            try AFMConversationEngine(
+            try makeConversationEngine(
                 configuration: defaultConversationConfiguration(
                     systemPrompt: generation.systemPrompt,
                     useCase: useCaseFlags.useCase,
                     guardrails: generation.guardrails,
-                    adapterPath: adapterPath,
                     tools: toolResolution.tools
-                )
+                ),
+                adapterPath: adapterPath
             )
         }
 
         let streamToConsole = resolvedOutput.format == .text
         let streamToJSON = resolvedOutput.format == .json
         let selectedUseCase = useCaseFlags.useCase.rawValue
-        let selectedGuardrails = generation.guardrails.rawValue
+        let selectedGuardrails = generation.guardrails.afmArgumentValue
         if streamToJSON && options.pretty {
             throw ValidationError("--pretty is not supported with streaming JSON output")
         }
@@ -337,7 +338,7 @@ struct SessionChatCommand: AsyncParsableCommand {
                     messages: validatedMessages,
                     messageFiles: resolvedMessages.compactMap { $0.file },
                     useCase: useCaseFlags.useCase.rawValue,
-                    guardrails: generation.guardrails.rawValue,
+                    guardrails: generation.guardrails.afmArgumentValue,
                     toolFiles: toolResolution.references.map { $0.filePath },
                     toolDirectory: toolSource.tool.isEmpty ? nil : expandedPathString(toolSource.toolDir)
                 ),
@@ -349,21 +350,21 @@ struct SessionChatCommand: AsyncParsableCommand {
 
         _ = try requireFoundationModelsAvailability(useCase: useCaseFlags.useCase)
         let engine = try await MainActor.run {
-            try AFMConversationEngine(
+            try makeConversationEngine(
                 configuration: defaultConversationConfiguration(
                     systemPrompt: generation.systemPrompt,
                     useCase: useCaseFlags.useCase,
                     guardrails: generation.guardrails,
-                    adapterPath: adapterPath,
                     tools: toolResolution.tools
-                )
+                ),
+                adapterPath: adapterPath
             )
         }
         var exchanges: [AFMConversationExchange] = []
         let streamToConsole = streaming.stream && resolvedOutput.format == .text
         let streamToJSON = streaming.stream && resolvedOutput.format == .json
         let selectedUseCase = useCaseFlags.useCase.rawValue
-        let selectedGuardrails = generation.guardrails.rawValue
+        let selectedGuardrails = generation.guardrails.afmArgumentValue
         if streamToJSON && options.pretty {
             throw ValidationError("--pretty is not supported with streaming JSON output")
         }

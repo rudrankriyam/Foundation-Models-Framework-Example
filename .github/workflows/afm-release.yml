@@ -1,9 +1,9 @@
-name: Release CLI
+name: Release AFM CLI
 
 on:
   push:
     tags:
-      - '[0-9]*.[0-9]*.[0-9]*'
+      - 'afm-v[0-9]*.[0-9]*.[0-9]*'
 
 jobs:
   release:
@@ -11,31 +11,22 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout code
+      - name: Check out repository
         uses: actions/checkout@v6
 
       - name: Validate release tag
         run: |
           TAG="${GITHUB_REF_NAME}"
-
-          if [[ ! "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::Release tags must match x.y.z. Got: ${TAG}"
+          if [[ ! "$TAG" =~ ^afm-v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::AFM release tags must match afm-vx.y.z. Got: ${TAG}"
             exit 1
           fi
 
-          printf 'VERSION=%s\n' "$TAG" >> "$GITHUB_ENV"
+          printf 'VERSION=%s\n' "${TAG#afm-v}" >> "$GITHUB_ENV"
 
-      - name: Show toolchain versions
+      - name: Run release checks
         run: |
-          xcodebuild -version
-          swift --version
-
-      - name: Resolve package dependencies
-        run: swift package resolve
-
-      - name: Run release guardrails
-        run: |
-          swift build
+          swift build --product afm
           swift test \
             --skip 'AFMCLITests\.(feedbackExportCreatesNestedDirectories|streamingJSONEmitsEvents|modelCommandsReturnStructuredJSON)'
 
@@ -43,10 +34,14 @@ jobs:
         run: |
           rm -rf .build-release release
           mkdir -p release
-          swift build -c release --arch arm64 --arch x86_64 --product afm --scratch-path .build-release
+          swift build \
+            -c release \
+            --arch arm64 \
+            --arch x86_64 \
+            --product afm \
+            --scratch-path .build-release
           cp .build-release/apple/Products/Release/afm "release/afm_${VERSION}_macOS_universal"
           chmod +x "release/afm_${VERSION}_macOS_universal"
-          shasum -a 256 "release/afm_${VERSION}_macOS_universal" > "release/afm_${VERSION}_checksums.txt"
 
       - name: Detect signing configuration
         id: signing
@@ -79,32 +74,36 @@ jobs:
           p12-file-base64: ${{ secrets.APPLE_DEVELOPER_ID_CERT }}
           p12-password: ${{ secrets.APPLE_DEVELOPER_ID_PASSWORD }}
 
-      - name: Code sign release binary
+      - name: Sign release binary
         if: ${{ steps.signing.outputs.enabled == 'true' }}
         env:
           APPLE_DEVELOPER_ID: ${{ secrets.APPLE_DEVELOPER_ID }}
         run: |
-          codesign --force --sign "$APPLE_DEVELOPER_ID" --timestamp --options=runtime "release/afm_${VERSION}_macOS_universal"
+          codesign \
+            --force \
+            --sign "$APPLE_DEVELOPER_ID" \
+            --timestamp \
+            --options=runtime \
+            "release/afm_${VERSION}_macOS_universal"
 
-      - name: Show release files
-        run: ls -la release
+      - name: Write checksum
+        run: |
+          shasum -a 256 "release/afm_${VERSION}_macOS_universal" \
+            > "release/afm_${VERSION}_checksums.txt"
 
-      - name: Create or update GitHub Release
+      - name: Create GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if gh release view "${VERSION}" >/dev/null 2>&1; then
-            gh release upload "${VERSION}" release/* --clobber
-          else
-            gh release create "${VERSION}" release/* --generate-notes --verify-tag
-          fi
+          gh release create "$GITHUB_REF_NAME" release/* --generate-notes --verify-tag
 
       - name: Update Homebrew tap
         if: ${{ steps.tap.outputs.enabled == 'true' }}
         env:
           TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
         run: |
-          export SHA256=$(shasum -a 256 "release/afm_${VERSION}_macOS_universal" | cut -d ' ' -f 1)
+          export SHA256
+          SHA256="$(shasum -a 256 "release/afm_${VERSION}_macOS_universal" | cut -d ' ' -f 1)"
 
           git clone "https://x-access-token:${TAP_GITHUB_TOKEN}@github.com/rudrankriyam/homebrew-tap.git" homebrew-tap
           cd homebrew-tap
@@ -123,8 +122,8 @@ jobs:
 
               class Afm < Formula
                 desc "A native CLI for Foundation Models on Apple platforms"
-                homepage "https://github.com/rudrankriyam/Foundation-Models-Framework-CLI"
-                url "https://github.com/rudrankriyam/Foundation-Models-Framework-CLI/releases/download/{version}/afm_{version}_macOS_universal"
+                homepage "https://github.com/rudrankriyam/Foundation-Models-Framework-Lab#command-line-interface"
+                url "https://github.com/rudrankriyam/Foundation-Models-Framework-Lab/releases/download/afm-v{version}/afm_{version}_macOS_universal"
                 version "{version}"
                 sha256 "{sha256}"
                 license "MIT"
@@ -149,7 +148,3 @@ jobs:
           git add Formula/afm.rb
           git commit -m "Update afm to ${VERSION}" || echo "No changes to commit"
           git push
-
-      - name: Note skipped Homebrew tap update
-        if: ${{ steps.tap.outputs.enabled != 'true' }}
-        run: echo "Skipping Homebrew tap update because TAP_GITHUB_TOKEN is not configured."
