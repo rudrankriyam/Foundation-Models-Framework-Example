@@ -279,6 +279,7 @@ public actor AppBenchRunner {
             iteration: item.iteration,
             usedFallback: fallbackReason != nil,
             fallbackReason: fallbackReason,
+            offlineSuccess: isVerifiedOfflineExecution(model: model),
             safetyOutcome: outcome,
             safetyDetail: detailedMessage(for: error),
             response: "",
@@ -502,7 +503,7 @@ public actor AppBenchRunner {
             iteration: item.iteration,
             usedFallback: fallbackReason != nil,
             fallbackReason: fallbackReason,
-            offlineSuccess: offlineConnectivityVerified && model == .onDevice,
+            offlineSuccess: isVerifiedOfflineExecution(model: model),
             toolCalls: toolCalls,
             safetyOutcome: safetyOutcome,
             response: response,
@@ -599,6 +600,13 @@ public actor AppBenchRunner {
             throw Error.offlineConnectivityNotObserved(observation.displayName)
         }
         return true
+    }
+
+    private func isVerifiedOfflineExecution(model: AppBenchModel) -> Bool {
+        AppBenchOfflineResultPolicy.isSuccess(
+            connectivityVerified: offlineConnectivityVerified,
+            model: model
+        )
     }
 
     private func ensureScenarioAvailability(_ scenario: AppBenchScenario) throws {

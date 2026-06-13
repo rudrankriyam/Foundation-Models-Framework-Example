@@ -59,6 +59,12 @@ enum AppBenchConnectivityObserver {
     }
 }
 
+enum AppBenchOfflineResultPolicy {
+    static func isSuccess(connectivityVerified: Bool, model: AppBenchModel) -> Bool {
+        connectivityVerified && model == .onDevice
+    }
+}
+
 private final class AppBenchConnectivityObservationState: @unchecked Sendable {
     private let lock = NSLock()
     private var continuation: CheckedContinuation<AppBenchConnectivityObservation, Never>?

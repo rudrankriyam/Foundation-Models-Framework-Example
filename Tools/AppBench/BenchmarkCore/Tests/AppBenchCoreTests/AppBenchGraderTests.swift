@@ -205,4 +205,26 @@ struct AppBenchGraderTests {
         #expect(!AppBenchConnectivityObservation.connectionRequired.verifiesOfflineExperiment)
         #expect(!AppBenchConnectivityObservation.unknown.verifiesOfflineExperiment)
     }
+
+    @Test
+    func offlineSuccessRequiresVerificationAndOnDeviceExecution() {
+        #expect(
+            AppBenchOfflineResultPolicy.isSuccess(
+                connectivityVerified: true,
+                model: .onDevice
+            )
+        )
+        #expect(
+            !AppBenchOfflineResultPolicy.isSuccess(
+                connectivityVerified: false,
+                model: .onDevice
+            )
+        )
+        #expect(
+            !AppBenchOfflineResultPolicy.isSuccess(
+                connectivityVerified: true,
+                model: .privateCloudCompute
+            )
+        )
+    }
 }
