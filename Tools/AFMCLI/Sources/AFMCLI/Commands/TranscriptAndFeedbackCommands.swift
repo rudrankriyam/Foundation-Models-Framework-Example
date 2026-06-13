@@ -91,6 +91,24 @@ struct TranscriptExportCommand: AsyncParsableCommand {
             _ = try await engine.sendMessage(entry, generationOptions: generationOptions)
         }
 
+        try await exportTranscript(
+            from: engine,
+            messages: messages,
+            adapterPath: adapterPath,
+            exportPath: exportPath,
+            outputOptions: resolvedOutput
+        )
+    }
+}
+
+private extension TranscriptExportCommand {
+    func exportTranscript(
+        from engine: FoundationLabConversationEngine,
+        messages: [String],
+        adapterPath: String?,
+        exportPath: String,
+        outputOptions: CLIOutputOptions
+    ) async throws {
         let entries = await MainActor.run { transcriptPayload(engine.session.transcript) }
         let sessionCount = await MainActor.run { engine.sessionCount }
         let tokenCount = await MainActor.run { engine.currentTokenCount }
@@ -123,7 +141,7 @@ struct TranscriptExportCommand: AsyncParsableCommand {
         } else {
             verboseHuman = human
         }
-        try CLIOutput.emit(payload: payload, human: verboseHuman, options: resolvedOutput)
+        try CLIOutput.emit(payload: payload, human: verboseHuman, options: outputOptions)
     }
 }
 
@@ -211,22 +229,43 @@ struct FeedbackExportCommand: AsyncParsableCommand {
             _ = try await session.respond(to: resolvedPrompt.value)
         }
 
-        let desiredEntry: Transcript.Entry?
-        if let desiredOutput, !desiredOutput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            desiredEntry = Transcript.Entry.response(Transcript.Response(assetIDs: [], segments: [
-                .text(.init(content: desiredOutput))
-            ]))
-        } else {
-            desiredEntry = nil
-        }
-
         let data = session.logFeedbackAttachment(
             sentiment: sentiment?.foundationModelsValue,
             issues: issues,
-            desiredOutput: desiredEntry
+            desiredOutput: desiredFeedbackEntry()
         )
         try writeFileData(data, to: exportPath)
+        try emitFeedbackExport(
+            data: data,
+            resolvedPrompt: resolvedPrompt,
+            adapterPath: adapterPath,
+            exportPath: exportPath,
+            outputOptions: resolvedOutput
+        )
+    }
+}
 
+private extension FeedbackExportCommand {
+    func desiredFeedbackEntry() -> Transcript.Entry? {
+        guard let desiredOutput,
+              !desiredOutput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return nil
+        }
+        return Transcript.Entry.response(
+            Transcript.Response(
+                assetIDs: [],
+                segments: [.text(.init(content: desiredOutput))]
+            )
+        )
+    }
+
+    func emitFeedbackExport(
+        data: Data,
+        resolvedPrompt: ResolvedTextInput,
+        adapterPath: String?,
+        exportPath: String,
+        outputOptions: CLIOutputOptions
+    ) throws {
         let payload = FeedbackExportSummaryPayload(
             command: "feedback export",
             adapter: adapterPath,
@@ -253,7 +292,7 @@ struct FeedbackExportCommand: AsyncParsableCommand {
         } else {
             verboseHuman = human
         }
-        try CLIOutput.emit(payload: payload, human: verboseHuman, options: resolvedOutput)
+        try CLIOutput.emit(payload: payload, human: verboseHuman, options: outputOptions)
     }
 }
 

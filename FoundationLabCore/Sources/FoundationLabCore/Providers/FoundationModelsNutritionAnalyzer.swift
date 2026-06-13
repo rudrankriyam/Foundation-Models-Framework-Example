@@ -109,6 +109,14 @@ private struct NutritionReference {
     let fat: Int
 }
 
+private struct NutritionSummaryValues {
+    let foodName: String
+    let calories: Int
+    let protein: Int
+    let carbs: Int
+    let fat: Int
+}
+
 private let nutritionReferences: [NutritionReference] = [
     .init(name: "egg", aliases: ["scrambled egg", "scrambled eggs", "egg", "eggs"], calories: 72, protein: 6, carbs: 1, fat: 5),
     .init(name: "toast", aliases: ["toast"], calories: 80, protein: 3, carbs: 15, fat: 1),
@@ -159,6 +167,13 @@ private func heuristicNutritionAnalysis(
         quantity > 1 ? "\(quantity)x \(reference.name)" : reference.name
     }
     .joined(separator: ", ")
+    let summaryValues = NutritionSummaryValues(
+        foodName: foodName,
+        calories: calories,
+        protein: protein,
+        carbs: carbs,
+        fat: fat
+    )
 
     return NutritionAnalysis(
         foodName: foodName,
@@ -167,11 +182,7 @@ private func heuristicNutritionAnalysis(
         carbsGrams: carbs,
         fatGrams: fat,
         insights: localizedNutritionSummary(
-            foodName: foodName,
-            calories: calories,
-            protein: protein,
-            carbs: carbs,
-            fat: fat,
+            summaryValues,
             responseLanguage: responseLanguage
         )
     )
@@ -192,32 +203,40 @@ private func inferredQuantity(for alias: String, in description: String) -> Int 
 }
 
 private func localizedNutritionSummary(
-    foodName: String,
-    calories: Int,
-    protein: Int,
-    carbs: Int,
-    fat: Int,
+    _ values: NutritionSummaryValues,
     responseLanguage: String
 ) -> String {
     let language = responseLanguage.lowercased()
 
     if language.contains("french") {
-        return "\(foodName) est estime a environ \(calories) calories, avec \(protein) g de proteines, \(carbs) g de glucides et \(fat) g de lipides. Il s'agit d'un resume factuel base sur des portions courantes."
+        return "\(values.foodName) est estime a environ \(values.calories) calories, " +
+            "avec \(values.protein) g de proteines, \(values.carbs) g de glucides et \(values.fat) g de lipides. " +
+            "Il s'agit d'un resume factuel base sur des portions courantes."
     }
     if language.contains("spanish") {
-        return "\(foodName) se estima en unas \(calories) calorias, con \(protein) g de proteina, \(carbs) g de carbohidratos y \(fat) g de grasa. Es un resumen factual basado en porciones comunes."
+        return "\(values.foodName) se estima en unas \(values.calories) calorias, " +
+            "con \(values.protein) g de proteina, \(values.carbs) g de carbohidratos y \(values.fat) g de grasa. " +
+            "Es un resumen factual basado en porciones comunes."
     }
     if language.contains("german") {
-        return "\(foodName) wird auf etwa \(calories) Kalorien mit \(protein) g Protein, \(carbs) g Kohlenhydraten und \(fat) g Fett geschatzt. Dies ist eine sachliche Schatzung auf Basis ublicher Portionen."
+        return "\(values.foodName) wird auf etwa \(values.calories) Kalorien mit \(values.protein) g Protein, " +
+            "\(values.carbs) g Kohlenhydraten und \(values.fat) g Fett geschatzt. " +
+            "Dies ist eine sachliche Schatzung auf Basis ublicher Portionen."
     }
     if language.contains("italian") {
-        return "\(foodName) e stimato a circa \(calories) calorie, con \(protein) g di proteine, \(carbs) g di carboidrati e \(fat) g di grassi. Si tratta di un riepilogo fattuale basato su porzioni comuni."
+        return "\(values.foodName) e stimato a circa \(values.calories) calorie, " +
+            "con \(values.protein) g di proteine, \(values.carbs) g di carboidrati e \(values.fat) g di grassi. " +
+            "Si tratta di un riepilogo fattuale basato su porzioni comuni."
     }
     if language.contains("portuguese") {
-        return "\(foodName) e estimado em cerca de \(calories) calorias, com \(protein) g de proteina, \(carbs) g de carboidratos e \(fat) g de gordura. Este e um resumo factual baseado em porcoes comuns."
+        return "\(values.foodName) e estimado em cerca de \(values.calories) calorias, " +
+            "com \(values.protein) g de proteina, \(values.carbs) g de carboidratos e \(values.fat) g de gordura. " +
+            "Este e um resumo factual baseado em porcoes comuns."
     }
 
-    return "\(foodName) is estimated at about \(calories) calories, with \(protein)g protein, \(carbs)g carbs, and \(fat)g fat. This is a factual estimate based on common serving sizes."
+    return "\(values.foodName) is estimated at about \(values.calories) calories, " +
+        "with \(values.protein)g protein, \(values.carbs)g carbs, and \(values.fat)g fat. " +
+        "This is a factual estimate based on common serving sizes."
 }
 
 private func nutritionPrompt(

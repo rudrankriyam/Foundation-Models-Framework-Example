@@ -9,6 +9,7 @@ on:
       - 'Packages/FoundationModelsKit/**'
       - 'Package.swift'
       - 'Package.resolved'
+      - '.swiftlint-core-cli.yml'
       - '.github/workflows/afm-cli.yml'
   push:
     branches: [main]
@@ -18,6 +19,7 @@ on:
       - 'Packages/FoundationModelsKit/**'
       - 'Package.swift'
       - 'Package.resolved'
+      - '.swiftlint-core-cli.yml'
       - '.github/workflows/afm-cli.yml'
   workflow_dispatch:
 
@@ -39,6 +41,12 @@ jobs:
         run: |
           xcodebuild -version
           swift --version
+
+      - name: Install SwiftLint
+        run: brew install swiftlint
+
+      - name: Lint Core and CLI
+        run: swiftlint lint --strict --config .swiftlint-core-cli.yml
 
       - name: Resolve package dependencies
         run: swift package resolve

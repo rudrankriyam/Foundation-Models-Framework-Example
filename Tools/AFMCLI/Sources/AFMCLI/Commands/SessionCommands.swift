@@ -30,22 +30,6 @@ struct SessionResponsePayload: Encodable {
     let transcript: [CLITranscriptEntry]?
 }
 
-private struct SessionStreamingEventPayload: Encodable {
-    let event: String
-    let command: String
-    let adapter: String?
-    let useCase: String?
-    let guardrails: String?
-    let messageIndex: Int?
-    let prompt: String?
-    let content: String?
-    let response: String?
-    let exchanges: [AFMConversationExchange]?
-    let sessionCount: Int?
-    let tokenCount: Int?
-    let transcript: [CLITranscriptEntry]?
-}
-
 struct SessionRespondCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "respond",
@@ -85,49 +69,40 @@ struct SessionRespondCommand: AsyncParsableCommand {
             return
         }
 
+        let context = SessionCommandContext(
+            command: "session respond",
+            adapterPath: adapterPath,
+            useCase: useCaseFlags.useCase.rawValue,
+            guardrails: generation.guardrails.afmArgumentValue,
+            output: resolvedOutput,
+            verbose: options.verbose,
+            streamingEnabled: false
+        )
         _ = try requireFoundationModelsAvailability(
             useCase: useCaseFlags.useCase,
             adapterPath: adapterPath
         )
         let engine = try await MainActor.run {
-            try makeConversationEngine(
-                configuration: defaultConversationConfiguration(
+            try makeSessionEngine(
+                SessionEngineRequest(
                     systemPrompt: generation.systemPrompt,
                     useCase: useCaseFlags.useCase,
                     guardrails: generation.guardrails,
-                    tools: toolResolution.tools
-                ),
-                adapterPath: adapterPath
+                    tools: toolResolution.tools,
+                    adapterPath: adapterPath
+                )
             )
         }
         let response = try await engine.sendMessage(resolvedPrompt.value, generationOptions: generationOptions)
-        let transcript = await MainActor.run {
-            transcriptFlags.transcript ? transcriptPayload(engine.session.transcript) : nil
+        let snapshot = await MainActor.run {
+            captureSessionSnapshot(engine: engine, includeTranscript: transcriptFlags.transcript)
         }
-        let sessionCount = await MainActor.run { engine.sessionCount }
-        let tokenCount = await MainActor.run { engine.currentTokenCount }
-
-        let payload = SessionResponsePayload(
-            command: "session respond",
-            adapter: adapterPath,
-            useCase: useCaseFlags.useCase.rawValue,
-            guardrails: generation.guardrails.afmArgumentValue,
+        try emitRespondResult(
+            response: response,
             prompt: resolvedPrompt.value,
-            messages: nil,
-            response: response,
-            exchanges: nil,
-            sessionCount: sessionCount,
-            tokenCount: tokenCount,
-            transcript: transcript
+            snapshot: snapshot,
+            context: context
         )
-        let human = humanReadableSessionResponse(
-            response: response,
-            transcript: transcript,
-            sessionCount: sessionCount,
-            tokenCount: tokenCount,
-            verbose: options.verbose
-        )
-        try CLIOutput.emit(payload: payload, human: human, options: resolvedOutput)
     }
 }
 
@@ -153,163 +128,61 @@ struct SessionStreamCommand: AsyncParsableCommand {
         let toolResolution = try resolveToolManifests(toolSource)
 
         if options.dryRun {
-            try CLIOutput.emit(
-                payload: DryRunPayload(
-                    command: "session stream",
-                    adapter: adapterPath,
-                    prompt: resolvedPrompt.value,
-                    promptFile: resolvedPrompt.file,
-                    useCase: useCaseFlags.useCase.rawValue,
-                    guardrails: generation.guardrails.afmArgumentValue,
-                    toolFiles: toolResolution.references.map { $0.filePath },
-                    toolDirectory: toolSource.tool.isEmpty ? nil : expandedPathString(toolSource.toolDir)
-                ),
-                human: "[dry-run] afm session stream\nPrompt: \(resolvedPrompt.value)",
-                options: resolvedOutput
+            try emitDryRun(
+                prompt: resolvedPrompt,
+                adapterPath: adapterPath,
+                tools: toolResolution,
+                output: resolvedOutput
             )
             return
         }
 
+        let context = SessionCommandContext(
+            command: "session stream",
+            adapterPath: adapterPath,
+            useCase: useCaseFlags.useCase.rawValue,
+            guardrails: generation.guardrails.afmArgumentValue,
+            output: resolvedOutput,
+            verbose: options.verbose,
+            streamingEnabled: true
+        )
+        try context.validateStreamingOutput()
         _ = try requireFoundationModelsAvailability(
             useCase: useCaseFlags.useCase,
             adapterPath: adapterPath
         )
         let engine = try await MainActor.run {
-            try makeConversationEngine(
-                configuration: defaultConversationConfiguration(
+            try makeSessionEngine(
+                SessionEngineRequest(
                     systemPrompt: generation.systemPrompt,
                     useCase: useCaseFlags.useCase,
                     guardrails: generation.guardrails,
-                    tools: toolResolution.tools
-                ),
-                adapterPath: adapterPath
-            )
-        }
-
-        let streamToConsole = resolvedOutput.format == .text
-        let streamToJSON = resolvedOutput.format == .json
-        let selectedUseCase = useCaseFlags.useCase.rawValue
-        let selectedGuardrails = generation.guardrails.afmArgumentValue
-        if streamToJSON && options.pretty {
-            throw ValidationError("--pretty is not supported with streaming JSON output")
-        }
-        var latestPrinted = ""
-        if streamToConsole {
-            print("Assistant: ", terminator: "")
-            fflush(stdout)
-        }
-        if streamToJSON {
-            emitSessionStreamingEvent(
-                .init(
-                    event: "started",
-                    command: "session stream",
-                    adapter: adapterPath,
-                    useCase: selectedUseCase,
-                    guardrails: selectedGuardrails,
-                    messageIndex: nil,
-                    prompt: resolvedPrompt.value,
-                    content: nil,
-                    response: nil,
-                    exchanges: nil,
-                    sessionCount: nil,
-                    tokenCount: nil,
-                    transcript: nil
+                    tools: toolResolution.tools,
+                    adapterPath: adapterPath
                 )
             )
         }
-
-        let response = try await engine.sendStreamingMessage(resolvedPrompt.value, generationOptions: generationOptions) { partial in
-            if streamToConsole {
-                if partial.hasPrefix(latestPrinted) {
-                    let suffix = String(partial.dropFirst(latestPrinted.count))
-                    guard !suffix.isEmpty else { return }
-                    print(suffix, terminator: "")
-                } else {
-                    print(partial, terminator: "")
-                }
-                fflush(stdout)
-                latestPrinted = partial
-                return
-            }
-            if streamToJSON {
-                emitSessionStreamingEvent(
-                    .init(
-                        event: "delta",
-                        command: "session stream",
-                        adapter: adapterPath,
-                        useCase: selectedUseCase,
-                        guardrails: selectedGuardrails,
-                        messageIndex: nil,
-                        prompt: resolvedPrompt.value,
-                        content: partial,
-                        response: nil,
-                        exchanges: nil,
-                        sessionCount: nil,
-                        tokenCount: nil,
-                        transcript: nil
-                    )
-                )
-            }
-        }
-
-        if streamToConsole {
-            print("")
-        }
-
-        let transcript = await MainActor.run {
-            transcriptFlags.transcript ? transcriptPayload(engine.session.transcript) : nil
-        }
-        let sessionCount = await MainActor.run { engine.sessionCount }
-        let tokenCount = await MainActor.run { engine.currentTokenCount }
-        let payload = SessionResponsePayload(
-            command: "session stream",
-            adapter: adapterPath,
-            useCase: selectedUseCase,
-            guardrails: selectedGuardrails,
-            prompt: resolvedPrompt.value,
-            messages: nil,
-            response: response,
-            exchanges: nil,
-            sessionCount: sessionCount,
-            tokenCount: tokenCount,
-            transcript: transcript
+        let response = try await executeSessionMessage(
+            engine: engine,
+            request: SessionMessageRequest(
+                prompt: resolvedPrompt.value,
+                messageIndex: nil,
+                generationOptions: generationOptions,
+                startedEvent: "started",
+                deltaEvent: "delta",
+                completedEvent: nil
+            ),
+            context: context
         )
-        if streamToJSON {
-            emitSessionStreamingEvent(
-                .init(
-                    event: "completed",
-                    command: "session stream",
-                    adapter: adapterPath,
-                    useCase: selectedUseCase,
-                    guardrails: selectedGuardrails,
-                    messageIndex: nil,
-                    prompt: resolvedPrompt.value,
-                    content: nil,
-                    response: response,
-                    exchanges: nil,
-                    sessionCount: sessionCount,
-                    tokenCount: tokenCount,
-                    transcript: transcript
-                )
-            )
-            return
+        let snapshot = await MainActor.run {
+            captureSessionSnapshot(engine: engine, includeTranscript: transcriptFlags.transcript)
         }
-        let human = resolvedOutput.format == .text
-            ? humanReadableSessionResponse(
-                response: "",
-                transcript: transcript,
-                sessionCount: sessionCount,
-                tokenCount: tokenCount,
-                verbose: options.verbose
-            )
-            : humanReadableSessionResponse(
-                response: response,
-                transcript: transcript,
-                sessionCount: sessionCount,
-                tokenCount: tokenCount,
-                verbose: options.verbose
-            )
-        try CLIOutput.emit(payload: payload, human: human, options: resolvedOutput)
+        try emitStreamResult(
+            response: response,
+            prompt: resolvedPrompt.value,
+            snapshot: snapshot,
+            context: context
+        )
     }
 }
 
@@ -337,282 +210,226 @@ struct SessionChatCommand: AsyncParsableCommand {
         let toolResolution = try resolveToolManifests(toolSource)
 
         if options.dryRun {
-            try CLIOutput.emit(
-                payload: DryRunPayload(
-                    command: "session chat",
-                    adapter: adapterPath,
-                    messages: validatedMessages,
-                    messageFiles: resolvedMessages.compactMap { $0.file },
-                    useCase: useCaseFlags.useCase.rawValue,
-                    guardrails: generation.guardrails.afmArgumentValue,
-                    toolFiles: toolResolution.references.map { $0.filePath },
-                    toolDirectory: toolSource.tool.isEmpty ? nil : expandedPathString(toolSource.toolDir)
-                ),
-                human: "[dry-run] afm session chat\nMessages: \(validatedMessages.count)",
-                options: resolvedOutput
+            try emitDryRun(
+                messages: resolvedMessages,
+                adapterPath: adapterPath,
+                tools: toolResolution,
+                output: resolvedOutput
             )
             return
         }
 
+        let context = SessionCommandContext(
+            command: "session chat",
+            adapterPath: adapterPath,
+            useCase: useCaseFlags.useCase.rawValue,
+            guardrails: generation.guardrails.afmArgumentValue,
+            output: resolvedOutput,
+            verbose: options.verbose,
+            streamingEnabled: streaming.stream
+        )
+        try context.validateStreamingOutput()
         _ = try requireFoundationModelsAvailability(
             useCase: useCaseFlags.useCase,
             adapterPath: adapterPath
         )
         let engine = try await MainActor.run {
-            try makeConversationEngine(
-                configuration: defaultConversationConfiguration(
+            try makeSessionEngine(
+                SessionEngineRequest(
                     systemPrompt: generation.systemPrompt,
                     useCase: useCaseFlags.useCase,
                     guardrails: generation.guardrails,
-                    tools: toolResolution.tools
-                ),
-                adapterPath: adapterPath
+                    tools: toolResolution.tools,
+                    adapterPath: adapterPath
+                )
             )
         }
-        var exchanges: [AFMConversationExchange] = []
-        let streamToConsole = streaming.stream && resolvedOutput.format == .text
-        let streamToJSON = streaming.stream && resolvedOutput.format == .json
-        let selectedUseCase = useCaseFlags.useCase.rawValue
-        let selectedGuardrails = generation.guardrails.afmArgumentValue
-        if streamToJSON && options.pretty {
-            throw ValidationError("--pretty is not supported with streaming JSON output")
+        let exchanges = try await executeSessionChat(
+            engine: engine,
+            request: SessionChatRequest(
+                messages: validatedMessages,
+                generationOptions: generationOptions
+            ),
+            context: context
+        )
+        let snapshot = await MainActor.run {
+            captureSessionSnapshot(engine: engine, includeTranscript: transcriptFlags.transcript)
         }
-
-        for (index, entry) in validatedMessages.enumerated() {
-            if streamToConsole {
-                print("User: \(entry)")
-                print("Assistant: ", terminator: "")
-                fflush(stdout)
-            }
-            if streamToJSON {
-                emitSessionStreamingEvent(
-                    .init(
-                        event: "message_started",
-                        command: "session chat",
-                        adapter: adapterPath,
-                        useCase: selectedUseCase,
-                        guardrails: selectedGuardrails,
-                        messageIndex: index,
-                        prompt: entry,
-                        content: nil,
-                        response: nil,
-                        exchanges: nil,
-                        sessionCount: nil,
-                        tokenCount: nil,
-                        transcript: nil
-                    )
-                )
-            }
-
-            var latestPrinted = ""
-            let response: String
-            if streamToConsole || streamToJSON {
-                response = try await engine.sendStreamingMessage(entry, generationOptions: generationOptions) { partial in
-                    if streamToConsole {
-                        if partial.hasPrefix(latestPrinted) {
-                            let suffix = String(partial.dropFirst(latestPrinted.count))
-                            guard !suffix.isEmpty else { return }
-                            print(suffix, terminator: "")
-                        } else {
-                            print(partial, terminator: "")
-                        }
-                        fflush(stdout)
-                        latestPrinted = partial
-                        return
-                    }
-                    if streamToJSON {
-                        emitSessionStreamingEvent(
-                            .init(
-                                event: "message_delta",
-                                command: "session chat",
-                                adapter: adapterPath,
-                                useCase: selectedUseCase,
-                                guardrails: selectedGuardrails,
-                                messageIndex: index,
-                                prompt: entry,
-                                content: partial,
-                                response: nil,
-                                exchanges: nil,
-                                sessionCount: nil,
-                                tokenCount: nil,
-                                transcript: nil
-                            )
-                        )
-                    }
-                }
-                if streamToConsole {
-                    print("")
-                }
-            } else {
-                response = try await engine.sendMessage(entry, generationOptions: generationOptions)
-            }
-
-            exchanges.append(AFMConversationExchange(prompt: entry, response: response, isError: false))
-            if streamToJSON {
-                emitSessionStreamingEvent(
-                    .init(
-                        event: "message_completed",
-                        command: "session chat",
-                        adapter: adapterPath,
-                        useCase: selectedUseCase,
-                        guardrails: selectedGuardrails,
-                        messageIndex: index,
-                        prompt: entry,
-                        content: nil,
-                        response: response,
-                        exchanges: nil,
-                        sessionCount: nil,
-                        tokenCount: nil,
-                        transcript: nil
-                    )
-                )
-            }
-        }
-
-        let transcript = await MainActor.run {
-            transcriptFlags.transcript ? transcriptPayload(engine.session.transcript) : nil
-        }
-        let sessionCount = await MainActor.run { engine.sessionCount }
-        let tokenCount = await MainActor.run { engine.currentTokenCount }
-        let payload = SessionResponsePayload(
-            command: "session chat",
-            adapter: adapterPath,
-            useCase: selectedUseCase,
-            guardrails: selectedGuardrails,
-            prompt: nil,
+        try emitChatResult(
             messages: validatedMessages,
-            response: nil,
             exchanges: exchanges,
-            sessionCount: sessionCount,
-            tokenCount: tokenCount,
-            transcript: transcript
+            snapshot: snapshot,
+            context: context
         )
-        if streamToJSON {
-            emitSessionStreamingEvent(
-                .init(
-                    event: "session_completed",
-                    command: "session chat",
-                    adapter: adapterPath,
-                    useCase: selectedUseCase,
-                    guardrails: selectedGuardrails,
-                    messageIndex: nil,
-                    prompt: nil,
-                    content: nil,
-                    response: nil,
-                    exchanges: exchanges,
-                    sessionCount: sessionCount,
-                    tokenCount: tokenCount,
-                    transcript: transcript
+    }
+}
+
+private extension SessionStreamCommand {
+    func emitDryRun(
+        prompt: ResolvedTextInput,
+        adapterPath: String?,
+        tools: ResolvedToolSet,
+        output: CLIOutputOptions
+    ) throws {
+        try CLIOutput.emit(
+            payload: DryRunPayload(
+                command: "session stream",
+                adapter: adapterPath,
+                prompt: prompt.value,
+                promptFile: prompt.file,
+                useCase: useCaseFlags.useCase.rawValue,
+                guardrails: generation.guardrails.afmArgumentValue,
+                toolFiles: tools.references.map { $0.filePath },
+                toolDirectory: toolSource.tool.isEmpty ? nil : expandedPathString(toolSource.toolDir)
+            ),
+            human: "[dry-run] afm session stream\nPrompt: \(prompt.value)",
+            options: output
+        )
+    }
+}
+
+private extension SessionChatCommand {
+    func emitDryRun(
+        messages: [ResolvedTextInput],
+        adapterPath: String?,
+        tools: ResolvedToolSet,
+        output: CLIOutputOptions
+    ) throws {
+        try CLIOutput.emit(
+            payload: DryRunPayload(
+                command: "session chat",
+                adapter: adapterPath,
+                messages: messages.map(\.value),
+                messageFiles: messages.compactMap(\.file),
+                useCase: useCaseFlags.useCase.rawValue,
+                guardrails: generation.guardrails.afmArgumentValue,
+                toolFiles: tools.references.map { $0.filePath },
+                toolDirectory: toolSource.tool.isEmpty ? nil : expandedPathString(toolSource.toolDir)
+            ),
+            human: "[dry-run] afm session chat\nMessages: \(messages.count)",
+            options: output
+        )
+    }
+}
+
+private func emitRespondResult(
+    response: String,
+    prompt: String,
+    snapshot: SessionSnapshot,
+    context: SessionCommandContext
+) throws {
+    let payload = SessionResponsePayload(
+        command: context.command,
+        adapter: context.adapterPath,
+        useCase: context.useCase,
+        guardrails: context.guardrails,
+        prompt: prompt,
+        messages: nil,
+        response: response,
+        exchanges: nil,
+        sessionCount: snapshot.sessionCount,
+        tokenCount: snapshot.tokenCount,
+        transcript: snapshot.transcript
+    )
+    let human = humanReadableSessionResponse(
+        response: response,
+        transcript: snapshot.transcript,
+        sessionCount: snapshot.sessionCount,
+        tokenCount: snapshot.tokenCount,
+        verbose: context.verbose
+    )
+    try CLIOutput.emit(payload: payload, human: human, options: context.output)
+}
+
+private func emitStreamResult(
+    response: String,
+    prompt: String,
+    snapshot: SessionSnapshot,
+    context: SessionCommandContext
+) throws {
+    let payload = SessionResponsePayload(
+        command: context.command,
+        adapter: context.adapterPath,
+        useCase: context.useCase,
+        guardrails: context.guardrails,
+        prompt: prompt,
+        messages: nil,
+        response: response,
+        exchanges: nil,
+        sessionCount: snapshot.sessionCount,
+        tokenCount: snapshot.tokenCount,
+        transcript: snapshot.transcript
+    )
+    if context.streamsToJSON {
+        emitSessionStreamingEvent(
+            context.event(
+                "completed",
+                content: SessionStreamingEventContent(
+                    prompt: prompt,
+                    response: response,
+                    sessionCount: snapshot.sessionCount,
+                    tokenCount: snapshot.tokenCount,
+                    transcript: snapshot.transcript
                 )
             )
-            return
-        }
-        let human = humanReadableConversation(
-            exchanges: exchanges,
-            transcript: transcript,
-            sessionCount: sessionCount,
-            tokenCount: tokenCount,
-            verbose: options.verbose,
-            streamed: streamToConsole
         )
-        try CLIOutput.emit(payload: payload, human: human, options: resolvedOutput)
-    }
-}
-
-private func humanReadableSessionResponse(
-    response: String,
-    transcript: [CLITranscriptEntry]?,
-    sessionCount: Int,
-    tokenCount: Int,
-    verbose: Bool
-) -> String {
-    var lines: [String] = []
-    if !response.isEmpty {
-        lines.append(response)
-    }
-    if let transcript, !transcript.isEmpty {
-        if !lines.isEmpty { lines.append("") }
-        lines.append("Transcript")
-        lines.append(
-            transcript.map { "\($0.role.capitalized): \($0.content)" }.joined(separator: "\n\n")
-        )
-    }
-    if verbose {
-        if !lines.isEmpty { lines.append("") }
-        lines.append("Sessions: \(sessionCount)")
-        lines.append("Token count: \(tokenCount)")
-    }
-    return lines.joined(separator: "\n")
-}
-
-private func emitSessionStreamingEvent(_ payload: SessionStreamingEventPayload) {
-    let encoder = JSONEncoder()
-    encoder.outputFormatting = [.sortedKeys]
-
-    guard let data = try? encoder.encode(payload),
-          let text = String(data: data, encoding: .utf8) else {
         return
     }
 
-    print(text)
-    fflush(stdout)
-}
-
-private func humanReadableConversation(
-    exchanges: [AFMConversationExchange],
-    transcript: [CLITranscriptEntry]?,
-    sessionCount: Int,
-    tokenCount: Int,
-    verbose: Bool,
-    streamed: Bool
-) -> String {
-    var lines: [String] = []
-    if !streamed {
-        for exchange in exchanges {
-            lines.append("User: \(exchange.prompt)")
-            lines.append("Assistant: \(exchange.response)")
-            lines.append("")
-        }
-        if !lines.isEmpty {
-            _ = lines.popLast()
-        }
-    }
-    if let transcript, !transcript.isEmpty {
-        if !lines.isEmpty { lines.append("") }
-        lines.append("Transcript")
-        lines.append(
-            transcript.map { "\($0.role.capitalized): \($0.content)" }.joined(separator: "\n\n")
-        )
-    }
-    if verbose {
-        if !lines.isEmpty { lines.append("") }
-        lines.append("Sessions: \(sessionCount)")
-        lines.append("Token count: \(tokenCount)")
-    }
-    return lines.joined(separator: "\n")
-}
-
-struct ResolvedToolSet {
-    let references: [ResolvedArtifactReference]
-    let tools: [any Tool]
-}
-
-func resolveToolManifests(_ toolSource: ToolSourceOptions) throws -> ResolvedToolSet {
-    let references = try toolSource.resolveTools()
-    if references.isEmpty {
-        return ResolvedToolSet(references: [], tools: [])
-    }
-
-    let manifests = try AFMArtifactRegistry.loadTools(from: references)
-    return ResolvedToolSet(
-        references: references,
-        tools: manifests.map { $0 as any Tool }
+    let humanResponse = context.streamsToConsole ? "" : response
+    let human = humanReadableSessionResponse(
+        response: humanResponse,
+        transcript: snapshot.transcript,
+        sessionCount: snapshot.sessionCount,
+        tokenCount: snapshot.tokenCount,
+        verbose: context.verbose
     )
+    try CLIOutput.emit(payload: payload, human: human, options: context.output)
 }
 
-func requiredResolvedInput(_ input: ResolvedTextInput?) throws -> ResolvedTextInput {
-    guard let input else {
-        throw ValidationError("Please provide --prompt, --prompt-file, or stdin.")
+private func emitChatResult(
+    messages: [String],
+    exchanges: [AFMConversationExchange],
+    snapshot: SessionSnapshot,
+    context: SessionCommandContext
+) throws {
+    let payload = SessionResponsePayload(
+        command: context.command,
+        adapter: context.adapterPath,
+        useCase: context.useCase,
+        guardrails: context.guardrails,
+        prompt: nil,
+        messages: messages,
+        response: nil,
+        exchanges: exchanges,
+        sessionCount: snapshot.sessionCount,
+        tokenCount: snapshot.tokenCount,
+        transcript: snapshot.transcript
+    )
+    if context.streamsToJSON {
+        emitSessionStreamingEvent(
+            context.event(
+                "session_completed",
+                content: SessionStreamingEventContent(
+                    exchanges: exchanges,
+                    sessionCount: snapshot.sessionCount,
+                    tokenCount: snapshot.tokenCount,
+                    transcript: snapshot.transcript
+                )
+            )
+        )
+        return
     }
-    return input
+
+    let human = humanReadableConversation(
+        ConversationRenderContext(
+            exchanges: exchanges,
+            transcript: snapshot.transcript,
+            sessionCount: snapshot.sessionCount,
+            tokenCount: snapshot.tokenCount,
+            verbose: context.verbose,
+            streamed: context.streamsToConsole
+        )
+    )
+    try CLIOutput.emit(payload: payload, human: human, options: context.output)
 }

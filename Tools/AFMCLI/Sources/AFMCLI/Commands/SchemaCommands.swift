@@ -149,33 +149,13 @@ struct SchemaCustomCommand: AsyncParsableCommand {
                 context: afmContext()
             )
         )
-
-        let json = result.output.jsonString
-        let payload = DynamicSchemaPayload(
-            command: "schema run custom",
-            adapter: adapterPath,
-            preset: schemaReference.identifier,
-            useCase: useCaseFlags.useCase.rawValue,
-            guardrails: generation.guardrails.afmArgumentValue,
-            includeSchemaInPrompt: schemaPromptFlags.includeSchemaInPrompt,
-            input: resolvedInput.value,
-            json: json,
-            tokenCount: result.metadata.tokenCount,
-            schemaFile: schemaReference.filePath
+        try emitResult(
+            result,
+            schemaReference: schemaReference,
+            resolvedInput: resolvedInput,
+            adapterPath: adapterPath,
+            outputOptions: resolvedOutput
         )
-        let human = """
-        Custom Schema
-
-        Schema: \(schemaReference.filePath)
-        \(json)
-        """
-        let verboseHuman: String
-        if options.verbose, let tokenCount = result.metadata.tokenCount {
-            verboseHuman = "\(human)\n\nToken count: \(tokenCount)"
-        } else {
-            verboseHuman = human
-        }
-        try CLIOutput.emit(payload: payload, human: verboseHuman, options: resolvedOutput)
     }
 }
 
@@ -235,6 +215,60 @@ struct TypedPersonSchemaCommand: AsyncParsableCommand {
                 context: afmContext()
             )
         )
+        try emitResult(
+            result,
+            preset: preset,
+            resolvedInput: resolvedInput,
+            adapterPath: adapterPath,
+            outputOptions: resolvedOutput
+        )
+    }
+}
+
+private extension SchemaCustomCommand {
+    func emitResult(
+        _ result: DynamicSchemaGenerationResult,
+        schemaReference: ResolvedArtifactReference,
+        resolvedInput: ResolvedTextInput,
+        adapterPath: String?,
+        outputOptions: CLIOutputOptions
+    ) throws {
+        let json = result.output.jsonString
+        let payload = DynamicSchemaPayload(
+            command: "schema run custom",
+            adapter: adapterPath,
+            preset: schemaReference.identifier,
+            useCase: useCaseFlags.useCase.rawValue,
+            guardrails: generation.guardrails.afmArgumentValue,
+            includeSchemaInPrompt: schemaPromptFlags.includeSchemaInPrompt,
+            input: resolvedInput.value,
+            json: json,
+            tokenCount: result.metadata.tokenCount,
+            schemaFile: schemaReference.filePath
+        )
+        let human = """
+        Custom Schema
+
+        Schema: \(schemaReference.filePath)
+        \(json)
+        """
+        let renderedHuman = verboseHumanOutput(
+            human,
+            tokenCount: result.metadata.tokenCount,
+            verbose: options.verbose
+        )
+        try CLIOutput.emit(payload: payload, human: renderedHuman, options: outputOptions)
+    }
+}
+
+private extension TypedPersonSchemaCommand {
+    func emitResult(
+        _ result: StructuredGenerationResult<AFMGeneratedPerson>,
+        preset: AFMSchemaPreset,
+        resolvedInput: ResolvedTextInput,
+        adapterPath: String?,
+        outputOptions: CLIOutputOptions
+    ) throws {
         let payload = TypedSchemaPayload(
             command: "schema run typed-person",
             adapter: adapterPath,
@@ -253,14 +287,24 @@ struct TypedPersonSchemaCommand: AsyncParsableCommand {
         Age: \(result.output.age)
         Occupation: \(result.output.occupation)
         """
-        let verboseHuman: String
-        if options.verbose, let tokenCount = result.metadata.tokenCount {
-            verboseHuman = "\(human)\n\nToken count: \(tokenCount)"
-        } else {
-            verboseHuman = human
-        }
-        try CLIOutput.emit(payload: payload, human: verboseHuman, options: resolvedOutput)
+        let renderedHuman = verboseHumanOutput(
+            human,
+            tokenCount: result.metadata.tokenCount,
+            verbose: options.verbose
+        )
+        try CLIOutput.emit(payload: payload, human: renderedHuman, options: outputOptions)
     }
+}
+
+private func verboseHumanOutput(
+    _ human: String,
+    tokenCount: Int?,
+    verbose: Bool
+) -> String {
+    guard verbose, let tokenCount else {
+        return human
+    }
+    return "\(human)\n\nToken count: \(tokenCount)"
 }
 
 struct BasicObjectSchemaCommand: AsyncParsableCommand {
@@ -281,16 +325,18 @@ struct BasicObjectSchemaCommand: AsyncParsableCommand {
 
     mutating func run() async throws {
         try await runDynamicSchemaCommand(
-            command: "schema run basic-object",
-            exampleID: "basic-object",
-            presetID: preset,
-            inputSource: inputSource,
-            schemaBuilder: makeBasicObjectSchema,
-            options: options,
-            generation: generation,
-            adapterPath: try adapterOptions.resolveAdapterPath(guardrails: generation.guardrails),
-            useCase: useCaseFlags.useCase,
-            includeSchemaInPrompt: schemaPromptFlags.includeSchemaInPrompt
+            DynamicSchemaCommandRequest(
+                command: "schema run basic-object",
+                exampleID: "basic-object",
+                presetID: preset,
+                inputSource: inputSource,
+                schemaBuilder: makeBasicObjectSchema,
+                options: options,
+                generation: generation,
+                adapterPath: try adapterOptions.resolveAdapterPath(guardrails: generation.guardrails),
+                useCase: useCaseFlags.useCase,
+                includeSchemaInPrompt: schemaPromptFlags.includeSchemaInPrompt
+            )
         )
     }
 }
@@ -318,19 +364,27 @@ struct ArraySchemaCommand: AsyncParsableCommand {
     var maximumItems = 5
 
     mutating func run() async throws {
+        let resolvedMinimumItems = minimumItems
+        let resolvedMaximumItems = maximumItems
         try await runDynamicSchemaCommand(
-            command: "schema run array-schema",
-            exampleID: "array-schema",
-            presetID: preset,
-            inputSource: inputSource,
-            schemaBuilder: { presetID in
-                try makeArraySchema(presetID: presetID, minimumItems: minimumItems, maximumItems: maximumItems)
-            },
-            options: options,
-            generation: generation,
-            adapterPath: try adapterOptions.resolveAdapterPath(guardrails: generation.guardrails),
-            useCase: useCaseFlags.useCase,
-            includeSchemaInPrompt: schemaPromptFlags.includeSchemaInPrompt
+            DynamicSchemaCommandRequest(
+                command: "schema run array-schema",
+                exampleID: "array-schema",
+                presetID: preset,
+                inputSource: inputSource,
+                schemaBuilder: { presetID in
+                    try makeArraySchema(
+                        presetID: presetID,
+                        minimumItems: resolvedMinimumItems,
+                        maximumItems: resolvedMaximumItems
+                    )
+                },
+                options: options,
+                generation: generation,
+                adapterPath: try adapterOptions.resolveAdapterPath(guardrails: generation.guardrails),
+                useCase: useCaseFlags.useCase,
+                includeSchemaInPrompt: schemaPromptFlags.includeSchemaInPrompt
+            )
         )
     }
 }
@@ -355,90 +409,115 @@ struct EnumSchemaCommand: AsyncParsableCommand {
     var choice: [String] = []
 
     mutating func run() async throws {
+        let customChoices = choice
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
         try await runDynamicSchemaCommand(
-            command: "schema run enum-schema",
-            exampleID: "enum-schema",
-            presetID: preset,
-            inputSource: inputSource,
-            schemaBuilder: { presetID in
-                try makeEnumSchema(
-                    presetID: presetID,
-                    customChoices: choice.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
-                )
-            },
-            options: options,
-            generation: generation,
-            adapterPath: try adapterOptions.resolveAdapterPath(guardrails: generation.guardrails),
-            useCase: useCaseFlags.useCase,
-            includeSchemaInPrompt: schemaPromptFlags.includeSchemaInPrompt
+            DynamicSchemaCommandRequest(
+                command: "schema run enum-schema",
+                exampleID: "enum-schema",
+                presetID: preset,
+                inputSource: inputSource,
+                schemaBuilder: { presetID in
+                    try makeEnumSchema(
+                        presetID: presetID,
+                        customChoices: customChoices
+                    )
+                },
+                options: options,
+                generation: generation,
+                adapterPath: try adapterOptions.resolveAdapterPath(guardrails: generation.guardrails),
+                useCase: useCaseFlags.useCase,
+                includeSchemaInPrompt: schemaPromptFlags.includeSchemaInPrompt
+            )
         )
     }
 }
 
-private func runDynamicSchemaCommand(
-    command: String,
-    exampleID: String,
-    presetID: String,
-    inputSource: InputSourceOptions,
-    schemaBuilder: (String) throws -> GenerationSchema,
-    options: GlobalCommandOptions,
-    generation: GenerationFlags,
-    adapterPath: String?,
-    useCase: FoundationLabModelUseCase,
-    includeSchemaInPrompt: Bool
-) async throws {
-    let resolvedOutput = try options.resolvedOutput()
-    let generationOptions = try generation.validatedOptions()
-    guard let example = AFMSchemaCatalog.example(id: exampleID) else {
-        throw AFMRuntimeError.invalidRequest("Unknown schema example: \(exampleID)")
-    }
-    guard let preset = example.presets.first(where: { $0.id == presetID }) else {
-        throw ValidationError("Unknown preset '\(presetID)' for \(exampleID)")
-    }
-    let resolvedInput = try inputSource.resolve(defaultValue: preset.defaultInput)
+private struct DynamicSchemaCommandRequest {
+    let command: String
+    let exampleID: String
+    let presetID: String
+    let inputSource: InputSourceOptions
+    let schemaBuilder: (String) throws -> GenerationSchema
+    let options: GlobalCommandOptions
+    let generation: GenerationFlags
+    let adapterPath: String?
+    let useCase: FoundationLabModelUseCase
+    let includeSchemaInPrompt: Bool
+}
 
-    if options.dryRun {
+private func runDynamicSchemaCommand(
+    _ request: DynamicSchemaCommandRequest
+) async throws {
+    let resolvedOutput = try request.options.resolvedOutput()
+    let generationOptions = try request.generation.validatedOptions()
+    guard let example = AFMSchemaCatalog.example(id: request.exampleID) else {
+        throw AFMRuntimeError.invalidRequest("Unknown schema example: \(request.exampleID)")
+    }
+    guard let preset = example.presets.first(where: { $0.id == request.presetID }) else {
+        throw ValidationError("Unknown preset '\(request.presetID)' for \(request.exampleID)")
+    }
+    let resolvedInput = try request.inputSource.resolve(defaultValue: preset.defaultInput)
+
+    if request.options.dryRun {
         try CLIOutput.emit(
             payload: DryRunPayload(
-                command: command,
-                adapter: adapterPath,
-                preset: presetID,
+                command: request.command,
+                adapter: request.adapterPath,
+                preset: request.presetID,
                 input: resolvedInput.value,
                 inputFile: resolvedInput.file,
-                useCase: useCase.rawValue,
-                guardrails: generation.guardrails.afmArgumentValue,
-                includeSchemaInPrompt: includeSchemaInPrompt
+                useCase: request.useCase.rawValue,
+                guardrails: request.generation.guardrails.afmArgumentValue,
+                includeSchemaInPrompt: request.includeSchemaInPrompt
             ),
-            human: "[dry-run] afm \(command)\nPreset: \(presetID)\nInput: \(resolvedInput.value)",
+            human: "[dry-run] afm \(request.command)\nPreset: \(request.presetID)\nInput: \(resolvedInput.value)",
             options: resolvedOutput
         )
         return
     }
 
     _ = try requireFoundationModelsAvailability(
-        useCase: useCase,
-        adapterPath: adapterPath
+        useCase: request.useCase,
+        adapterPath: request.adapterPath
     )
     let result = try await GenerateDynamicSchemaContentUseCase().execute(
         DynamicSchemaGenerationRequest(
             prompt: resolvedInput.value,
-            schema: try schemaBuilder(presetID),
-            systemPrompt: generation.systemPrompt,
-            modelUseCase: useCase,
-            guardrails: generation.guardrails,
-            adapterURL: adapterURL(from: adapterPath),
+            schema: try request.schemaBuilder(request.presetID),
+            systemPrompt: request.generation.systemPrompt,
+            modelUseCase: request.useCase,
+            guardrails: request.generation.guardrails,
+            adapterURL: adapterURL(from: request.adapterPath),
             generationOptions: generationOptions,
-            includeSchemaInPrompt: includeSchemaInPrompt,
+            includeSchemaInPrompt: request.includeSchemaInPrompt,
             context: afmContext()
         )
     )
+    try emitDynamicSchemaResult(
+        result,
+        request: request,
+        example: example,
+        resolvedInput: resolvedInput,
+        outputOptions: resolvedOutput
+    )
+}
+
+private func emitDynamicSchemaResult(
+    _ result: DynamicSchemaGenerationResult,
+    request: DynamicSchemaCommandRequest,
+    example: AFMSchemaExampleDescriptor,
+    resolvedInput: ResolvedTextInput,
+    outputOptions: CLIOutputOptions
+) throws {
     let payload = DynamicSchemaPayload(
-        command: command,
-        adapter: adapterPath,
-        preset: presetID,
-        useCase: useCase.rawValue,
-        guardrails: generation.guardrails.afmArgumentValue,
-        includeSchemaInPrompt: includeSchemaInPrompt,
+        command: request.command,
+        adapter: request.adapterPath,
+        preset: request.presetID,
+        useCase: request.useCase.rawValue,
+        guardrails: request.generation.guardrails.afmArgumentValue,
+        includeSchemaInPrompt: request.includeSchemaInPrompt,
         input: resolvedInput.value,
         json: result.output.jsonString,
         tokenCount: result.metadata.tokenCount,
@@ -449,82 +528,10 @@ private func runDynamicSchemaCommand(
 
     \(result.output.jsonString)
     """
-    let verboseHuman: String
-    if options.verbose, let tokenCount = result.metadata.tokenCount {
-        verboseHuman = "\(human)\n\nToken count: \(tokenCount)"
-    } else {
-        verboseHuman = human
-    }
-    try CLIOutput.emit(payload: payload, human: verboseHuman, options: resolvedOutput)
-}
-
-private func makeBasicObjectSchema(presetID: String) throws -> GenerationSchema {
-    let root: DynamicGenerationSchema
-    switch presetID {
-    case "person":
-        root = DynamicGenerationSchema(
-            name: "Person",
-            properties: [
-                .init(name: "name", schema: .init(type: String.self)),
-                .init(name: "age", schema: .init(type: Int.self)),
-                .init(name: "occupation", schema: .init(type: String.self))
-            ]
-        )
-    case "product":
-        root = DynamicGenerationSchema(
-            name: "Product",
-            properties: [
-                .init(name: "name", schema: .init(type: String.self)),
-                .init(name: "price", schema: .init(type: Double.self)),
-                .init(name: "feature", schema: .init(type: String.self))
-            ]
-        )
-    default:
-        throw ValidationError("Unknown preset '\(presetID)' for basic-object")
-    }
-    return try GenerationSchema(root: root, dependencies: [])
-}
-
-private func makeArraySchema(presetID: String, minimumItems: Int, maximumItems: Int) throws -> GenerationSchema {
-    guard minimumItems > 0 else {
-        throw ValidationError("--min-items must be greater than 0")
-    }
-    guard maximumItems >= minimumItems else {
-        throw ValidationError("--max-items must be greater than or equal to --min-items")
-    }
-
-    let itemName: String = switch presetID {
-    case "todo": "TodoItem"
-    default: throw ValidationError("Unknown preset '\(presetID)' for array-schema")
-    }
-
-    let itemSchema = DynamicGenerationSchema(
-        name: itemName,
-        properties: [
-            .init(name: "title", schema: .init(type: String.self)),
-            .init(name: "completed", schema: .init(type: Bool.self), isOptional: true)
-        ]
+    let renderedHuman = verboseHumanOutput(
+        human,
+        tokenCount: result.metadata.tokenCount,
+        verbose: request.options.verbose
     )
-    let root = DynamicGenerationSchema(
-        name: "TodoList",
-        properties: [
-            .init(
-                name: "items",
-                schema: .init(arrayOf: .init(referenceTo: itemName), minimumElements: minimumItems, maximumElements: maximumItems)
-            )
-        ]
-    )
-    return try GenerationSchema(root: root, dependencies: [itemSchema])
-}
-
-private func makeEnumSchema(presetID: String, customChoices: [String]) throws -> GenerationSchema {
-    let choices = customChoices.isEmpty ? AFMSchemaCatalog.defaultChoices(for: presetID) : customChoices
-    let root = DynamicGenerationSchema(
-        name: "Classification",
-        properties: [
-            .init(name: "label", schema: .init(name: "Label", anyOf: choices)),
-            .init(name: "reason", schema: .init(type: String.self), isOptional: true)
-        ]
-    )
-    return try GenerationSchema(root: root, dependencies: [])
+    try CLIOutput.emit(payload: payload, human: renderedHuman, options: outputOptions)
 }

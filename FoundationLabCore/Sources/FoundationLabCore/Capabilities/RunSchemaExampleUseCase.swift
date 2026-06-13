@@ -20,18 +20,18 @@ public struct RunSchemaExampleUseCase: CapabilityUseCase {
             throw FoundationLabCoreError.invalidRequest("Missing input")
         }
 
-        let (schema, prompt, formatter) = try makeExecutionPlan(for: request, input: trimmedInput)
+        let plan = try makeExecutionPlan(for: request, input: trimmedInput)
         let response = try await generator.execute(
             DynamicSchemaGenerationRequest(
-                prompt: prompt,
-                schema: schema,
+                prompt: plan.prompt,
+                schema: plan.schema,
                 generationOptions: request.generationOptions,
                 context: request.context
             )
         )
 
         return RunSchemaExampleResult(
-            content: formatter(response.output),
+            content: plan.formatter(response.output),
             metadata: response.metadata
         )
     }
@@ -40,10 +40,27 @@ public struct RunSchemaExampleUseCase: CapabilityUseCase {
 private extension RunSchemaExampleUseCase {
     typealias SchemaFormatter = @Sendable (GeneratedContent) -> String
 
+    struct SchemaExecutionPlan {
+        let schema: GenerationSchema
+        let prompt: String
+        let formatter: SchemaFormatter
+    }
+
+    struct NamedSchema {
+        let schema: GenerationSchema
+        let name: String
+    }
+
+    struct ClassificationData {
+        let classification: String
+        let confidence: Float?
+        let reasoning: String?
+    }
+
     func makeExecutionPlan(
         for request: RunSchemaExampleRequest,
         input: String
-    ) throws -> (GenerationSchema, String, SchemaFormatter) {
+    ) throws -> SchemaExecutionPlan {
         switch request.example {
         case .basicObject:
             return try basicObjectPlan(
@@ -69,75 +86,107 @@ private extension RunSchemaExampleUseCase {
     func basicObjectPlan(
         presetIndex: Int,
         input: String
-    ) throws -> (GenerationSchema, String, SchemaFormatter) {
-        let schema: GenerationSchema
-        let schemaName: String
-
-        switch presetIndex {
-        case 0:
-            let personSchema = DynamicGenerationSchema(
-                name: "Person",
-                description: "Information about a person",
-                properties: [
-                    .init(name: "name", description: "The person's full name", schema: .init(type: String.self)),
-                    .init(name: "age", description: "The person's age in years", schema: .init(type: Int.self)),
-                    .init(name: "occupation", description: "The person's job or profession", schema: .init(type: String.self)),
-                    .init(name: "hobbies", description: "List of hobbies or interests", schema: .init(arrayOf: .init(type: String.self)))
-                ]
-            )
-            schema = try GenerationSchema(root: personSchema, dependencies: [])
-            schemaName = "Person"
-        case 1:
-            let specsSchema = DynamicGenerationSchema(
-                name: "Specifications",
-                description: "Product specifications",
-                properties: [
-                    .init(name: "display_size", description: "Display size if mentioned", schema: .init(type: String.self), isOptional: true),
-                    .init(name: "other_specs", description: "Any other specifications", schema: .init(arrayOf: .init(type: String.self)), isOptional: true)
-                ]
-            )
-            let productSchema = DynamicGenerationSchema(
-                name: "Product",
-                description: "Information about a product",
-                properties: [
-                    .init(name: "name", description: "Product name", schema: .init(type: String.self)),
-                    .init(name: "price", description: "Price in USD", schema: .init(type: Double.self)),
-                    .init(name: "specifications", description: "Product specifications", schema: specsSchema)
-                ]
-            )
-            schema = try GenerationSchema(root: productSchema, dependencies: [specsSchema])
-            schemaName = "Product"
-        default:
-            let customSchema = DynamicGenerationSchema(
-                name: "CustomObject",
-                description: "Generic custom object",
-                properties: [
-                    .init(name: "field1", description: "A text field", schema: .init(type: String.self)),
-                    .init(name: "field2", description: "A number field", schema: .init(type: Int.self))
-                ]
-            )
-            schema = try GenerationSchema(root: customSchema, dependencies: [])
-            schemaName = "CustomObject"
-        }
-
+    ) throws -> SchemaExecutionPlan {
+        let namedSchema = try basicObjectSchema(presetIndex: presetIndex)
         let prompt = """
         Extract the following information from this text:
 
         \(input)
         """
 
-        return (schema, prompt, { content in
-            """
-            Input:
-            \(input)
+        return SchemaExecutionPlan(
+            schema: namedSchema.schema,
+            prompt: prompt,
+            formatter: { content in
+                """
+                Input:
+                \(input)
 
-            Extracted Data:
-            \(generatedContentJSONString(content))
+                Extracted Data:
+                \(generatedContentJSONString(content))
 
-            Schema Used:
-            \(schemaName)
-            """
-        })
+                Schema Used:
+                \(namedSchema.name)
+                """
+            }
+        )
+    }
+
+    func basicObjectSchema(presetIndex: Int) throws -> NamedSchema {
+        switch presetIndex {
+        case 0:
+            return try personSchema()
+        case 1:
+            return try productSchema()
+        default:
+            return try customObjectSchema()
+        }
+    }
+
+    func personSchema() throws -> NamedSchema {
+        let personSchema = DynamicGenerationSchema(
+            name: "Person",
+            description: "Information about a person",
+            properties: [
+                .init(name: "name", description: "The person's full name", schema: .init(type: String.self)),
+                .init(name: "age", description: "The person's age in years", schema: .init(type: Int.self)),
+                .init(name: "occupation", description: "The person's job or profession", schema: .init(type: String.self)),
+                .init(name: "hobbies", description: "List of hobbies or interests", schema: .init(arrayOf: .init(type: String.self)))
+            ]
+        )
+        return NamedSchema(
+            schema: try GenerationSchema(root: personSchema, dependencies: []),
+            name: "Person"
+        )
+    }
+
+    func productSchema() throws -> NamedSchema {
+        let specsSchema = DynamicGenerationSchema(
+            name: "Specifications",
+            description: "Product specifications",
+            properties: [
+                .init(
+                    name: "display_size",
+                    description: "Display size if mentioned",
+                    schema: .init(type: String.self),
+                    isOptional: true
+                ),
+                .init(
+                    name: "other_specs",
+                    description: "Any other specifications",
+                    schema: .init(arrayOf: .init(type: String.self)),
+                    isOptional: true
+                )
+            ]
+        )
+        let productSchema = DynamicGenerationSchema(
+            name: "Product",
+            description: "Information about a product",
+            properties: [
+                .init(name: "name", description: "Product name", schema: .init(type: String.self)),
+                .init(name: "price", description: "Price in USD", schema: .init(type: Double.self)),
+                .init(name: "specifications", description: "Product specifications", schema: specsSchema)
+            ]
+        )
+        return NamedSchema(
+            schema: try GenerationSchema(root: productSchema, dependencies: [specsSchema]),
+            name: "Product"
+        )
+    }
+
+    func customObjectSchema() throws -> NamedSchema {
+        let customSchema = DynamicGenerationSchema(
+            name: "CustomObject",
+            description: "Generic custom object",
+            properties: [
+                .init(name: "field1", description: "A text field", schema: .init(type: String.self)),
+                .init(name: "field2", description: "A number field", schema: .init(type: Int.self))
+            ]
+        )
+        return NamedSchema(
+            schema: try GenerationSchema(root: customSchema, dependencies: []),
+            name: "CustomObject"
+        )
     }
 
     func arraySchemaPlan(
@@ -145,13 +194,41 @@ private extension RunSchemaExampleUseCase {
         input: String,
         minimumElements: Int,
         maximumElements: Int
-    ) throws -> (GenerationSchema, String, SchemaFormatter) {
+    ) throws -> SchemaExecutionPlan {
         guard minimumElements <= maximumElements else {
             throw FoundationLabCoreError.invalidRequest("Minimum elements must be less than or equal to maximum elements")
         }
 
-        let schema: GenerationSchema
+        let schema = try arraySchema(
+            presetIndex: presetIndex,
+            minimumElements: minimumElements,
+            maximumElements: maximumElements
+        )
+        let prompt = """
+        Extract the items from this text. Return between \(minimumElements) and \(maximumElements) items.
 
+        Text: \(input)
+        """
+
+        return SchemaExecutionPlan(
+            schema: schema,
+            prompt: prompt,
+            formatter: { content in
+                formattedArrayOutput(
+                    from: content,
+                    input: input,
+                    minimumElements: minimumElements,
+                    maximumElements: maximumElements
+                )
+            }
+        )
+    }
+
+    func arraySchema(
+        presetIndex: Int,
+        minimumElements: Int,
+        maximumElements: Int
+    ) throws -> GenerationSchema {
         switch presetIndex {
         case 0:
             let todoItemSchema = DynamicGenerationSchema(
@@ -172,7 +249,7 @@ private extension RunSchemaExampleUseCase {
                 minimumElements: minimumElements,
                 maximumElements: maximumElements
             )
-            schema = try GenerationSchema(root: arraySchema, dependencies: [todoItemSchema])
+            return try GenerationSchema(root: arraySchema, dependencies: [todoItemSchema])
         case 1:
             let ingredientSchema = DynamicGenerationSchema(
                 name: "Ingredient",
@@ -187,7 +264,7 @@ private extension RunSchemaExampleUseCase {
                 minimumElements: minimumElements,
                 maximumElements: maximumElements
             )
-            schema = try GenerationSchema(root: arraySchema, dependencies: [ingredientSchema])
+            return try GenerationSchema(root: arraySchema, dependencies: [ingredientSchema])
         default:
             let stringSchema = DynamicGenerationSchema(type: String.self)
             let arraySchema = DynamicGenerationSchema(
@@ -195,30 +272,15 @@ private extension RunSchemaExampleUseCase {
                 minimumElements: minimumElements,
                 maximumElements: maximumElements
             )
-            schema = try GenerationSchema(root: arraySchema, dependencies: [])
+            return try GenerationSchema(root: arraySchema, dependencies: [])
         }
-
-        let prompt = """
-        Extract the items from this text. Return between \(minimumElements) and \(maximumElements) items.
-
-        Text: \(input)
-        """
-
-        return (schema, prompt, { content in
-            formattedArrayOutput(
-                from: content,
-                input: input,
-                minimumElements: minimumElements,
-                maximumElements: maximumElements
-            )
-        })
     }
 
     func enumSchemaPlan(
         presetIndex: Int,
         input: String,
         customChoices: [String]?
-    ) throws -> (GenerationSchema, String, SchemaFormatter) {
+    ) throws -> SchemaExecutionPlan {
         let choices: [String]
         let fieldName: String
         let description: String
@@ -273,7 +335,7 @@ private extension RunSchemaExampleUseCase {
         fieldName: String,
         description: String,
         choices: [String]
-    ) throws -> (GenerationSchema, String, SchemaFormatter) {
+    ) throws -> SchemaExecutionPlan {
         let enumSchema = DynamicGenerationSchema(
             name: "\(fieldName.capitalized)Type",
             description: description,
@@ -284,8 +346,18 @@ private extension RunSchemaExampleUseCase {
             description: "Classification result with optional confidence and reasoning",
             properties: [
                 .init(name: fieldName, description: description, schema: enumSchema),
-                .init(name: "confidence", description: "Confidence score between 0 and 1", schema: .init(type: Float.self), isOptional: true),
-                .init(name: "reasoning", description: "Brief explanation for the classification", schema: .init(type: String.self), isOptional: true)
+                .init(
+                    name: "confidence",
+                    description: "Confidence score between 0 and 1",
+                    schema: .init(type: Float.self),
+                    isOptional: true
+                ),
+                .init(
+                    name: "reasoning",
+                    description: "Brief explanation for the classification",
+                    schema: .init(type: String.self),
+                    isOptional: true
+                )
             ]
         )
 
@@ -295,17 +367,18 @@ private extension RunSchemaExampleUseCase {
         Text: \(input)
         """
 
-        return (
-            try GenerationSchema(root: resultSchema, dependencies: [enumSchema]),
-            prompt,
-            { content in
-            formattedEnumOutput(
-                from: content,
-                input: input,
-                fieldName: fieldName,
-                choices: choices
-            )
-        })
+        return SchemaExecutionPlan(
+            schema: try GenerationSchema(root: resultSchema, dependencies: [enumSchema]),
+            prompt: prompt,
+            formatter: { content in
+                formattedEnumOutput(
+                    from: content,
+                    input: input,
+                    fieldName: fieldName,
+                    choices: choices
+                )
+            }
+        )
     }
 
     func formattedArrayOutput(
@@ -396,12 +469,16 @@ private extension RunSchemaExampleUseCase {
     func classificationData(
         from content: GeneratedContent,
         fieldName: String
-    ) -> (classification: String, confidence: Float?, reasoning: String?) {
+    ) -> ClassificationData {
         guard case .structure(let properties, _) = content.kind else {
-            return ("unknown", nil, nil)
+            return ClassificationData(
+                classification: "unknown",
+                confidence: nil,
+                reasoning: nil
+            )
         }
 
-        return (
+        return ClassificationData(
             classification: extractedStringValue(from: properties[fieldName]) ?? "unknown",
             confidence: extractedFloatValue(from: properties["confidence"]),
             reasoning: extractedStringValue(from: properties["reasoning"])

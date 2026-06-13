@@ -1,12 +1,6 @@
 import Foundation
 import Testing
 
-struct CommandResult {
-    let status: Int32
-    let stdout: String
-    let stderr: String
-}
-
 @Test("Root help shows grouped command discovery")
 func rootHelpShowsGroupedCommands() throws {
     let result = try runAFM("--help")
@@ -58,43 +52,8 @@ func leafCommandHelpCoverage() throws {
         let result = try runAFM(command)
         #expect(result.status == 0)
         #expect(result.stdout.contains("USAGE:"))
-        #expect(result.stdout.contains("--help"))
-        if command.contains("session")
-            || command == ["schema", "run", "typed-person", "--help"]
-            || command == ["schema", "run", "basic-object", "--help"]
-            || command == ["schema", "run", "array-schema", "--help"]
-            || command == ["schema", "run", "enum-schema", "--help"]
-            || command == ["schema", "run", "custom", "--help"]
-            || command.contains("transcript")
-            || command.contains("feedback")
-            || command == ["tag", "run", "--help"] {
-            #expect(result.stdout.contains("--guardrails <guardrails>"))
-        }
-        if command.contains("session")
-            || command.contains("feedback")
-            || command.contains("transcript")
-            || command.contains("schema")
-            || command == ["model", "status", "--help"]
-            || command == ["model", "languages", "--help"] {
-            #expect(result.stdout.contains("--use-case <use-case>") || command.contains("schema"))
-        }
-        if command == ["schema", "run", "custom", "--help"]
-            || command == ["schema", "run", "typed-person", "--help"]
-            || command == ["schema", "run", "basic-object", "--help"]
-            || command == ["schema", "run", "array-schema", "--help"]
-            || command == ["schema", "run", "enum-schema", "--help"] {
-            #expect(result.stdout.contains("--include-schema-in-prompt"))
-        }
-        if command.contains("session")
-            || command.contains("feedback")
-            || command.contains("transcript")
-            || command == ["schema", "run", "custom", "--help"]
-            || command == ["schema", "run", "typed-person", "--help"]
-            || command == ["schema", "run", "basic-object", "--help"]
-            || command == ["schema", "run", "array-schema", "--help"]
-            || command == ["schema", "run", "enum-schema", "--help"]
-            || command == ["tag", "run", "--help"] {
-            #expect(result.stdout.contains("--adapter <adapter>"))
+        for flag in expectedHelpFlags(for: command) {
+            #expect(result.stdout.contains(flag))
         }
     }
 }
@@ -286,239 +245,27 @@ func adapterDryRunAndValidation() throws {
     )
 }
 
-@Test("Schema commands expose list and run flows")
-func schemaCommands() throws {
-    let list = try runAFM("schema", "list", "--output", "json")
-    let typedPerson = try runAFM(
-        "schema", "run", "typed-person", "--output", "json", "--dry-run",
-        "--input", "Alex Rivera is a designer in Berlin."
-    )
-    let badPreset = try runAFM(
-        "schema", "run", "enum-schema", "--dry-run", "--preset", "missing"
-    )
-
-    #expect(list.status == 0)
-    #expect(typedPerson.status == 0)
-    #expect(badPreset.status == 64)
-    #expect(badPreset.stderr.contains("Unknown preset 'missing' for enum-schema"))
-
-    let listJSON = try parseJSONObject(list.stdout)
-    let typedJSON = try parseJSONObject(typedPerson.stdout)
-
-    let schemas = listJSON["schemas"] as? [[String: Any]]
-    #expect((schemas?.isEmpty == false))
-    #expect(typedJSON["command"] as? String == "schema run typed-person")
-    #expect(typedJSON["input"] as? String == "Alex Rivera is a designer in Berlin.")
-}
-
-@Test("Foundation Models flags surface in dry-run payloads")
-func foundationModelsFlagsSurfaceInDryRunPayloads() throws {
-    let directory = URL(fileURLWithPath: NSTemporaryDirectory())
-        .appending(path: "afm-fmf-\(UUID().uuidString)")
-    let schemaDirectory = directory.appending(path: ".afm/schemas")
-    defer { try? FileManager.default.removeItem(at: directory) }
-    try FileManager.default.createDirectory(at: schemaDirectory, withIntermediateDirectories: true)
-
-    let schema = """
-    title: PersonCard
-    type: object
-    properties:
-      name:
-        type: string
-    required:
-      - name
-    """
-    try schema.write(to: schemaDirectory.appending(path: "person-card.yaml"), atomically: true, encoding: .utf8)
-
-    let modelStatus = try runAFM(
-        "model", "status", "--output", "json", "--dry-run",
-        "--use-case", "content-tagging"
-    )
-    let customSchema = try runAFM(
-        "schema", "run", "custom", "--output", "json", "--dry-run",
-        "--schema", "person-card",
-        "--schema-dir", schemaDirectory.path(),
-        "--input", "Alex Rivera",
-        "--use-case", "content-tagging",
-        "--no-include-schema-in-prompt"
-    )
-    let feedback = try runAFM(
-        "feedback", "export", "--output", "json", "--dry-run",
-        "--prompt", "hello",
-        "--file", "/tmp/afm-feedback.json",
-        "--issue", "incorrect",
-        "--issue-explanation", "Wrong answer"
-    )
-    let tag = try runAFM(
-        "tag", "run", "--output", "json", "--dry-run",
-        "--prompt", "A joyful dog playing in a sunny park."
-    )
-
-    #expect(modelStatus.status == 0)
-    #expect(customSchema.status == 0)
-    #expect(feedback.status == 0)
-    #expect(tag.status == 0)
-
-    let modelJSON = try parseJSONObject(modelStatus.stdout)
-    let schemaJSON = try parseJSONObject(customSchema.stdout)
-    let feedbackJSON = try parseJSONObject(feedback.stdout)
-    let tagJSON = try parseJSONObject(tag.stdout)
-
-    #expect(modelJSON["useCase"] as? String == "content-tagging")
-    #expect(schemaJSON["useCase"] as? String == "content-tagging")
-    #expect(schemaJSON["includeSchemaInPrompt"] as? Bool == false)
-    #expect((feedbackJSON["feedbackIssues"] as? [String]) == ["incorrect"])
-    #expect(tagJSON["command"] as? String == "tag run")
-    #expect(tagJSON["useCase"] as? String == "content-tagging")
-}
-
-@Test("Custom schema files resolve from schema-dir and dry-run cleanly")
-func customSchemaFilesResolve() throws {
-    let directory = URL(fileURLWithPath: NSTemporaryDirectory())
-        .appending(path: "afm-schemas-\(UUID().uuidString)")
-    let schemaDirectory = directory.appending(path: ".afm/schemas")
-    let inputFile = directory.appending(path: "input.txt")
-
-    try FileManager.default.createDirectory(at: schemaDirectory, withIntermediateDirectories: true)
-    defer { try? FileManager.default.removeItem(at: directory) }
-
-    let schema = """
-    title: PersonCard
-    type: object
-    properties:
-      name:
-        type: string
-      age:
-        type: integer
-      occupation:
-        type: string
-    required:
-      - name
-      - age
-      - occupation
-    """
-    try schema.write(to: schemaDirectory.appending(path: "person-card.yaml"), atomically: true, encoding: .utf8)
-    try "Alex Rivera is a 34-year-old designer in Berlin.".write(to: inputFile, atomically: true, encoding: .utf8)
-
-    let result = try runAFM(
-        "schema", "run", "custom",
-        "--output", "json",
-        "--dry-run",
-        "--schema", "person-card",
-        "--schema-dir", schemaDirectory.path(),
-        "--input", "@\(inputFile.path())"
-    )
-
-    #expect(result.status == 0)
-    let json = try parseJSONObject(result.stdout)
-    #expect(json["command"] as? String == "schema run custom")
-    #expect(json["schema"] as? String == "person-card")
-    #expect(json["schemaFile"] as? String == schemaDirectory.appending(path: "person-card.yaml").path())
-    #expect(json["input"] as? String == "Alex Rivera is a 34-year-old designer in Berlin.")
-    #expect(json["inputFile"] as? String == inputFile.path())
-}
-
-@Test("All dynamic schema workflows dry-run cleanly")
-func dynamicSchemaDryRuns() throws {
-    let basic = try runAFM(
-        "schema", "run", "basic-object", "--output", "json", "--dry-run", "--preset", "product"
-    )
-    let array = try runAFM(
-        "schema", "run", "array-schema", "--output", "json", "--dry-run", "--preset", "todo",
-        "--min-items", "2", "--max-items", "4"
-    )
-    let enumeration = try runAFM(
-        "schema", "run", "enum-schema", "--output", "json", "--dry-run",
-        "--choice", "high", "--choice", "medium", "--choice", "low"
-    )
-
-    #expect(basic.status == 0)
-    #expect(array.status == 0)
-    #expect(enumeration.status == 0)
-
-    let basicJSON = try parseJSONObject(basic.stdout)
-    let arrayJSON = try parseJSONObject(array.stdout)
-    let enumJSON = try parseJSONObject(enumeration.stdout)
-
-    #expect(basicJSON["command"] as? String == "schema run basic-object")
-    #expect(arrayJSON["command"] as? String == "schema run array-schema")
-    #expect(enumJSON["command"] as? String == "schema run enum-schema")
-}
-
-@Test("Piped schema input overrides preset defaults")
-func pipedSchemaInputOverridesPresetDefaults() throws {
-    let pipedInput = "Taylor is a 29-year-old architect in Seattle."
-    let result = try runAFM(
-        [
-            "schema", "run", "typed-person",
-            "--output", "json",
-            "--dry-run"
-        ],
-        stdin: "\(pipedInput)\n"
-    )
-
-    #expect(result.status == 0)
-    let json = try parseJSONObject(result.stdout)
-    #expect(json["input"] as? String == pipedInput)
-}
-
 @Test("Tool manifests validate, inspect, and call through the CLI")
 func toolManifestCommands() throws {
-    let directory = URL(fileURLWithPath: NSTemporaryDirectory())
-        .appending(path: "afm-tools-\(UUID().uuidString)")
-    let toolDirectory = directory.appending(path: ".afm/tools")
-    let argsFile = directory.appending(path: "args.json")
-
-    try FileManager.default.createDirectory(at: toolDirectory, withIntermediateDirectories: true)
-    defer { try? FileManager.default.removeItem(at: directory) }
-
-    let toolManifest = """
-    name: echo_json
-    description: Echoes JSON arguments back to the caller.
-    parameters:
-      title: EchoPayload
-      type: object
-      properties:
-        city:
-          type: string
-      required:
-        - city
-    runner:
-      kind: shell
-      outputFormat: json
-      command: /bin/sh
-      args:
-        - -lc
-        - cat
-    """
-    let secondToolManifest = toolManifest.replacingOccurrences(
-        of: "name: echo_json",
-        with: "name: echo_json_two"
-    )
-    try toolManifest.write(to: toolDirectory.appending(path: "echo-json.yaml"), atomically: true, encoding: .utf8)
-    try secondToolManifest.write(
-        to: toolDirectory.appending(path: "echo-json-two.yaml"),
-        atomically: true,
-        encoding: .utf8
-    )
-    try #"{"city":"Berlin"}"#.write(to: argsFile, atomically: true, encoding: .utf8)
+    let fixture = try ToolManifestFixture()
+    defer { fixture.remove() }
 
     let inspect = try runAFM(
         "tool", "inspect", "--output", "json",
         "--tool", "echo-json",
-        "--tool-dir", toolDirectory.path()
+        "--tool-dir", fixture.toolDirectory.path()
     )
     let validate = try runAFM(
         "tool", "validate", "--output", "json",
         "--tool", "echo-json",
         "--tool", "echo-json-two",
-        "--tool-dir", toolDirectory.path()
+        "--tool-dir", fixture.toolDirectory.path()
     )
     let call = try runAFM(
         "tool", "call", "--output", "json",
         "--tool", "echo-json",
-        "--tool-dir", toolDirectory.path(),
-        "--args-file", argsFile.path()
+        "--tool-dir", fixture.toolDirectory.path(),
+        "--args-file", fixture.argumentsFile.path()
     )
 
     #expect(inspect.status == 0)
@@ -538,8 +285,8 @@ func toolManifestCommands() throws {
     #expect(validatedTools.compactMap { $0["name"] as? String } == ["echo_json", "echo_json_two"])
     #expect(
         validatedTools.compactMap { $0["file"] as? String } == [
-            toolDirectory.appending(path: "echo-json.yaml").path(),
-            toolDirectory.appending(path: "echo-json-two.yaml").path()
+            fixture.toolDirectory.appending(path: "echo-json.yaml").path(),
+            fixture.toolDirectory.appending(path: "echo-json-two.yaml").path()
         ]
     )
     #expect(callJSON["name"] as? String == "echo_json")
@@ -717,153 +464,92 @@ func modelCommandsReturnStructuredJSON() throws {
     let useCasesJSON = try parseJSONObject(useCases.stdout)
     let guardrailsJSON = try parseJSONObject(guardrails.stdout)
 
-    #expect(statusJSON["status"] as? String != nil)
-    #expect(statusJSON["reason"] as? String != nil)
-    #expect(statusJSON["useCase"] as? String != nil)
+    #expect(statusJSON["status"] is String)
+    #expect(statusJSON["reason"] is String)
+    #expect(statusJSON["useCase"] is String)
 
     let supportedLanguages = languagesJSON["languages"] as? [[String: Any]]
     #expect((supportedLanguages?.isEmpty == false))
-    #expect(languagesJSON["currentLanguage"] as? String != nil)
-    #expect(languagesJSON["useCase"] as? String != nil)
+    #expect(languagesJSON["currentLanguage"] is String)
+    #expect(languagesJSON["useCase"] is String)
     #expect((useCasesJSON["useCases"] as? [[String: Any]])?.isEmpty == false)
     #expect((guardrailsJSON["guardrails"] as? [[String: Any]])?.isEmpty == false)
 }
 
-private func runAFM(
-    _ arguments: String...,
-    environment: [String: String] = [:],
-    stdin: String? = nil
-) throws -> CommandResult {
-    try runAFM(arguments, environment: environment, stdin: stdin)
-}
+private func expectedHelpFlags(for command: [String]) -> [String] {
+    let commandGroup = command.first
+    let isSchemaRun = Array(command.prefix(2)) == ["schema", "run"]
+    var flags = ["--help"]
 
-private func runAFM(
-    _ arguments: [String],
-    environment: [String: String] = [:],
-    stdin: String? = nil
-) throws -> CommandResult {
-    let process = Process()
-    process.executableURL = try findAFMBinary()
-    process.currentDirectoryURL = packageRoot()
-    process.environment = ProcessInfo.processInfo.environment.merging(environment) { _, new in new }
-
-    let stdoutPipe = Pipe()
-    let stderrPipe = Pipe()
-    let stdinPipe = stdin.map { _ in Pipe() }
-    process.standardOutput = stdoutPipe
-    process.standardError = stderrPipe
-    if let stdinPipe {
-        process.standardInput = stdinPipe
-    } else {
-        process.standardInput = FileHandle.nullDevice
+    if commandGroup == "session"
+        || commandGroup == "feedback"
+        || commandGroup == "transcript"
+        || command == ["tag", "run", "--help"]
+        || isSchemaRun {
+        flags.append(contentsOf: ["--guardrails <guardrails>", "--adapter <adapter>"])
     }
-    process.arguments = arguments
-
-    try process.run()
-    let readGroup = DispatchGroup()
-    let stdoutBuffer = CommandDataBuffer()
-    let stderrBuffer = CommandDataBuffer()
-    captureProcessOutput(
-        from: stdoutPipe.fileHandleForReading,
-        into: stdoutBuffer,
-        group: readGroup
-    )
-    captureProcessOutput(
-        from: stderrPipe.fileHandleForReading,
-        into: stderrBuffer,
-        group: readGroup
-    )
-
-    if let stdin, let stdinPipe {
-        stdinPipe.fileHandleForWriting.write(Data(stdin.utf8))
-        try? stdinPipe.fileHandleForWriting.close()
+    if commandGroup == "session"
+        || commandGroup == "feedback"
+        || commandGroup == "transcript"
+        || command == ["model", "status", "--help"]
+        || command == ["model", "languages", "--help"] {
+        flags.append("--use-case <use-case>")
     }
-    process.waitUntilExit()
-    readGroup.wait()
-
-    let stdout = String(data: stdoutBuffer.data, encoding: .utf8) ?? ""
-    let stderr = String(data: stderrBuffer.data, encoding: .utf8) ?? ""
-
-    return CommandResult(
-        status: process.terminationStatus,
-        stdout: stdout.trimmingCharacters(in: .whitespacesAndNewlines),
-        stderr: stderr.trimmingCharacters(in: .whitespacesAndNewlines)
-    )
-}
-
-private final class CommandDataBuffer: @unchecked Sendable {
-    var data = Data()
-}
-
-private func captureProcessOutput(
-    from handle: FileHandle,
-    into buffer: CommandDataBuffer,
-    group: DispatchGroup
-) {
-    group.enter()
-    DispatchQueue.global(qos: .userInitiated).async {
-        buffer.data = handle.readDataToEndOfFile()
-        group.leave()
+    if isSchemaRun {
+        flags.append("--include-schema-in-prompt")
     }
+    return flags
 }
 
-private func parseJSONObject(_ text: String) throws -> [String: Any] {
-    let data = try #require(text.data(using: .utf8))
-    let object = try JSONSerialization.jsonObject(with: data)
-    return try #require(object as? [String: Any])
-}
+private struct ToolManifestFixture {
+    let root: URL
+    let toolDirectory: URL
+    let argumentsFile: URL
 
-private func parseJSONLines(_ text: String) throws -> [[String: Any]] {
-    let lines = text
-        .split(separator: "\n")
-        .map(String.init)
-        .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    init() throws {
+        root = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appending(path: "afm-tools-\(UUID().uuidString)")
+        toolDirectory = root.appending(path: ".afm/tools")
+        argumentsFile = root.appending(path: "args.json")
+        try FileManager.default.createDirectory(at: toolDirectory, withIntermediateDirectories: true)
 
-    return try lines.map(parseJSONObject)
-}
-
-private func findAFMBinary() throws -> URL {
-    let root = packageRoot()
-    let directCandidates = [
-        root.appending(path: ".build/debug/afm"),
-        root.appending(path: ".build/arm64-apple-macosx/debug/afm"),
-        root.appending(path: ".build/x86_64-apple-macosx/debug/afm")
-    ]
-
-    for candidate in directCandidates where FileManager.default.isExecutableFile(atPath: candidate.path()) {
-        return candidate
+        let manifest = """
+        name: echo_json
+        description: Echoes JSON arguments back to the caller.
+        parameters:
+          title: EchoPayload
+          type: object
+          properties:
+            city:
+              type: string
+          required:
+            - city
+        runner:
+          kind: shell
+          outputFormat: json
+          command: /bin/sh
+          args:
+            - -lc
+            - cat
+        """
+        let secondManifest = manifest.replacingOccurrences(
+            of: "name: echo_json",
+            with: "name: echo_json_two"
+        )
+        try manifest.write(
+            to: toolDirectory.appending(path: "echo-json.yaml"),
+            atomically: true,
+            encoding: .utf8
+        )
+        try secondManifest.write(
+            to: toolDirectory.appending(path: "echo-json-two.yaml"),
+            atomically: true,
+            encoding: .utf8
+        )
+        try #"{"city":"Berlin"}"#.write(to: argumentsFile, atomically: true, encoding: .utf8)
     }
 
-    let buildRoot = root.appending(path: ".build")
-    if let enumerator = FileManager.default.enumerator(at: buildRoot, includingPropertiesForKeys: nil) {
-        for case let fileURL as URL in enumerator where fileURL.lastPathComponent == "afm" {
-            if FileManager.default.isExecutableFile(atPath: fileURL.path()) {
-                return fileURL
-            }
-        }
-    }
-
-    throw TestFailure("Could not find built afm executable under \(buildRoot.path())")
-}
-
-private func packageRoot() -> URL {
-    var directory = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
-
-    while directory.path != "/" {
-        let manifest = directory.appending(path: "Package.swift")
-        if FileManager.default.fileExists(atPath: manifest.path()) {
-            return directory
-        }
-        directory.deleteLastPathComponent()
-    }
-
-    preconditionFailure("Could not find the package root above \(#filePath)")
-}
-
-private struct TestFailure: Error, CustomStringConvertible {
-    let description: String
-
-    init(_ description: String) {
-        self.description = description
+    func remove() {
+        try? FileManager.default.removeItem(at: root)
     }
 }

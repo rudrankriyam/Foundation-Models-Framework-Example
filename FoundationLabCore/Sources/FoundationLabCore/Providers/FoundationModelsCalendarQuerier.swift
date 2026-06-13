@@ -16,10 +16,14 @@ public struct FoundationModelsCalendarQuerier: CalendarQuerying {
 
         let localeIdentifier = request.context.localeIdentifier ?? Locale.current.identifier
         let timeZone = FoundationModelsPromptSupport.resolvedTimeZone(identifier: request.timeZoneIdentifier)
+        let currentTimestamp = FoundationModelsPromptSupport.isoTimestamp(
+            request.referenceDate,
+            timeZoneIdentifier: request.timeZoneIdentifier
+        )
         let contextualInstructions = """
         The user's current time zone is \(timeZone.identifier).
         The user's current locale identifier is \(localeIdentifier).
-        The current local date and time is \(FoundationModelsPromptSupport.isoTimestamp(request.referenceDate, timeZoneIdentifier: request.timeZoneIdentifier)).
+        The current local date and time is \(currentTimestamp).
         Use this information when interpreting relative dates like "today" or "tomorrow".
         """
 
