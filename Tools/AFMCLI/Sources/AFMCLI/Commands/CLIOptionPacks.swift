@@ -61,13 +61,14 @@ struct InputSourceOptions: ParsableArguments {
             }
         }
 
+        if shouldAutomaticallyReadFromStdin(),
+           let resolved = try readOptionalStandardInput(optionName: "--stdin") {
+            return resolved
+        }
+
         if let defaultValue {
             let trimmed = try validatedResolvedText(defaultValue, optionName: "--input")
             return ResolvedTextInput(value: trimmed, source: .inline, file: nil)
-        }
-
-        if shouldAutomaticallyReadFromStdin() {
-            return try readStandardInput(optionName: "--stdin", requiredMessage: "Please provide --input, --input-file, or stdin.")
         }
 
         throw ValidationError("Please provide --input, --input-file, or stdin.")
@@ -247,14 +248,19 @@ func readFileInput(path: String, optionName: String) throws -> ResolvedTextInput
 }
 
 func readStandardInput(optionName: String, requiredMessage: String) throws -> ResolvedTextInput {
+    guard let resolved = try readOptionalStandardInput(optionName: optionName) else {
+        throw ValidationError(requiredMessage)
+    }
+    return resolved
+}
+
+func readOptionalStandardInput(optionName: String) throws -> ResolvedTextInput? {
     let data = FileHandle.standardInput.readDataToEndOfFile()
     guard let text = String(data: data, encoding: .utf8) else {
         throw ValidationError("Could not decode \(optionName) input as UTF-8 text.")
     }
     let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !trimmed.isEmpty else {
-        throw ValidationError(requiredMessage)
-    }
+    guard !trimmed.isEmpty else { return nil }
     return ResolvedTextInput(value: trimmed, source: .stdin, file: nil)
 }
 

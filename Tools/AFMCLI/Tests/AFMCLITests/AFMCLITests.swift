@@ -445,6 +445,23 @@ func dynamicSchemaDryRuns() throws {
     #expect(enumJSON["command"] as? String == "schema run enum-schema")
 }
 
+@Test("Piped schema input overrides preset defaults")
+func pipedSchemaInputOverridesPresetDefaults() throws {
+    let pipedInput = "Taylor is a 29-year-old architect in Seattle."
+    let result = try runAFM(
+        [
+            "schema", "run", "typed-person",
+            "--output", "json",
+            "--dry-run"
+        ],
+        stdin: "\(pipedInput)\n"
+    )
+
+    #expect(result.status == 0)
+    let json = try parseJSONObject(result.stdout)
+    #expect(json["input"] as? String == pipedInput)
+}
+
 @Test("Tool manifests validate, inspect, and call through the CLI")
 func toolManifestCommands() throws {
     let directory = URL(fileURLWithPath: NSTemporaryDirectory())
@@ -692,6 +709,8 @@ private func runAFM(
         process.standardInput = stdinPipe
         stdinPipe.fileHandleForWriting.write(Data(stdin.utf8))
         try? stdinPipe.fileHandleForWriting.close()
+    } else {
+        process.standardInput = FileHandle.nullDevice
     }
     process.arguments = arguments
 
