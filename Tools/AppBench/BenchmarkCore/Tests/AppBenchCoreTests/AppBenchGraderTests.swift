@@ -160,4 +160,15 @@ struct AppBenchGraderTests {
         #expect(configuration.randomizeOrder)
         #expect(configuration.sampleLimit == 1)
     }
+
+    @Test
+    func quickSuiteCanExplicitlyUseAllSamples() {
+        let configuration = AppBenchRunConfiguration(
+            suite: .quick,
+            sampleLimit: 1,
+            useAllSamples: true
+        )
+
+        #expect(configuration.sampleLimit == nil)
+    }
 }

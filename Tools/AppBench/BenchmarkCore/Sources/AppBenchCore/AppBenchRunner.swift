@@ -26,6 +26,7 @@ public struct AppBenchRunConfiguration: Sendable {
         warmupCount: Int = 5,
         repetitions: Int = 20,
         sampleLimit: Int? = nil,
+        useAllSamples: Bool = false,
         sessionMode: AppBenchSessionMode = .cold,
         reasoningLevel: AppBenchReasoningLevel = .none,
         fallbackMode: AppBenchFallbackMode = .disabled,
@@ -38,7 +39,8 @@ public struct AppBenchRunConfiguration: Sendable {
         self.model = model
         self.warmupCount = max(0, warmupCount)
         self.repetitions = max(1, repetitions)
-        self.sampleLimit = sampleLimit.map { max(1, $0) } ?? (suite == .quick ? 1 : nil)
+        self.sampleLimit =
+            useAllSamples ? nil : sampleLimit.map { max(1, $0) } ?? (suite == .quick ? 1 : nil)
         self.sessionMode = sessionMode
         self.reasoningLevel = reasoningLevel
         self.fallbackMode = fallbackMode
