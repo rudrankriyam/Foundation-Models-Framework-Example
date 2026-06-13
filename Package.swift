@@ -1,13 +1,12 @@
 // swift-tools-version: 6.2
-// The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
 let package = Package(
-    name: "FoundationModelsKit",
+    name: "FoundationModelsFrameworkLab",
     platforms: [
-        .macOS(.v26),
-        .iOS(.v26)
+        .iOS(.v26),
+        .macOS(.v26)
     ],
     products: [
         .library(
@@ -21,19 +20,23 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "FoundationModelsKit"
+            name: "FoundationModelsKit",
+            path: "Packages/FoundationModelsKit/Sources/FoundationModelsKit"
         ),
         .target(
             name: "FoundationModelsTools",
-            dependencies: ["FoundationModelsKit"]
+            dependencies: ["FoundationModelsKit"],
+            path: "Packages/FoundationModelsKit/Sources/FoundationModelsTools"
         ),
         .testTarget(
             name: "FoundationModelsKitTests",
-            dependencies: ["FoundationModelsKit"]
+            dependencies: ["FoundationModelsKit"],
+            path: "Packages/FoundationModelsKit/Tests/FoundationModelsKitTests"
         ),
         .testTarget(
             name: "FoundationModelsToolsTests",
-            dependencies: ["FoundationModelsTools"]
+            dependencies: ["FoundationModelsTools"],
+            path: "Packages/FoundationModelsKit/Tests/FoundationModelsToolsTests"
         )
     ]
 )

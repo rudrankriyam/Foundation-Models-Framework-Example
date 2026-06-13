@@ -76,6 +76,44 @@ It also expects these repository variables:
 - Build and run the project
 - Explore the different capabilities through the examples!
 
+## Swift Packages
+
+The repository also distributes reusable Swift package products for applications that do not need the Foundation Lab UI:
+
+- `FoundationModelsKit` provides transcript history transforms, token estimation, and context-budget utilities.
+- `FoundationModelsTools` provides calendar, contacts, health, location, music, reminders, weather, and web tools. It re-exports `FoundationModelsKit` for compatibility with existing users.
+
+Add the repository to your package dependencies:
+
+```swift
+dependencies: [
+    .package(
+        url: "https://github.com/rudrankriyam/Foundation-Models-Framework-Lab.git",
+        branch: "main"
+    )
+]
+```
+
+Then select the products needed by your target:
+
+```swift
+.target(
+    name: "YourTarget",
+    dependencies: [
+        .product(
+            name: "FoundationModelsKit",
+            package: "foundation-models-framework-lab"
+        ),
+        .product(
+            name: "FoundationModelsTools",
+            package: "foundation-models-framework-lab"
+        )
+    ]
+)
+```
+
+The original `rryam/FoundationModelsKit` repository remains available for applications pinned to 2.x releases.
+
 ## Agent Skill
 
 This repo includes a `foundation-models-app-builder` agent skill with self-contained Swift recipes for Foundation Models app development. It gives agents packaged patterns for sessions, structured generation, dynamic schemas, tool calling, RAG, voice, HealthKit, App Intents, multilingual support, and shared capability extraction without needing to inspect this repo's source files.

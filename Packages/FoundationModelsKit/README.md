@@ -1,7 +1,12 @@
 # FoundationModelsKit
 
 
-A collection of tools and utilities for Apple's Foundation Models Framework that help working with the language model, better.
+A reusable Swift package for Apple's Foundation Models framework.
+
+The package has two public products:
+
+- `FoundationModelsKit` provides lightweight transcript, token-budget, and history utilities.
+- `FoundationModelsTools` provides system and web tools and re-exports `FoundationModelsKit` for source compatibility.
 
 ## Table of Contents
 
@@ -39,7 +44,7 @@ A collection of tools and utilities for Apple's Foundation Models Framework that
 
 ## Overview
 
-**FoundationModelsTools** provides a set of pre-built tools and utilities that extend the capabilities of models using Apple's Foundation Models Framework. These tools allow you to:
+**FoundationModelsKit** provides reusable model utilities, while **FoundationModelsTools** provides pre-built integrations that extend Apple's Foundation Models framework. Together they allow you to:
 
 - Access and manage calendar events
 - Read and create contacts
@@ -70,22 +75,36 @@ A collection of tools and utilities for Apple's Foundation Models Framework that
 
 ## Installation
 
-Add **FoundationModelsTools** as a dependency in your `Package.swift`:
+Add Foundation Models Framework Lab as a dependency in your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/rryam/FoundationModelsKit", from: "2.0.0")
+    .package(
+        url: "https://github.com/rudrankriyam/Foundation-Models-Framework-Lab.git",
+        branch: "main"
+    )
 ]
 ```
 
-Then add it to your target dependencies:
+Choose the lightweight utility product, the tools product, or both:
 
 ```swift
 .target(
     name: "YourTarget",
-    dependencies: ["FoundationModelsTools"]
+    dependencies: [
+        .product(
+            name: "FoundationModelsKit",
+            package: "foundation-models-framework-lab"
+        ),
+        .product(
+            name: "FoundationModelsTools",
+            package: "foundation-models-framework-lab"
+        )
+    ]
 )
 ```
+
+Existing applications pinned to `rryam/FoundationModelsKit` 2.x continue to resolve from the original repository.
 
 ## Quick Start
 
@@ -975,5 +994,3 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## License
 
 [MIT License](LICENSE)
-
-[![Star History Chart](https://api.star-history.com/svg?repos=rryam/FoundationModelsKit&type=Date)](https://star-history.com/#rryam/FoundationModelsKit&Date)

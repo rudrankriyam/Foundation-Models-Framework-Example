@@ -1,13 +1,13 @@
 //
 //  TokenCountingExample.swift
-//  FoundationModelsTools
+//  FoundationModelsKit
 //
 //  Example demonstrating token counting and context window management
 //
 
 import Foundation
 import FoundationModels
-import FoundationModelsTools
+import FoundationModelsKit
 
 // MARK: - Basic Token Counting
 
