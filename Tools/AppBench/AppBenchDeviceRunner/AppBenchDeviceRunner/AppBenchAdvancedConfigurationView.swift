@@ -43,7 +43,7 @@ struct AppBenchAdvancedConfigurationView: View {
             in: 1...50
         )
 
-        Toggle("All 25 samples", isOn: $viewModel.useAllSamples)
+        Toggle("Use all samples", isOn: $viewModel.useAllSamples)
 
         if !viewModel.useAllSamples {
             Stepper(

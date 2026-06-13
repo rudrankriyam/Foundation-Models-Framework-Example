@@ -173,6 +173,13 @@ struct AppBenchGraderTests {
     }
 
     @Test
+    func nonQuickSuitesUseAllSamplesByDefault() {
+        for suite in AppBenchSuite.allCases where suite != .quick {
+            #expect(AppBenchRunConfiguration(suite: suite).sampleLimit == nil)
+        }
+    }
+
+    @Test
     func partialResponsePolicyPreservesOnlyRecoverableOutput() {
         let decodingFailure = LanguageModelSession.GenerationError.decodingFailure(
             .init(debugDescription: "Late decoding failure")

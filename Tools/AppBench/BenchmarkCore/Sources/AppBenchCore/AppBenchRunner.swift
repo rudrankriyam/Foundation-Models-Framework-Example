@@ -40,7 +40,7 @@ public struct AppBenchRunConfiguration: Sendable {
         self.warmupCount = max(0, warmupCount)
         self.repetitions = max(1, repetitions)
         self.sampleLimit =
-            useAllSamples ? nil : sampleLimit.map { max(1, $0) } ?? (suite == .quick ? 1 : nil)
+            useAllSamples ? nil : sampleLimit.map { max(1, $0) } ?? suite.defaultSampleLimit
         self.sessionMode = sessionMode
         self.reasoningLevel = reasoningLevel
         self.fallbackMode = fallbackMode

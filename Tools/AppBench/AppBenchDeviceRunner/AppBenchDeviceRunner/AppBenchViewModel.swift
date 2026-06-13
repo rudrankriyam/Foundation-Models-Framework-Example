@@ -5,7 +5,12 @@ import SwiftUI
 @MainActor
 @Observable
 final class AppBenchViewModel {
-    var selectedSuite: AppBenchSuite = .quick
+    var selectedSuite: AppBenchSuite = .quick {
+        didSet {
+            guard selectedSuite != oldValue else { return }
+            applySampleDefaults(for: selectedSuite)
+        }
+    }
     var selectedModel: AppBenchModel = .onDevice
     var selectedSessionMode: AppBenchSessionMode = .cold
     var selectedReasoningLevel: AppBenchReasoningLevel = .none
@@ -32,7 +37,21 @@ final class AppBenchViewModel {
         isRunning = true
         result = nil
 
-        let configuration = AppBenchRunConfiguration(
+        let configuration = makeConfiguration()
+
+        Task {
+            do {
+                result = try await AppBenchRunner(configuration: configuration).run()
+            } catch {
+                errorMessage = error.localizedDescription
+                showError = true
+            }
+            isRunning = false
+        }
+    }
+
+    func makeConfiguration() -> AppBenchRunConfiguration {
+        AppBenchRunConfiguration(
             suite: selectedSuite,
             model: selectedModel,
             warmupCount: warmupCount,
@@ -46,16 +65,6 @@ final class AppBenchViewModel {
             randomizeOrder: randomizeOrder,
             randomSeed: randomSeed
         )
-
-        Task {
-            do {
-                result = try await AppBenchRunner(configuration: configuration).run()
-            } catch {
-                errorMessage = error.localizedDescription
-                showError = true
-            }
-            isRunning = false
-        }
     }
 
     func copyMarkdown() {
@@ -68,5 +77,14 @@ final class AppBenchViewModel {
         #else
             UIPasteboard.general.string = markdown
         #endif
+    }
+
+    private func applySampleDefaults(for suite: AppBenchSuite) {
+        if let sampleLimit = suite.defaultSampleLimit {
+            samplesPerScenario = sampleLimit
+            useAllSamples = false
+        } else {
+            useAllSamples = true
+        }
     }
 }

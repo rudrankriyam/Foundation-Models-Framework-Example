@@ -39,6 +39,15 @@ public enum AppBenchSuite: String, CaseIterable, Codable, Identifiable, Sendable
             "Context Limits"
         }
     }
+
+    public var defaultSampleLimit: Int? {
+        switch self {
+        case .quick:
+            1
+        case .full, .guardrails, .performance, .context:
+            nil
+        }
+    }
 }
 
 public enum AppBenchScenarioCategory: String, Codable, CaseIterable, Sendable {
