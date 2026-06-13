@@ -11,6 +11,7 @@ import FoundationLabCore
 enum StudioWorkspace: String, CaseIterable, Identifiable {
     case promptTesting
     case structuredOutput
+    case adapterComparison
     case benchmarkRuns
     case capabilityMatrix
 
@@ -22,6 +23,8 @@ enum StudioWorkspace: String, CaseIterable, Identifiable {
             return "Prompt Testing"
         case .structuredOutput:
             return "Structured Output"
+        case .adapterComparison:
+            return "Adapter Comparison"
         case .benchmarkRuns:
             return "Benchmark Runs"
         case .capabilityMatrix:
@@ -35,6 +38,8 @@ enum StudioWorkspace: String, CaseIterable, Identifiable {
             return "Compare instructions, sampling, and prompt variants."
         case .structuredOutput:
             return "Validate generated values against dynamic schemas."
+        case .adapterComparison:
+            return "Compare a custom .fmadapter package with the base system model."
         case .benchmarkRuns:
             return "Compare app-shaped workloads with separate quality and performance metrics."
         case .capabilityMatrix:
@@ -48,6 +53,8 @@ enum StudioWorkspace: String, CaseIterable, Identifiable {
             return "text.bubble"
         case .structuredOutput:
             return "checklist.checked"
+        case .adapterComparison:
+            return "square.split.2x1"
         case .benchmarkRuns:
             return "speedometer"
         case .capabilityMatrix:
@@ -61,6 +68,8 @@ enum StudioWorkspace: String, CaseIterable, Identifiable {
             return "First Slice"
         case .structuredOutput:
             return "Next"
+        case .adapterComparison:
+            return "Available"
         case .benchmarkRuns:
             return "Available"
         case .capabilityMatrix:
@@ -74,6 +83,8 @@ enum StudioWorkspace: String, CaseIterable, Identifiable {
             return "Variants"
         case .structuredOutput:
             return "Schemas"
+        case .adapterComparison:
+            return "Models"
         case .benchmarkRuns:
             return "Suites"
         case .capabilityMatrix:
@@ -87,6 +98,8 @@ enum StudioWorkspace: String, CaseIterable, Identifiable {
             return "4"
         case .structuredOutput:
             return "8"
+        case .adapterComparison:
+            return "2"
         case .benchmarkRuns:
             return "5"
         case .capabilityMatrix:
@@ -107,6 +120,12 @@ enum StudioWorkspace: String, CaseIterable, Identifiable {
                 "Schema picker",
                 "Validation failures",
                 "Repair prompt tracking"
+            ]
+        case .adapterComparison:
+            return [
+                "Managed .fmadapter imports",
+                "Fresh base and adapter sessions",
+                "Side-by-side output and timing"
             ]
         case .benchmarkRuns:
             return [
@@ -239,7 +258,8 @@ enum StudioPromptVariant: String, CaseIterable, Identifiable {
         case .structured:
             return "Return a clear answer with sections: Summary, Details, and Validation Notes."
         case .productTone:
-            return "You are helping an Apple platforms developer evaluate local Foundation Models behavior. Be practical, specific, and product-minded."
+            return "You are helping an Apple platforms developer evaluate local Foundation Models behavior. "
+                + "Be practical, specific, and product-minded."
         }
     }
 

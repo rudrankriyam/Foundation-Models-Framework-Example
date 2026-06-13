@@ -73,6 +73,7 @@ fastlane/test_output
 build/
 DerivedData/
 .derivedData/
+.derivedData-*/
 
 # Python packaging
 *.egg-info/

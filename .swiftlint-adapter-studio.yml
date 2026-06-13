@@ -1,0 +1,40 @@
+included:
+  - "Foundation Lab/AdapterStudio"
+  - "Foundation Lab/Models/StudioWorkspace.swift"
+  - "Foundation Lab/Views/StudioView.swift"
+
+excluded:
+  - DerivedData
+  - build
+
+disabled_rules:
+  - file_length
+  - type_body_length
+
+line_length:
+  warning: 140
+  error: 140
+  ignores_comments: true
+  ignores_urls: true
+
+identifier_name:
+  min_length:
+    warning: 2
+    error: 1
+  max_length:
+    warning: 40
+    error: 50
+
+type_name:
+  max_length:
+    warning: 50
+    error: 60
+
+function_body_length:
+  warning: 60
+  error: 100
+
+nesting:
+  type_level:
+    warning: 3
+    error: 5

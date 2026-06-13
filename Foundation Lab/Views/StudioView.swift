@@ -188,6 +188,12 @@ struct StudioView: View {
                 sourceInfoRow(title: "Device Runner", subtitle: "iPhone and iPad", systemImage: "iphone")
                 sourceInfoRow(title: "Simulator", subtitle: "Validation only", systemImage: "hammer")
             }
+        case .adapterComparison:
+            sourceSection("Surfaces") {
+                sourceInfoRow(title: "Base Model", subtitle: "Fresh session", systemImage: "cpu")
+                sourceInfoRow(title: "Custom Adapter", subtitle: ".fmadapter", systemImage: "shippingbox")
+                sourceInfoRow(title: "Training CLI", subtitle: "fmas", systemImage: "terminal")
+            }
         case .structuredOutput, .capabilityMatrix:
             EmptyView()
         }
@@ -265,12 +271,25 @@ struct StudioView: View {
     private var stageBar: some View {
         HStack(spacing: Spacing.large) {
 #if os(macOS)
-            if selectedWorkspace == .promptTesting {
-                Button(action: runPromptTests) {
-                    Image(systemName: isRunningPromptTests ? "hourglass" : "play.fill")
-                        .font(.title3)
-                        .frame(width: 34, height: 34)
+            Picker("Workspace", selection: $selectedWorkspace) {
+                ForEach(StudioWorkspace.allCases) { workspace in
+                    Label(workspace.title, systemImage: workspace.icon)
+                        .tag(workspace)
                 }
+            }
+            .pickerStyle(.menu)
+            .labelsHidden()
+            .frame(width: 220)
+
+            if selectedWorkspace == .promptTesting {
+                Button(
+                    "Run selected prompt variants",
+                    systemImage: isRunningPromptTests ? "hourglass" : "play.fill",
+                    action: runPromptTests
+                )
+                .labelStyle(.iconOnly)
+                .font(.title3)
+                .frame(width: 34, height: 34)
                 .buttonStyle(.borderless)
                 .disabled(isRunningPromptTests || !canRunPromptTests)
                 .help("Run selected prompt variants")
@@ -284,6 +303,7 @@ struct StudioView: View {
                 }
             }
             .pickerStyle(.segmented)
+            .labelsHidden()
             .frame(maxWidth: 560)
 
             Spacer(minLength: 0)
@@ -344,7 +364,9 @@ struct StudioView: View {
 
     @ViewBuilder
     private var stageContent: some View {
-        if selectedWorkspace == .benchmarkRuns {
+        if selectedWorkspace == .adapterComparison {
+            AdapterStudioContent(stage: selectedStage)
+        } else if selectedWorkspace == .benchmarkRuns {
             AppBenchStudioContent(stage: selectedStage)
         } else {
             switch selectedStage {
@@ -364,7 +386,9 @@ struct StudioView: View {
 
     @ViewBuilder
     private var compactStageContent: some View {
-        if selectedWorkspace == .benchmarkRuns {
+        if selectedWorkspace == .adapterComparison {
+            AdapterStudioContent(stage: selectedStage)
+        } else if selectedWorkspace == .benchmarkRuns {
             AppBenchStudioContent(stage: selectedStage)
         } else {
             switch selectedStage {
@@ -811,7 +835,9 @@ struct StudioView: View {
 
     @ViewBuilder
     private var activityInspectorContent: some View {
-        if selectedWorkspace == .benchmarkRuns {
+        if selectedWorkspace == .adapterComparison {
+            AdapterStudioInspector()
+        } else if selectedWorkspace == .benchmarkRuns {
             AppBenchStudioInspector()
         } else {
             VStack(alignment: .leading, spacing: Spacing.large) {
@@ -963,6 +989,7 @@ struct StudioView: View {
     }
 
     private var statusIcon: String {
+        if selectedWorkspace == .adapterComparison { return "shippingbox.fill" }
         if selectedWorkspace == .benchmarkRuns { return "checkmark.circle.fill" }
         if isRunningPromptTests { return "hourglass" }
         if promptRuns.isEmpty { return "info.circle.fill" }
@@ -970,6 +997,7 @@ struct StudioView: View {
     }
 
     private var statusColor: Color {
+        if selectedWorkspace == .adapterComparison { return .blue }
         if selectedWorkspace == .benchmarkRuns { return .green }
         if isRunningPromptTests { return .orange }
         if promptRuns.isEmpty { return .secondary }
@@ -977,6 +1005,13 @@ struct StudioView: View {
     }
 
     private var statusText: String {
+        if selectedWorkspace == .adapterComparison {
+#if os(macOS)
+            return "Adapter comparison is available locally on this Mac"
+#else
+            return "Adapter comparison requires Foundation Lab for macOS"
+#endif
+        }
         if selectedWorkspace == .benchmarkRuns {
             return "AppBench is available through the Mac CLI and physical-device runner"
         }
