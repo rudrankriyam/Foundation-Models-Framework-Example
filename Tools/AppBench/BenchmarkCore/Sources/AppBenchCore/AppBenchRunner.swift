@@ -298,6 +298,7 @@ public actor AppBenchRunner {
         try ensureScenarioAvailability(item.scenario)
         let bundle = try sessionBundle(for: item.scenario, model: model)
         await bundle.recorder.reset()
+        let transcriptStartIndex = bundle.session.transcript.endIndex
 
         let options = generationOptions(
             maximumResponseTokens: item.scenario.maximumResponseTokens,
@@ -447,7 +448,10 @@ public actor AppBenchRunner {
         }
 
         if response.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-            let transcriptResponse = latestTranscriptResponse(from: bundle.session.transcript) {
+            let transcriptResponse = AppBenchTranscriptRecovery.latestResponse(
+                from: bundle.session.transcript,
+                startingAt: transcriptStartIndex
+            ) {
             let recoveredAt = Date.now
             response = transcriptResponse
             firstStreamUpdate = transcriptResponse
@@ -755,20 +759,6 @@ private func detailedMessage(for error: any Swift.Error) -> String {
     let userInfo = nsError.userInfo.isEmpty ? "" : " userInfo=\(nsError.userInfo)"
     return
         "\(error.localizedDescription) [\(reflected); domain=\(nsError.domain) code=\(nsError.code)\(userInfo)]"
-}
-
-private func latestTranscriptResponse(from transcript: Transcript) -> String? {
-    for entry in transcript.reversed() {
-        guard case .response(let response) = entry else { continue }
-        let text = response.segments.compactMap { segment -> String? in
-            guard case .text(let textSegment) = segment else { return nil }
-            return textSegment.content
-        }.joined()
-        if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return text
-        }
-    }
-    return nil
 }
 
 private func failureKind(_ error: any Swift.Error) -> String {
