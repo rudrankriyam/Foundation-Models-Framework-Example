@@ -397,19 +397,14 @@ public struct LocationTool: Tool {
     return formatter.string(from: date)
   }
 
+  @MainActor
   private func requestLocationPermission() async -> GeneratedContent {
     let permissionRequester = PermissionRequester()
-    locationManager.delegate = permissionRequester
+    let receivedResponse = await permissionRequester.requestAuthorization(using: locationManager)
 
-    #if os(macOS)
-      locationManager.startUpdatingLocation()
-      locationManager.stopUpdatingLocation()
-    #else
-      locationManager.requestWhenInUseAuthorization()
-    #endif
-
-    // Wait for authorization response
-    await permissionRequester.waitForAuthorizationResponse()
+    guard receivedResponse else {
+      return createErrorOutput(error: LocationError.authorizationNotDetermined)
+    }
 
     // Check the new authorization status
     let authorization = await checkLocationAuthorization()
@@ -651,20 +646,48 @@ enum LocationError: Error, LocalizedError {
   }
 }
 
+@MainActor
 final class PermissionRequester: NSObject, CLLocationManagerDelegate {
-  private let authorizationUpdated = AsyncStream<Void>.makeStream()
+  private var continuation: CheckedContinuation<Bool, Never>?
+  private var timeoutTask: Task<Void, Never>?
 
-  func waitForAuthorizationResponse() async {
-    for await _ in authorizationUpdated.stream {
-      break
+  func requestAuthorization(
+    using manager: CLLocationManager,
+    timeout: TimeInterval = 8
+  ) async -> Bool {
+    guard manager.authorizationStatus == .notDetermined else {
+      return true
+    }
+
+    return await withCheckedContinuation { continuation in
+      self.continuation = continuation
+      manager.delegate = self
+      manager.requestWhenInUseAuthorization()
+
+      timeoutTask = Task { @MainActor [weak self] in
+        do {
+          try await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
+          self?.finish(receivedResponse: false, manager: manager)
+        } catch {
+          // Task cancelled after receiving an authorization response.
+        }
+      }
     }
   }
 
   nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-    let continuation = self.authorizationUpdated.continuation
-    Task { @MainActor in
-      continuation.yield()
-      continuation.finish()
+    Task { @MainActor [weak self] in
+      guard manager.authorizationStatus != .notDetermined else { return }
+      self?.finish(receivedResponse: true, manager: manager)
     }
+  }
+
+  private func finish(receivedResponse: Bool, manager: CLLocationManager) {
+    guard let continuation else { return }
+    timeoutTask?.cancel()
+    timeoutTask = nil
+    manager.delegate = nil
+    self.continuation = nil
+    continuation.resume(returning: receivedResponse)
   }
 }

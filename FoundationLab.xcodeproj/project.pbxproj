@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		0A21D7F12E518858004E8806 /* LiquidGlasKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0A21D7F02E518858004E8806 /* LiquidGlasKit */; };
 		0A5454AB2E1148A8002C2152 /* Foundation Lab.icon in Resources */ = {isa = PBXBuildFile; fileRef = 0A5454A72E1148A8002C2152 /* Foundation Lab.icon */; };
-		0A979E842E1E5921008CFA37 /* FoundationModelsTools in Frameworks */ = {isa = PBXBuildFile; productRef = 0A979E832E1E5921008CFA37 /* FoundationModelsTools */; };
+		0A979E842E1E5921008CFA37 /* FoundationModelsKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0A979E832E1E5921008CFA37 /* FoundationModelsKit */; };
 		0B0A11132ECB100100000001 /* FoundationLabCore in Frameworks */ = {isa = PBXBuildFile; productRef = 0B0A11122ECB100100000001 /* FoundationLabCore */; };
 		F1B8C56E2E5B5A1C00XYZ123 /* LumoKit in Frameworks */ = {isa = PBXBuildFile; productRef = F1B8C56D2E5B5A1C00XYZ123 /* LumoKit */; };
 		FA43F9412E13A16E00F24BCC /* HighlightSwift in Frameworks */ = {isa = PBXBuildFile; productRef = FA43F9402E13A16E00F24BCC /* HighlightSwift */; };
@@ -54,7 +54,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FA43F9412E13A16E00F24BCC /* HighlightSwift in Frameworks */,
-				0A979E842E1E5921008CFA37 /* FoundationModelsTools in Frameworks */,
+				0A979E842E1E5921008CFA37 /* FoundationModelsKit in Frameworks */,
 				0A21D7F12E518858004E8806 /* LiquidGlasKit in Frameworks */,
 				0B0A11132ECB100100000001 /* FoundationLabCore in Frameworks */,
 				F1B8C56E2E5B5A1C00XYZ123 /* LumoKit in Frameworks */,
@@ -119,7 +119,7 @@
 			name = "Foundation Lab";
 			packageProductDependencies = (
 				FA43F9402E13A16E00F24BCC /* HighlightSwift */,
-				0A979E832E1E5921008CFA37 /* FoundationModelsTools */,
+				0A979E832E1E5921008CFA37 /* FoundationModelsKit */,
 				0A21D7F02E518858004E8806 /* LiquidGlasKit */,
 				0B0A11122ECB100100000001 /* FoundationLabCore */,
 				F1B8C56D2E5B5A1C00XYZ123 /* LumoKit */,
@@ -154,7 +154,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				0AC6037E2E1D5288002106F9 /* XCRemoteSwiftPackageReference "HighlightSwift" */,
-				0A979E822E1E5921008CFA37 /* XCRemoteSwiftPackageReference "FoundationModelsTools" */,
+				0A979E822E1E5921008CFA37 /* XCLocalSwiftPackageReference "FoundationModelsKit" */,
 				0A21D7EF2E518858004E8806 /* XCRemoteSwiftPackageReference "LiquidGlasKit" */,
 				0B0A11112ECB100100000001 /* XCLocalSwiftPackageReference "FoundationLabCore" */,
 				F1B8C56C2E5B5A1C00XYZ123 /* XCRemoteSwiftPackageReference "LumoKit" */,
@@ -506,6 +506,10 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
+		0A979E822E1E5921008CFA37 /* XCLocalSwiftPackageReference "FoundationModelsKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/FoundationModelsKit;
+		};
 		0B0A11112ECB100100000001 /* XCLocalSwiftPackageReference "FoundationLabCore" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = FoundationLabCore;
@@ -516,14 +520,6 @@
 		0A21D7EF2E518858004E8806 /* XCRemoteSwiftPackageReference "LiquidGlasKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/rryam/LiquidGlasKit.git";
-			requirement = {
-				branch = main;
-				kind = branch;
-			};
-		};
-		0A979E822E1E5921008CFA37 /* XCRemoteSwiftPackageReference "FoundationModelsTools" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/rudrankriyam/FoundationModelsTools.git";
 			requirement = {
 				branch = main;
 				kind = branch;
@@ -561,10 +557,10 @@
 			package = 0A21D7EF2E518858004E8806 /* XCRemoteSwiftPackageReference "LiquidGlasKit" */;
 			productName = LiquidGlasKit;
 		};
-		0A979E832E1E5921008CFA37 /* FoundationModelsTools */ = {
+		0A979E832E1E5921008CFA37 /* FoundationModelsKit */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 0A979E822E1E5921008CFA37 /* XCRemoteSwiftPackageReference "FoundationModelsTools" */;
-			productName = FoundationModelsTools;
+			package = 0A979E822E1E5921008CFA37 /* XCLocalSwiftPackageReference "FoundationModelsKit" */;
+			productName = FoundationModelsKit;
 		};
 		0B0A11122ECB100100000001 /* FoundationLabCore */ = {
 			isa = XCSwiftPackageProductDependency;

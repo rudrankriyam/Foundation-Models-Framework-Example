@@ -16,6 +16,10 @@ let package = Package(
         .library(
             name: "FoundationModelsTools",
             targets: ["FoundationModelsTools"]
+        ),
+        .library(
+            name: "FoundationLabCore",
+            targets: ["FoundationLabCore"]
         )
     ],
     targets: [
@@ -28,6 +32,14 @@ let package = Package(
             dependencies: ["FoundationModelsKit"],
             path: "Packages/FoundationModelsKit/Sources/FoundationModelsTools"
         ),
+        .target(
+            name: "FoundationLabCore",
+            dependencies: [
+                "FoundationModelsKit",
+                "FoundationModelsTools"
+            ],
+            path: "FoundationLabCore/Sources/FoundationLabCore"
+        ),
         .testTarget(
             name: "FoundationModelsKitTests",
             dependencies: ["FoundationModelsKit"],
@@ -37,6 +49,11 @@ let package = Package(
             name: "FoundationModelsToolsTests",
             dependencies: ["FoundationModelsTools"],
             path: "Packages/FoundationModelsKit/Tests/FoundationModelsToolsTests"
+        ),
+        .testTarget(
+            name: "FoundationLabCoreTests",
+            dependencies: ["FoundationLabCore"],
+            path: "FoundationLabCore/Tests/FoundationLabCoreTests"
         )
     ]
 )

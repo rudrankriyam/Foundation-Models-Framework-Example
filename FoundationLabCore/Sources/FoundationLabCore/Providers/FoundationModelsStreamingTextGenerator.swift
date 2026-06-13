@@ -1,5 +1,6 @@
 import Foundation
 import FoundationModels
+import FoundationModelsKit
 
 public struct FoundationModelsStreamingTextGenerator: StreamingTextGenerationProviding {
     public init() {}
@@ -45,7 +46,7 @@ public struct FoundationModelsStreamingTextGenerator: StreamingTextGenerationPro
             }
         }
 
-        let tokenCount = await session.transcript.foundationLabTokenCount(using: model)
+        let tokenCount = await session.transcript.tokenCount(using: model)
 
         return TextGenerationResult(
             content: finalContent,

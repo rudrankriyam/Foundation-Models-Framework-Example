@@ -1,5 +1,6 @@
 import Foundation
 import FoundationModels
+import FoundationModelsKit
 
 public struct FoundationModelsHealthEncouragementGenerator: HealthEncouragementGenerating {
     public init() {}
@@ -34,7 +35,7 @@ public struct FoundationModelsHealthEncouragementGenerator: HealthEncouragementG
         """
 
         let response = try await session.respond(to: Prompt(prompt))
-        let tokenCount = await session.transcript.foundationLabTokenCount()
+        let tokenCount = await session.transcript.tokenCount()
 
         return GenerateHealthEncouragementResult(
             message: response.content,

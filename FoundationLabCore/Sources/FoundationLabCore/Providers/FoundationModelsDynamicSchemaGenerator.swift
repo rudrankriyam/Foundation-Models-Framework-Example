@@ -1,5 +1,6 @@
 import Foundation
 import FoundationModels
+import FoundationModelsKit
 
 public struct FoundationModelsDynamicSchemaGenerator: DynamicSchemaGenerationProviding {
     public init() {}
@@ -40,7 +41,7 @@ public struct FoundationModelsDynamicSchemaGenerator: DynamicSchemaGenerationPro
             ).content
         }
 
-        let tokenCount = await session.transcript.foundationLabTokenCount(using: model)
+        let tokenCount = await session.transcript.tokenCount(using: model)
 
         return DynamicSchemaGenerationResult(
             output: output,

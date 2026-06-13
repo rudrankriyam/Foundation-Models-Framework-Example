@@ -1,5 +1,6 @@
 import Foundation
 import FoundationModels
+import FoundationModelsKit
 
 public struct FoundationModelsToolInvoker: Sendable {
     public init() {}
@@ -44,7 +45,7 @@ public struct FoundationModelsToolInvoker: Sendable {
             responseContent = try await session.respond(to: Prompt(trimmedPrompt)).content
         }
 
-        let tokenCount = await session.transcript.foundationLabTokenCount(using: model)
+        let tokenCount = await session.transcript.tokenCount(using: model)
 
         return TextGenerationResult(
             content: responseContent,

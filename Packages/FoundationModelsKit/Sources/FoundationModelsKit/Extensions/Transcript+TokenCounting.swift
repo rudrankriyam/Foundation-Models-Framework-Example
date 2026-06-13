@@ -59,7 +59,7 @@ extension Transcript.Entry {
   /// - Tool calls: Tool name + arguments + overhead (5 tokens)
   /// - Tool output: Sum of segments + overhead (3 tokens)
   ///
-  /// Uses Apple's guidance of 4.5 characters per token.
+  /// Uses the package's empirically calibrated estimate.
   public var estimatedTokenCount: Int {
     switch self {
     case .instructions(let instructions):
@@ -79,6 +79,11 @@ extension Transcript.Entry {
 
     case .toolOutput(let output):
       return output.segments.totalEstimatedTokenCount + toolOutputOverheadTokens
+
+    #if compiler(>=6.4)
+    case .reasoning(let reasoning):
+      return reasoning.segments.totalEstimatedTokenCount + toolOutputOverheadTokens
+    #endif
 
     @unknown default:
       // Return 0 for unknown entry types to avoid crashes
@@ -102,6 +107,14 @@ extension Transcript.Segment {
 
     case .structure(let structuredSegment):
       return estimateTokens(from: structuredSegment.content)
+
+    #if compiler(>=6.4)
+    case .attachment(let attachmentSegment):
+      return estimateTokens(from: attachmentSegment.label ?? "image attachment") + 12
+
+    case .custom(let customSegment):
+      return estimateTokens(from: customSegment.description)
+    #endif
 
     @unknown default:
       // Return 0 for unknown segment types to avoid crashes
@@ -185,6 +198,13 @@ extension Transcript {
   /// let newTranscript = Transcript(entries: trimmed)
   /// ```
   public func entriesWithinTokenBudget(_ budget: Int) -> [Transcript.Entry] {
+    foundationModelsKitEstimatedEntriesWithinTokenBudget(budget)
+  }
+
+  func foundationModelsKitEstimatedEntriesWithinTokenBudget(
+    _ budget: Int
+  ) -> [Transcript.Entry] {
+    let contentBudget = estimatedContentBudget(forSafeBudget: budget)
     var tokenCount = 0
     var recentEntriesToKeep: [Transcript.Entry] = []
 
@@ -193,8 +213,8 @@ extension Transcript {
 
     if let instruction = firstInstruction {
       let instructionTokens = instruction.estimatedTokenCount
-      // Only account for the instruction if it fits the budget
-      if instructionTokens <= budget {
+      // Only account for the instruction if it fits the conservative content budget.
+      if instructionTokens <= contentBudget {
         tokenCount = instructionTokens
       }
     }
@@ -204,20 +224,28 @@ extension Transcript {
       if entry.isInstruction { continue }
 
       let entryTokens = entry.estimatedTokenCount
-      if tokenCount + entryTokens <= budget {
-        tokenCount += entryTokens
-        recentEntriesToKeep.append(entry)
-      }
+      guard tokenCount + entryTokens <= contentBudget else { break }
+      tokenCount += entryTokens
+      recentEntriesToKeep.append(entry)
     }
 
     // 3. Assemble the final list in chronological order
     var result: [Transcript.Entry] = []
-    if let instruction = firstInstruction, instruction.estimatedTokenCount <= budget {
+    if let instruction = firstInstruction, instruction.estimatedTokenCount <= contentBudget {
       result.append(instruction)
     }
     result.append(contentsOf: recentEntriesToKeep.reversed())
     return result
   }
+}
+
+private func estimatedContentBudget(forSafeBudget budget: Int) -> Int {
+  guard budget > systemOverheadTokens else { return 0 }
+  return Int(
+    floor(
+      Double(budget - systemOverheadTokens) / (1 + safetyBufferMultiplier)
+    )
+  )
 }
 
 // MARK: - Token Estimation Utilities

@@ -44,8 +44,8 @@ public struct WebTool: Tool {
     @Guide(description: "Number of results to return (default: 5, max: 10)")
     public var numResults: Int?
 
-    /// Type of search: "neural" or "keyword" (default: "neural")
-    @Guide(description: "Type of search: 'neural' or 'keyword' (default: 'neural')")
+    /// Type of search, such as "auto", "fast", "deep", or "deep-reasoning"
+    @Guide(description: "Type of search, such as 'auto', 'fast', 'deep', or 'deep-reasoning'")
     public var type: String?
 
     /// Whether to include page contents (default: true)
@@ -108,16 +108,35 @@ public struct WebTool: Tool {
     }
 
     do {
-      let searchData = try await performWebSearch(query: searchQuery)
+      let searchData = try await performWebSearch(
+        query: searchQuery,
+        numResults: arguments.numResults,
+        type: arguments.type,
+        includeContents: arguments.includeContents,
+        category: arguments.category
+      )
       return createSuccessOutput(from: searchData)
     } catch {
       return createErrorOutput(for: searchQuery, error: error)
     }
   }
 
-  private func performWebSearch(query: String) async throws -> SearchData {
+  private func performWebSearch(
+    query: String,
+    numResults: Int?,
+    type: String?,
+    includeContents: Bool?,
+    category: String?
+  ) async throws -> SearchData {
     do {
-      let exaResponse = try await exaService.search(query: query, apiKey: exaAPIKey)
+      let exaResponse = try await exaService.search(
+        query: query,
+        apiKey: exaAPIKey,
+        numResults: numResults,
+        type: type,
+        includeContents: includeContents,
+        category: category
+      )
 
       return SearchData(
         query: query,
