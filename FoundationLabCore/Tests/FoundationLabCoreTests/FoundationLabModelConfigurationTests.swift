@@ -52,4 +52,83 @@ final class FoundationLabModelConfigurationTests: XCTestCase {
             )
         }
     }
+
+    func testModelFactoryAvailabilityIdentifiesSystemUseCase() throws {
+        let availability = try FoundationModelsModelFactory.currentAvailability(
+            useCase: .contentTagging
+        )
+
+        XCTAssertEqual(availability.metadata.modelIdentifier, "content-tagging")
+    }
+
+    @MainActor
+    func testAdapterConversationEngineKeepsDefaultGuardrailsWhenRebuilding() {
+        let engine = FoundationLabConversationEngine(
+            configuration: makeConversationConfiguration(),
+            model: .default,
+            adapterURL: URL(fileURLWithPath: "/tmp/Test.fmadapter")
+        )
+
+        engine.rebuild(
+            modelRuntime: .privateCloudCompute,
+            reasoningLevel: .deep,
+            guardrails: .permissiveContentTransformations
+        )
+
+        XCTAssertEqual(engine.modelRuntime, .onDevice)
+        XCTAssertEqual(engine.reasoningLevel, .none)
+        XCTAssertEqual(engine.guardrails, .default)
+    }
+
+    @MainActor
+    func testAdapterConversationEngineRejectsPrivateCloudRuntime() {
+        XCTAssertThrowsError(
+            try FoundationLabConversationEngine(
+                configuration: makeConversationConfiguration(
+                    modelRuntime: .privateCloudCompute
+                ),
+                adapterURL: URL(fileURLWithPath: "/tmp/Test.fmadapter")
+            )
+        ) { error in
+            XCTAssertEqual(
+                error as? FoundationLabCoreError,
+                .invalidRequest(
+                    "Foundation Models adapters only support the on-device runtime."
+                )
+            )
+        }
+    }
+
+    @MainActor
+    func testAdapterConversationEngineRejectsReasoningLevel() {
+        XCTAssertThrowsError(
+            try FoundationLabConversationEngine(
+                configuration: makeConversationConfiguration(reasoningLevel: .deep),
+                adapterURL: URL(fileURLWithPath: "/tmp/Test.fmadapter")
+            )
+        ) { error in
+            XCTAssertEqual(
+                error as? FoundationLabCoreError,
+                .invalidRequest(
+                    "Foundation Models adapters do not support Private Cloud Compute reasoning levels."
+                )
+            )
+        }
+    }
+
+    private func makeConversationConfiguration(
+        modelRuntime: FoundationLabModelRuntime = .onDevice,
+        reasoningLevel: FoundationLabReasoningLevel = .none
+    ) -> FoundationLabConversationConfiguration {
+        FoundationLabConversationConfiguration(
+            baseInstructions: "Answer briefly.",
+            summaryInstructions: "Summarize.",
+            summaryPromptPreamble: "Summary:",
+            conversationUserLabel: "User:",
+            conversationAssistantLabel: "Assistant:",
+            continuationNote: "Continue.",
+            modelRuntime: modelRuntime,
+            reasoningLevel: reasoningLevel
+        )
+    }
 }

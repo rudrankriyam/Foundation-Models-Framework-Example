@@ -18,6 +18,9 @@ public final class FoundationLabConversationEngine {
     public var reasoningLevel: FoundationLabReasoningLevel {
         configuration.reasoningLevel
     }
+    public var guardrails: FoundationLabGuardrails {
+        configuration.guardrails
+    }
 
     private var configuration: FoundationLabConversationConfiguration
     private var model: SystemLanguageModel
@@ -39,6 +42,16 @@ public final class FoundationLabConversationEngine {
         configuration: FoundationLabConversationConfiguration,
         adapterURL: URL
     ) throws {
+        guard configuration.modelRuntime == .onDevice else {
+            throw FoundationLabCoreError.invalidRequest(
+                "Foundation Models adapters only support the on-device runtime."
+            )
+        }
+        guard configuration.reasoningLevel == .none else {
+            throw FoundationLabCoreError.invalidRequest(
+                "Foundation Models adapters do not support Private Cloud Compute reasoning levels."
+            )
+        }
         self.init(
             configuration: configuration,
             model: try FoundationModelsModelFactory.makeModel(
@@ -49,7 +62,7 @@ public final class FoundationLabConversationEngine {
         )
     }
 
-    private init(
+    init(
         configuration: FoundationLabConversationConfiguration,
         model: SystemLanguageModel,
         adapterURL: URL?
@@ -87,14 +100,19 @@ public final class FoundationLabConversationEngine {
         if let baseInstructions {
             configuration.baseInstructions = baseInstructions
         }
-        if let modelRuntime {
+        if let modelRuntime, adapterURL == nil {
             configuration.modelRuntime = modelRuntime
         }
-        if let reasoningLevel {
+        if let reasoningLevel, adapterURL == nil {
             configuration.reasoningLevel = reasoningLevel
         }
-        if let guardrails {
+        if let guardrails, adapterURL == nil {
             configuration.guardrails = guardrails
+        }
+        if adapterURL != nil {
+            configuration.modelRuntime = .onDevice
+            configuration.reasoningLevel = .none
+            configuration.guardrails = .default
         }
 
         if adapterURL == nil {

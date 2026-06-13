@@ -56,7 +56,10 @@ struct TagRunCommand: AsyncParsableCommand {
             return
         }
 
-        _ = try requireFoundationModelsAvailability(useCase: .contentTagging)
+        _ = try requireFoundationModelsAvailability(
+            useCase: .contentTagging,
+            adapterPath: adapterPath
+        )
         let result = try await GenerateTextUseCase().execute(
             TextGenerationRequest(
                 prompt: resolvedPrompt.value,

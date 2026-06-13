@@ -132,7 +132,10 @@ struct SchemaCustomCommand: AsyncParsableCommand {
             return
         }
 
-        _ = try requireFoundationModelsAvailability(useCase: useCaseFlags.useCase)
+        _ = try requireFoundationModelsAvailability(
+            useCase: useCaseFlags.useCase,
+            adapterPath: adapterPath
+        )
         let result = try await GenerateDynamicSchemaContentUseCase().execute(
             DynamicSchemaGenerationRequest(
                 prompt: resolvedInput.value,
@@ -216,7 +219,10 @@ struct TypedPersonSchemaCommand: AsyncParsableCommand {
             return
         }
 
-        _ = try requireFoundationModelsAvailability(useCase: useCaseFlags.useCase)
+        _ = try requireFoundationModelsAvailability(
+            useCase: useCaseFlags.useCase,
+            adapterPath: adapterPath
+        )
         let result = try await GenerateStructuredDataUseCase<AFMGeneratedPerson>().execute(
             StructuredGenerationRequest(
                 prompt: resolvedInput.value,
@@ -409,7 +415,10 @@ private func runDynamicSchemaCommand(
         return
     }
 
-    _ = try requireFoundationModelsAvailability(useCase: useCase)
+    _ = try requireFoundationModelsAvailability(
+        useCase: useCase,
+        adapterPath: adapterPath
+    )
     let result = try await GenerateDynamicSchemaContentUseCase().execute(
         DynamicSchemaGenerationRequest(
             prompt: resolvedInput.value,

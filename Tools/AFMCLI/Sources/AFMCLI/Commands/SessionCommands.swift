@@ -85,7 +85,10 @@ struct SessionRespondCommand: AsyncParsableCommand {
             return
         }
 
-        _ = try requireFoundationModelsAvailability(useCase: useCaseFlags.useCase)
+        _ = try requireFoundationModelsAvailability(
+            useCase: useCaseFlags.useCase,
+            adapterPath: adapterPath
+        )
         let engine = try await MainActor.run {
             try makeConversationEngine(
                 configuration: defaultConversationConfiguration(
@@ -167,7 +170,10 @@ struct SessionStreamCommand: AsyncParsableCommand {
             return
         }
 
-        _ = try requireFoundationModelsAvailability(useCase: useCaseFlags.useCase)
+        _ = try requireFoundationModelsAvailability(
+            useCase: useCaseFlags.useCase,
+            adapterPath: adapterPath
+        )
         let engine = try await MainActor.run {
             try makeConversationEngine(
                 configuration: defaultConversationConfiguration(
@@ -348,7 +354,10 @@ struct SessionChatCommand: AsyncParsableCommand {
             return
         }
 
-        _ = try requireFoundationModelsAvailability(useCase: useCaseFlags.useCase)
+        _ = try requireFoundationModelsAvailability(
+            useCase: useCaseFlags.useCase,
+            adapterPath: adapterPath
+        )
         let engine = try await MainActor.run {
             try makeConversationEngine(
                 configuration: defaultConversationConfiguration(

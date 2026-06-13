@@ -193,9 +193,10 @@ Supported guardrails:
 - `default`
 - `permissive-content-transformations`
 
-Foundation Models adapters currently use the framework's default guardrails.
-`afm` rejects `--guardrails permissive-content-transformations` when `--adapter`
-is present instead of silently ignoring the requested mode.
+Foundation Models adapters currently use the on-device runtime without PCC
+reasoning and use the framework's default guardrails. `afm` rejects
+`--guardrails permissive-content-transformations` when `--adapter` is present
+instead of silently ignoring the requested mode.
 
 ## Design Goals
 

@@ -318,8 +318,14 @@ func adapterURL(from path: String?) -> URL? {
     path.map { URL(fileURLWithPath: $0) }
 }
 
-func requireFoundationModelsAvailability(useCase: FoundationLabModelUseCase = .general) throws -> ModelAvailabilityResult {
-    let availability = CheckModelAvailabilityUseCase().execute(useCase: useCase)
+func requireFoundationModelsAvailability(
+    useCase: FoundationLabModelUseCase = .general,
+    adapterPath: String? = nil
+) throws -> ModelAvailabilityResult {
+    let availability = try FoundationModelsModelFactory.currentAvailability(
+        useCase: useCase,
+        adapterURL: adapterURL(from: adapterPath)
+    )
     guard availability.isAvailable else {
         throw AFMRuntimeError.unavailableCapability(availabilityReasonDescription(availability))
     }

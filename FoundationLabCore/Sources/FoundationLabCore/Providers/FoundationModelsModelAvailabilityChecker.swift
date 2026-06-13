@@ -15,40 +15,9 @@ public struct FoundationModelsModelAvailabilityChecker: ModelAvailabilityCheckin
             useCase: useCase.foundationModelsValue,
             guardrails: FoundationLabGuardrails.default.foundationModelsValue
         )
-
-        switch model.availability {
-        case .available:
-            return ModelAvailabilityResult(
-                isAvailable: true,
-                metadata: CapabilityExecutionMetadata(
-                    provider: "Foundation Models",
-                    modelIdentifier: useCase.rawValue
-                )
-            )
-        case .unavailable(let reason):
-            return ModelAvailabilityResult(
-                isAvailable: false,
-                reason: map(reason),
-                metadata: CapabilityExecutionMetadata(
-                    provider: "Foundation Models",
-                    modelIdentifier: useCase.rawValue
-                )
-            )
-        }
-    }
-
-    private func map(
-        _ reason: SystemLanguageModel.Availability.UnavailableReason
-    ) -> ModelAvailabilityUnavailableReason {
-        switch reason {
-        case .deviceNotEligible:
-            return .deviceNotEligible
-        case .appleIntelligenceNotEnabled:
-            return .appleIntelligenceNotEnabled
-        case .modelNotReady:
-            return .modelNotReady
-        @unknown default:
-            return .unknown
-        }
+        return FoundationModelsModelFactory.availabilityResult(
+            for: model,
+            modelIdentifier: useCase.rawValue
+        )
     }
 }

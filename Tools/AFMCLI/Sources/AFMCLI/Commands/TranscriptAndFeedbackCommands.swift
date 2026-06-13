@@ -71,7 +71,10 @@ struct TranscriptExportCommand: AsyncParsableCommand {
             return
         }
 
-        _ = try requireFoundationModelsAvailability(useCase: useCaseFlags.useCase)
+        _ = try requireFoundationModelsAvailability(
+            useCase: useCaseFlags.useCase,
+            adapterPath: adapterPath
+        )
         let engine = try await MainActor.run {
             try makeConversationEngine(
                 configuration: defaultConversationConfiguration(
@@ -192,7 +195,10 @@ struct FeedbackExportCommand: AsyncParsableCommand {
             return
         }
 
-        _ = try requireFoundationModelsAvailability(useCase: useCaseFlags.useCase)
+        _ = try requireFoundationModelsAvailability(
+            useCase: useCaseFlags.useCase,
+            adapterPath: adapterPath
+        )
         let model = try FoundationModelsModelFactory.makeModel(
             useCase: useCaseFlags.useCase,
             guardrails: generation.guardrails,
