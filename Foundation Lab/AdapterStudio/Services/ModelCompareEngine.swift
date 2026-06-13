@@ -19,6 +19,12 @@ final class ModelCompareEngine {
         let continuation: AsyncStream<ModelCompareEvent>.Continuation
     }
 
+    private struct ActiveRun {
+        let id: UUID
+        let task: Task<Void, Never>
+        let continuation: AsyncStream<ModelCompareEvent>.Continuation
+    }
+
     private struct ComparisonSummaries {
         var base: ModelCompareResponseSummary?
         var adapter: ModelCompareResponseSummary?
@@ -42,17 +48,18 @@ final class ModelCompareEngine {
     )
     private let baseModel: SystemLanguageModel
     private var adapterModel: SystemLanguageModel?
-    private var currentRunTask: Task<Void, Never>?
-    private var currentRunID: UUID?
+    private var activeRun: ActiveRun?
 
     init(model: SystemLanguageModel = .default) {
         baseModel = model
     }
 
     func cancelCurrentRun() {
-        currentRunTask?.cancel()
-        currentRunTask = nil
-        currentRunID = nil
+        guard let activeRun else { return }
+
+        self.activeRun = nil
+        activeRun.task.cancel()
+        activeRun.continuation.finish()
     }
 
     func configureAdapter(_ context: AdapterContext?) {
@@ -79,8 +86,11 @@ final class ModelCompareEngine {
                     runID: runID
                 )
             }
-            currentRunID = runID
-            currentRunTask = runTask
+            activeRun = ActiveRun(
+                id: runID,
+                task: runTask,
+                continuation: continuation
+            )
 
             continuation.onTermination = { @Sendable _ in
                 runTask.cancel()
@@ -99,11 +109,18 @@ private extension ModelCompareEngine {
         continuation: AsyncStream<ModelCompareEvent>.Continuation,
         runID: UUID
     ) async {
+        defer {
+            continuation.finish()
+            clearCurrentRun(ifMatching: runID)
+        }
+
         let summaries = await collectSummaries(
             prompt: prompt,
             options: options,
             continuation: continuation
         )
+
+        guard !Task.isCancelled, activeRun?.id == runID else { return }
 
         if summaries.base != nil || summaries.adapter != nil {
             continuation.yield(
@@ -116,9 +133,6 @@ private extension ModelCompareEngine {
                 )
             )
         }
-
-        continuation.finish()
-        clearCurrentRun(ifMatching: runID)
     }
 
     private func collectSummaries(
@@ -154,9 +168,8 @@ private extension ModelCompareEngine {
     }
 
     private func clearCurrentRun(ifMatching runID: UUID) {
-        guard currentRunID == runID else { return }
-        currentRunTask = nil
-        currentRunID = nil
+        guard activeRun?.id == runID else { return }
+        activeRun = nil
     }
 
     private func addComparisonTasks(

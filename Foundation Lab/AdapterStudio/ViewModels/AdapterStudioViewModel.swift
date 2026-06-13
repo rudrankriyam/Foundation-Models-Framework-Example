@@ -21,6 +21,7 @@ final class AdapterStudioViewModel {
     @ObservationIgnored private let engine: ModelCompareEngine
     @ObservationIgnored private let provider: AdapterProvider?
     @ObservationIgnored private var streamTask: Task<Void, Never>?
+    @ObservationIgnored private var activeStreamID: UUID?
     @ObservationIgnored private let logger = Logger(
         subsystem: "com.rudrankriyam.foundationlab",
         category: "AdapterStudio"
@@ -141,28 +142,32 @@ final class AdapterStudioViewModel {
         state = .running(prompt: trimmedPrompt)
 
         let stream = engine.submit(prompt: trimmedPrompt, options: options)
-        streamTask = Task { [weak self] in
-            guard let self else { return }
-
+        let streamID = UUID()
+        activeStreamID = streamID
+        streamTask = Task { @MainActor [weak self] in
             for await event in stream {
                 guard !Task.isCancelled else { return }
+                guard let self, self.activeStreamID == streamID else { return }
                 handle(event)
             }
 
-            streamDidComplete()
+            guard !Task.isCancelled else { return }
+            self?.streamDidComplete(ifMatching: streamID)
         }
     }
 
     func cancel() {
         guard isRunning else { return }
-        engine.cancelCurrentRun()
+        discardCurrentRun()
     }
 }
 
 private extension AdapterStudioViewModel {
     func discardCurrentRun() {
-        streamTask?.cancel()
+        let task = streamTask
+        activeStreamID = nil
         streamTask = nil
+        task?.cancel()
         engine.cancelCurrentRun()
 
         if isRunning {
@@ -243,7 +248,9 @@ private extension AdapterStudioViewModel {
         state = .completed(result)
     }
 
-    func streamDidComplete() {
+    func streamDidComplete(ifMatching streamID: UUID) {
+        guard activeStreamID == streamID else { return }
+        activeStreamID = nil
         streamTask = nil
         guard case .running = state else { return }
 
